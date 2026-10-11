@@ -16,6 +16,9 @@ Single page, hosted on GitHub Pages: `index.html` + `data/streets.json`.
 | `data/sf_intersections.csv` | DataSF "Street Intersections" export (source, used for intersection lookups) |
 | `scripts/build_data.py` | Rebuilds `data/streets.json` from the CSVs |
 | `scripts/match_blocks.py` | Matches free-text block descriptions in a CSV to CNNs |
+| `layers/` | Raw downloads for the map layers (Muni, bike network, schools, fire/police, health care) |
+| `data/layers/*.geojson` | Trimmed copies the map loads (~1.7 MB total, ~230 KB gzipped) |
+| `scripts/build_layers.py` | Rebuilds `data/layers/` from `layers/` |
 
 `data/streets.json`, `scripts/build_data.py`, and `scripts/match_blocks.py` are copies from [burritojustice/sf-blocks](https://github.com/burritojustice/sf-blocks), which keeps the master copy of the street data and matching logic (it's shared with other projects). Block Party doesn't depend on that repo to run or build; the copies are complete. Each script's first lines say which version it came from.
 
@@ -28,7 +31,9 @@ From DataSF:
 - **List of Intersections only** → `data/sf_intersections.csv`
   https://data.sf.gov/Geographic-Locations-and-Boundaries/List-of-Intersections-only/sw2d-qfup/about_data
 
-The GeoJSON version of the streets dataset isn't needed; the CSV has the same geometry as WKT.
+Both CSVs are committed so anyone can rebuild `streets.json` right away. If one is missing, `scripts/build_data.py` downloads it from DataSF's API; `python3 scripts/build_data.py --download` refreshes both before building. The dataset ids and pages are also at the top of the script. `build_data.py` reads and writes only inside this repo (`data/` next to `scripts/`), wherever you run it from.
+
+The GeoJSON version of the streets dataset isn't needed; the CSV has the same geometry as WKT, so `data/sf_streets.geojson` (18 MB) can be removed.
 
 ### How the intersections file is used
 
@@ -50,6 +55,12 @@ Or directly here: drop fresh exports into `data/` with the same names, then:
 
 ```
 python3 scripts/build_data.py
+```
+
+To also enable the "flat to moderate" quiet-streets filter, build with slopes (downloads about 250 elevation tiles once, into `.tile-cache/`):
+
+```
+python3 scripts/build_data.py --slopes
 ```
 
 Standard library only. Commit the new `data/streets.json`. If you change `match_blocks.py` or `build_data.py` here, make the same change in sf-blocks so the projects stay in step.
@@ -86,6 +97,8 @@ python3 -m http.server 8000   # then open http://localhost:8000
 | `#cnn=21900000` | An intersection by its CNN (intersection and block CNNs never overlap) |
 | `&all=1` | Include retired, freeway, and paper streets |
 | `&minor=0` | Hide pedestrian paths and streets the city doesn't maintain |
+| `&quiet=dead,ped,unmaint,res,flat` | Find quiet streets: any of dead ends, pedestrian, not city-maintained; narrowed to residential and flat to moderate |
+| `&layers=muni:always,bike:off,contours:on` | Map layer settings that differ from the defaults (each layer `off`, `close`, or `always`; contours `off` or `on`) |
 | `&lang=es` | Interface language, once a translation exists |
 
 Street names in the hash are matched the same way as the search box (case-insensitive, "27th" or "twenty seventh").
@@ -94,6 +107,42 @@ Street names in the hash are matched the same way as the search box (case-insens
 
 - `CONFIG.PROTOMAPS_KEY`: swap for the production key.
 - `CONFIG.PUBLIC_LAYERS`: street layers shown by default. Anything not listed (freeways, paper streets, pseudo streets, private parking) and anything with `active=false` only appears with the "Include retired…" box checked. Links by CNN always load, whatever the layer.
+
+## Quiet streets, dead ends, one-way
+
+- **Dead end:** a block end where no other drivable street meets it; paper streets (often stairs or unbuilt sections) and pedestrian paths don't count as a way through. About 1,040 blocks.
+- **One-way:** `oneway` F = traffic from the `from` street to the `to` street, T = the reverse, B = both ways. The compass direction comes from the line's geometry.
+- **Find quiet streets:** the first group adds (any of dead ends, pedestrian streets, not city-maintained); the second group narrows (residential only = road class 5 or 0; flat to moderate = larger of average grade and 80% of the steepest quarter under 10%, needs `--slopes`). Rules live in `QUIET_SHOW` and `QUIET_NARROW` in `index.html`; future conditions (meets a busy street, bus route, protected bike lane) go in `QUIET_NARROW`.
+
+## Map layers
+
+The **Layers** menu on the map has Off / Close up / Always for each layer, plus Contours (Off / On). "Close up" (the default) shows a layer from zoom 16 in (`CLOSE_ZOOM`); names and route numbers appear from there too, or from zoom 14 with "Always". Each file loads the first time its layer is about to show.
+
+| Layer | DataSF dataset (download into `layers/`) | Style |
+|---|---|---|
+| Muni routes | [Muni Simple Routes](https://data.sf.gov/Transportation/Muni-Simple-Routes/9exe-acju/about_data) (`9exe-acju`), GeoJSON | Pale orange band along the street (under basemap labels), orange route-number shields. Solid on the map so overlapping routes don't darken; see-through orange over satellite |
+| Bike network | [MTA Bike Network Linear Features](https://data.sf.gov/Transportation/MTA-Bike-Network-Linear-Features/ygmz-vaxd/about_data) (`ygmz-vaxd`), GeoJSON | Dark green #1A7F37 (light green over satellite). Separated bikeway 3 px, bike lane and path 2 px, bike route and Neighborway dashed 1.6 px (at zoom 16). Label like "Separated bikeway · parking, posts" |
+| Schools | [Schools](https://data.sf.gov/Economy-and-Community/Schools/7e7j-59qk/about_data) (`7e7j-59qk`), GeoJSON, plus columns added after download: `short_name`, elevation, and (coming) enrollment from the California Department of Education. That join will be documented with its own workflow, possibly a separate repo | Brown #8A5A00 square, `short_name` |
+| Fire and police | [City-owned Facilities: Fire and Police](https://data.sf.gov/City-Infrastructure/City-owned-Facilities-Fire-and-Police/wt27-4jim/about_data) (`wt27-4jim`), CSV | Red #C92A2A "F" / navy #1E3A8A "P", `common_name` |
+| Hospitals and clinics | [Health Care Facilities](https://data.sf.gov/Health-and-Social-Services/Health-Care-Facilities/jhsu-2pka/about_data) (`jhsu-2pka`), CSV | Dark teal #0B7285: "H" square for hospitals, "+" circle for clinics, facility name |
+
+Hovering a street adds the Muni routes under the cursor and the block's bike facility (joined by `cnn`) to the popup. Hovering a point shows its name and type.
+
+To update: on each dataset's page, Export in the format listed, save the download into `layers/` without renaming it, and run `python3 scripts/build_layers.py`. DataSF names downloads after the dataset title plus a date stamp (`Muni_Simple_Routes_20261011.geojson`); the script finds each by its title and uses the newest stamp, so old downloads can stay or go. The dataset list (title, id, URL) is `SOURCES` at the top of the script, and each built file in `data/layers/` records which dataset and download it came from, plus the data's "as of" date where the download has one. The script keeps only the fields the map uses and rounds coordinates to about 1 m. Muni lines are passed through as published, one line per route and direction, except the rail-replacement bus patterns (FBUS, KBUS, NBUS, TBUS), which are dropped.
+
+Later, the script can pull these straight from the Socrata API using the same ids (`https://data.sf.gov/resource/<id>.geojson`), so Muni and bike routes stay current without hand downloads.
+
+Known limits: Muni Metro lines include their subway and tunnel sections (Market St subway, Twin Peaks and Sunset tunnels, Central Subway), so those show on the streets above. Route numbers repeat along a street where two routes or both directions run side by side; MapLibre drops identical labels that land close together, but not all of them.
+
+The layers are small enough to load as GeoJSON. For offline use or bigger layers, the same files can go into one PMTiles file instead (needs a server with HTTP range requests, which `python3 -m http.server` doesn't do):
+
+```
+tippecanoe -o data/layers.pmtiles --force -Z11 -z16 --no-line-simplification \
+  --no-feature-limit --no-tile-size-limit -r1 \
+  -L muni:data/layers/muni.geojson -L bike:data/layers/bike.geojson \
+  -L schools:data/layers/schools.geojson -L stations:data/layers/stations.geojson \
+  -L health:data/layers/health.geojson
+```
 
 ## Terrain and slope
 

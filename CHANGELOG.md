@@ -2,6 +2,29 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v25
+- **Map layers:** Muni routes, bike network, schools, fire and police stations, hospitals and clinics. New **Layers** menu on the map: Off / Close up (zoom 16 and in, the default) / Always for each. Contours moved into the same menu (Off / On). Links keep non-default settings as `&layers=muni:always,contours:on`.
+- Muni is a pale orange band with route-number shields; bike lanes dark green (solid for separated bikeways, lanes, and paths; dashed for shared routes); schools, stations, and health care as small icons with names close up. Map key rows appear while a layer shows.
+- Hovering a street also lists the Muni routes there and the block's bike facility ("Separated bikeway · parking, posts"). Hovering a school, station, or clinic shows its name and type.
+- **Quiet streets** moved from the header onto the map toolbar as a yellow "✦ Quiet streets ▾" button with a match count; its panel drops down over the map. Matches are now magenta (#B5179E) instead of green, which was hard to tell from parks and now the bike lanes.
+- New `scripts/build_layers.py` builds `data/layers/*.geojson` from the raw downloads in `layers/`.
+- `scripts/build_data.py` updated from sf-blocks 2026.10.11: downloads `data/sf_streets.csv` and `data/sf_intersections.csv` from DataSF when missing (`--download` to refresh), with the dataset pages listed in the script.
+- `.gitignore` also covers `.DS_Store`, `__pycache__/`, `*.pyc`, and partial downloads.
+- `build_layers.py` lists each layer's DataSF dataset (title, id, URL) and finds downloads by dataset title with DataSF's date stamp, so new downloads don't need renaming. Built files record their source dataset, file, and "as of" date. Map credits DataSF for the layers.
+
+## v24
+- Fixed: the map hover popup and the "Blocks leading into it" rows under intersection cards now say "Myra Way to dead end" like the cards do, instead of naming the street itself as the cross street.
+
+## v23
+- **One-way streets:** cards show "One-way ↑ northbound, 18th St → 17th St" (from the `oneway` field: F = from street to to street, T = the reverse). Arrows along one-way streets on the map from zoom 15; new "One-way" row in the map key.
+- **Dead ends:** a block end with no other drivable street (paper streets and stairs don't count) reads "Church St to dead end", with a green "Dead end" pill.
+- **Road class** pill: Residential, Collector, Arterial, Major street, Freeway, Freeway ramp (none for class 0, which already has a private / paper / pedestrian pill).
+- **Copying text:** dragging to select text no longer checks or unchecks a card, and clicks in the details, chart, or pills don't toggle it. New ⧉ button copies the whole card as plain text.
+- **Find quiet streets** (under the intro): show any of dead ends, pedestrian streets, streets the city doesn't maintain; narrow to residential only (leaves out collectors, arterials, and bigger) and flat to moderate (under 10%). Matches light up green on the map with a count; tap one to add it. Links keep it as `&quiet=dead,res`. Matches stay clickable even when the Options hide minor streets.
+- The "flat to moderate" filter only appears when `streets.json` has slopes (`build_data.py --slopes`).
+- Exports add `road_class`, `oneway`, `oneway_direction`, and `dead_end` (the cross street at the dead end, or "both ends").
+- `scripts/build_data.py` updated from sf-blocks 2026.10.08 (optional `--slopes`).
+
 ## v22 (housekeeping)
 - The striping diagram map moved to its own repo, [burritojustice/sf-striping](https://github.com/burritojustice/sf-striping) (https://burritojustice.github.io/sf-striping/). Removed `striping/`, its data files, scripts, and workflows from this repo.
 - The street data and matching scripts now have a master copy in [burritojustice/sf-blocks](https://github.com/burritojustice/sf-blocks). This repo keeps its own copies (`data/streets.json`, `scripts/build_data.py`, `scripts/match_blocks.py`), marked with the version they came from, so Block Party still stands alone.
