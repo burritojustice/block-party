@@ -2326,7 +2326,7 @@ const onPoi = e => map.queryRenderedFeatures(e.point, { layers: POI_LAYERS.filte
 
 function addOverlayLayers(popup) {
   addOverlayIcons();
-  for (const k of Object.keys(OVERLAYS)) map.addSource('lyr-' + k, { type: 'geojson', data: EMPTY });
+  for (const k of Object.keys(OVERLAYS)) map.addSource('lyr-' + k, { type: 'geojson', data: EMPTY, attribution: 'Layers: <a href="https://data.sf.gov">DataSF</a>' });
   const zw = (a, b, c) => ['interpolate', ['linear'], ['zoom'], 12, a, 16, b, 18, c];
   const halo = { 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.5 };
   // Muni: a soft orange band along the street, under the basemap's labels. On the map it's a solid pale
