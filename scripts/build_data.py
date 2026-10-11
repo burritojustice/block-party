@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
-# Copied from burritojustice/sf-blocks 2026.10.08. Make changes there, then copy the new version here.
+# Copied from burritojustice/sf-blocks 2026.10.11. Make changes there, then copy the new version here.
 """
 Build the compact lookup file used by Block Party (index.html).
 
-Reads the DataSF exports in data/ and writes data/streets.json:
+Reads two DataSF datasets from data/ and writes data/streets.json:
 
-  data/sf_streets.csv        "Streets - Active and Retired" (required)
-  data/sf_intersections.csv  "Street Intersections"         (optional, for intersection lookups)
+  data/sf_streets.csv        Streets - Active and Retired (required)
+      https://data.sf.gov/Geographic-Locations-and-Boundaries/Streets-Active-and-Retired/3psu-pn9h/about_data
+  data/sf_intersections.csv  List of Intersections only (optional; adds every street that meets at a corner)
+      https://data.sf.gov/Geographic-Locations-and-Boundaries/List-of-Intersections-only/sw2d-qfup/about_data
+
+If either file is missing, it's downloaded from DataSF's API first (SOURCES below). --download fetches
+fresh copies even when the files are there. A manual Export from the pages above works too: save it
+under the name shown.
 
 Usage (from the repo root):
   python3 scripts/build_data.py
+  python3 scripts/build_data.py --download    # refresh both CSVs from DataSF, then build
   python3 scripts/build_data.py --slopes      # also store each block's slope (downloads ~250 elevation tiles)
   python3 scripts/build_data.py --streets path/to/streets.csv --intersections path/to/int.csv --out data/streets.json
 
@@ -35,6 +42,36 @@ from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCALE = 100000
+
+# DataSF (Socrata) datasets. The /resource/ CSV uses the API field names (cnn, f_st, line ...), the same
+# names as the site's Export, and includes geometry as WKT.
+SOURCES = {
+    "streets": {"title": "Streets - Active and Retired", "id": "3psu-pn9h",
+                "page": "https://data.sf.gov/Geographic-Locations-and-Boundaries/Streets-Active-and-Retired/3psu-pn9h/about_data"},
+    "intersections": {"title": "List of Intersections only", "id": "sw2d-qfup",
+                      "page": "https://data.sf.gov/Geographic-Locations-and-Boundaries/List-of-Intersections-only/sw2d-qfup/about_data"},
+}
+API_CSV = "https://data.sf.gov/resource/{id}.csv?$limit=1000000&$order=:id"
+
+
+def download(key, path):
+    src = SOURCES[key]
+    url = API_CSV.format(id=src["id"])
+    print(f"downloading {src['title']} -> {os.path.relpath(path, ROOT)}", flush=True)
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    tmp = path + ".part"
+    req = urllib.request.Request(url, headers={"User-Agent": "sf-blocks"})
+    with urllib.request.urlopen(req, timeout=300) as r, open(tmp, "wb") as f:
+        while chunk := r.read(1 << 20):
+            f.write(chunk)
+    os.replace(tmp, path)
+
+
+def rows(path):
+    """CSV rows with lowercase column names, so API downloads and site exports read the same"""
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        for r in csv.DictReader(f):
+            yield {(k or "").strip().lower(): v for k, v in r.items()}
 
 SEG_FIELDS = ["cnn", "streetname", "f_st", "t_st",
               "lf_fadd", "lf_toadd", "rt_fadd", "rt_toadd",
@@ -181,43 +218,52 @@ def main():
     ap.add_argument("--streets", default=os.path.join(ROOT, "data", "sf_streets.csv"))
     ap.add_argument("--intersections", default=os.path.join(ROOT, "data", "sf_intersections.csv"))
     ap.add_argument("--out", default=os.path.join(ROOT, "data", "streets.json"))
+    ap.add_argument("--download", action="store_true", help="download fresh copies of both CSVs from DataSF first")
     ap.add_argument("--slopes", action="store_true", help="add slope_avg and slope_max (percent x10) to every segment")
     ap.add_argument("--tile-cache", default=os.path.join(ROOT, ".tile-cache"), help="where elevation tiles are kept")
     a = ap.parse_args()
 
+    for key, path in (("streets", a.streets), ("intersections", a.intersections)):
+        if a.download or not os.path.exists(path):
+            try:
+                download(key, path)
+            except Exception as e:
+                msg = f"couldn't download {SOURCES[key]['title']} ({e}). Export it from {SOURCES[key]['page']} and save it as {path}"
+                if key == "streets" and not os.path.exists(path):
+                    sys.exit(msg)
+                print(msg, file=sys.stderr)
+
     S = Strings()
     segs, node_xy, data_as_of = [], {}, ""
-    with open(a.streets, newline="", encoding="utf-8-sig") as f:
-        for r in csv.DictReader(f):
-            pts = parse_wkt_line(r.get("line"))
-            if not pts:
-                print(f"skipping cnn {r.get('cnn')}: no geometry", file=sys.stderr)
-                continue
-            fn, tn = to_int(r["f_node_cnn"]), to_int(r["t_node_cnn"])
-            node_xy.setdefault(fn, pts[0])
-            node_xy.setdefault(tn, pts[-1])
-            flags = (1 if r["active"].lower() == "true" else 0) | (2 if r["accepted"].lower() == "true" else 0)
-            data_as_of = data_as_of or r.get("data_as_of", "")
-            segs.append([
-                to_int(r["cnn"]), S(r["streetname"]), S(r["f_st"]), S(r["t_st"]),
-                to_int(r["lf_fadd"]), to_int(r["lf_toadd"]), to_int(r["rt_fadd"]), to_int(r["rt_toadd"]),
-                fn, tn, S(r["layer"]), flags,
-                S(r["nhood"]), S(r["analysis_neighborhood"]), to_int(r["supervisor_district"]), S(r["zip_code"]),
-                S(r["oneway"]), to_int(r["classcode"]), S(r["date_dropped"]), delta(pts),
-            ])
+    for r in rows(a.streets):
+        pts = parse_wkt_line(r.get("line"))
+        if not pts:
+            print(f"skipping cnn {r.get('cnn')}: no geometry", file=sys.stderr)
+            continue
+        fn, tn = to_int(r["f_node_cnn"]), to_int(r["t_node_cnn"])
+        node_xy.setdefault(fn, pts[0])
+        node_xy.setdefault(tn, pts[-1])
+        flags = (1 if r["active"].lower() == "true" else 0) | (2 if r["accepted"].lower() == "true" else 0)
+        data_as_of = data_as_of or r.get("data_as_of", "")
+        segs.append([
+            to_int(r["cnn"]), S(r["streetname"]), S(r["f_st"]), S(r["t_st"]),
+            to_int(r["lf_fadd"]), to_int(r["lf_toadd"]), to_int(r["rt_fadd"]), to_int(r["rt_toadd"]),
+            fn, tn, S(r["layer"]), flags,
+            S(r["nhood"]), S(r["analysis_neighborhood"]), to_int(r["supervisor_district"]), S(r["zip_code"]),
+            S(r["oneway"]), to_int(r["classcode"]), S(r["date_dropped"]), delta(pts),
+        ])
 
     # Intersections: which streets meet at each node. Falls back to segment endpoints if the CSV is missing.
     node_streets = {}
     if os.path.exists(a.intersections):
-        with open(a.intersections, newline="", encoding="utf-8-sig") as f:
-            for r in csv.DictReader(f):
-                cnn = to_int(r.get("CNN") or r.get("cnn"))
-                names = node_streets.setdefault(cnn, set())
-                names.add(r["streetname"].strip())
-                for part in (r.get("from_st") or "").split("\\"):
-                    part = part.strip()
-                    if part and not part.upper().startswith("END"):
-                        names.add(part)
+        for r in rows(a.intersections):
+            cnn = to_int(r.get("cnn"))
+            names = node_streets.setdefault(cnn, set())
+            names.add(r["streetname"].strip())
+            for part in (r.get("from_st") or "").split("\\"):
+                part = part.strip()
+                if part and not part.upper().startswith("END"):
+                    names.add(part)
     else:
         print("no intersections CSV found; deriving nodes from segments", file=sys.stderr)
     strings = S.list
