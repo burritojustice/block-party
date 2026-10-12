@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v25 -->
+<!-- build: v27 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -289,6 +289,9 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 .facts { display: grid; grid-template-columns: max-content 1fr; gap: 3px 14px; margin: 12px 0 0; font-size: 15px; }
 .facts dt { color: var(--ink-soft); }
 .facts dd { margin: 0; font-weight: 500; }
+.facts .route { display: inline-block; min-width: 1.8em; margin: 1px 3px 1px 0; padding: 0 5px; border-radius: 5px; background: #D9480F; color: #fff; font-size: 13px; font-weight: 700; text-align: center; }
+.facts .svc { color: var(--ink-soft); font-size: 13px; font-weight: 500; margin-right: 6px; }
+.facts .svc-group { display: inline-block; }
 
 .notice {
   border: 2px dashed var(--line); border-radius: var(--radius-lg);
@@ -515,7 +518,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 <div class="toast" id="toast" role="status"></div>
 
 <script>
-const _BUILD_VERSION = 'v25';
+const _BUILD_VERSION = 'v27';
 
 /* =====================================================================
    CONFIG
@@ -624,7 +627,8 @@ const I18N = {
     lyr_contours: 'Contours', lyr_contoursHint: 'Elevation lines', lyrOff: 'Off', lyrClose: 'Close up', lyrAlways: 'Always', lyrOn: 'On',
     lgMuni: 'Muni routes', lgBike: 'Bike lanes (dashed: shared routes)', lgSchools: 'Schools', lgStations: 'Fire / police stations', lgHealth: 'Hospitals / clinics',
     bike_separated: 'Separated bikeway', bike_lane: 'Bike lane', bike_path: 'Bike path', bike_route: 'Bike route', bike_neighborway: 'Neighborway',
-    muniOn: 'Muni {routes}', fireStation: 'Fire station', policeStation: 'Police station',
+    barrier: 'barrier: {b}', hoverSlope: 'Slope {avg}% average{max} · {grade}', hoverSteepest: ', steepest {pct}%',
+    muniOn: 'Muni {routes}', muniRow: 'Muni', bikeRow: 'Bike', noneHere: 'None', checking: 'Checking…', fireStation: 'Fire station', policeStation: 'Police station',
     length: 'Length', slope: 'Slope',
     slopeAvg: '{pct}% average', steepest: 'steepest part {pct}%',
     uphillTo: 'uphill toward {name}',
@@ -831,6 +835,53 @@ const Logic = (() => {
       const open = n => (segsAtNode.get(n) || []).some(o => o !== s && drivable(o));
       const f = !open(s.fn), tEnd = !open(s.tn);
       s.deadAt = f && tEnd ? 'both' : f ? 'from' : tEnd ? 'to' : '';
+    }
+    // Some blocks touch another street with no intersection between them in the city data, like
+    // Comerford St, which runs from Church to Sanchez but shares no corner with either. An end within
+    // TOUCH_M of another drivable street's line counts as open. Freeways and ramps don't count, since
+    // they pass over or under streets.
+    {
+      const TOUCH_M = 1.5, CELL = 50, KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
+      const grid = new Map(), k = (i, j) => i * 100000 + j;
+      const fwy = s => s.layer === 'FREEWAYS' || s.classcode === 1 || s.classcode === 6;
+      for (const s of segs) {
+        if (!drivable(s) || fwy(s)) continue;
+        for (let n = 1; n < s.coords.length; n++) {
+          const a = s.coords[n - 1], b = s.coords[n];
+          const ax = a[0] * KX, ay = a[1] * KY, bx = b[0] * KX, by = b[1] * KY;
+          for (let i = Math.floor(Math.min(ax, bx) / CELL); i <= Math.floor(Math.max(ax, bx) / CELL); i++)
+            for (let j = Math.floor(Math.min(ay, by) / CELL); j <= Math.floor(Math.max(ay, by) / CELL); j++) {
+              if (!grid.has(k(i, j))) grid.set(k(i, j), []);
+              grid.get(k(i, j)).push([ax, ay, bx, by, s]);
+            }
+        }
+      }
+      const touches = (c, self) => {
+        const x = c[0] * KX, y = c[1] * KY, ci = Math.floor(x / CELL), cj = Math.floor(y / CELL);
+        for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++)
+          for (const [ax, ay, bx, by, o] of grid.get(k(i, j)) || []) {
+            if (o === self) continue;
+            const vx = bx - ax, vy = by - ay, L2 = vx * vx + vy * vy || 1;
+            const u = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / L2));
+            if (Math.hypot(ax + u * vx - x, ay + u * vy - y) <= TOUCH_M) return o;
+          }
+        return null;
+      };
+      // the city names these ends "START: 1-99 BLOCK" / "END: ..."; use the street they touch instead
+      const placeholder = name => /^(START|END)\b/i.test(name);
+      for (const s of segs) {
+        if (!s.deadAt) continue;
+        const a = s.coords[0], b = s.coords[s.coords.length - 1];
+        // which drawn end is the "from" end: the one nearer the from-intersection
+        const fn = nodes.get(s.fn);
+        const fromPt = !fn || Math.hypot(a[0] - fn.x, a[1] - fn.y) <= Math.hypot(b[0] - fn.x, b[1] - fn.y) ? a : b;
+        const toPt = fromPt === a ? b : a;
+        let f = s.deadAt === 'from' || s.deadAt === 'both', tEnd = s.deadAt === 'to' || s.deadAt === 'both';
+        const fo = f && touches(fromPt, s), to = tEnd && touches(toPt, s);
+        if (fo) { f = false; if (placeholder(s.f) && fo.street !== s.street) s.f = fo.street; }
+        if (to) { tEnd = false; if (placeholder(s.t) && to.street !== s.street) s.t = to.street; }
+        s.deadAt = f && tEnd ? 'both' : f ? 'from' : tEnd ? 'to' : '';
+      }
     }
     // One-way: F = traffic runs from the "from" street to the "to" street, T = the reverse.
     // owAlong: 1 if traffic runs the way the line is drawn, -1 if against it.
@@ -1514,6 +1565,8 @@ function render() {
     (legs.length ? `<li class="legs-head"><b>${esc(t('legsTitle'))}</b><span>${esc(t('legsHint'))}</span></li>` + legs.map(s => legHTML(s, ints)).join('') : '');
   $('clear-sel-bottom').hidden = !segs.length;
   hydrateElevation();
+  // Muni and bike rows fill in once those files have loaded (the first time cards appear)
+  if (segs.length && !Transit.ready) Transit.ensure().then(() => { if (Transit.ready) render(); });
   const d = Logic.db && Logic.db.dataAsOf;
   $('foot-note').textContent = d ? t('dataNote', { date: d.slice(0, 10) }) : '';
   drawResults();
@@ -1538,6 +1591,7 @@ function intCardHTML(i) {
       <dt>${esc(t('nhood'))}</dt><dd>${esc(i.nhood)}</dd>
       <dt>${esc(t('anhood'))}</dt><dd>${esc(i.anhood)}</dd>
       <dt>${esc(t('elevation'))}</dt><dd data-elev="${i.cnn}">${esc(elev)}</dd>
+      ${transitFacts(i)}
     </dl>
   </li>`;
 }
@@ -1571,6 +1625,9 @@ function cardText(s) {
   if (tags.length) lines.push(tags.join(', '));
   lines.push(`${t('district')}: ${s.sup}`, `${t('zip')}: ${s.zip}`, `${t('nhood')}: ${s.nhood}`, `${t('length')}: ${t('ft', { n: fmtFt(s.len) })}`);
   if (p) lines.push(`${t('slope')}: ${t('slopeAvg', { pct: Math.abs(p.net).toFixed(1) })}`);
+  const m = Transit.muni(s), b = Transit.bike(s);
+  if (m) lines.push(`${t('muniRow')}: ${m.length ? muniText(m) : t('noneHere')}`);
+  if (b) lines.push(`${t('bikeRow')}: ${b.length ? b.join('; ') : t('noneHere')}`);
   lines.push(linkFor([s]));
   return lines.join('\n');
 }
@@ -1609,6 +1666,7 @@ function cardHTML(s) {
       <dt>${esc(t('anhood'))}</dt><dd>${esc(s.anhood)}</dd>
       <dt>${esc(t('length'))}</dt><dd>${esc(t('ft', { n: fmtFt(s.len) }))}</dd>
       <dt>${esc(t('slope'))}</dt><dd data-slope="${s.cnn}">${slopeHTML(s)}</dd>
+      ${transitFacts(s)}
     </dl>
     <div class="profile" data-profile="${s.cnn}" aria-label="${esc(t('profileTitle'))}">${profileHTML(s)}</div>
   </li>`;
@@ -1629,6 +1687,13 @@ function gradeOf(pct) {
   const a = Math.abs(pct);
   const i = GRADE_STEPS.findIndex(max => a < max);
   return i < 0 ? GRADE_STEPS.length : i;
+}
+// hover popup: from the slopes stored in streets.json (build_data.py --slopes), with the same tiers as cards
+function slopeHover(s) {
+  if (s.slopeAvg == null) return '';
+  const g = gradeOf(Math.max(s.slopeAvg, 0.8 * s.slopeMax));
+  return t('hoverSlope', { avg: s.slopeAvg.toFixed(1), grade: t('grade' + g),
+    max: s.slopeMax - s.slopeAvg >= 1.5 ? t('hoverSteepest', { pct: s.slopeMax.toFixed(1) }) : '' });
 }
 function slopeHTML(s) {
   if (!Elev.has(s.cnn)) return `<span class="wait-inline">${esc(t('measuring'))}</span>`;
@@ -1764,8 +1829,14 @@ function elevFields(s) {
 }
 async function exportSegs() {
   const segs = checkedSegs();
-  await Promise.all(segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)));
+  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure()]);
   return segs;
+}
+// "14 (Frequent Local); 14R (Rapid Bus)" and "Bike lane · posts"
+function transitFields(s) {
+  const m = Transit.muni(s), b = Transit.bike(s);
+  return { muni_routes: m ? m.map(r => r.route + (r.service ? ` (${r.service})` : '')).join('; ') : '',
+    bike_facility: b ? b.join('; ') : '' };
 }
 const wktOf = o => isInt(o) ? `POINT (${o.x.toFixed(5)} ${o.y.toFixed(5)})`
   : `LINESTRING (${o.coords.map(c => `${c[0].toFixed(5)} ${c[1].toFixed(5)}`).join(', ')})`;
@@ -1776,7 +1847,7 @@ function record(s) {
     return { ...blank, type: 'intersection', cnn: s.cnn, streetname: s.streets[0] || '',
       from_street: s.streets.slice(1).join(' & '), to_street: '',
       supervisor_district: s.sup, zip_code: s.zip, nhood: s.nhood, analysis_neighborhood: s.anhood,
-      elev_from_ft: e == null ? '' : Math.round(e * M2FT), wkt: wktOf(s), link: linkFor([s]) };
+      elev_from_ft: e == null ? '' : Math.round(e * M2FT), ...transitFields(s), wkt: wktOf(s), link: linkFor([s]) };
   }
   const sides = Logic.addressSides(s);
   const side = p => { const x = sides.find(y => y.parity === p); return x ? x.side : ''; };
@@ -1793,6 +1864,7 @@ function record(s) {
     dead_end: s.deadAt ? (s.deadAt === 'both' ? 'both ends' : s.deadAt === 'from' ? s.f : s.t) : '',
     length_ft: fmtFt(s.len),
     ...elevFields(s),
+    ...transitFields(s),
     wkt: wktOf(s),
     link: linkFor([s]),
   };
@@ -2102,7 +2174,7 @@ function addMapLayers() {
     map.getCanvas().style.cursor = 'pointer';
     map.getSource('hover').setData(fc([segFeature(s)]));
     const ranges = addrRanges(s);
-    const extra = overlayInfo(e, s).map(x => `<br><span class="pop-lyr">${esc(x)}</span>`).join('');
+    const extra = [slopeHover(s), ...overlayInfo(e, s)].filter(Boolean).map(x => `<br><span class="pop-lyr">${esc(x)}</span>`).join('');
     popup.setLngLat(e.lngLat).setHTML(`<b>${esc(P(s.street))}</b><br>${esc(betweenText(s))}<br>CNN ${s.cnn}${ranges ? `<br>${esc(ranges)}` : ''}${extra}`).addTo(map);
     hoverCardFromMap(s.cnn);
   });
@@ -2319,13 +2391,13 @@ const OVERLAYS = {
 const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', schools: 'close', stations: 'close', health: 'close', contours: 'off' };
 const overlayMode = { ...OVERLAY_DEFAULT };
 const overlayLoaded = new Set();
-let bikeByCnn = null;                 // cnn -> [bike features], for the street hover popup
 const POI_LAYERS = ['bp-lyr-schools', 'bp-lyr-stations', 'bp-lyr-health'];
 const BIKE_SOLID = ['separated', 'lane', 'path'];
 const onPoi = e => map.queryRenderedFeatures(e.point, { layers: POI_LAYERS.filter(id => map.getLayer(id)) }).length > 0;
 
 function addOverlayLayers(popup) {
   addOverlayIcons();
+  map.addSource('lyr-muni-lbl', { type: 'geojson', data: EMPTY });
   for (const k of Object.keys(OVERLAYS)) map.addSource('lyr-' + k, { type: 'geojson', data: EMPTY, attribution: 'Layers: <a href="https://data.sf.gov">DataSF</a>' });
   const zw = (a, b, c) => ['interpolate', ['linear'], ['zoom'], 12, a, 16, b, 18, c];
   const halo = { 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.5 };
@@ -2344,9 +2416,11 @@ function addOverlayLayers(popup) {
     paint: { 'line-color': '#1A7F37', 'line-width': zw(0.8, 1.6, 2.2), 'line-dasharray': [2.5, 2] } }, 'bp-quiet');
   // labels and points sit under Block Party's own labels, so ours win where they collide
   const below = 'bp-context-label';
-  map.addLayer({ id: 'bp-lyr-muni-label', type: 'symbol', source: 'lyr-muni',
-    layout: { 'symbol-placement': 'line', 'symbol-spacing': 280, 'text-field': ['get', 'route'], 'text-font': LABEL_FONT, 'text-size': 11,
-      'text-rotation-alignment': 'viewport', 'icon-rotation-alignment': 'viewport', 'text-padding': 6,
+  // route numbers come from the block matching (Transit), one shield per block with every route on it,
+  // so streets with several routes show them all instead of one shield hiding the others
+  map.addLayer({ id: 'bp-lyr-muni-label', type: 'symbol', source: 'lyr-muni-lbl',
+    layout: { 'symbol-sort-key': ['-', ['get', 'n']], 'text-field': ['get', 'label'], 'text-font': LABEL_FONT, 'text-size': 12,
+      'text-padding': 24, 'text-max-width': 30,
       'icon-image': 'muni-shield', 'icon-text-fit': 'both', 'icon-text-fit-padding': [1, 4, 1, 4] },
     paint: { 'text-color': '#FFFFFF' } }, below);
   map.addLayer({ id: 'bp-lyr-bike-label', type: 'symbol', source: 'lyr-bike', filter: ['!=', ['get', 'kind'], 'route'],
@@ -2356,8 +2430,8 @@ function addOverlayLayers(popup) {
       'text-offset': [0, 0.9] },
     paint: { 'text-color': '#1A7F37', ...halo } }, below);
   const point = (id, icon) => map.addLayer({ id, type: 'symbol', source: id.replace('bp-lyr-', 'lyr-'),
-    layout: { 'icon-image': icon, 'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.6, 16, 1], 'icon-allow-overlap': true,
-      'text-field': ['get', 'name'], 'text-font': LABEL_FONT, 'text-size': 11, 'text-offset': [0, 1.2], 'text-anchor': 'top',
+    layout: { 'icon-image': icon, 'icon-size': ['interpolate', ['linear'], ['zoom'], 12, 0.75, 16, 1.25, 18, 1.4], 'icon-allow-overlap': true,
+      'text-field': ['get', 'name'], 'text-font': LABEL_FONT, 'text-size': 11, 'text-offset': [0, 1.4], 'text-anchor': 'top',
       'text-optional': true, 'text-max-width': 9 },
     paint: { 'text-color': '#3B4070', ...halo } }, below);
   point('bp-lyr-schools', 'poi-school');
@@ -2432,42 +2506,155 @@ function updateOverlays() {
     const li = $('lg-lyr-' + k); if (li) li.hidden = !showing;
   }
 }
+// one fetch per layer file, shared by the map and the cards
+const layerFetches = {};
+function fetchLayer(k) {
+  return layerFetches[k] ||= fetch(OVERLAYS[k].url).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .catch(err => { delete layerFetches[k]; throw err; });
+}
 async function loadOverlay(k) {
   if (overlayLoaded.has(k)) return;
   overlayLoaded.add(k);
   try {
-    const r = await fetch(OVERLAYS[k].url);
-    if (!r.ok) throw new Error(r.status);
-    const data = await r.json();
+    const data = await fetchLayer(k);
     map.getSource('lyr-' + k).setData(data);
-    if (k === 'bike') {
-      bikeByCnn = new Map();
-      for (const f of data.features) if (f.properties.cnn) {
-        if (!bikeByCnn.has(f.properties.cnn)) bikeByCnn.set(f.properties.cnn, []);
-        bikeByCnn.get(f.properties.cnn).push(f.properties);
-      }
-    }
+    if (k === 'muni') { await Transit.ensure(); map.getSource('lyr-muni-lbl').setData(Transit.labelData()); }
   } catch (err) {
     console.warn(`[block-party] layer ${k} failed to load`, err);
     overlayLoaded.delete(k);
   }
 }
-// extra lines for the street hover popup: Muni routes under the cursor, the block's bike facility
-function overlayInfo(e, s) {
-  const out = [];
-  if (overlayMode.muni !== 'off' && map.getLayer('bp-lyr-muni')) {
-    const box = [[e.point.x - 4, e.point.y - 4], [e.point.x + 4, e.point.y + 4]];
-    const routes = [...new Set(map.queryRenderedFeatures(box, { layers: ['bp-lyr-muni'] }).map(f => f.properties.route))]
-      .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
-    if (routes.length) out.push(t('muniOn', { routes: routes.join(', ') }));
-  }
-  if (overlayMode.bike !== 'off' && bikeByCnn && bikeByCnn.has(s.cnn)) {
-    const seen = new Set();
-    for (const p of bikeByCnn.get(s.cnn)) {
-      const txt = t('bike_' + p.kind) + (p.barrier ? ' · ' + p.barrier : '');
-      if (!seen.has(txt)) { seen.add(txt); out.push(txt); }
+
+/* ---------- Muni routes and bike facilities by block ----------
+   Bike lanes carry the block's CNN. Muni lines don't, so each block is matched here: a route runs
+   along a block when it's within MATCH_M of the block at 25%, 50%, and 75% of the way along, heading
+   the same way (within 30°). That leaves out routes that only cross at a corner. Intersections list
+   the routes passing within MATCH_M of the corner. Runs in the browser once both files are loaded. */
+const Transit = (() => {
+  const MATCH_M = 15, CELL = 50, COS_MAX = Math.cos(30 * Math.PI / 180);
+  const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
+  let promise = null, ready = false;
+  const byCnn = new Map(), bikeBy = new Map(), grid = new Map();
+  const key = (i, j) => i * 100000 + j;
+  const routeSort = (a, b) => a.route.localeCompare(b.route, 'en', { numeric: true });
+  function index(muni) {
+    for (const f of muni.features) {
+      const p = f.properties, g = f.geometry;
+      const lines = g.type === 'LineString' ? [g.coordinates] : g.coordinates;
+      for (const line of lines) for (let k = 1; k < line.length; k++) {
+        const ax = line[k - 1][0] * KX, ay = line[k - 1][1] * KY, bx = line[k][0] * KX, by = line[k][1] * KY;
+        const seg = { ax, ay, bx, by, p };
+        const i0 = Math.floor((Math.min(ax, bx) - MATCH_M) / CELL), i1 = Math.floor((Math.max(ax, bx) + MATCH_M) / CELL);
+        const j0 = Math.floor((Math.min(ay, by) - MATCH_M) / CELL), j1 = Math.floor((Math.max(ay, by) + MATCH_M) / CELL);
+        for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+          const kk = key(i, j); if (!grid.has(kk)) grid.set(kk, []); grid.get(kk).push(seg);
+        }
+      }
     }
   }
+  // route segments within MATCH_M of (x, y) meters; with a direction, only ones running the same way
+  function near(x, y, dx, dy) {
+    const hits = new Map();
+    for (const sg of grid.get(key(Math.floor(x / CELL), Math.floor(y / CELL))) || []) {
+      const vx = sg.bx - sg.ax, vy = sg.by - sg.ay, L2 = vx * vx + vy * vy || 1;
+      const u = Math.max(0, Math.min(1, ((x - sg.ax) * vx + (y - sg.ay) * vy) / L2));
+      if (Math.hypot(sg.ax + u * vx - x, sg.ay + u * vy - y) > MATCH_M) continue;
+      if (dx != null && Math.abs((vx * dx + vy * dy) / Math.sqrt(L2)) < COS_MAX) continue;
+      const r = hits.get(sg.p.route) || { route: sg.p.route, service: sg.p.service, dirs: new Set() };
+      if (sg.p.dir) r.dirs.add(sg.p.dir);
+      hits.set(sg.p.route, r);
+    }
+    return hits;
+  }
+  function matchBlock(s) {
+    const pts = s.coords.map(c => [c[0] * KX, c[1] * KY]);
+    const cum = [0];
+    for (let k = 1; k < pts.length; k++) cum.push(cum[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]));
+    const total = cum[cum.length - 1];
+    if (!total) return [];
+    let found = null;
+    for (const f of total < 30 ? [0.5] : [0.25, 0.5, 0.75]) {
+      const d = f * total; let k = 1;
+      while (k < pts.length - 1 && cum[k] < d) k++;
+      const segLen = (cum[k] - cum[k - 1]) || 1, u = (d - cum[k - 1]) / segLen;
+      const dx = (pts[k][0] - pts[k - 1][0]) / segLen, dy = (pts[k][1] - pts[k - 1][1]) / segLen;
+      const hits = near(pts[k - 1][0] + u * dx * segLen, pts[k - 1][1] + u * dy * segLen, dx, dy);
+      if (!found) found = hits;
+      else for (const [r, v] of found) { if (!hits.has(r)) found.delete(r); else hits.get(r).dirs.forEach(x => v.dirs.add(x)); }
+      if (!found.size) return [];
+    }
+    return [...found.values()].sort(routeSort);
+  }
+  function build(muni, bike) {
+    index(muni);
+    for (const s of Logic.db.segs) { const m = matchBlock(s); if (m.length) byCnn.set(s.cnn, m); }
+    for (const f of bike.features) {
+      const c = f.properties.cnn; if (!c) continue;
+      if (!bikeBy.has(c)) bikeBy.set(c, []);
+      bikeBy.get(c).push(f.properties);
+    }
+    ready = true;
+  }
+  return {
+    get ready() { return ready; },
+    ensure() {
+      return promise ||= Promise.all([fetchLayer('muni'), fetchLayer('bike')]).then(([m, b]) => build(m, b))
+        .catch(err => { promise = null; console.warn('[block-party] transit data failed to load', err); });
+    },
+    // routes along a block, or through an intersection
+    muni(item) {
+      if (!ready) return null;
+      if (!isInt(item)) return byCnn.get(item.cnn) || [];
+      return [...near(item.x * KX, item.y * KY).values()].sort(routeSort);
+    },
+    // bike facilities on a block, or on the blocks meeting at an intersection ("Valencia St: Bike lane")
+    bike(item) {
+      if (!ready) return null;
+      const one = c => [...new Set((bikeBy.get(c) || []).map(p => t('bike_' + p.kind) + (p.barrier ? ' · ' + t('barrier', { b: p.barrier }) : '')))];
+      if (!isInt(item)) return one(item.cnn);
+      const out = new Set();
+      for (const s of Logic.db.segsAtNode.get(item.cnn) || []) for (const x of one(s.cnn)) out.add(`${P(s.street)}: ${x}`);
+      return [...out];
+    },
+    // one label per block, listing every route on it: "14 · 14R · 49 · 714"
+    labelData() {
+      const feats = [];
+      for (const s of Logic.db.segs) {
+        const m = s.active && byCnn.get(s.cnn); if (!m) continue;     // retired blocks would double up
+        // at the block's middle: a point label doesn't need the block to be longer than the label
+        feats.push({ type: 'Feature', geometry: { type: 'Point', coordinates: s.coords[Math.floor((s.coords.length - 1) / 2)].map((v, i) =>
+          s.coords.length % 2 ? v : (v + s.coords[s.coords.length / 2][i]) / 2) },
+          properties: { label: m.map(r => r.route).join(' · '), n: m.length } });
+      }
+      return fc(feats);
+    },
+  };
+})();
+// "14, 49 (Frequent Local) · 14R (Rapid Bus)": routes grouped by service type
+function muniText(routes) {
+  const groups = new Map();
+  for (const r of routes) { const k = r.service || ''; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r.route); }
+  return [...groups].map(([svc, rs]) => rs.join(', ') + (svc ? ` (${svc})` : '')).join(' · ');
+}
+function muniHTML(routes) {
+  const groups = new Map();
+  for (const r of routes) { const k = r.service || ''; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(r.route); }
+  return [...groups].map(([svc, rs]) => `<span class="svc-group">${rs.map(x => `<span class="route">${esc(x)}</span>`).join('')}${svc ? ` <span class="svc">${esc(svc)}</span>` : ''}</span>`).join(' ');
+}
+// card rows for Muni and bike; "Checking…" until the files are in
+function transitFacts(item) {
+  const m = Transit.muni(item), b = Transit.bike(item);
+  const wait = `<span class="wait-inline">${esc(t('checking'))}</span>`;
+  return `<dt>${esc(t('muniRow'))}</dt><dd>${m == null ? wait : m.length ? muniHTML(m) : esc(t('noneHere'))}</dd>
+      <dt>${esc(t('bikeRow'))}</dt><dd>${b == null ? wait : b.length ? b.map(esc).join('<br>') : esc(t('noneHere'))}</dd>`;
+}
+// extra lines for the street hover popup: Muni routes on the block (with service type), its bike facility
+function overlayInfo(e, s) {
+  const out = [];
+  const m = overlayMode.muni !== 'off' && Transit.muni(s);
+  if (m && m.length) out.push(t('muniOn', { routes: muniText(m) }));
+  const b = overlayMode.bike !== 'off' && Transit.bike(s);
+  if (b && b.length) out.push(...b);
   return out;
 }
 function setOverlay(k, v, write = true) {

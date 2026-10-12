@@ -110,7 +110,7 @@ Street names in the hash are matched the same way as the search box (case-insens
 
 ## Quiet streets, dead ends, one-way
 
-- **Dead end:** a block end where no other drivable street meets it; paper streets (often stairs or unbuilt sections) and pedestrian paths don't count as a way through. About 1,040 blocks.
+- **Dead end:** a block end where no other drivable street meets it; paper streets (often stairs or unbuilt sections) and pedestrian paths don't count as a way through. An end that touches another drivable street's line within 1.5 m counts as open even without an intersection in the data (Comerford St between Church and Sanchez); freeways and ramps don't count. About 1,020 blocks.
 - **One-way:** `oneway` F = traffic from the `from` street to the `to` street, T = the reverse, B = both ways. The compass direction comes from the line's geometry.
 - **Find quiet streets:** the first group adds (any of dead ends, pedestrian streets, not city-maintained); the second group narrows (residential only = road class 5 or 0; flat to moderate = larger of average grade and 80% of the steepest quarter under 10%, needs `--slopes`). Rules live in `QUIET_SHOW` and `QUIET_NARROW` in `index.html`; future conditions (meets a busy street, bus route, protected bike lane) go in `QUIET_NARROW`.
 
@@ -126,13 +126,15 @@ The **Layers** menu on the map has Off / Close up / Always for each layer, plus 
 | Fire and police | [City-owned Facilities: Fire and Police](https://data.sf.gov/City-Infrastructure/City-owned-Facilities-Fire-and-Police/wt27-4jim/about_data) (`wt27-4jim`), CSV | Red #C92A2A "F" / navy #1E3A8A "P", `common_name` |
 | Hospitals and clinics | [Health Care Facilities](https://data.sf.gov/Health-and-Social-Services/Health-Care-Facilities/jhsu-2pka/about_data) (`jhsu-2pka`), CSV | Dark teal #0B7285: "H" square for hospitals, "+" circle for clinics, facility name |
 
-Hovering a street adds the Muni routes under the cursor and the block's bike facility (joined by `cnn`) to the popup. Hovering a point shows its name and type.
+Hovering a street adds the block's Muni routes (with service type) and bike facility to the popup, and block and intersection cards list them too (also in exports as `muni_routes` and `bike_facility`). Hovering a point shows its name and type.
+
+Bike facilities join to blocks by the `cnn` in the bike data. Muni lines have no CNN, so `Transit` in `index.html` matches them when the files load: a route runs along a block when it's within 15 m (`MATCH_M`) at 25%, 50%, and 75% of the way along and heading the same way within 30°, which keeps out routes that only cross at a corner. An intersection lists routes within 15 m of the corner. Route shields come from the same matching, one per block listing every route on it. Later, GTFS can replace the route lines as the input; the block matching stays the same.
 
 To update: on each dataset's page, Export in the format listed, save the download into `layers/` without renaming it, and run `python3 scripts/build_layers.py`. DataSF names downloads after the dataset title plus a date stamp (`Muni_Simple_Routes_20261011.geojson`); the script finds each by its title and uses the newest stamp, so old downloads can stay or go. The dataset list (title, id, URL) is `SOURCES` at the top of the script, and each built file in `data/layers/` records which dataset and download it came from, plus the data's "as of" date where the download has one. The script keeps only the fields the map uses and rounds coordinates to about 1 m. Muni lines are passed through as published, one line per route and direction, except the rail-replacement bus patterns (FBUS, KBUS, NBUS, TBUS), which are dropped.
 
 Later, the script can pull these straight from the Socrata API using the same ids (`https://data.sf.gov/resource/<id>.geojson`), so Muni and bike routes stay current without hand downloads.
 
-Known limits: Muni Metro lines include their subway and tunnel sections (Market St subway, Twin Peaks and Sunset tunnels, Central Subway), so those show on the streets above. Route numbers repeat along a street where two routes or both directions run side by side; MapLibre drops identical labels that land close together, but not all of them.
+Known limits: Muni Metro lines include their subway and tunnel sections (Market St subway, Twin Peaks and Sunset tunnels, Central Subway), so those show on the streets above. The Central Subway also puts the T on Stockton St blocks, and the Market St subway puts J, K, L, M, N on Market's blocks.
 
 The layers are small enough to load as GeoJSON. For offline use or bigger layers, the same files can go into one PMTiles file instead (needs a server with HTTP range requests, which `python3 -m http.server` doesn't do):
 
