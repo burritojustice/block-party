@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v27 -->
+<!-- build: v30 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -101,6 +101,11 @@ button, input { font: inherit; color: inherit; }
 .lseg button + button { border-left: 1.5px solid var(--ink); }
 .lseg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
 .pop-hint { margin: 0; font-size: 12.5px; color: var(--ink-soft); }
+.land-chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 0 8px 34px; }
+.land-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 2px 8px 2px 4px; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; color: var(--ink-soft); }
+.land-chip:has(input:checked) { border-color: var(--ink); color: var(--ink); }
+.land-chip input { width: 13px; height: 13px; margin: 0; accent-color: var(--ink); }
+.land-chip i { width: 8px; height: 8px; border-radius: 2px; }
 .lyr-sep { margin: 6px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
 .quiet-group { margin: 4px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
 .qchip { display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--line); border-radius: 12px; padding: 7px 10px; font-size: 15px; cursor: pointer; }
@@ -487,6 +492,8 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
         <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/><path d="M15 6 l-6 -4 v8z" fill="#545B7F"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOneway">One-way</span></li>
         <li id="lg-lyr-muni" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="2" y1="6" x2="22" y2="6" stroke="#D9480F" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/><line x1="2" y1="6" x2="22" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1" y="3" width="14" height="10" rx="3" fill="#D9480F"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg></span><span data-i18n="lgMuni">Muni routes</span></li>
         <li id="lg-lyr-bike" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3" x2="23" y2="3" stroke="#1A7F37" stroke-width="3"/><line x1="1" y1="9.5" x2="23" y2="9.5" stroke="#1A7F37" stroke-width="1.6" stroke-dasharray="3 2.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBike">Bike lanes (dashed: shared routes)</span></li>
+        <li id="lg-lyr-lands" hidden><span class="sw"><svg viewBox="0 0 24 12" id="lg-lands-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLands">City-owned land</span></li>
+        <li id="lg-lyr-slow" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#2457D6" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0.1 7"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlow">Slow Streets</span></li>
         <li id="lg-lyr-schools" hidden><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1.5" y="1.5" width="13" height="13" rx="3.5" fill="#8A5A00" stroke="#fff"/><path d="M4.5 8 L8 5 L11.5 8 V11.5 H4.5Z" fill="#fff"/></svg></span><span data-i18n="lgSchools">Schools</span></li>
         <li id="lg-lyr-stations" hidden><span class="sw"><svg viewBox="0 0 24 12"><circle cx="18" cy="6" r="6" fill="#C92A2A" stroke="#fff"/><text x="18" y="9" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">F</text></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="7" fill="#1E3A8A" stroke="#fff"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">P</text></svg></span><span data-i18n="lgStations">Fire / police stations</span></li>
         <li id="lg-lyr-health" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect x="12" y="0" width="12" height="12" rx="3" fill="#0B7285" stroke="#fff"/><text x="18" y="9.5" font-size="8.5" font-weight="700" text-anchor="middle" fill="#fff">H</text></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="6" fill="#0B7285" stroke="#fff"/><path d="M8 5v6M5 8h6" stroke="#fff" stroke-width="2"/></svg></span><span data-i18n="lgHealth">Hospitals / clinics</span></li>
@@ -518,7 +525,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 <div class="toast" id="toast" role="status"></div>
 
 <script>
-const _BUILD_VERSION = 'v27';
+const _BUILD_VERSION = 'v30';
 
 /* =====================================================================
    CONFIG
@@ -623,11 +630,18 @@ const I18N = {
     furtherAlong: 'Further along',
     btn3d: '3D', btnContours: 'Contours', btnLayers: 'Layers',
     layersHint: '“Close up” shows a layer once you zoom in to a few blocks.',
-    lyr_muni: 'Muni routes', lyr_bike: 'Bike network', lyr_schools: 'Schools', lyr_stations: 'Fire and police', lyr_health: 'Hospitals and clinics',
+    lyr_lands: 'City-owned land', lgLands: 'City-owned land',
+    land_school: 'Schools', land_park: 'Parks', land_fire: 'Fire', land_police: 'Police', land_health: 'Health',
+    land_openspace: 'Open space', land_port: 'Port', land_library: 'Library', land_mta: 'MTA', land_works: 'Public Works',
+    land_puc: 'Water and sewer', land_housing: 'Housing Authority', land_realestate: 'Real Estate',
+    land_ocii: 'Former Redevelopment', land_other: 'Other',
+    lyr_muni: 'Muni routes', lyr_bike: 'Bike network', lyr_slow: 'Slow Streets', lgSlow: 'Slow Streets',
+    slowStreet: 'Slow Street', slowPlanned: 'Slow Street (planned)', slowRow: 'Slow Street', yesHere: 'Yes', slowOn: 'Slow Street{corridor}{status}', lyr_schools: 'Schools', lyr_stations: 'Fire and police', lyr_health: 'Hospitals and clinics',
     lyr_contours: 'Contours', lyr_contoursHint: 'Elevation lines', lyrOff: 'Off', lyrClose: 'Close up', lyrAlways: 'Always', lyrOn: 'On',
     lgMuni: 'Muni routes', lgBike: 'Bike lanes (dashed: shared routes)', lgSchools: 'Schools', lgStations: 'Fire / police stations', lgHealth: 'Hospitals / clinics',
     bike_separated: 'Separated bikeway', bike_lane: 'Bike lane', bike_path: 'Bike path', bike_route: 'Bike route', bike_neighborway: 'Neighborway',
     barrier: 'barrier: {b}', hoverSlope: 'Slope {avg}% average{max} · {grade}', hoverSteepest: ', steepest {pct}%',
+    nextTo: 'Next to',
     muniOn: 'Muni {routes}', muniRow: 'Muni', bikeRow: 'Bike', noneHere: 'None', checking: 'Checking…', fireStation: 'Fire station', policeStation: 'Police station',
     length: 'Length', slope: 'Slope',
     slopeAvg: '{pct}% average', steepest: 'steepest part {pct}%',
@@ -1567,6 +1581,7 @@ function render() {
   hydrateElevation();
   // Muni and bike rows fill in once those files have loaded (the first time cards appear)
   if (segs.length && !Transit.ready) Transit.ensure().then(() => { if (Transit.ready) render(); });
+  if (segs.length && !Nearby.ready) Nearby.ensure().then(() => { if (Nearby.ready) render(); });
   const d = Logic.db && Logic.db.dataAsOf;
   $('foot-note').textContent = d ? t('dataNote', { date: d.slice(0, 10) }) : '';
   drawResults();
@@ -1628,6 +1643,9 @@ function cardText(s) {
   const m = Transit.muni(s), b = Transit.bike(s);
   if (m) lines.push(`${t('muniRow')}: ${m.length ? muniText(m) : t('noneHere')}`);
   if (b) lines.push(`${t('bikeRow')}: ${b.length ? b.join('; ') : t('noneHere')}`);
+  if (Transit.slow(s)) lines.push(Transit.slow(s));
+  const nx = Nearby.of(s);
+  if (nx && nx.length) lines.push(`${t('nextTo')}: ${nextToText(nx)}`);
   lines.push(linkFor([s]));
   return lines.join('\n');
 }
@@ -1829,14 +1847,14 @@ function elevFields(s) {
 }
 async function exportSegs() {
   const segs = checkedSegs();
-  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure()]);
+  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure(), Nearby.ensure()]);
   return segs;
 }
 // "14 (Frequent Local); 14R (Rapid Bus)" and "Bike lane · posts"
 function transitFields(s) {
   const m = Transit.muni(s), b = Transit.bike(s);
   return { muni_routes: m ? m.map(r => r.route + (r.service ? ` (${r.service})` : '')).join('; ') : '',
-    bike_facility: b ? b.join('; ') : '' };
+    bike_facility: b ? b.join('; ') : '', slow_street: Transit.slow(s) || '', next_to: nextToText(Nearby.of(s) || []) };
 }
 const wktOf = o => isInt(o) ? `POINT (${o.x.toFixed(5)} ${o.y.toFixed(5)})`
   : `LINESTRING (${o.coords.map(c => `${c[0].toFixed(5)} ${c[1].toFixed(5)}`).join(', ')})`;
@@ -1898,6 +1916,8 @@ function writeHash() {
   if (q.length) parts.push('quiet=' + q.join(','));
   const lyr = typeof layerHash === 'function' ? layerHash() : '';
   if (lyr) parts.push('layers=' + lyr);
+  if (typeof landCats !== 'undefined' && [...landCats].sort().join() !== [...LAND_DEFAULT].sort().join())
+    parts.push('lands=' + ([...landCats].join(',') || 'none'));
   if (LANG !== 'en') parts.push('lang=' + LANG);
   const h = parts.length ? '#' + parts.join('&') : '';
   if (h !== location.hash) { writingHash = true; history.replaceState(null, '', baseUrl() + location.search + h); writingHash = false; }
@@ -1906,7 +1926,7 @@ function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   const list = k => (p.get(k) || '').split(',').map(s => s.trim()).filter(Boolean);
   return { cnn: list('cnn').map(Number).filter(Boolean), street: list('street'), all: p.get('all') === '1', minor: p.get('minor') !== '0', lang: p.get('lang'), quiet: list('quiet'),
-    layers: Object.fromEntries(list('layers').map(x => x.split(':')).filter(x => x.length === 2)) };
+    layers: Object.fromEntries(list('layers').map(x => x.split(':')).filter(x => x.length === 2)), lands: p.get('lands') };
 }
 function applyHash() {
   const h = readHash();
@@ -1915,6 +1935,7 @@ function applyHash() {
     document.querySelectorAll('[data-quiet]').forEach(i => i.checked = h.quiet.includes(i.dataset.quiet));
   }
   for (const [k, v] of Object.entries(h.layers)) setOverlay(k, v, false);
+  if (h.lands) setLandCats(h.lands.split(','), false);
   if (h.minor !== Logic.db.includeMinor) { $('include-minor').checked = h.minor; Logic.setIncludeMinor(h.minor); refreshMapFilter(); }
   if (h.all !== Logic.db.searchAll) { $('search-all').checked = h.all; Logic.setSearchAll(h.all); refreshMapFilter(); }
   if (h.cnn.length) {
@@ -2297,7 +2318,8 @@ function arrangeLayers() {
   const target = satOn ? 'bp-all' : 'bp-sat';      // bp-all is the first Block Party layer above the satellite
   for (const id of basemapLabelIds) map.moveLayer(id, target);
   const firstLabel = basemapLabelIds[0] || target;
-  for (const id of ['bp-lyr-muni', CONTOUR_LINE, CONTOUR_LABEL]) if (map.getLayer(id)) map.moveLayer(id, firstLabel);
+  for (const id of ['bp-lyr-lands-fill', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-muni', CONTOUR_LINE, CONTOUR_LABEL])
+    if (map.getLayer(id)) map.moveLayer(id, firstLabel);
   // on satellite the clickable streets turn white, so contours go pale yellow to stay distinct
   if (map.getLayer(CONTOUR_LINE)) map.setPaintProperty(CONTOUR_LINE, 'line-color', satOn ? '#FFE7A3' : '#FFFFFF');
 }
@@ -2357,6 +2379,7 @@ function setBasemap(sat) {
     map.setPaintProperty('bp-lyr-muni', 'line-color', sat ? MUNI_BAND.sat : MUNI_BAND.map);
     map.setPaintProperty('bp-lyr-muni', 'line-opacity', sat ? MUNI_BAND.satOpacity : 1);
     for (const id of ['bp-lyr-bike', 'bp-lyr-bike-dash']) map.setPaintProperty(id, 'line-color', sat ? BIKE_COLOR.sat : BIKE_COLOR.map);
+    map.setPaintProperty('bp-lyr-slow', 'line-color', sat ? SLOW_COLOR.sat : SLOW_COLOR.map);
   }
   map.setPaintProperty('bp-all', 'line-color', sat ? '#FFFFFF' : '#7D86B5');
   map.setPaintProperty('bp-all', 'line-opacity', sat ? 0.5 : 0.45);
@@ -2381,14 +2404,28 @@ function refreshMapFilter() {
 const CLOSE_ZOOM = 16;
 const MUNI_BAND = { map: '#F4C8B7', sat: '#FF8A50', satOpacity: 0.3 };
 const BIKE_COLOR = { map: '#1A7F37', sat: '#6EE7A0' };   // lighter green over satellite
+const SLOW_COLOR = { map: '#2457D6', sat: '#8FB4FF' };
+// City-owned land categories (build_layers.py LAND_CATS): [key, color, on by default]
+const LAND_CATS = [
+  ['school', '#8A5A00', true], ['park', '#2F7D32', true], ['fire', '#C92A2A', true], ['police', '#1E3A8A', true],
+  ['health', '#0B7285', true], ['openspace', '#4D7C0F', true],
+  ['port', '#0E7490', false], ['library', '#6B4E9E', false], ['mta', '#D9480F', false], ['works', '#5F5E5A', false],
+  ['puc', '#5F5E5A', false], ['housing', '#5F5E5A', false], ['realestate', '#5F5E5A', false], ['ocii', '#5F5E5A', false],
+  ['other', '#5F5E5A', false],
+];
+const LAND_DEFAULT = LAND_CATS.filter(c => c[2]).map(c => c[0]);
+let landCats = new Set(LAND_DEFAULT);
+const landColor = ['match', ['get', 'cat'], ...LAND_CATS.flatMap(([k, c]) => [k, c]), '#5F5E5A'];
 const OVERLAYS = {
   muni:     { url: 'data/layers/muni.geojson',     layers: ['bp-lyr-muni', 'bp-lyr-muni-label'] },
   bike:     { url: 'data/layers/bike.geojson',     layers: ['bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-bike-label'] },
+  slow:     { url: 'data/layers/slow.geojson',     layers: ['bp-lyr-slow', 'bp-lyr-slow-label'] },
+  lands:    { url: 'data/layers/lands.geojson',    layers: ['bp-lyr-lands-fill', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-lands-label'] },
   schools:  { url: 'data/layers/schools.geojson',  layers: ['bp-lyr-schools'] },
   stations: { url: 'data/layers/stations.geojson', layers: ['bp-lyr-stations'] },
   health:   { url: 'data/layers/health.geojson',   layers: ['bp-lyr-health'] },
 };
-const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', schools: 'close', stations: 'close', health: 'close', contours: 'off' };
+const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', slow: 'close', lands: 'close', schools: 'close', stations: 'close', health: 'close', contours: 'off' };
 const overlayMode = { ...OVERLAY_DEFAULT };
 const overlayLoaded = new Set();
 const POI_LAYERS = ['bp-lyr-schools', 'bp-lyr-stations', 'bp-lyr-health'];
@@ -2405,6 +2442,15 @@ function addOverlayLayers(popup) {
   // orange (what #D9480F at 30% looks like), so both directions and several routes on one street don't
   // stack up darker. Over satellite it's see-through instead (see setBasemap).
   const firstBasemapLabel = map.getStyle().layers.find(l => l.type === 'symbol' && !l.id.startsWith('bp-'));
+  // City-owned land: a faint tint and thin outline, under the basemap labels and the Muni band. Parks get
+  // a dashed outline and no tint, since the basemap already shades them green.
+  const landBelow = firstBasemapLabel ? firstBasemapLabel.id : 'bp-sat';
+  map.addLayer({ id: 'bp-lyr-lands-fill', type: 'fill', source: 'lyr-lands', filter: landFilter(),
+    paint: { 'fill-color': landColor, 'fill-opacity': ['case', ['==', ['get', 'cat'], 'park'], 0, 0.09] } }, landBelow);
+  map.addLayer({ id: 'bp-lyr-lands-line', type: 'line', source: 'lyr-lands', filter: landFilter(['!=', ['get', 'cat'], 'park']),
+    paint: { 'line-color': landColor, 'line-width': zw(0.6, 1.2, 1.6), 'line-opacity': 0.75 } }, landBelow);
+  map.addLayer({ id: 'bp-lyr-lands-park', type: 'line', source: 'lyr-lands', filter: landFilter(['==', ['get', 'cat'], 'park']),
+    paint: { 'line-color': landColor, 'line-width': zw(0.7, 1.4, 1.8), 'line-opacity': 0.8, 'line-dasharray': [3, 2] } }, landBelow);
   map.addLayer({ id: 'bp-lyr-muni', type: 'line', source: 'lyr-muni', layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': MUNI_BAND.map, 'line-opacity': 1, 'line-width': zw(3, 11, 16) } }, firstBasemapLabel ? firstBasemapLabel.id : 'bp-sat');
   // bike network: on top of the gray street lines, under quiet matches and selections
@@ -2414,6 +2460,10 @@ function addOverlayLayers(popup) {
       12, ['match', ['get', 'kind'], 'separated', 1.5, 1], 16, ['match', ['get', 'kind'], 'separated', 3, 2], 18, ['match', ['get', 'kind'], 'separated', 4.5, 3]] } }, 'bp-quiet');
   map.addLayer({ id: 'bp-lyr-bike-dash', type: 'line', source: 'lyr-bike', filter: ['!', ['in', ['get', 'kind'], ['literal', BIKE_SOLID]]],
     paint: { 'line-color': '#1A7F37', 'line-width': zw(0.8, 1.6, 2.2), 'line-dasharray': [2.5, 2] } }, 'bp-quiet');
+  // Slow Streets: a dotted blue line along the block (planned ones fainter), over the bike lanes
+  map.addLayer({ id: 'bp-lyr-slow', type: 'line', source: 'lyr-slow', layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': SLOW_COLOR.map, 'line-width': zw(2, 4.5, 6.5), 'line-dasharray': [0.1, 1.8],
+      'line-opacity': ['case', ['==', ['get', 'status'], 'Planned'], 0.45, 0.95] } }, 'bp-quiet');
   // labels and points sit under Block Party's own labels, so ours win where they collide
   const below = 'bp-context-label';
   // route numbers come from the block matching (Transit), one shield per block with every route on it,
@@ -2423,6 +2473,13 @@ function addOverlayLayers(popup) {
       'text-padding': 24, 'text-max-width': 30,
       'icon-image': 'muni-shield', 'icon-text-fit': 'both', 'icon-text-fit-padding': [1, 4, 1, 4] },
     paint: { 'text-color': '#FFFFFF' } }, below);
+  map.addLayer({ id: 'bp-lyr-lands-label', type: 'symbol', source: 'lyr-lands', filter: landFilter(),
+    layout: { 'text-field': ['get', 'name'], 'text-font': LABEL_FONT, 'text-size': 11, 'text-max-width': 10, 'text-padding': 6 },
+    paint: { 'text-color': landColor, 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.4, 'text-opacity': 0.9 } }, below);
+  map.addLayer({ id: 'bp-lyr-slow-label', type: 'symbol', source: 'lyr-slow',
+    layout: { 'symbol-placement': 'line', 'symbol-spacing': 360, 'text-font': LABEL_FONT, 'text-size': 10.5,
+      'text-field': ['case', ['==', ['get', 'status'], 'Planned'], t('slowPlanned'), t('slowStreet')], 'text-offset': [0, -0.9] },
+    paint: { 'text-color': SLOW_COLOR.map, ...halo } }, below);
   map.addLayer({ id: 'bp-lyr-bike-label', type: 'symbol', source: 'lyr-bike', filter: ['!=', ['get', 'kind'], 'route'],
     layout: { 'symbol-placement': 'line', 'symbol-spacing': 320, 'text-font': LABEL_FONT, 'text-size': 10.5,
       'text-field': ['concat', ['match', ['get', 'kind'], 'separated', t('bike_separated'), 'lane', t('bike_lane'), 'path', t('bike_path'),
@@ -2450,6 +2507,13 @@ function addOverlayLayers(popup) {
     });
     map.on('mouseleave', id, () => popup.remove());
   }
+  map.on('mousemove', 'bp-lyr-lands-fill', e => {
+    const f = e.features[0];
+    if (!f || map.queryRenderedFeatures(e.point, { layers: ['bp-all-hit', 'bp-corners-hit', ...POI_LAYERS].filter(id => map.getLayer(id)) }).length) return;
+    const p = f.properties;
+    popup.setLngLat(e.lngLat).setHTML(`<b>${esc(p.name || '')}</b><br><span class="pop-lyr">${esc([t('land_' + p.cat), p.dept].filter(Boolean).join(' · '))}</span>${p.addr ? `<br><span class="pop-lyr">${esc(p.addr)}</span>` : ''}`).addTo(map);
+  });
+  map.on('mouseleave', 'bp-lyr-lands-fill', () => popup.remove());
   map.on('zoom', updateOverlays);
   for (const k of Object.keys(OVERLAYS)) applyOverlay(k);
 }
@@ -2478,6 +2542,24 @@ function addOverlayIcons() {
     disc(g, m, 6.5, '#0B7285');
     g.strokeStyle = '#FFFFFF'; g.lineWidth = 2; g.beginPath(); g.moveTo(m, m - 3.5); g.lineTo(m, m + 3.5); g.moveTo(m - 3.5, m); g.lineTo(m + 3.5, m); g.stroke();
   });
+}
+// category filter for every land layer, plus an optional extra condition
+function landFilter(extra) {
+  const f = ['in', ['get', 'cat'], ['literal', [...landCats]]];
+  return extra ? ['all', f, extra] : f;
+}
+function setLandCats(cats, write = true) {
+  landCats = new Set(cats.filter(c => LAND_CATS.some(x => x[0] === c)));
+  document.querySelectorAll('[data-land]').forEach(i => i.checked = landCats.has(i.dataset.land));
+  if (mapReady || map?.getLayer('bp-lyr-lands-fill')) {
+    map.setFilter('bp-lyr-lands-fill', landFilter());
+    map.setFilter('bp-lyr-lands-line', landFilter(['!=', ['get', 'cat'], 'park']));
+    map.setFilter('bp-lyr-lands-park', landFilter(['==', ['get', 'cat'], 'park']));
+    map.setFilter('bp-lyr-lands-label', landFilter());
+  }
+  const sw = $('lg-lands-sw');
+  if (sw) sw.innerHTML = LAND_CATS.filter(c => landCats.has(c[0])).slice(0, 5).map(([, c]) => `<rect width="4" height="10" fill="${c}" fill-opacity=".35" stroke="${c}"/>`).map((r, i) => r.replace('<rect', `<rect x="${i * 5}" y="1"`)).join('');
+  if (write) writeHash();
 }
 const overlayMinZoom = k => overlayMode[k] === 'always' ? 0 : CLOSE_ZOOM;
 // labels: from CLOSE_ZOOM in Close up, a little sooner in Always
@@ -2534,7 +2616,7 @@ const Transit = (() => {
   const MATCH_M = 15, CELL = 50, COS_MAX = Math.cos(30 * Math.PI / 180);
   const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
   let promise = null, ready = false;
-  const byCnn = new Map(), bikeBy = new Map(), grid = new Map();
+  const byCnn = new Map(), bikeBy = new Map(), slowBy = new Map(), grid = new Map();
   const key = (i, j) => i * 100000 + j;
   const routeSort = (a, b) => a.route.localeCompare(b.route, 'en', { numeric: true });
   function index(muni) {
@@ -2585,8 +2667,9 @@ const Transit = (() => {
     }
     return [...found.values()].sort(routeSort);
   }
-  function build(muni, bike) {
+  function build(muni, bike, slow) {
     index(muni);
+    for (const f of slow ? slow.features : []) if (f.properties.cnn) slowBy.set(f.properties.cnn, f.properties);
     for (const s of Logic.db.segs) { const m = matchBlock(s); if (m.length) byCnn.set(s.cnn, m); }
     for (const f of bike.features) {
       const c = f.properties.cnn; if (!c) continue;
@@ -2598,7 +2681,8 @@ const Transit = (() => {
   return {
     get ready() { return ready; },
     ensure() {
-      return promise ||= Promise.all([fetchLayer('muni'), fetchLayer('bike')]).then(([m, b]) => build(m, b))
+      // Slow Streets is optional: a missing file just means no Slow Street info
+      return promise ||= Promise.all([fetchLayer('muni'), fetchLayer('bike'), fetchLayer('slow').catch(() => null)]).then(([m, b, sl]) => build(m, b, sl))
         .catch(err => { promise = null; console.warn('[block-party] transit data failed to load', err); });
     },
     // routes along a block, or through an intersection
@@ -2615,6 +2699,14 @@ const Transit = (() => {
       const out = new Set();
       for (const s of Logic.db.segsAtNode.get(item.cnn) || []) for (const x of one(s.cnn)) out.add(`${P(s.street)}: ${x}`);
       return [...out];
+    },
+    // "Slow Street: Sanchez St (planned)" for a block on one, else ''; intersections: any block meeting there
+    slow(item) {
+      if (!ready) return null;
+      const one = p => t('slowOn', { corridor: p.corridor ? ' · ' + p.corridor : '', status: p.status === 'Planned' ? ' (planned)' : '' });
+      if (!isInt(item)) return slowBy.has(item.cnn) ? one(slowBy.get(item.cnn)) : '';
+      const hit = (Logic.db.segsAtNode.get(item.cnn) || []).map(s => slowBy.get(s.cnn)).filter(Boolean);
+      return [...new Set(hit.map(one))].join('; ');
     },
     // one label per block, listing every route on it: "14 · 14R · 49 · 714"
     labelData() {
@@ -2642,11 +2734,116 @@ function muniHTML(routes) {
   return [...groups].map(([svc, rs]) => `<span class="svc-group">${rs.map(x => `<span class="route">${esc(x)}</span>`).join('')}${svc ? ` <span class="svc">${esc(svc)}</span>` : ''}</span>`).join(' ');
 }
 // card rows for Muni and bike; "Checking…" until the files are in
+/* ---------- "Next to": city-owned land, schools, stations, and clinics beside a block ----------
+   A parcel counts when the block runs alongside it: at least 2 of the points sampled every ~10 m along
+   the block (leaving out the last 10% at each end, so a parcel on the far side of a cross street doesn't
+   count) are inside it or within NEXT_M of its edge. NEXT_M covers the street's half-width and sidewalk.
+   Schools, fire and police stations, and health facilities from the point layers count within POINT_M
+   of the block, which adds private schools and clinics City Lands leaves out; a point inside a parcel
+   already listed is skipped. Intersections list what's within NEXT_M of the corner. */
+const Nearby = (() => {
+  const NEXT_M = 20, POINT_M = 35, CELL = 100;
+  const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
+  let promise = null, ready = false;
+  const parcels = [], grid = new Map(), points = [];
+  const key = (i, j) => i * 100000 + j;
+  const m = c => [c[0] * KX, c[1] * KY];
+  function addParcel(f) {
+    const g = f.geometry; if (!g) return;
+    const polys = (g.type === 'Polygon' ? [g.coordinates] : g.coordinates).map(poly => poly.map(r => r.map(m)));
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const poly of polys) for (const [x, y] of poly[0]) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+    const p = { polys, props: f.properties, box: [x0, y0, x1, y1] };
+    parcels.push(p);
+    for (let i = Math.floor((x0 - NEXT_M) / CELL); i <= Math.floor((x1 + NEXT_M) / CELL); i++)
+      for (let j = Math.floor((y0 - NEXT_M) / CELL); j <= Math.floor((y1 + NEXT_M) / CELL); j++) {
+        if (!grid.has(key(i, j))) grid.set(key(i, j), []); grid.get(key(i, j)).push(p);
+      }
+  }
+  const segDist = (x, y, a, b) => {
+    const vx = b[0] - a[0], vy = b[1] - a[1], L2 = vx * vx + vy * vy || 1;
+    const u = Math.max(0, Math.min(1, ((x - a[0]) * vx + (y - a[1]) * vy) / L2));
+    return Math.hypot(a[0] + u * vx - x, a[1] + u * vy - y);
+  };
+  function inRing(x, y, r) {
+    let inside = false;
+    for (let i = 0, j = r.length - 1; i < r.length; j = i++)
+      if ((r[i][1] > y) !== (r[j][1] > y) && x < (r[j][0] - r[i][0]) * (y - r[i][1]) / (r[j][1] - r[i][1]) + r[i][0]) inside = !inside;
+    return inside;
+  }
+  function near(p, x, y, tol) {
+    const [x0, y0, x1, y1] = p.box;
+    if (x < x0 - tol || x > x1 + tol || y < y0 - tol || y > y1 + tol) return false;
+    for (const poly of p.polys) {
+      if (inRing(x, y, poly[0]) && !poly.slice(1).some(h => inRing(x, y, h))) return true;
+      for (const r of poly) for (let k = 1; k < r.length; k++) if (segDist(x, y, r[k - 1], r[k]) <= tol) return true;
+    }
+    return false;
+  }
+  // points along the block every ~10 m, leaving out the last 10% at each end
+  function samples(coords) {
+    const pts = coords.map(m), cum = [0];
+    for (let k = 1; k < pts.length; k++) cum.push(cum[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]));
+    const L = cum[cum.length - 1], out = [];
+    if (!L) return [pts[0]];
+    const n = Math.max(3, Math.round(L * 0.8 / 10));
+    for (let i = 0; i <= n; i++) {
+      const d = L * (0.1 + 0.8 * i / n); let k = 1;
+      while (k < pts.length - 1 && cum[k] < d) k++;
+      const u = (d - cum[k - 1]) / ((cum[k] - cum[k - 1]) || 1);
+      out.push([pts[k - 1][0] + u * (pts[k][0] - pts[k - 1][0]), pts[k - 1][1] + u * (pts[k][1] - pts[k - 1][1])]);
+    }
+    return out;
+  }
+  function build(lands, schools, stations, health) {
+    for (const f of lands ? lands.features : []) addParcel(f);
+    const pt = (data, kindOf) => { for (const f of data ? data.features : []) if (f.geometry) points.push({ xy: m(f.geometry.coordinates), name: f.properties.name, kind: kindOf(f.properties) }); };
+    pt(schools, () => t('land_school'));
+    pt(stations, p => t(p.kind === 'fire' ? 'fireStation' : 'policeStation'));
+    pt(health, p => p.type || t('land_health'));
+    ready = true;
+  }
+  function find(item) {
+    const sm = isInt(item) ? [m([item.x, item.y])] : samples(item.coords);
+    const need = isInt(item) ? 1 : 2;
+    const cand = new Set();
+    for (const [x, y] of sm) for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++)
+      for (const p of grid.get(key(Math.floor(x / CELL) + i, Math.floor(y / CELL) + j)) || []) cand.add(p);
+    const hits = [...cand].filter(p => sm.filter(([x, y]) => near(p, x, y, NEXT_M)).length >= need);
+    const out = hits.map(p => ({ name: p.props.name, kind: t('land_' + p.props.cat), cat: p.props.cat }));
+    const seen = new Set(out.map(o => o.name.toLowerCase()));
+    for (const q of points) {
+      if (seen.has((q.name || '').toLowerCase())) continue;
+      if (!sm.some(([x, y]) => Math.hypot(x - q.xy[0], y - q.xy[1]) <= POINT_M)) continue;
+      if (hits.some(p => near(p, q.xy[0], q.xy[1], 0))) continue;       // already listed as a parcel
+      seen.add((q.name || '').toLowerCase());
+      out.push({ name: q.name, kind: q.kind });
+    }
+    return out;
+  }
+  const cache = new Map();
+  return {
+    get ready() { return ready; },
+    ensure() {
+      const opt = k => fetchLayer(k).catch(() => null);      // any of these files can be missing
+      return promise ||= Promise.all(['lands', 'schools', 'stations', 'health'].map(opt)).then(d => build(...d));
+    },
+    // [{name, kind}], or null until loaded
+    of(item) {
+      if (!ready) return null;
+      if (!cache.has(item.cnn)) cache.set(item.cnn, find(item));
+      return cache.get(item.cnn);
+    },
+  };
+})();
+const nextToText = list => list.map(o => `${o.name} (${o.kind})`).join('; ');
 function transitFacts(item) {
   const m = Transit.muni(item), b = Transit.bike(item);
   const wait = `<span class="wait-inline">${esc(t('checking'))}</span>`;
   return `<dt>${esc(t('muniRow'))}</dt><dd>${m == null ? wait : m.length ? muniHTML(m) : esc(t('noneHere'))}</dd>
-      <dt>${esc(t('bikeRow'))}</dt><dd>${b == null ? wait : b.length ? b.map(esc).join('<br>') : esc(t('noneHere'))}</dd>`;
+      <dt>${esc(t('bikeRow'))}</dt><dd>${b == null ? wait : b.length ? b.map(esc).join('<br>') : esc(t('noneHere'))}</dd>
+      ${(Nearby.of(item) || []).length ? `<dt>${esc(t('nextTo'))}</dt><dd>${Nearby.of(item).map(o => `${esc(o.name)} <span class="svc">${esc(o.kind)}</span>`).join('<br>')}</dd>` : ''}
+      ${Transit.slow(item) ? `<dt>${esc(t('slowRow'))}</dt><dd>${esc(Transit.slow(item).replace(/^Slow Street( · )?/, '') || t('yesHere'))}</dd>` : ''}`;
 }
 // extra lines for the street hover popup: Muni routes on the block (with service type), its bike facility
 function overlayInfo(e, s) {
@@ -2655,6 +2852,8 @@ function overlayInfo(e, s) {
   if (m && m.length) out.push(t('muniOn', { routes: muniText(m) }));
   const b = overlayMode.bike !== 'off' && Transit.bike(s);
   if (b && b.length) out.push(...b);
+  const sl = overlayMode.slow !== 'off' && Transit.slow(s);
+  if (sl) out.push(sl);
   return out;
 }
 function setOverlay(k, v, write = true) {
@@ -2678,6 +2877,8 @@ function setupMapMenus() {
   const SW = {
     muni: '<svg viewBox="0 0 26 16"><line x1="3" y1="8" x2="23" y2="8" stroke="#D9480F" stroke-opacity=".35" stroke-width="11" stroke-linecap="round"/><rect x="7" y="3.5" width="12" height="9" rx="2.5" fill="#D9480F"/></svg>',
     bike: '<svg viewBox="0 0 26 16"><line x1="2" y1="5" x2="24" y2="5" stroke="#1A7F37" stroke-width="3"/><line x1="2" y1="11" x2="24" y2="11" stroke="#1A7F37" stroke-width="1.6" stroke-dasharray="3 2.5"/></svg>',
+    slow: '<svg viewBox="0 0 26 16"><line x1="3" y1="8" x2="23" y2="8" stroke="#2457D6" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0.1 7"/></svg>',
+    lands: '<svg viewBox="0 0 26 16"><rect x="2" y="2" width="22" height="12" rx="2" fill="#8A5A00" fill-opacity=".12" stroke="#8A5A00" stroke-width="1.2"/></svg>',
     schools: '<svg viewBox="0 0 26 16"><rect x="6" y="1" width="14" height="14" rx="3.5" fill="#8A5A00"/><path d="M9 8.5 L13 5 L17 8.5 V12.5 H9Z" fill="#fff"/></svg>',
     stations: '<svg viewBox="0 0 26 16"><circle cx="7" cy="8" r="6.5" fill="#C92A2A"/><text x="7" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">F</text><circle cx="19" cy="8" r="6.5" fill="#1E3A8A"/><text x="19" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">P</text></svg>',
     health: '<svg viewBox="0 0 26 16"><rect x="0.5" y="1.5" width="13" height="13" rx="3" fill="#0B7285"/><text x="7" y="11.5" font-size="9" font-weight="700" text-anchor="middle" fill="#fff">H</text><circle cx="20" cy="8" r="5.5" fill="#0B7285"/><path d="M20 5v6M17 8h6" stroke="#fff" stroke-width="1.8"/></svg>',
@@ -2687,7 +2888,11 @@ function setupMapMenus() {
     <div class="lseg" role="group" aria-label="${esc(t('lyr_' + k))}">${opts.map(([v, label]) =>
       `<button type="button" data-v="${v}" aria-pressed="${overlayMode[k] === v}">${esc(t(label))}</button>`).join('')}</div></div>`;
   const three = [['off', 'lyrOff'], ['close', 'lyrClose'], ['always', 'lyrAlways']];
-  rowsEl.innerHTML = Object.keys(OVERLAYS).map(k => row(k, three)).join('') + row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]);
+  const landChips = `<div class="land-chips">${LAND_CATS.map(([k, c]) => `<label class="land-chip"><input type="checkbox" data-land="${k}" ${landCats.has(k) ? 'checked' : ''}><i style="background:${c}"></i>${esc(t('land_' + k))}</label>`).join('')}</div>`;
+  rowsEl.innerHTML = Object.keys(OVERLAYS).map(k => row(k, three) + (k === 'lands' ? landChips : '')).join('') + row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]);
+  rowsEl.addEventListener('change', e => {
+    if (e.target.dataset.land) setLandCats([...rowsEl.querySelectorAll('[data-land]:checked')].map(i => i.dataset.land));
+  });
   rowsEl.addEventListener('click', e => {
     const b = e.target.closest('.lseg button'); if (!b) return;
     setOverlay(b.closest('[data-lyr]').dataset.lyr, b.dataset.v);
@@ -2700,6 +2905,7 @@ function setupMapMenus() {
   });
   document.addEventListener('click', e => { if (!e.target.closest('.map-ui')) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  setLandCats([...landCats], false);     // draws the map-key swatch
 }
 
 /* ---------- quiet streets ---------- */
