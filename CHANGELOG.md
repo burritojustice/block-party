@@ -2,6 +2,18 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v30
+- **Next to** on block cards: the city-owned land the block runs alongside (Mission Dolores Park, Parks), plus schools, fire and police stations, and health facilities from the point layers within 35 m, which adds private schools and clinics City Lands leaves out. A parcel counts when at least 2 points sampled every ~10 m along the block (ignoring the last 10% at each end) are inside it or within 20 m of its edge, so parcels across a cross street don't count. Intersection cards list what's within 20 m of the corner. Lists every category, whatever the map's checkboxes say. Copy-card text and exports add `next_to`.
+
+## v29
+- **City-owned land** layer (DataSF City Lands, `gtnh-hgvs`): parcel polygons with a faint tint and thin outline, under the basemap labels, with Off / Close up / Always. Category checkboxes under it in the Layers menu; Schools, Parks, Fire, Police, Health, and Open space are on by default, and Port, Library, MTA, Public Works, Water and sewer, Housing Authority, Real Estate, Former Redevelopment, and Other can be turned on. Parks get a dashed outline only. Hovering a parcel (away from streets and icons) shows its name, category, department, and address. Links keep non-default categories as `&lands=…`.
+- `build_layers.py` builds `data/layers/lands.geojson` (downloaded automatically when missing), keeping name, category, department, and address, and simplifying outlines by 0.5 m.
+
+## v28
+- `build_layers.py` downloads any missing dataset from DataSF's API before building (like `build_data.py` does for the street CSVs); `--download` refreshes all of them except schools. CSV columns are read case-insensitively, so API downloads and site Exports both work.
+- **Slow Streets** layer (DataSF `hkz3-itiu`): dotted blue line, planned blocks fainter, in the Layers menu with Off / Close up / Always like the others. Blocks on a Slow Street get a "Slow Street" card row and popup line with the corridor; exports add `slow_street`. Intersection cards list it when any block meeting there is on one.
+- `build_layers.py` builds `data/layers/slow.geojson` from a "Slow Streets" download in `layers/`, leaving out blocks marked as removed (`slw_st = 0`). Until that file exists, the layer and rows just stay empty.
+
 ## v27
 - **Dead ends:** an end that touches another street's line (within 1.5 m) counts as open even when the city data has no intersection there. Comerford St now reads "Church St to Sanchez St" and isn't a dead end; Gaiser Ct reads "Guerrero St to dead end". 36 block ends in all, mostly private streets around Stonestown, Sunnyside, and Mission Terrace. Freeways and ramps don't count, since they pass over or under streets. The quiet-streets dead-end count drops from about 1,040 to 1,020.
 - Where the city names such an end "START: 1-99 BLOCK" or "END: …", the card, popup, and exports use the street it touches instead.
