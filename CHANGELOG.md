@@ -2,13 +2,28 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v27
+- **Dead ends:** an end that touches another street's line (within 1.5 m) counts as open even when the city data has no intersection there. Comerford St now reads "Church St to Sanchez St" and isn't a dead end; Gaiser Ct reads "Guerrero St to dead end". 36 block ends in all, mostly private streets around Stonestown, Sunnyside, and Mission Terrace. Freeways and ramps don't count, since they pass over or under streets. The quiet-streets dead-end count drops from about 1,040 to 1,020.
+- Where the city names such an end "START: 1-99 BLOCK" or "END: …", the card, popup, and exports use the street it touches instead.
+- Hover popup shows the block's slope and tier ("Slope 22.7% average, steepest 25.9% · Extremely steep"), from the slopes in `streets.json`.
+- Bike info on cards and the popup labels the barrier: "Separated bikeway · barrier: curb, posts".
+- School, station, and health care icons are about 25% larger; Muni shield numbers one size up.
+
+## v26
+- **Muni and bike on cards:** block cards list the Muni routes running along the block, grouped by service type (14, 49 Frequent Local · 14R Rapid Bus …), and the block's bike facility. Intersection cards list the routes through the corner and the bike facilities on the streets meeting there. Shown whether or not the map layers are on; "Checking…" until the files load.
+- Hover popup shows each route's service type: "Muni 14, 49 (Frequent Local) · 14R (Rapid Bus) · 714 (Specialized)".
+- **Route shields list every route on a block** ("14 · 14R · 49 · 714") instead of one per route line, where overlapping shields hid all but one. Busier blocks win when shields collide.
+- Muni routes are matched to blocks in the browser: a route counts when it's within 15 m of the block at 25%, 50%, and 75% along and heading the same way, so routes crossing at a corner don't count. Bike facilities use the CNN already in the bike data.
+- The copy-card text and CSV/JSON exports add `muni_routes` and `bike_facility`.
+- `data/streets.json` rebuilt from DataSF on 2026-10-11 with slopes (6 new blocks).
+
 ## v25
 - **Map layers:** Muni routes, bike network, schools, fire and police stations, hospitals and clinics. New **Layers** menu on the map: Off / Close up (zoom 16 and in, the default) / Always for each. Contours moved into the same menu (Off / On). Links keep non-default settings as `&layers=muni:always,contours:on`.
 - Muni is a pale orange band with route-number shields; bike lanes dark green (solid for separated bikeways, lanes, and paths; dashed for shared routes); schools, stations, and health care as small icons with names close up. Map key rows appear while a layer shows.
 - Hovering a street also lists the Muni routes there and the block's bike facility ("Separated bikeway · parking, posts"). Hovering a school, station, or clinic shows its name and type.
 - **Quiet streets** moved from the header onto the map toolbar as a yellow "✦ Quiet streets ▾" button with a match count; its panel drops down over the map. Matches are now magenta (#B5179E) instead of green, which was hard to tell from parks and now the bike lanes.
 - New `scripts/build_layers.py` builds `data/layers/*.geojson` from the raw downloads in `layers/`.
-- `scripts/build_data.py` updated from sf-blocks 2026.10.11: downloads `data/sf_streets.csv` and `data/sf_intersections.csv` from DataSF when missing (`--download` to refresh), with the dataset pages listed in the script.
+- `scripts/build_data.py` updated from sf-blocks 2026.10.11: downloads `data/sf_streets.csv` and `data/sf_intersections.csv` from DataSF when missing (`--download` to refresh), with the dataset pages listed in the script. Dates are stored as YYYY-MM-DD, so a retired block reads "Retired 2013-11-07" whichever way the CSV was downloaded.
 - `.gitignore` also covers `.DS_Store`, `__pycache__/`, `*.pyc`, and partial downloads.
 - `build_layers.py` lists each layer's DataSF dataset (title, id, URL) and finds downloads by dataset title with DataSF's date stamp, so new downloads don't need renaming. Built files record their source dataset, file, and "as of" date. Map credits DataSF for the layers.
 
