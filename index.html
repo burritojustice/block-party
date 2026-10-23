@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v33 -->
+<!-- build: v34 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -305,6 +305,15 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 .lu-table td + td { padding-left: 12px; text-align: right; color: var(--ink-soft); }
 .lu-table i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
 .facts .zsw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
+.ng summary { cursor: pointer; color: var(--grape); font-weight: 600; }
+.ng-list { list-style: none; margin: 6px 0 4px; padding: 0; display: grid; gap: 5px; font-size: 13px; font-weight: 400; max-height: 320px; overflow: auto; }
+.ng-list b { font-weight: 600; }
+.ng-list span { color: var(--ink-soft); }
+.ng-list a { color: inherit; }
+.ng-city { margin-top: 4px; }
+.ng-city > summary { font-size: 13px; }
+.ng-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 8px 0 0; font-size: 12px; font-weight: 400; color: var(--ink-soft); }
+.ng-foot a { color: inherit; }
 .lu-note { display: block; margin-top: 3px; font-size: 11.5px; color: var(--ink-soft); font-weight: 400; }
 
 .notice {
@@ -543,7 +552,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 <div class="toast" id="toast" role="status"></div>
 
 <script>
-const _BUILD_VERSION = 'v33';
+const _BUILD_VERSION = 'v34';
 
 /* =====================================================================
    CONFIG
@@ -651,9 +660,10 @@ const I18N = {
     lyr_lands: 'City-owned land', lgLands: 'City-owned land',
     lyr_landuse: 'Parcels', lyr_landuseHint: 'Land use (SF Planning 2023) or zoning, from zoom 15', lgLanduse: 'Land use (2023)', lgZoning: 'Zoning',
     lyrLanduse: 'Land use', lyrZoning: 'Zoning',
-    zRH: 'Houses (RH)', zRM: 'Apartments and mixed residential (RM, RTO, RC)', zNC: 'Neighborhood commercial (NC, NCT, NCD)',
-    zC: 'Downtown and community business (C-2, C-3, Chinatown)', zPDR: 'Industrial (PDR, M)', zMU: 'Mixed use (UMU, MUG, MUO, MUR, SoMa)',
-    zP: 'Public (P)', zSP: 'Special plan areas (Mission Bay, Parkmerced, Treasure Island…)',
+    zRH: 'Houses (RH)', zRM: 'Apartments (RM, RC)', zRTO: 'Transit-oriented residential (RTO)', zNC: 'Neighborhood commercial (NC, NCD)',
+    zNCT: 'Neighborhood commercial transit (NCT)', zC: 'Downtown and community business (C-2, C-3)', zCh: 'Chinatown (CCB, CRNC, CVR)',
+    zPDR: 'Production, distribution, repair (PDR)', zM: 'Industrial (M)', zMU: 'Eastern Neighborhoods mixed use (UMU, MUG, MUO, MUR)',
+    zSoMa: 'SoMa (SALI, SLI, SSO, RED, WMUG…)', zP: 'Public (P)', zSP: 'Special plan areas (Mission Bay, Parkmerced, Treasure Island…)',
     lu_RESIDENT: 'Residential', lu_MIXRES: 'Mixed residential', lu_MIXED: 'Mixed, no housing', 'lu_RETAIL/ENT': 'Retail and entertainment',
     lu_MIPS: 'Office', lu_CIE: 'Cultural, institutional, education', lu_MED: 'Medical', lu_VISITOR: 'Hotels', lu_PDR: 'Industrial (PDR)',
     lu_OPENSPACE: 'Open space', lu_VACANT: 'Vacant', lu_none: 'No land use data',
@@ -670,6 +680,10 @@ const I18N = {
     bike_separated: 'Separated bikeway', bike_lane: 'Bike lane', bike_path: 'Bike path', bike_route: 'Bike route', bike_neighborway: 'Neighborway',
     barrier: 'barrier: {b}', hoverSlope: 'Slope {avg}% average{max} · {grade}', hoverSteepest: ', steepest {pct}%',
     nextTo: 'Next to',
+    ngRow: 'Neighborhood groups', ngTitle: 'Neighborhood groups (SF Planning notification list)',
+    ngSummary: '{hoods}: {n} groups', ngCitywideN: 'Plus {n} citywide', ngCitywide: 'Citywide',
+    ngCopy: 'Copy list', ngCopied: 'Copied {n} groups', ngSource: 'SF Planning list of {date}.', ngSourceLink: 'Source',
+    planningNhood: 'Planning neighborhood',
     muniOn: 'Muni {routes}', muniRow: 'Muni', bikeRow: 'Bike', noneHere: 'None', checking: 'Checking…', fireStation: 'Fire station', policeStation: 'Police station',
     length: 'Length', slope: 'Slope',
     slopeAvg: '{pct}% average', steepest: 'steepest part {pct}%',
@@ -1603,13 +1617,16 @@ function render() {
   const isLeg = s => !isInt(s) && !state.checked.has(s.cnn) && (intNodes.has(s.fn) || intNodes.has(s.tn));
   const full = segs.filter(s => !isLeg(s));
   const legs = segs.filter(isLeg);
+  const openNg = new Set([...document.querySelectorAll('#seg-list details.ng[open]')].map(d => d.closest('[data-cnn]').dataset.cnn + (d.classList.contains('ng-city') ? 'c' : '')));
   $('seg-list').innerHTML = full.map(s => isInt(s) ? intCardHTML(s) : cardHTML(s)).join('') +
     (legs.length ? `<li class="legs-head"><b>${esc(t('legsTitle'))}</b><span>${esc(t('legsHint'))}</span></li>` + legs.map(s => legHTML(s, ints)).join('') : '');
+  document.querySelectorAll('#seg-list details.ng').forEach(d => { if (openNg.has(d.closest('[data-cnn]').dataset.cnn + (d.classList.contains('ng-city') ? 'c' : ''))) d.open = true; });
   $('clear-sel-bottom').hidden = !segs.length;
   hydrateElevation();
   // Muni and bike rows fill in once those files have loaded (the first time cards appear)
   if (segs.length && !Transit.ready) Transit.ensure().then(() => { if (Transit.ready) render(); });
   if (segs.length && !Nearby.ready) Nearby.ensure().then(() => { if (Nearby.ready) render(); });
+  if (segs.length && !Groups.ready) Groups.ensure().then(() => { if (Groups.ready) render(); });
   // land use per block: read the parcel tiles for any card that doesn't have it yet, then redraw once
   const needParcels = segs.filter(s => !isInt(s) && !Parcels.peek(s));
   if (needParcels.length && Parcels.available()) Promise.all(needParcels.map(s => Parcels.fetch(s))).then(rs => { if (rs.some(Boolean)) render(); });
@@ -1639,6 +1656,7 @@ function intCardHTML(i) {
       <dt>${esc(t('anhood'))}</dt><dd>${esc(i.anhood)}</dd>
       <dt>${esc(t('elevation'))}</dt><dd data-elev="${i.cnn}">${esc(elev)}</dd>
       ${transitFacts(i)}
+      ${groupsFacts(i)}
     </dl>
   </li>`;
 }
@@ -1678,6 +1696,8 @@ function cardText(s) {
   if (Transit.slow(s)) lines.push(Transit.slow(s));
   const nx = Nearby.of(s);
   if (nx && nx.length) lines.push(`${t('nextTo')}: ${nextToText(nx)}`);
+  const ng = Groups.of(s);
+  if (ng && ng.hoods.length) lines.push(`${t('planningNhood')}: ${ng.hoods.join(', ')} (${t('ngSummary', { hoods: '', n: ng.groups.length }).replace(/^: /, '')})`);
   const pr = Parcels.peek(s);
   if (pr && pr.lots) lines.push(`${t('zoningRow')}: ${pr.zones.map(z => `${z.code} ${zoneName(z.name)} (${z.n})`).join('; ')}`,
     `${t('parcelsRow')}: ${pr.homes ? t('lotsHomes', { lots: pr.lots, homes: pr.homes }) : t('lotsOnly', { lots: pr.lots })}`,
@@ -1722,6 +1742,7 @@ function cardHTML(s) {
       <dt>${esc(t('slope'))}</dt><dd data-slope="${s.cnn}">${slopeHTML(s)}</dd>
       ${transitFacts(s)}
       ${parcelFacts(s)}
+      ${groupsFacts(s)}
     </dl>
     <div class="profile" data-profile="${s.cnn}" aria-label="${esc(t('profileTitle'))}">${profileHTML(s)}</div>
   </li>`;
@@ -1849,6 +1870,8 @@ function setupResultsEvents() {
     if (rm) { removeCard(+rm.dataset.remove); return; }
     const cc = e.target.closest('[data-copy-card]');
     if (cc) { const s = state.results.find(r => r.cnn === +cc.dataset.copyCard); if (s) copyText(cardText(s), t('copiedCard')); return; }
+    const cg = e.target.closest('[data-copy-groups]');
+    if (cg) { const s = state.results.find(r => r.cnn === +cg.dataset.copyGroups); const r = s && Groups.of(s); if (r) copyText(groupsText(r), t('ngCopied', { n: r.groups.length + r.citywide.length })); return; }
     const li = e.target.closest('.seg'); if (!li) return;
     // selecting text, or clicking in the details or chart, shouldn't check or uncheck the card
     if (e.target.tagName !== 'INPUT') {
@@ -1884,7 +1907,7 @@ function elevFields(s) {
 }
 async function exportSegs() {
   const segs = checkedSegs();
-  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure(), Nearby.ensure(), ...segs.map(s => Parcels.fetch(s))]);
+  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure(), Nearby.ensure(), Groups.ensure(), ...segs.map(s => Parcels.fetch(s))]);
   return segs;
 }
 // "14 (Frequent Local); 14R (Rapid Bus)" and "Bike lane · posts"
@@ -1892,6 +1915,7 @@ function transitFields(s) {
   const m = Transit.muni(s), b = Transit.bike(s);
   return { muni_routes: m ? m.map(r => r.route + (r.service ? ` (${r.service})` : '')).join('; ') : '',
     bike_facility: b ? b.join('; ') : '', slow_street: Transit.slow(s) || '', next_to: nextToText(Nearby.of(s) || []),
+    planning_neighborhood: ((Groups.of(s) || {}).hoods || []).join('; '), neighborhood_groups: (Groups.of(s) || { groups: [] }).groups.length || '',
     ...(isInt(s) ? {} : parcelFields(Parcels.peek(s))) };
 }
 const wktOf = o => isInt(o) ? `POINT (${o.x.toFixed(5)} ${o.y.toFixed(5)})`
@@ -2484,29 +2508,34 @@ const LANDUSE = [
   ['CIE', '#3B6FB6'], ['MED', '#C92A2A'], ['VISITOR', '#E5683C'], ['PDR', '#7A6A8E'], ['OPENSPACE', '#4C9A3F'], ['VACANT', '#B8B4AA'],
 ];
 const landuseColor = ['match', ['get', 'landuse'], ...LANDUSE.flat(), '#D8D5CE'];
-// Zoning, by code family (first code when a lot has several, "C-2|M-1"). Provisional colors following
-// common planning conventions (houses yellow, apartments orange, neighborhood commercial pink, downtown
-// red, industrial purple, mixed use orchid, public blue) until we have SF Planning's own palette.
-// Longer prefixes first: the first match wins.
-const ZONING = [
-  ['RH-1(D)', '#FFF1A8', 'zRH'], ['RH-1', '#FFE985', 'zRH'], ['RH-2', '#FFD84F', 'zRH'], ['RH-3', '#F2C133', 'zRH'],
-  ['RM-1', '#F6B26B', 'zRM'], ['RM-2', '#EE9C4E', 'zRM'], ['RM-3', '#E3853A', 'zRM'], ['RM-4', '#CF6C2A', 'zRM'],
-  ['RTO', '#F3BE8A', 'zRM'], ['RC-', '#DE8A68', 'zRM'], ['RED', '#E9B38D', 'zRM'],
-  ['NC-S', '#F4C3CE', 'zNC'], ['NCT', '#D9668A', 'zNC'], ['NCD', '#E893AC', 'zNC'], ['NC-', '#EFA9BA', 'zNC'],
-  ['CRNC', '#D35D7A', 'zNC'], ['CVR', '#C94F6C', 'zC'], ['CCB', '#C94F6C', 'zC'],
-  ['C-3', '#C2343F', 'zC'], ['C-2', '#E0606A', 'zC'],
-  ['PDR', '#B7A3D9', 'zPDR'], ['M-1', '#A08CC8', 'zPDR'], ['M-2', '#8771B4', 'zPDR'],
-  ['UMU', '#E3A2D6', 'zMU'], ['MUG', '#E3A2D6', 'zMU'], ['MUO', '#D88CCB', 'zMU'], ['MUR', '#EBB8E0', 'zMU'], ['CMUO', '#D88CCB', 'zMU'],
-  ['WMU', '#E3A2D6', 'zMU'], ['SALI', '#CDA3D9', 'zMU'], ['SLI', '#CDA3D9', 'zMU'], ['SSO', '#D88CCB', 'zMU'], ['SPD', '#E3A2D6', 'zMU'], ['RSD', '#EBB8E0', 'zMU'],
-  ['P70', '#BCC6D0', 'zSP'], ['PPS', '#BCC6D0', 'zSP'], ['PM-', '#BCC6D0', 'zSP'],
-  ['P', '#A6CBEA', 'zP'],
-  ['MB-', '#BCC6D0', 'zSP'], ['HP-', '#BCC6D0', 'zSP'], ['TB', '#BCC6D0', 'zSP'], ['TI-', '#BCC6D0', 'zSP'], ['MR-', '#BCC6D0', 'zSP'],
-  ['S-MU', '#BCC6D0', 'zSP'], ['Job', '#BCC6D0', 'zSP'],
-];
-const ZONE_GROUPS = [['zRH', '#FFD84F'], ['zRM', '#EE9C4E'], ['zNC', '#E893AC'], ['zC', '#C2343F'], ['zPDR', '#A08CC8'], ['zMU', '#E3A2D6'], ['zP', '#A6CBEA'], ['zSP', '#BCC6D0']];
+// Zoning colors: SF Planning's own, from the Zoning Map's Zoning Districts layer
+// (sfplanninggis.org/arcgiswa/rest/services/PlanningData/MapServer/3, renderer on zoning_sim), by
+// zoning code. A lot with several codes ("C-2|M-1") takes the first one's color.
+const ZONING = {
+  'C-2': '#FFA1A1', 'C-3-G': '#FF4040', 'C-3-O': '#FF2121', 'C-3-O(SD)': '#FF0000', 'C-3-R': '#FF6161', 'C-3-S': '#FF8080',
+  'C-M': '#B3B3B3', 'CCB': '#B5FFF4', 'CMUO': '#A5F57A', 'CRNC': '#BFE9FF', 'CVR': '#BAF8FF', 'HP-RA': '#D69DBC',
+  'Job Corps': '#DBEDD3', 'M-1': '#A0A2AD', 'M-2': '#9094AB', 'MB-O': '#D6BDBA', 'MB-OS': '#B5FF80', 'MB-RA': '#CD8966',
+  'MUG': '#DEA345', 'MUO': '#F0A35B', 'MUR': '#FAA473', 'NC-1': '#E9BFFF', 'NC-2': '#DBA0F2', 'NC-3': '#D284E8',
+  'NC-S': '#CC68DE', 'NCD': '#C950D4', 'NCT': '#A80084', 'NCT-1': '#C73AC9', 'NCT-2': '#BD24B3', 'NCT-3': '#B3129D',
+  'P': '#8A8A74', 'P-W': '#97DBF2', 'PDR-1-B': '#8087A8', 'PDR-1-D': '#6F78A6', 'PDR-1-G': '#606BA3', 'PDR-2': '#505EA1',
+  'PM-CF': '#5E8DA9', 'PM-MU1': '#4F1B0A', 'PM-MU2': '#AB4625', 'PM-OS': '#AFC18A', 'PM-R': '#FFEBBE', 'PM-S': '#D9E6ED',
+  'RC-3': '#F7C359', 'RC-4': '#F7BA4F', 'RCD': '#FFBFBF', 'RED': '#83A807', 'RED-MX': '#8FA60F', 'RH DTR': '#F5982F',
+  'RH-1': '#FCFAB3', 'RH-1(D)': '#FFFFBF', 'RH-1(S)': '#FCF6A9', 'RH-2': '#FCF29F', 'RH-3': '#FAEA91', 'RM-1': '#FAE587',
+  'RM-2': '#FADF7D', 'RM-3': '#FAD870', 'RM-4': '#F7CE65', 'RSD': '#9FA616', 'RTO-1': '#FFAA00', 'RTO-C': '#FF8C29',
+  'RTO-M': '#F57F38', 'SALI': '#C7A232', 'SB-DTR': '#F58C22', 'SLI': '#BDA428', 'SLR': '#ADA41F', 'SPD': '#70A800',
+  'SSO': '#D4A33B', 'TB DTR': '#F57F18', 'TI-MU': '#F37457', 'TI-OS': '#B5DAA5', 'TI-PCI': '#A7D9D3', 'TI-R': '#FEC965',
+  'UMU': '#FFA880', 'WMUG': '#E8A451', 'WMUO': '#F5A467', 'YBI-MU': '#F37457', 'YBI-OS': '#B5DAA5', 'YBI-PCI': '#A7D9D3',
+  'YBI-R': '#FEC965', 'P70-MU': '#F9BDC7', 'BR-MU': '#FFEBD6', 'MR-MU': '#F2C5A7', 'PPS-MU': '#E69A7A', 'S-MU': '#C40A0A',
+};
+// map key: families, with one of SF Planning's colors for each
+const ZONE_GROUPS = [['zRH', '#FCF29F'], ['zRM', '#FAD870'], ['zRTO', '#FFAA00'], ['zNC', '#D284E8'], ['zNCT', '#A80084'],
+  ['zC', '#FF4040'], ['zCh', '#BFE9FF'], ['zPDR', '#606BA3'], ['zM', '#A0A2AD'], ['zMU', '#F0A35B'], ['zSoMa', '#C7A232'],
+  ['zP', '#8A8A74'], ['zSP', '#D69DBC']];
 const ZCODE = ['coalesce', ['get', 'parcelsactiveandretired_zoning_code'], ''];
-const zoningColor = ['case', ...ZONING.flatMap(([pre, c]) => [['==', ['slice', ZCODE, 0, pre.length], pre], c]), '#D8D5CE'];
-const zoningOf = code => (ZONING.find(([pre]) => (code || '').startsWith(pre)) || [null, '#D8D5CE', ''])
+const ZFIRST = ['let', 'c', ZCODE, ['slice', ['var', 'c'], 0,
+  ['case', ['>=', ['index-of', '|', ['var', 'c']], 0], ['index-of', '|', ['var', 'c']], ['length', ['var', 'c']]]]];
+const zoningColor = ['match', ZFIRST, ...Object.entries(ZONING).flat(), '#D8D5CE'];
+const zoningOf = code => [null, ZONING[(code || '').split('|')[0]] || '#D8D5CE'];
 const LAND_DEFAULT = LAND_CATS.filter(c => c[2]).map(c => c[0]);
 let landCats = new Set(LAND_DEFAULT);
 const landColor = ['match', ['get', 'cat'], ...LAND_CATS.flatMap(([k, c]) => [k, c]), '#5F5E5A'];
@@ -3197,6 +3226,81 @@ function parcelFields(r) {
     zoning: r ? r.zones.map(z => `${z.code} (${z.n})`).join('; ') : '' };
 }
 const landuseText = r => r ? r.uses.map(([k, n]) => `${landuseName(k)} ${n}`).join('; ') : '';
+/* ---------- Neighborhood groups that may be notified ----------
+   SF Planning keeps a list of neighborhood groups and the Planning Neighborhoods each wants to hear
+   about (data/neighborhood_groups.json, built from reference/neighborhood-groups/). A block's Planning
+   Neighborhood comes from the 37 boundaries in data/layers/planning_neighborhoods.geojson, tested at 25%,
+   50%, and 75% along the block, so a block on a boundary lists both sides; an intersection is tested at
+   the corner and 15 m each way. */
+const Groups = (() => {
+  let promise = null, ready = false, polys = [], data = null;
+  const cache = new Map();
+  const inRing = (x, y, r) => { let a = false; for (let i = 0, j = r.length - 1; i < r.length; j = i++)
+    if ((r[i][1] > y) !== (r[j][1] > y) && x < (r[j][0] - r[i][0]) * (y - r[i][1]) / (r[j][1] - r[i][1]) + r[i][0]) a = !a; return a; };
+  const hoodAt = (x, y) => (polys.find(p => p.parts.some(pp => inRing(x, y, pp[0]) && !pp.slice(1).some(h => inRing(x, y, h)))) || {}).name;
+  function along(coords, f) {
+    let total = 0; const seg = [];
+    for (let k = 1; k < coords.length; k++) { const d = Math.hypot(coords[k][0] - coords[k - 1][0], coords[k][1] - coords[k - 1][1]); seg.push(d); total += d; }
+    let d = total * f, k = 0;
+    while (k < seg.length - 1 && d > seg[k]) d -= seg[k++];
+    const u = seg[k] ? d / seg[k] : 0, a = coords[k], b = coords[k + 1] || a;
+    return [a[0] + u * (b[0] - a[0]), a[1] + u * (b[1] - a[1])];
+  }
+  return {
+    get ready() { return ready; },
+    get source() { return data && data.source; },
+    ensure() {
+      return promise ||= Promise.all([fetch('data/layers/planning_neighborhoods.geojson').then(r => r.json()),
+        fetch('data/neighborhood_groups.json').then(r => r.json())]).then(([g, d]) => {
+        polys = g.features.map(f => ({ name: f.properties.neighborho,
+          parts: f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates }));
+        data = d; ready = true;
+      }).catch(err => { promise = null; console.warn('[block-party] neighborhood groups', err); });
+    },
+    // {hoods: [names], groups: [{org, people: [{name, email, pref}]}], citywide: [...]}, or null until loaded
+    of(item) {
+      if (!ready) return null;
+      if (cache.has(item.cnn)) return cache.get(item.cnn);
+      // a corner usually sits on a boundary street, so look 15 m each way around it too
+      const dx = 15 / 88000, dy = 15 / 110540;
+      const pts = isInt(item) ? [[item.x, item.y], [item.x + dx, item.y], [item.x - dx, item.y], [item.x, item.y + dy], [item.x, item.y - dy]]
+        : [0.25, 0.5, 0.75].map(f => along(item.coords, f));
+      const hoods = [...new Set(pts.map(([x, y]) => hoodAt(x, y)).filter(Boolean))];
+      const collect = names => {
+        const byOrg = new Map();
+        for (const n of names) for (const i of data.neighborhoods[n] || []) {
+          const g = data.groups[i], k = g.org || g.name;
+          if (!byOrg.has(k)) byOrg.set(k, { org: k, people: [] });
+          const o = byOrg.get(k);
+          if (g.org && !o.people.some(p => p.name === g.name && p.email === g.email)) o.people.push({ name: g.name, email: g.email, pref: g.pref });
+          if (!g.org && !o.people.length) o.people.push({ name: '', email: g.email, pref: g.pref });
+        }
+        return [...byOrg.values()].sort((a, b) => a.org.localeCompare(b.org));
+      };
+      const r = { hoods, groups: collect(hoods), citywide: collect(['Citywide']) };
+      cache.set(item.cnn, r);
+      return r;
+    },
+  };
+})();
+const groupLine = g => [g.org, ...g.people.map(p => [p.name, p.email].filter(Boolean).join(' <') + (p.email && p.name ? '>' : ''))].join(' — ');
+function groupsText(r) {
+  return [`${t('ngTitle')}: ${r.hoods.join(', ')}`, ...r.groups.map(groupLine), '', `${t('ngCitywide')}:`, ...r.citywide.map(groupLine),
+    '', t('ngSource', { date: (Groups.source || {}).list_date || '' }) + ' ' + ((Groups.source || {}).page || '')].join('\n');
+}
+function groupsFacts(item) {
+  const r = Groups.of(item);
+  if (r == null) return `<dt>${esc(t('ngRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
+  if (!r.hoods.length) return '';
+  const li = g => `<li><b>${esc(g.org)}</b>${g.people.map(p => `<br><span>${esc(p.name)}${p.name && p.email ? ' · ' : ''}${p.email ? p.email.split('; ').map(m => `<a href="mailto:${esc(m)}">${esc(m)}</a>`).join(', ') : ''}</span>`).join('')}</li>`;
+  return `<dt>${esc(t('ngRow'))}</dt><dd>
+    <details class="ng"><summary>${esc(t('ngSummary', { hoods: r.hoods.join(' and '), n: r.groups.length }))}</summary>
+      <ul class="ng-list">${r.groups.map(li).join('')}</ul>
+      <details class="ng ng-city"><summary>${esc(t('ngCitywideN', { n: r.citywide.length }))}</summary><ul class="ng-list">${r.citywide.map(li).join('')}</ul></details>
+      <p class="ng-foot"><button type="button" class="btn small" data-copy-groups="${item.cnn}">${esc(t('ngCopy'))}</button>
+        <span>${esc(t('ngSource', { date: (Groups.source || {}).list_date || '' }))} <a href="${esc((Groups.source || {}).page || '#')}" target="_blank" rel="noopener">${esc(t('ngSourceLink'))}</a></span></p>
+    </details></dd>`;
+}
 const nextToText = list => list.map(o => `${o.name} (${o.kind})`).join('; ');
 function transitFacts(item) {
   const m = Transit.muni(item), b = Transit.bike(item);
