@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v32 -->
+<!-- build: v33 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -304,6 +304,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 .lu-table td { padding: 1px 0; }
 .lu-table td + td { padding-left: 12px; text-align: right; color: var(--ink-soft); }
 .lu-table i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+.facts .zsw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
 .lu-note { display: block; margin-top: 3px; font-size: 11.5px; color: var(--ink-soft); font-weight: 400; }
 
 .notice {
@@ -350,6 +351,14 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 .legend .sw svg { width: 24px; height: 12px; overflow: visible; }
 .legend .sw svg.dot { width: 16px; height: 16px; }
 .legend .lg-halo svg { filter: drop-shadow(0 0 1px rgba(30,35,64,.5)); }
+.legend li.lg-expand { display: block; }
+.legend li.lg-expand summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; }
+.legend li.lg-expand summary::-webkit-details-marker { display: none; }
+.legend .lg-more { color: var(--ink-soft); }
+.legend details[open] .lg-more { transform: rotate(180deg); display: inline-block; }
+.lg-table { margin: 4px 0 2px 51px; border-collapse: collapse; font-size: 12px; }
+.lg-table td { padding: 1px 6px 1px 0; }
+.lg-table i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; opacity: .75; vertical-align: -1px; }
 .legend-hint { margin: 6px 0 0; font-size: 12px; color: var(--ink-soft); }
 .map-loading { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 600; color: var(--ink-soft); z-index: 4; pointer-events: none; }
 .maplibregl-popup-content { font-family: var(--body); border-radius: 12px; padding: 8px 12px; font-size: 14px; box-shadow: 0 4px 0 rgba(30,35,64,.25); }
@@ -374,7 +383,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
     <svg class="bunting" id="bunting" viewBox="0 0 600 64" preserveAspectRatio="none" aria-hidden="true"></svg>
     <div class="brand">
       <img class="logo" src="img/civic-joy.png" alt="Civic Joy Fund" width="64" height="64">
-      <h1 data-i18n="title">Block Party</h1>
+      <h1 data-i18n="title" id="app-title">Block Party</h1>
     </div>
     <p class="intro" data-i18n="intro">Find the exact block for your street event, and get the city’s block ID (called a CNN) to include with your application.</p>
   </header>
@@ -500,7 +509,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
         <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/><path d="M15 6 l-6 -4 v8z" fill="#545B7F"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOneway">One-way</span></li>
         <li id="lg-lyr-muni" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="2" y1="6" x2="22" y2="6" stroke="#D9480F" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/><line x1="2" y1="6" x2="22" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1" y="3" width="14" height="10" rx="3" fill="#D9480F"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg></span><span data-i18n="lgMuni">Muni routes</span></li>
         <li id="lg-lyr-bike" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3" x2="23" y2="3" stroke="#1A7F37" stroke-width="3"/><line x1="1" y1="9.5" x2="23" y2="9.5" stroke="#1A7F37" stroke-width="1.6" stroke-dasharray="3 2.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBike">Bike lanes (dashed: shared routes)</span></li>
-        <li id="lg-lyr-landuse" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect width="6" height="12" fill="#E9C845" fill-opacity=".6"/><rect x="6" width="6" height="12" fill="#F0A04B" fill-opacity=".6"/><rect x="12" width="6" height="12" fill="#9C6FB6" fill-opacity=".6"/><rect x="18" width="6" height="12" fill="#4C9A3F" fill-opacity=".6"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLanduse">Land use (2023)</span></li>
+        <li id="lg-lyr-landuse" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12"><rect width="6" height="12" fill="#E9C845" fill-opacity=".6"/><rect x="6" width="6" height="12" fill="#F0A04B" fill-opacity=".6"/><rect x="12" width="6" height="12" fill="#9C6FB6" fill-opacity=".6"/><rect x="18" width="6" height="12" fill="#4C9A3F" fill-opacity=".6"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span id="lg-landuse-title">Land use (2023)</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-landuse-table"></table></details></li>
         <li id="lg-lyr-lands" hidden><span class="sw"><svg viewBox="0 0 24 12" id="lg-lands-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLands">City-owned land</span></li>
         <li id="lg-lyr-slow" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#2457D6" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0.1 7"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlow">Slow Streets</span></li>
         <li id="lg-lyr-schools" hidden><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1.5" y="1.5" width="13" height="13" rx="3.5" fill="#8A5A00" stroke="#fff"/><path d="M4.5 8 L8 5 L11.5 8 V11.5 H4.5Z" fill="#fff"/></svg></span><span data-i18n="lgSchools">Schools</span></li>
@@ -534,7 +543,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 <div class="toast" id="toast" role="status"></div>
 
 <script>
-const _BUILD_VERSION = 'v32';
+const _BUILD_VERSION = 'v33';
 
 /* =====================================================================
    CONFIG
@@ -640,7 +649,11 @@ const I18N = {
     btn3d: '3D', btnContours: 'Contours', btnLayers: 'Layers',
     layersHint: '“Close up” shows a layer once you zoom in to a few blocks.',
     lyr_lands: 'City-owned land', lgLands: 'City-owned land',
-    lyr_landuse: 'Land use and zoning', lyr_landuseHint: 'Parcels, SF Planning 2023, from zoom 15', lgLanduse: 'Land use (2023)',
+    lyr_landuse: 'Parcels', lyr_landuseHint: 'Land use (SF Planning 2023) or zoning, from zoom 15', lgLanduse: 'Land use (2023)', lgZoning: 'Zoning',
+    lyrLanduse: 'Land use', lyrZoning: 'Zoning',
+    zRH: 'Houses (RH)', zRM: 'Apartments and mixed residential (RM, RTO, RC)', zNC: 'Neighborhood commercial (NC, NCT, NCD)',
+    zC: 'Downtown and community business (C-2, C-3, Chinatown)', zPDR: 'Industrial (PDR, M)', zMU: 'Mixed use (UMU, MUG, MUO, MUR, SoMa)',
+    zP: 'Public (P)', zSP: 'Special plan areas (Mission Bay, Parkmerced, Treasure Island…)',
     lu_RESIDENT: 'Residential', lu_MIXRES: 'Mixed residential', lu_MIXED: 'Mixed, no housing', 'lu_RETAIL/ENT': 'Retail and entertainment',
     lu_MIPS: 'Office', lu_CIE: 'Cultural, institutional, education', lu_MED: 'Medical', lu_VISITOR: 'Hotels', lu_PDR: 'Industrial (PDR)',
     lu_OPENSPACE: 'Open space', lu_VACANT: 'Vacant', lu_none: 'No land use data',
@@ -1600,6 +1613,7 @@ function render() {
   // land use per block: read the parcel tiles for any card that doesn't have it yet, then redraw once
   const needParcels = segs.filter(s => !isInt(s) && !Parcels.peek(s));
   if (needParcels.length && Parcels.available()) Promise.all(needParcels.map(s => Parcels.fetch(s))).then(rs => { if (rs.some(Boolean)) render(); });
+  updateAdjLots();
   const d = Logic.db && Logic.db.dataAsOf;
   $('foot-note').textContent = d ? t('dataNote', { date: d.slice(0, 10) }) : '';
   drawResults();
@@ -2470,6 +2484,29 @@ const LANDUSE = [
   ['CIE', '#3B6FB6'], ['MED', '#C92A2A'], ['VISITOR', '#E5683C'], ['PDR', '#7A6A8E'], ['OPENSPACE', '#4C9A3F'], ['VACANT', '#B8B4AA'],
 ];
 const landuseColor = ['match', ['get', 'landuse'], ...LANDUSE.flat(), '#D8D5CE'];
+// Zoning, by code family (first code when a lot has several, "C-2|M-1"). Provisional colors following
+// common planning conventions (houses yellow, apartments orange, neighborhood commercial pink, downtown
+// red, industrial purple, mixed use orchid, public blue) until we have SF Planning's own palette.
+// Longer prefixes first: the first match wins.
+const ZONING = [
+  ['RH-1(D)', '#FFF1A8', 'zRH'], ['RH-1', '#FFE985', 'zRH'], ['RH-2', '#FFD84F', 'zRH'], ['RH-3', '#F2C133', 'zRH'],
+  ['RM-1', '#F6B26B', 'zRM'], ['RM-2', '#EE9C4E', 'zRM'], ['RM-3', '#E3853A', 'zRM'], ['RM-4', '#CF6C2A', 'zRM'],
+  ['RTO', '#F3BE8A', 'zRM'], ['RC-', '#DE8A68', 'zRM'], ['RED', '#E9B38D', 'zRM'],
+  ['NC-S', '#F4C3CE', 'zNC'], ['NCT', '#D9668A', 'zNC'], ['NCD', '#E893AC', 'zNC'], ['NC-', '#EFA9BA', 'zNC'],
+  ['CRNC', '#D35D7A', 'zNC'], ['CVR', '#C94F6C', 'zC'], ['CCB', '#C94F6C', 'zC'],
+  ['C-3', '#C2343F', 'zC'], ['C-2', '#E0606A', 'zC'],
+  ['PDR', '#B7A3D9', 'zPDR'], ['M-1', '#A08CC8', 'zPDR'], ['M-2', '#8771B4', 'zPDR'],
+  ['UMU', '#E3A2D6', 'zMU'], ['MUG', '#E3A2D6', 'zMU'], ['MUO', '#D88CCB', 'zMU'], ['MUR', '#EBB8E0', 'zMU'], ['CMUO', '#D88CCB', 'zMU'],
+  ['WMU', '#E3A2D6', 'zMU'], ['SALI', '#CDA3D9', 'zMU'], ['SLI', '#CDA3D9', 'zMU'], ['SSO', '#D88CCB', 'zMU'], ['SPD', '#E3A2D6', 'zMU'], ['RSD', '#EBB8E0', 'zMU'],
+  ['P70', '#BCC6D0', 'zSP'], ['PPS', '#BCC6D0', 'zSP'], ['PM-', '#BCC6D0', 'zSP'],
+  ['P', '#A6CBEA', 'zP'],
+  ['MB-', '#BCC6D0', 'zSP'], ['HP-', '#BCC6D0', 'zSP'], ['TB', '#BCC6D0', 'zSP'], ['TI-', '#BCC6D0', 'zSP'], ['MR-', '#BCC6D0', 'zSP'],
+  ['S-MU', '#BCC6D0', 'zSP'], ['Job', '#BCC6D0', 'zSP'],
+];
+const ZONE_GROUPS = [['zRH', '#FFD84F'], ['zRM', '#EE9C4E'], ['zNC', '#E893AC'], ['zC', '#C2343F'], ['zPDR', '#A08CC8'], ['zMU', '#E3A2D6'], ['zP', '#A6CBEA'], ['zSP', '#BCC6D0']];
+const ZCODE = ['coalesce', ['get', 'parcelsactiveandretired_zoning_code'], ''];
+const zoningColor = ['case', ...ZONING.flatMap(([pre, c]) => [['==', ['slice', ZCODE, 0, pre.length], pre], c]), '#D8D5CE'];
+const zoningOf = code => (ZONING.find(([pre]) => (code || '').startsWith(pre)) || [null, '#D8D5CE', ''])
 const LAND_DEFAULT = LAND_CATS.filter(c => c[2]).map(c => c[0]);
 let landCats = new Set(LAND_DEFAULT);
 const landColor = ['match', ['get', 'cat'], ...LAND_CATS.flatMap(([k, c]) => [k, c]), '#5F5E5A'];
@@ -2478,8 +2515,9 @@ const OVERLAYS = {
   bike:     { url: 'data/layers/bike.geojson',     layers: ['bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-bike-label'] },
   slow:     { url: 'data/layers/slow.geojson',     layers: ['bp-lyr-slow', 'bp-lyr-slow-label'] },
   // vector tiles straight from a .pmtiles file (no GeoJSON to load); On / Off, from zoom 15
-  landuse:  { pmtiles: 'data/Land_Use_with_Active_Parcel_Information.pmtiles', minzoom: 15, onOff: true,
-              layers: ['bp-lyr-landuse-fill', 'bp-lyr-landuse-line'] },
+  landuse:  { pmtiles: 'data/Land_Use_with_Active_Parcel_Information.pmtiles', minzoom: 15,
+              modes: [['off', 'lyrOff'], ['landuse', 'lyrLanduse'], ['zoning', 'lyrZoning']],
+              layers: ['bp-lyr-landuse-fill', 'bp-lyr-landuse-line', 'bp-lyr-landuse-label'] },
   lands:    { url: 'data/layers/lands.geojson',    layers: ['bp-lyr-lands-fill', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-lands-label'] },
   schools:  { url: 'data/layers/schools.geojson',  layers: ['bp-lyr-schools'] },
   stations: { url: 'data/layers/stations.geojson', layers: ['bp-lyr-stations'] },
@@ -2516,7 +2554,16 @@ function addOverlayLayers(popup) {
       paint: { 'fill-color': landuseColor, 'fill-opacity': 0.32 } }, landBelow);
     map.addLayer({ id: 'bp-lyr-landuse-line', type: 'line', source: 'lyr-landuse', 'source-layer': 'parcels',
       paint: { 'line-color': '#8A8478', 'line-opacity': 0.35, 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 0.2, 18, 0.8] } }, landBelow);
+    // the lots counted on the checked blocks' cards: white outline with a soft dark edge, whether or not
+    // the land use layer is on (drawn from the same tiles, so lots split across tiles outline cleanly)
+    map.addLayer({ id: 'bp-adj-lots-casing', type: 'line', source: 'lyr-landuse', 'source-layer': 'parcels', minzoom: 15,
+      filter: ['in', ['get', 'mapblklot'], ['literal', []]],
+      paint: { 'line-color': '#1E2340', 'line-opacity': 0.35, 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 2.5, 18, 4.5] } }, 'bp-all');
+    map.addLayer({ id: 'bp-adj-lots', type: 'line', source: 'lyr-landuse', 'source-layer': 'parcels', minzoom: 15,
+      filter: ['in', ['get', 'mapblklot'], ['literal', []]],
+      paint: { 'line-color': '#FFFFFF', 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 1.2, 18, 2.5] } }, 'bp-all');
   }
+  map.addSource('parcel-labels', { type: 'geojson', data: EMPTY });
   map.addLayer({ id: 'bp-lyr-lands-fill', type: 'fill', source: 'lyr-lands', filter: landFilter(),
     paint: { 'fill-color': landColor, 'fill-opacity': ['case', ['==', ['get', 'cat'], 'park'], 0, 0.09] } }, landBelow);
   map.addLayer({ id: 'bp-lyr-lands-line', type: 'line', source: 'lyr-lands', filter: landFilter(['!=', ['get', 'cat'], 'park']),
@@ -2545,6 +2592,11 @@ function addOverlayLayers(popup) {
       'text-padding': 24, 'text-max-width': 30,
       'icon-image': 'muni-shield', 'icon-text-fit': 'both', 'icon-text-fit-padding': [1, 4, 1, 4] },
     paint: { 'text-color': '#FFFFFF' } }, below);
+  // one land use / zoning label per run of same-kind lots on an assessor block (see updateParcelLabels)
+  map.addLayer({ id: 'bp-lyr-landuse-label', type: 'symbol', source: 'parcel-labels', minzoom: 16,
+    layout: { 'text-field': ['get', 'label'], 'text-font': LABEL_FONT, 'text-size': 10.5, 'text-max-width': 8, 'text-padding': 4,
+      'symbol-sort-key': ['-', ['get', 'n']], visibility: 'none' },
+    paint: { 'text-color': '#4A4538', 'text-halo-color': 'rgba(255,255,255,0.85)', 'text-halo-width': 1.4 } }, below);
   map.addLayer({ id: 'bp-lyr-lands-label', type: 'symbol', source: 'lyr-lands', filter: landFilter(),
     layout: { 'text-field': ['get', 'name'], 'text-font': LABEL_FONT, 'text-size': 11, 'text-max-width': 10, 'text-padding': 6 },
     paint: { 'text-color': landColor, 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.4, 'text-opacity': 0.9 } }, below);
@@ -2603,6 +2655,8 @@ function addOverlayLayers(popup) {
   });
   map.on('mouseout', () => { if (areaPopup) { popup.remove(); areaPopup = false; } });
   map.on('zoom', updateOverlays);
+  map.on('moveend', updateParcelLabels);
+  map.on('sourcedata', e => { if (e.sourceId === 'lyr-landuse' && e.isSourceLoaded) updateParcelLabelsSoon(); });
   for (const k of Object.keys(OVERLAYS)) applyOverlay(k);
 }
 // route shield and point icons, drawn on a canvas like the intersection icons
@@ -2654,6 +2708,10 @@ const overlayMinZoomStd = k => overlayMode[k] === 'always' ? 0 : CLOSE_ZOOM;
 // labels: from CLOSE_ZOOM in Close up, a little sooner in Always
 const overlayLabelZoom = k => overlayMode[k] === 'always' ? 14 : CLOSE_ZOOM;
 function applyOverlay(k) {
+  if (k === 'landuse' && map.getLayer('bp-lyr-landuse-fill')) {
+    map.setPaintProperty('bp-lyr-landuse-fill', 'fill-color', overlayMode.landuse === 'zoning' ? zoningColor : landuseColor);
+    updateParcelLabels(); updateLanduseLegend();
+  }
   for (const id of OVERLAYS[k].layers) {
     // point layers: icons show with the layer, names wait for the label zoom
     if (POI_LAYERS.includes(id) && map.getLayer(id)) map.setLayoutProperty(id, 'text-field', ['step', ['zoom'], '', overlayLabelZoom(k), ['get', 'name']]);
@@ -2932,6 +2990,51 @@ const Nearby = (() => {
    like Dolores put the lot line further out). Leaving out the block's ends keeps the second lot in from
    a corner, which faces the cross street, out of the count; the corner lot itself still counts.
    Lots are counted by map block-lot, since condos repeat one lot many times. */
+// Parcel labels without a wall of repeats: lots are grouped by assessor block (the map block-lot minus
+// its last 3 digits) and value, and each group gets one label at the middle of its lots, sized by count.
+// Rebuilt from the parcels on screen whenever the view settles, from zoom 16.
+let parcelLabelTimer = null;
+const updateParcelLabelsSoon = () => { clearTimeout(parcelLabelTimer); parcelLabelTimer = setTimeout(updateParcelLabels, 300); };
+function updateParcelLabels() {
+  if (!map || !map.getSource('parcel-labels') || !map.getSource('lyr-landuse')) return;
+  const mode = overlayMode.landuse;
+  if (mode === 'off' || map.getZoom() < 16) { map.getSource('parcel-labels').setData(EMPTY); return; }
+  const b = map.getBounds(), seen = new Set(), groups = new Map();
+  // rendered features (querySourceFeatures comes back empty for this source with terrain on)
+  for (const f of map.queryRenderedFeatures({ layers: ['bp-lyr-landuse-fill'] })) {
+    const p = f.properties, lot = p.mapblklot;
+    if (!lot || seen.has(lot)) continue;
+    const ring = f.geometry.type === 'Polygon' ? f.geometry.coordinates[0] : f.geometry.coordinates[0][0];
+    let x = 0, y = 0; for (const c of ring) { x += c[0]; y += c[1]; } x /= ring.length; y /= ring.length;
+    if (!b.contains([x, y])) continue;
+    seen.add(lot);
+    const val = mode === 'zoning' ? (p.parcelsactiveandretired_zoning_code || '').split('|')[0] : (p.landuse || '');
+    if (!val) continue;
+    const k = lot.slice(0, -3) + '|' + val, g = groups.get(k) || { val, x: 0, y: 0, n: 0 };
+    g.x += x; g.y += y; g.n++; groups.set(k, g);
+  }
+  map.getSource('parcel-labels').setData(fc([...groups.values()].map(g => ({ type: 'Feature',
+    geometry: { type: 'Point', coordinates: [g.x / g.n, g.y / g.n] },
+    properties: { label: mode === 'zoning' ? g.val : landuseName(g.val), n: g.n } }))));
+}
+// map key: the land use row expands (click) into the palette for the current mode
+function updateLanduseLegend() {
+  const li = $('lg-lyr-landuse'); if (!li) return;
+  const zoning = overlayMode.landuse === 'zoning';
+  $('lg-landuse-title').textContent = t(zoning ? 'lgZoning' : 'lgLanduse');
+  const rows = zoning ? ZONE_GROUPS.map(([g, c]) => [c, t(g)]) : LANDUSE.map(([k, c]) => [c, landuseName(k)]);
+  $('lg-landuse-table').innerHTML = rows.map(([c, n]) => `<tr><td><i style="background:${c}"></i></td><td>${esc(n)}</td></tr>`).join('');
+}
+// outline the lots counted on the checked blocks' cards
+function updateAdjLots() {
+  if (!mapReady || !map.getLayer('bp-adj-lots')) return;
+  const lots = state.results.filter(s => !isInt(s) && state.checked.has(s.cnn)).flatMap(s => (Parcels.peek(s) || {}).lotIds || []);
+  const f = ['in', ['get', 'mapblklot'], ['literal', [...new Set(lots)]]];
+  for (const id of ['bp-adj-lots', 'bp-adj-lots-casing']) {
+    map.setFilter(id, f);
+    map.setLayoutProperty(id, 'visibility', lots.length ? 'visible' : 'none');   // no tile reads when nothing's checked
+  }
+}
 function landuseName(k) { return k ? t('lu_' + k) : t('lu_none'); }
 const ZONE_CAPS = new Set(['NC', 'NCD', 'NCT', 'PDR', 'SALI', 'MUG', 'MUO', 'MUR', 'RED', 'RSD', 'SPD', 'UMU', 'CMUO', 'WMUG', 'WMUO', 'RCD', 'SLI', 'SSO', 'MB', 'TB', 'DTR', 'RTO', 'HP', 'II', 'OS']);
 function zoneName(z) {
@@ -3058,7 +3161,7 @@ const Parcels = (() => {
     const count = key => { const m = new Map(); for (const l of lots.values()) { const k = key(l); m.set(k, (m.get(k) || 0) + 1); } return [...m].sort((a, b) => b[1] - a[1]); };
     const zones = new Map();
     for (const l of lots.values()) if (l.zone) { const z = zones.get(l.zone) || { code: l.code, n: 0 }; z.n++; zones.set(l.zone, z); }
-    return { lots: lots.size, homes: [...lots.values()].reduce((a, l) => a + l.units, 0), uses: count(l => l.use),
+    return { lotIds: [...lots.keys()], lots: lots.size, homes: [...lots.values()].reduce((a, l) => a + l.units, 0), uses: count(l => l.use),
       zones: [...zones].sort((a, b) => b[1].n - a[1].n).map(([name, z]) => ({ name, code: z.code, n: z.n })) };
   }
   return {
@@ -3082,7 +3185,7 @@ function parcelFacts(s) {
   const r = Parcels.peek(s);
   if (!r) return `<dt>${esc(t('landuseRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
   if (!r.lots) return '';
-  const zones = r.zones.slice(0, 4).map(z => `${esc(z.code)} <span class="svc">${esc(zoneName(z.name))}${r.zones.length > 1 ? ` (${z.n})` : ''}</span>`).join('<br>');
+  const zones = r.zones.slice(0, 4).map(z => `<i class="zsw" style="background:${zoningOf(z.code)[1]}"></i>${esc(z.code)} <span class="svc">${esc(zoneName(z.name))}${r.zones.length > 1 ? ` (${z.n})` : ''}</span>`).join('<br>');
   const color = Object.fromEntries(LANDUSE);
   const uses = `<table class="lu-table">${r.uses.map(([k, n]) => `<tr><td><i style="background:${color[k] || '#D8D5CE'}"></i>${esc(landuseName(k))}</td><td>${n}</td></tr>`).join('')}</table>`;
   return `<dt>${esc(t('zoningRow'))}</dt><dd>${zones}</dd>
@@ -3116,7 +3219,8 @@ function overlayInfo(e, s) {
 }
 function setOverlay(k, v, write = true) {
   if (!(k in OVERLAY_DEFAULT)) return;
-  const ok = k === 'contours' || (OVERLAYS[k] && OVERLAYS[k].onOff) ? ['off', 'on'] : ['off', 'close', 'always'];
+  const ok = k === 'contours' ? ['off', 'on'] : OVERLAYS[k] && OVERLAYS[k].modes ? OVERLAYS[k].modes.map(m => m[0]) : ['off', 'close', 'always'];
+  if (k === 'landuse' && v === 'on') v = 'landuse';         // links from v32
   if (!ok.includes(v)) return;
   overlayMode[k] = v;
   document.querySelectorAll(`[data-lyr="${k}"] .lseg button`).forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
@@ -3148,8 +3252,7 @@ function setupMapMenus() {
       `<button type="button" data-v="${v}" aria-pressed="${overlayMode[k] === v}">${esc(t(label))}</button>`).join('')}</div></div>`;
   const three = [['off', 'lyrOff'], ['close', 'lyrClose'], ['always', 'lyrAlways']];
   const landChips = `<div class="land-chips">${LAND_CATS.map(([k, c]) => `<label class="land-chip"><input type="checkbox" data-land="${k}" ${landCats.has(k) ? 'checked' : ''}><i style="background:${c}"></i>${esc(t('land_' + k))}</label>`).join('')}</div>`;
-  const useKey = `<div class="land-chips">${LANDUSE.map(([k, c]) => `<span class="land-chip key"><i style="background:${c}"></i>${esc(landuseName(k))}</span>`).join('')}</div>`;
-  rowsEl.innerHTML = Object.keys(OVERLAYS).map(k => OVERLAYS[k].onOff ? row(k, [['off', 'lyrOff'], ['on', 'lyrOn']]) + useKey
+  rowsEl.innerHTML = Object.keys(OVERLAYS).map(k => OVERLAYS[k].modes ? row(k, OVERLAYS[k].modes)
     : row(k, three) + (k === 'lands' ? landChips : '')).join('') + row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]);
   rowsEl.addEventListener('change', e => {
     if (e.target.dataset.land) setLandCats([...rowsEl.querySelectorAll('[data-land]:checked')].map(i => i.dataset.land));
@@ -3341,6 +3444,7 @@ function drawBunting() {
   applyI18n();
   drawBunting();
   if (window.innerWidth <= 860) $('legend').open = false;
+  $('app-title').title = `Block Party ${_BUILD_VERSION}`;
   setupForm();
   setupResultsEvents();
   console.log(`[block-party] ${_BUILD_VERSION} · ${new Date().toLocaleString()}`);

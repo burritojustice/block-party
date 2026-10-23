@@ -2,6 +2,13 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v33
+- **Parcels** layer (was "Land use and zoning") is now **Off / Land use / Zoning**. Zoning colors parcels by zoning code family: houses (RH) yellow, apartments (RM, RTO, RC) orange, neighborhood commercial (NC, NCT, NCD) pink, downtown and community business (C-2, C-3, Chinatown) red, industrial (PDR, M) purple, mixed use (UMU, MUG, MUO, MUR, SoMa) orchid, public (P) blue, special plan areas grey. Provisional palette until we have SF Planning's. Links from v32 with `landuse:on` open in Land use.
+- Parcel labels from zoom 16: one label per run of same-kind lots on an assessor block (land use name, or zoning code), placed in the middle of the run, so a block of 30 RH-2 houses gets one "RH-2" instead of 30.
+- Map key: the land use / zoning row expands (click) into a color table for the current mode.
+- Checking a block outlines the lots counted on its card in white (from zoom 15, whether or not the Parcels layer is on). Zoning on the card gets a color swatch.
+- Hovering the "Block Party" title shows the build number.
+
 ## v32
 - **Land use and zoning** layer from `data/Land_Use_with_Active_Parcel_Information.pmtiles` (SF Planning land use 2023 joined to active parcels, DataSF `h5vv-2u24`): parcels tinted by land use with faint outlines, off by default (Off / On in the Layers menu, with a color key), drawn from zoom 15. Hovering a parcel shows its lot, land use, homes, and zoning. Loaded with the PMTiles library (4.5.0), which needs a server with range requests (GitHub Pages; `npx http-server` locally, not `python3 -m http.server`).
 - Block cards add **Zoning** (districts with lot counts), **Parcels** (lots and homes), and a **Land use** table, read from the same file for the lots beside the block, whether or not the layer is on. Lots count when they're within 14 m of the middle 70% of the block's centerline, or 25 m when their address is on the block's street; lots are counted once per map block-lot, since condos repeat. Copy-card text and exports add `lots`, `homes`, `land_use_2023`, and `zoning`.
