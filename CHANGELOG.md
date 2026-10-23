@@ -2,6 +2,10 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v34
+- **Neighborhood groups** on block and intersection cards: the groups on SF Planning's notification list for the block's Planning Neighborhood, behind a link that expands (organization, contacts, emails), with citywide groups in their own expandable list and a "Copy list" button. A block on a boundary lists both neighborhoods. Data: `data/neighborhood_groups.json`, built by `scripts/build_neighborhood_groups.py` from the copy in the new `reference/neighborhood-groups/` folder (list of September 25, 2026); boundaries `data/layers/planning_neighborhoods.geojson` (DataSF `mw29-m2za`, copied from civic-joy-fund/joiner). Exports add `planning_neighborhood` and `neighborhood_groups` (count).
+- **Zoning colors are now SF Planning's own**, from the Zoning Map's Zoning Districts layer (`PlanningData/MapServer/3`), matched by zoning code; the map key lists the families with one of their colors each.
+
 ## v33
 - **Parcels** layer (was "Land use and zoning") is now **Off / Land use / Zoning**. Zoning colors parcels by zoning code family: houses (RH) yellow, apartments (RM, RTO, RC) orange, neighborhood commercial (NC, NCT, NCD) pink, downtown and community business (C-2, C-3, Chinatown) red, industrial (PDR, M) purple, mixed use (UMU, MUG, MUO, MUR, SoMa) orchid, public (P) blue, special plan areas grey. Provisional palette until we have SF Planning's. Links from v32 with `landuse:on` open in Land use.
 - Parcel labels from zoom 16: one label per run of same-kind lots on an assessor block (land use name, or zoning code), placed in the middle of the run, so a block of 30 RH-2 houses gets one "RH-2" instead of 30.

@@ -5,7 +5,6 @@ Gathered from the build conversation, October 2026. Check items off or move them
 ## Waiting on someone
 
 - [ ] **Airtable:** prefill the form from a link vs. embed it — waiting on stakeholders. The "Apply for a Block Party" button is still a placeholder.
-- [ ] **Zoning colors:** swap the provisional zoning palette (`ZONING` in `index.html`) for SF Planning's. Needs the ArcGIS item data for https://experience.arcgis.com/experience/573d02b43b7b46e381df04b7f225da95 (`https://www.arcgis.com/sharing/rest/content/items/573d02b43b7b46e381df04b7f225da95/data?f=json` — paste it in chat so Claude can fetch it).
 - [ ] **Slimmer parcels pmtiles:** rebuild with only the fields we use and zoom 15 only (command in the v32 notes); same filename, nothing else changes.
 - [ ] **Schools enrollment:** join California Department of Education enrollment; document the workflow (maybe its own repo, since it works statewide). Then add the enrollment column to `build_layers.py`'s school fields.
 
@@ -41,6 +40,8 @@ Gathered from the build conversation, October 2026. Check items off or move them
 - [ ] Green SF Now matches: Dorchester picks up Portola blocks next to the median; Frida Kahlo Way picks up City College private-road ends; area polygons list many partial edge blocks (`--min-partial`).
 
 ## Housekeeping
+
+- [ ] Neighborhood groups: refresh `reference/neighborhood-groups/` when SF Planning updates the list (steps in its README); joiner could use the same list.
 
 - [ ] sf-blocks: `git rm --cached .DS_Store`; keep its `streets.json` the slopes version.
 - [ ] Selecter: same creek-filter fix as Block Party (keep the style's kind filter, treat a missing name as blank).
