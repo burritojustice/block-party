@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v30 -->
+<!-- build: v32 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -13,6 +13,8 @@
 <script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
 <!-- maplibre-contour v0.1.0 (BSD-3-Clause), same version as Selecter -->
 <script src="https://unpkg.com/maplibre-contour@0.1.0/dist/index.min.js"></script>
+<!-- PMTiles 4.5.0 (BSD-3-Clause): land use parcels -->
+<script src="https://unpkg.com/pmtiles@4.5.0/dist/pmtiles.js"></script>
 <style>
 :root {
   --ink: #1E2340;
@@ -106,6 +108,7 @@ button, input { font: inherit; color: inherit; }
 .land-chip:has(input:checked) { border-color: var(--ink); color: var(--ink); }
 .land-chip input { width: 13px; height: 13px; margin: 0; accent-color: var(--ink); }
 .land-chip i { width: 8px; height: 8px; border-radius: 2px; }
+.land-chip.key { cursor: default; color: var(--ink); padding-left: 6px; }
 .lyr-sep { margin: 6px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
 .quiet-group { margin: 4px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
 .qchip { display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--line); border-radius: 12px; padding: 7px 10px; font-size: 15px; cursor: pointer; }
@@ -297,6 +300,11 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 .facts .route { display: inline-block; min-width: 1.8em; margin: 1px 3px 1px 0; padding: 0 5px; border-radius: 5px; background: #D9480F; color: #fff; font-size: 13px; font-weight: 700; text-align: center; }
 .facts .svc { color: var(--ink-soft); font-size: 13px; font-weight: 500; margin-right: 6px; }
 .facts .svc-group { display: inline-block; }
+.lu-table { border-collapse: collapse; font-size: 13px; font-weight: 500; }
+.lu-table td { padding: 1px 0; }
+.lu-table td + td { padding-left: 12px; text-align: right; color: var(--ink-soft); }
+.lu-table i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+.lu-note { display: block; margin-top: 3px; font-size: 11.5px; color: var(--ink-soft); font-weight: 400; }
 
 .notice {
   border: 2px dashed var(--line); border-radius: var(--radius-lg);
@@ -492,6 +500,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
         <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/><path d="M15 6 l-6 -4 v8z" fill="#545B7F"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOneway">One-way</span></li>
         <li id="lg-lyr-muni" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="2" y1="6" x2="22" y2="6" stroke="#D9480F" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/><line x1="2" y1="6" x2="22" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1" y="3" width="14" height="10" rx="3" fill="#D9480F"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg></span><span data-i18n="lgMuni">Muni routes</span></li>
         <li id="lg-lyr-bike" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3" x2="23" y2="3" stroke="#1A7F37" stroke-width="3"/><line x1="1" y1="9.5" x2="23" y2="9.5" stroke="#1A7F37" stroke-width="1.6" stroke-dasharray="3 2.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBike">Bike lanes (dashed: shared routes)</span></li>
+        <li id="lg-lyr-landuse" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect width="6" height="12" fill="#E9C845" fill-opacity=".6"/><rect x="6" width="6" height="12" fill="#F0A04B" fill-opacity=".6"/><rect x="12" width="6" height="12" fill="#9C6FB6" fill-opacity=".6"/><rect x="18" width="6" height="12" fill="#4C9A3F" fill-opacity=".6"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLanduse">Land use (2023)</span></li>
         <li id="lg-lyr-lands" hidden><span class="sw"><svg viewBox="0 0 24 12" id="lg-lands-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLands">City-owned land</span></li>
         <li id="lg-lyr-slow" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#2457D6" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0.1 7"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlow">Slow Streets</span></li>
         <li id="lg-lyr-schools" hidden><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1.5" y="1.5" width="13" height="13" rx="3.5" fill="#8A5A00" stroke="#fff"/><path d="M4.5 8 L8 5 L11.5 8 V11.5 H4.5Z" fill="#fff"/></svg></span><span data-i18n="lgSchools">Schools</span></li>
@@ -525,7 +534,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 <div class="toast" id="toast" role="status"></div>
 
 <script>
-const _BUILD_VERSION = 'v30';
+const _BUILD_VERSION = 'v32';
 
 /* =====================================================================
    CONFIG
@@ -631,6 +640,12 @@ const I18N = {
     btn3d: '3D', btnContours: 'Contours', btnLayers: 'Layers',
     layersHint: '“Close up” shows a layer once you zoom in to a few blocks.',
     lyr_lands: 'City-owned land', lgLands: 'City-owned land',
+    lyr_landuse: 'Land use and zoning', lyr_landuseHint: 'Parcels, SF Planning 2023, from zoom 15', lgLanduse: 'Land use (2023)',
+    lu_RESIDENT: 'Residential', lu_MIXRES: 'Mixed residential', lu_MIXED: 'Mixed, no housing', 'lu_RETAIL/ENT': 'Retail and entertainment',
+    lu_MIPS: 'Office', lu_CIE: 'Cultural, institutional, education', lu_MED: 'Medical', lu_VISITOR: 'Hotels', lu_PDR: 'Industrial (PDR)',
+    lu_OPENSPACE: 'Open space', lu_VACANT: 'Vacant', lu_none: 'No land use data',
+    parcelLot: 'Lot {lot}', homesN: '{n} homes', zoningRow: 'Zoning', parcelsRow: 'Parcels', landuseRow: 'Land use',
+    lotsHomes: '{lots} lots, {homes} homes', lotsOnly: '{lots} lots', landuseNote: 'Land use: SF Planning, 2023. Lots on both sides of the block.',
     land_school: 'Schools', land_park: 'Parks', land_fire: 'Fire', land_police: 'Police', land_health: 'Health',
     land_openspace: 'Open space', land_port: 'Port', land_library: 'Library', land_mta: 'MTA', land_works: 'Public Works',
     land_puc: 'Water and sewer', land_housing: 'Housing Authority', land_realestate: 'Real Estate',
@@ -1582,6 +1597,9 @@ function render() {
   // Muni and bike rows fill in once those files have loaded (the first time cards appear)
   if (segs.length && !Transit.ready) Transit.ensure().then(() => { if (Transit.ready) render(); });
   if (segs.length && !Nearby.ready) Nearby.ensure().then(() => { if (Nearby.ready) render(); });
+  // land use per block: read the parcel tiles for any card that doesn't have it yet, then redraw once
+  const needParcels = segs.filter(s => !isInt(s) && !Parcels.peek(s));
+  if (needParcels.length && Parcels.available()) Promise.all(needParcels.map(s => Parcels.fetch(s))).then(rs => { if (rs.some(Boolean)) render(); });
   const d = Logic.db && Logic.db.dataAsOf;
   $('foot-note').textContent = d ? t('dataNote', { date: d.slice(0, 10) }) : '';
   drawResults();
@@ -1646,6 +1664,10 @@ function cardText(s) {
   if (Transit.slow(s)) lines.push(Transit.slow(s));
   const nx = Nearby.of(s);
   if (nx && nx.length) lines.push(`${t('nextTo')}: ${nextToText(nx)}`);
+  const pr = Parcels.peek(s);
+  if (pr && pr.lots) lines.push(`${t('zoningRow')}: ${pr.zones.map(z => `${z.code} ${zoneName(z.name)} (${z.n})`).join('; ')}`,
+    `${t('parcelsRow')}: ${pr.homes ? t('lotsHomes', { lots: pr.lots, homes: pr.homes }) : t('lotsOnly', { lots: pr.lots })}`,
+    `${t('landuseRow')} (2023): ${landuseText(pr)}`);
   lines.push(linkFor([s]));
   return lines.join('\n');
 }
@@ -1685,6 +1707,7 @@ function cardHTML(s) {
       <dt>${esc(t('length'))}</dt><dd>${esc(t('ft', { n: fmtFt(s.len) }))}</dd>
       <dt>${esc(t('slope'))}</dt><dd data-slope="${s.cnn}">${slopeHTML(s)}</dd>
       ${transitFacts(s)}
+      ${parcelFacts(s)}
     </dl>
     <div class="profile" data-profile="${s.cnn}" aria-label="${esc(t('profileTitle'))}">${profileHTML(s)}</div>
   </li>`;
@@ -1847,14 +1870,15 @@ function elevFields(s) {
 }
 async function exportSegs() {
   const segs = checkedSegs();
-  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure(), Nearby.ensure()]);
+  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure(), Nearby.ensure(), ...segs.map(s => Parcels.fetch(s))]);
   return segs;
 }
 // "14 (Frequent Local); 14R (Rapid Bus)" and "Bike lane · posts"
 function transitFields(s) {
   const m = Transit.muni(s), b = Transit.bike(s);
   return { muni_routes: m ? m.map(r => r.route + (r.service ? ` (${r.service})` : '')).join('; ') : '',
-    bike_facility: b ? b.join('; ') : '', slow_street: Transit.slow(s) || '', next_to: nextToText(Nearby.of(s) || []) };
+    bike_facility: b ? b.join('; ') : '', slow_street: Transit.slow(s) || '', next_to: nextToText(Nearby.of(s) || []),
+    ...(isInt(s) ? {} : parcelFields(Parcels.peek(s))) };
 }
 const wktOf = o => isInt(o) ? `POINT (${o.x.toFixed(5)} ${o.y.toFixed(5)})`
   : `LINESTRING (${o.coords.map(c => `${c[0].toFixed(5)} ${c[1].toFixed(5)}`).join(', ')})`;
@@ -2044,7 +2068,34 @@ function initMap() {
   map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), 'top-right');
   return new Promise(res => map.on('load', res));
 }
+// Basemap creek fix, ported from Selecter: OSM tags many Bay Area creeks (some of them underground, like
+// Mission Creek) as rivers, so they draw across the city. Hide streams, plus river lines and waterway
+// labels named "Creek" or "Arroyo". Unlike Selecter, this keeps the style's own kind filter and adds to
+// it, so the layers don't start drawing other water features.
+function hideCreeks() {
+  const named = w => ['!', ['in', w, ['coalesce', ['get', 'name'], '']]];
+  // the style's filters use the old syntax (["in", "kind", "river"]), which can't be mixed with
+  // expressions, so convert the simple forms before combining
+  const expr = f => {
+    if (!Array.isArray(f) || typeof f[1] !== 'string') return f;           // already an expression
+    if (f[0] === 'in') return ['match', ['get', f[1]], f.slice(2), true, false];
+    if (f[0] === '==') return ['==', ['get', f[1]], f[2]];
+    return null;
+  };
+  const add = (id, ...conds) => {
+    if (!map.getLayer(id)) return;
+    const f = map.getFilter(id), e = f ? expr(f) : true;
+    if (e === null) { console.warn('[block-party] creek filter: unexpected filter on', id); return; }
+    map.setFilter(id, ['all', e, ...conds]);
+  };
+  try {
+    if (map.getLayer('water_stream')) map.setLayoutProperty('water_stream', 'visibility', 'none');
+    add('water_river', named('Creek'), named('Arroyo'));
+    add('water_waterway_label', ['!=', ['get', 'kind'], 'stream'], named('Creek'), named('Arroyo'));
+  } catch (e) { console.warn('[block-party] creek filter', e); }
+}
 function addMapLayers() {
+  hideCreeks();
   map.addSource('sat', { type: 'raster', tiles: [CONFIG.SATELLITE_TILES], tileSize: 256, maxzoom: 19,
     attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' });
   map.addLayer({ id: 'bp-sat', type: 'raster', source: 'sat', layout: { visibility: 'none' } });
@@ -2318,7 +2369,7 @@ function arrangeLayers() {
   const target = satOn ? 'bp-all' : 'bp-sat';      // bp-all is the first Block Party layer above the satellite
   for (const id of basemapLabelIds) map.moveLayer(id, target);
   const firstLabel = basemapLabelIds[0] || target;
-  for (const id of ['bp-lyr-lands-fill', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-muni', CONTOUR_LINE, CONTOUR_LABEL])
+  for (const id of ['bp-lyr-landuse-fill', 'bp-lyr-landuse-line', 'bp-lyr-lands-fill', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-muni', CONTOUR_LINE, CONTOUR_LABEL])
     if (map.getLayer(id)) map.moveLayer(id, firstLabel);
   // on satellite the clickable streets turn white, so contours go pale yellow to stay distinct
   if (map.getLayer(CONTOUR_LINE)) map.setPaintProperty(CONTOUR_LINE, 'line-color', satOn ? '#FFE7A3' : '#FFFFFF');
@@ -2413,6 +2464,12 @@ const LAND_CATS = [
   ['puc', '#5F5E5A', false], ['housing', '#5F5E5A', false], ['realestate', '#5F5E5A', false], ['ocii', '#5F5E5A', false],
   ['other', '#5F5E5A', false],
 ];
+// SF Planning land use (2023), from the parcels file's `landuse`
+const LANDUSE = [
+  ['RESIDENT', '#E9C845'], ['MIXRES', '#F0A04B'], ['MIXED', '#C9825A'], ['RETAIL/ENT', '#9C6FB6'], ['MIPS', '#6E8FC9'],
+  ['CIE', '#3B6FB6'], ['MED', '#C92A2A'], ['VISITOR', '#E5683C'], ['PDR', '#7A6A8E'], ['OPENSPACE', '#4C9A3F'], ['VACANT', '#B8B4AA'],
+];
+const landuseColor = ['match', ['get', 'landuse'], ...LANDUSE.flat(), '#D8D5CE'];
 const LAND_DEFAULT = LAND_CATS.filter(c => c[2]).map(c => c[0]);
 let landCats = new Set(LAND_DEFAULT);
 const landColor = ['match', ['get', 'cat'], ...LAND_CATS.flatMap(([k, c]) => [k, c]), '#5F5E5A'];
@@ -2420,12 +2477,15 @@ const OVERLAYS = {
   muni:     { url: 'data/layers/muni.geojson',     layers: ['bp-lyr-muni', 'bp-lyr-muni-label'] },
   bike:     { url: 'data/layers/bike.geojson',     layers: ['bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-bike-label'] },
   slow:     { url: 'data/layers/slow.geojson',     layers: ['bp-lyr-slow', 'bp-lyr-slow-label'] },
+  // vector tiles straight from a .pmtiles file (no GeoJSON to load); On / Off, from zoom 15
+  landuse:  { pmtiles: 'data/Land_Use_with_Active_Parcel_Information.pmtiles', minzoom: 15, onOff: true,
+              layers: ['bp-lyr-landuse-fill', 'bp-lyr-landuse-line'] },
   lands:    { url: 'data/layers/lands.geojson',    layers: ['bp-lyr-lands-fill', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-lands-label'] },
   schools:  { url: 'data/layers/schools.geojson',  layers: ['bp-lyr-schools'] },
   stations: { url: 'data/layers/stations.geojson', layers: ['bp-lyr-stations'] },
   health:   { url: 'data/layers/health.geojson',   layers: ['bp-lyr-health'] },
 };
-const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', slow: 'close', lands: 'close', schools: 'close', stations: 'close', health: 'close', contours: 'off' };
+const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', slow: 'close', landuse: 'off', lands: 'close', schools: 'close', stations: 'close', health: 'close', contours: 'off' };
 const overlayMode = { ...OVERLAY_DEFAULT };
 const overlayLoaded = new Set();
 const POI_LAYERS = ['bp-lyr-schools', 'bp-lyr-stations', 'bp-lyr-health'];
@@ -2435,7 +2495,12 @@ const onPoi = e => map.queryRenderedFeatures(e.point, { layers: POI_LAYERS.filte
 function addOverlayLayers(popup) {
   addOverlayIcons();
   map.addSource('lyr-muni-lbl', { type: 'geojson', data: EMPTY });
-  for (const k of Object.keys(OVERLAYS)) map.addSource('lyr-' + k, { type: 'geojson', data: EMPTY, attribution: 'Layers: <a href="https://data.sf.gov">DataSF</a>' });
+  if (window.pmtiles) {
+    maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
+    map.addSource('lyr-landuse', { type: 'vector', url: 'pmtiles://' + new URL(OVERLAYS.landuse.pmtiles, location.href).href,
+      attribution: 'Land use 2023: <a href="https://data.sf.gov/d/h5vv-2u24">SF Planning / DataSF</a>' });
+  }
+  for (const k of Object.keys(OVERLAYS)) if (!OVERLAYS[k].pmtiles) map.addSource('lyr-' + k, { type: 'geojson', data: EMPTY, attribution: 'Layers: <a href="https://data.sf.gov">DataSF</a>' });
   const zw = (a, b, c) => ['interpolate', ['linear'], ['zoom'], 12, a, 16, b, 18, c];
   const halo = { 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.5 };
   // Muni: a soft orange band along the street, under the basemap's labels. On the map it's a solid pale
@@ -2445,6 +2510,13 @@ function addOverlayLayers(popup) {
   // City-owned land: a faint tint and thin outline, under the basemap labels and the Muni band. Parks get
   // a dashed outline and no tint, since the basemap already shades them green.
   const landBelow = firstBasemapLabel ? firstBasemapLabel.id : 'bp-sat';
+  // Land use: parcels tinted by use, faint outlines, under city-owned land and the basemap labels
+  if (map.getSource('lyr-landuse')) {
+    map.addLayer({ id: 'bp-lyr-landuse-fill', type: 'fill', source: 'lyr-landuse', 'source-layer': 'parcels',
+      paint: { 'fill-color': landuseColor, 'fill-opacity': 0.32 } }, landBelow);
+    map.addLayer({ id: 'bp-lyr-landuse-line', type: 'line', source: 'lyr-landuse', 'source-layer': 'parcels',
+      paint: { 'line-color': '#8A8478', 'line-opacity': 0.35, 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 0.2, 18, 0.8] } }, landBelow);
+  }
   map.addLayer({ id: 'bp-lyr-lands-fill', type: 'fill', source: 'lyr-lands', filter: landFilter(),
     paint: { 'fill-color': landColor, 'fill-opacity': ['case', ['==', ['get', 'cat'], 'park'], 0, 0.09] } }, landBelow);
   map.addLayer({ id: 'bp-lyr-lands-line', type: 'line', source: 'lyr-lands', filter: landFilter(['!=', ['get', 'cat'], 'park']),
@@ -2507,13 +2579,29 @@ function addOverlayLayers(popup) {
     });
     map.on('mouseleave', id, () => popup.remove());
   }
-  map.on('mousemove', 'bp-lyr-lands-fill', e => {
-    const f = e.features[0];
-    if (!f || map.queryRenderedFeatures(e.point, { layers: ['bp-all-hit', 'bp-corners-hit', ...POI_LAYERS].filter(id => map.getLayer(id)) }).length) return;
-    const p = f.properties;
-    popup.setLngLat(e.lngLat).setHTML(`<b>${esc(p.name || '')}</b><br><span class="pop-lyr">${esc([t('land_' + p.cat), p.dept].filter(Boolean).join(' · '))}</span>${p.addr ? `<br><span class="pop-lyr">${esc(p.addr)}</span>` : ''}`).addTo(map);
+  // area features (city-owned land, land use parcels): one popup, only when no street, corner, or
+  // icon is under the cursor (those have their own)
+  let areaPopup = false;
+  map.on('mousemove', e => {
+    const ids = ['bp-lyr-lands-fill', 'bp-lyr-landuse-fill'].filter(id => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none');
+    const busy = map.queryRenderedFeatures(e.point, { layers: ['bp-all-hit', 'bp-corners-hit', ...POI_LAYERS].filter(id => map.getLayer(id)) }).length;
+    const hits = busy || !ids.length ? [] : map.queryRenderedFeatures(e.point, { layers: ids });
+    const land = hits.find(f => f.layer.id === 'bp-lyr-lands-fill'), parcel = hits.find(f => f.layer.id === 'bp-lyr-landuse-fill');
+    if (!land && !parcel) { if (areaPopup) { popup.remove(); areaPopup = false; } return; }
+    const parts = [];
+    if (land) {
+      const p = land.properties;
+      parts.push(`<b>${esc(p.name || '')}</b><br><span class="pop-lyr">${esc([t('land_' + p.cat), p.dept].filter(Boolean).join(' · '))}</span>${p.addr ? `<br><span class="pop-lyr">${esc(p.addr)}</span>` : ''}`);
+    }
+    if (parcel) {
+      const p = parcel.properties, units = +p.resunits || 0;
+      parts.push(`${land ? '' : `<b>${esc(t('parcelLot', { lot: p.mapblklot || '' }))}</b><br>`}<span class="pop-lyr">${esc([landuseName(p.landuse), units ? t('homesN', { n: units }) : ''].filter(Boolean).join(' · '))}</span>`
+        + `<br><span class="pop-lyr">${esc(zoneName(p.parcelsactiveandretired_zoning_district))}${p.parcelsactiveandretired_zoning_code ? ` (${esc(p.parcelsactiveandretired_zoning_code)})` : ''}</span>`);
+    }
+    popup.setLngLat(e.lngLat).setHTML(parts.join('<br>')).addTo(map);
+    areaPopup = true;
   });
-  map.on('mouseleave', 'bp-lyr-lands-fill', () => popup.remove());
+  map.on('mouseout', () => { if (areaPopup) { popup.remove(); areaPopup = false; } });
   map.on('zoom', updateOverlays);
   for (const k of Object.keys(OVERLAYS)) applyOverlay(k);
 }
@@ -2561,7 +2649,8 @@ function setLandCats(cats, write = true) {
   if (sw) sw.innerHTML = LAND_CATS.filter(c => landCats.has(c[0])).slice(0, 5).map(([, c]) => `<rect width="4" height="10" fill="${c}" fill-opacity=".35" stroke="${c}"/>`).map((r, i) => r.replace('<rect', `<rect x="${i * 5}" y="1"`)).join('');
   if (write) writeHash();
 }
-const overlayMinZoom = k => overlayMode[k] === 'always' ? 0 : CLOSE_ZOOM;
+const overlayMinZoom = k => OVERLAYS[k].minzoom != null ? OVERLAYS[k].minzoom : overlayMinZoomStd(k);
+const overlayMinZoomStd = k => overlayMode[k] === 'always' ? 0 : CLOSE_ZOOM;
 // labels: from CLOSE_ZOOM in Close up, a little sooner in Always
 const overlayLabelZoom = k => overlayMode[k] === 'always' ? 14 : CLOSE_ZOOM;
 function applyOverlay(k) {
@@ -2578,7 +2667,7 @@ function updateOverlays() {
   if (!map || !map.getSource('lyr-muni')) return;
   const z = map.getZoom();
   for (const k of Object.keys(OVERLAYS)) {
-    const on = overlayMode[k] !== 'off';
+    const on = overlayMode[k] !== 'off' && !(OVERLAYS[k].pmtiles && !map.getSource('lyr-' + k));
     for (const id of OVERLAYS[k].layers) {
       const vis = on && z >= (id.endsWith('-label') ? overlayLabelZoom(k) : overlayMinZoom(k)) ? 'visible' : 'none';
       if (overlayVis[id] !== vis && map.getLayer(id)) { map.setLayoutProperty(id, 'visibility', vis); overlayVis[id] = vis; }
@@ -2595,7 +2684,7 @@ function fetchLayer(k) {
     .catch(err => { delete layerFetches[k]; throw err; });
 }
 async function loadOverlay(k) {
-  if (overlayLoaded.has(k)) return;
+  if (overlayLoaded.has(k) || OVERLAYS[k].pmtiles) return;
   overlayLoaded.add(k);
   try {
     const data = await fetchLayer(k);
@@ -2836,6 +2925,175 @@ const Nearby = (() => {
     },
   };
 })();
+/* ---------- Land use and zoning along a block, read from the parcels .pmtiles ----------
+   Reads the zoom-15 tiles around the block straight from the file (the map layer can be off), decodes
+   them with a small vector-tile reader, and keeps the lots beside the block: within NEAR_M of the
+   middle 70% of its centerline, or within ADDR_M when the lot's address is on this street (wide streets
+   like Dolores put the lot line further out). Leaving out the block's ends keeps the second lot in from
+   a corner, which faces the cross street, out of the count; the corner lot itself still counts.
+   Lots are counted by map block-lot, since condos repeat one lot many times. */
+function landuseName(k) { return k ? t('lu_' + k) : t('lu_none'); }
+const ZONE_CAPS = new Set(['NC', 'NCD', 'NCT', 'PDR', 'SALI', 'MUG', 'MUO', 'MUR', 'RED', 'RSD', 'SPD', 'UMU', 'CMUO', 'WMUG', 'WMUO', 'RCD', 'SLI', 'SSO', 'MB', 'TB', 'DTR', 'RTO', 'HP', 'II', 'OS']);
+function zoneName(z) {
+  return (z || '').toLowerCase().replace(/\b[a-z][a-z'.]*/g, w => ZONE_CAPS.has(w.toUpperCase()) ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1))
+    .replace(/-\s+/g, ' – ');
+}
+// minimal Mapbox Vector Tile reader: layer name -> [{props, rings}] with rings in tile coordinates
+function decodeMVT(buf, wantLayer) {
+  let pos = 0;
+  const varint = (end) => { let r = 0, s = 0, b; do { b = buf[pos++]; r += (b & 0x7f) * 2 ** s; s += 7; } while (b & 0x80); return r; };
+  const str = (n) => { const v = new TextDecoder().decode(buf.subarray(pos, pos + n)); pos += n; return v; };
+  const out = [];
+  while (pos < buf.length) {
+    const tag = varint(), field = tag >> 3, wt = tag & 7;
+    if (field !== 3 || wt !== 2) { skip(wt); continue; }
+    const len = varint(), end = pos + len;
+    let name = '', extent = 4096; const keys = [], vals = [], feats = [];
+    while (pos < end) {
+      const t2 = varint(), f2 = t2 >> 3, w2 = t2 & 7;
+      if (f2 === 1 && w2 === 2) name = str(varint());
+      else if (f2 === 3 && w2 === 2) keys.push(str(varint()));
+      else if (f2 === 5 && w2 === 0) extent = varint();
+      else if ((f2 === 2 || f2 === 4) && w2 === 2) {
+        const l = varint(), e = pos + l;
+        if (f2 === 4) {
+          let v = null;
+          while (pos < e) {
+            const t3 = varint(), f3 = t3 >> 3, w3 = t3 & 7;
+            if (f3 === 1) v = str(varint());
+            else if (f3 === 2) { v = new DataView(buf.buffer, buf.byteOffset + pos, 4).getFloat32(0, true); pos += 4; }
+            else if (f3 === 3) { v = new DataView(buf.buffer, buf.byteOffset + pos, 8).getFloat64(0, true); pos += 8; }
+            else if (f3 === 7) v = !!varint();
+            else if (f3 === 6) { const n = varint(); v = n % 2 ? -(n + 1) / 2 : n / 2; }
+            else v = varint();
+          }
+          vals.push(v);
+        } else feats.push(buf.subarray(pos, e));
+        pos = e;
+      } else skip(w2);
+    }
+    pos = end;
+    if (name !== wantLayer) continue;
+    for (const fb of feats) out.push(feature(fb, keys, vals, extent));
+  }
+  return out;
+  function skip(wt) { if (wt === 0) varint(); else if (wt === 1) pos += 8; else if (wt === 2) pos += varint(); else if (wt === 5) pos += 4; }
+  function feature(fb, keys, vals, extent) {
+    const save = [buf, pos]; buf = fb; pos = 0;
+    const props = {}, rings = []; let geom = null;
+    const packed = () => { const l = varint(), e = pos + l, a = []; while (pos < e) a.push(varint()); return a; };
+    while (pos < buf.length) {
+      const t = varint(), f = t >> 3, w = t & 7;
+      if (f === 2 && w === 2) { const tags = packed(); for (let i = 0; i < tags.length; i += 2) props[keys[tags[i]]] = vals[tags[i + 1]]; }
+      else if (f === 4 && w === 2) geom = packed();
+      else skip(w);
+    }
+    let x = 0, y = 0, ring = null;
+    for (let i = 0; geom && i < geom.length;) {
+      const cmd = geom[i] & 7, n = geom[i++] >> 3;
+      if (cmd === 7) { if (ring) rings.push(ring); ring = null; continue; }
+      for (let k = 0; k < n; k++) {
+        const dx = geom[i++], dy = geom[i++];
+        x += dx & 1 ? -(dx + 1) / 2 : dx / 2; y += dy & 1 ? -(dy + 1) / 2 : dy / 2;
+        if (cmd === 1) { if (ring) rings.push(ring); ring = [[x, y]]; } else ring.push([x, y]);
+      }
+    }
+    if (ring && ring.length > 1) rings.push(ring);
+    [buf, pos] = save;
+    return { props, rings, extent };
+  }
+}
+const Parcels = (() => {
+  const Z = 15, NEAR_M = 14, ADDR_M = 25, PAD_M = 30;
+  const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
+  let pm = null; const tiles = new Map(), cache = new Map(), pending = new Map();
+  const tx = lon => (lon + 180) / 360 * 2 ** Z;
+  const ty = lat => (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * 2 ** Z;
+  const lon = x => x / 2 ** Z * 360 - 180;
+  const lat = y => Math.atan(Math.sinh(Math.PI * (1 - 2 * y / 2 ** Z))) * 180 / Math.PI;
+  function tile(x, y) {
+    const k = x + '/' + y;
+    if (!tiles.has(k)) tiles.set(k, pm.getZxy(Z, x, y).then(r => !r ? [] :
+      decodeMVT(new Uint8Array(r.data), 'parcels').map(f => ({
+        p: f.props,
+        rings: f.rings.map(r => r.map(([px, py]) => [lon(x + px / f.extent) * KX, lat(y + py / f.extent) * KY])),
+      }))).catch(err => { console.warn('[block-party] parcels tile', k, err); tiles.delete(k); return []; }));
+    return tiles.get(k);
+  }
+  const segDist = (x, y, a, b) => {
+    const vx = b[0] - a[0], vy = b[1] - a[1], L2 = vx * vx + vy * vy || 1;
+    const u = Math.max(0, Math.min(1, ((x - a[0]) * vx + (y - a[1]) * vy) / L2));
+    return Math.hypot(a[0] + u * vx - x, a[1] + u * vy - y);
+  };
+  // the middle part of the block's centerline, in meters
+  function middle(coords, from, to) {
+    const pts = coords.map(c => [c[0] * KX, c[1] * KY]), cum = [0];
+    for (let k = 1; k < pts.length; k++) cum.push(cum[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]));
+    const L = cum[cum.length - 1], at = d => { let k = 1; while (k < pts.length - 1 && cum[k] < d) k++;
+      const u = (d - cum[k - 1]) / ((cum[k] - cum[k - 1]) || 1); return [pts[k - 1][0] + u * (pts[k][0] - pts[k - 1][0]), pts[k - 1][1] + u * (pts[k][1] - pts[k - 1][1])]; };
+    const out = [at(L * from)];
+    for (let k = 1; k < pts.length - 1; k++) if (cum[k] > L * from && cum[k] < L * to) out.push(pts[k]);
+    out.push(at(L * to));
+    return out;
+  }
+  const streetKey = s => (s || '').toUpperCase().replace(/\b0+(\d)/g, '$1').split(' ').filter(w => !/^(ST|AVE?|BLVD|WAY|DR|CT|PL|TER|LN|RD|ALY|CIR|HWY|PARK|PLZ|EXPY|WALK|STWY|TUNL)$/.test(w)).join(' ');
+  async function compute(s) {
+    const mid = middle(s.coords, 0.15, 0.85);
+    const xs = s.coords.map(c => c[0]), ys = s.coords.map(c => c[1]);
+    const padLon = PAD_M / KX, padLat = PAD_M / KY;
+    const x0 = Math.floor(tx(Math.min(...xs) - padLon)), x1 = Math.floor(tx(Math.max(...xs) + padLon));
+    const y0 = Math.floor(ty(Math.max(...ys) + padLat)), y1 = Math.floor(ty(Math.min(...ys) - padLat));
+    const feats = (await Promise.all([...Array((x1 - x0 + 1) * (y1 - y0 + 1)).keys()].map(i => tile(x0 + i % (x1 - x0 + 1), y0 + Math.floor(i / (x1 - x0 + 1)))))).flat();
+    const myStreet = streetKey(s.street), lots = new Map();
+    for (const f of feats) {
+      const lot = f.p.mapblklot; if (!lot) continue;
+      let d = Infinity;
+      for (const r of f.rings) for (const [x, y] of r) for (let k = 1; k < mid.length; k++) d = Math.min(d, segDist(x, y, mid[k - 1], mid[k]));
+      const onStreet = streetKey(f.p.street) === myStreet;
+      if (d > (onStreet ? ADDR_M : NEAR_M)) continue;
+      const prev = lots.get(lot);
+      lots.set(lot, { use: f.p.landuse || '', zone: f.p.parcelsactiveandretired_zoning_district || '', code: f.p.parcelsactiveandretired_zoning_code || '',
+        units: Math.max(+f.p.resunits || 0, prev ? prev.units : 0) });
+    }
+    const count = key => { const m = new Map(); for (const l of lots.values()) { const k = key(l); m.set(k, (m.get(k) || 0) + 1); } return [...m].sort((a, b) => b[1] - a[1]); };
+    const zones = new Map();
+    for (const l of lots.values()) if (l.zone) { const z = zones.get(l.zone) || { code: l.code, n: 0 }; z.n++; zones.set(l.zone, z); }
+    return { lots: lots.size, homes: [...lots.values()].reduce((a, l) => a + l.units, 0), uses: count(l => l.use),
+      zones: [...zones].sort((a, b) => b[1].n - a[1].n).map(([name, z]) => ({ name, code: z.code, n: z.n })) };
+  }
+  return {
+    available: () => !!window.pmtiles,
+    // the summary, or null while it's being read (fetch() starts it)
+    peek: s => cache.get(s.cnn) || null,
+    fetch(s) {
+      if (!window.pmtiles || isInt(s)) return Promise.resolve(null);
+      if (cache.has(s.cnn)) return Promise.resolve(cache.get(s.cnn));
+      if (!pending.has(s.cnn)) {
+        pm ||= new pmtiles.PMTiles(new URL(OVERLAYS.landuse.pmtiles, location.href).href);
+        pending.set(s.cnn, compute(s).then(r => { cache.set(s.cnn, r); pending.delete(s.cnn); return r; })
+          .catch(err => { console.warn('[block-party] parcels', err); pending.delete(s.cnn); return null; }));
+      }
+      return pending.get(s.cnn);
+    },
+  };
+})();
+function parcelFacts(s) {
+  if (!Parcels.available() || isInt(s)) return '';
+  const r = Parcels.peek(s);
+  if (!r) return `<dt>${esc(t('landuseRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
+  if (!r.lots) return '';
+  const zones = r.zones.slice(0, 4).map(z => `${esc(z.code)} <span class="svc">${esc(zoneName(z.name))}${r.zones.length > 1 ? ` (${z.n})` : ''}</span>`).join('<br>');
+  const color = Object.fromEntries(LANDUSE);
+  const uses = `<table class="lu-table">${r.uses.map(([k, n]) => `<tr><td><i style="background:${color[k] || '#D8D5CE'}"></i>${esc(landuseName(k))}</td><td>${n}</td></tr>`).join('')}</table>`;
+  return `<dt>${esc(t('zoningRow'))}</dt><dd>${zones}</dd>
+      <dt>${esc(t('parcelsRow'))}</dt><dd>${esc(r.homes ? t('lotsHomes', { lots: r.lots, homes: r.homes }) : t('lotsOnly', { lots: r.lots }))}</dd>
+      <dt>${esc(t('landuseRow'))}</dt><dd>${uses}<small class="lu-note">${esc(t('landuseNote'))}</small></dd>`;
+}
+function parcelFields(r) {
+  return { lots: r ? r.lots : '', homes: r ? r.homes : '', land_use_2023: landuseText(r),
+    zoning: r ? r.zones.map(z => `${z.code} (${z.n})`).join('; ') : '' };
+}
+const landuseText = r => r ? r.uses.map(([k, n]) => `${landuseName(k)} ${n}`).join('; ') : '';
 const nextToText = list => list.map(o => `${o.name} (${o.kind})`).join('; ');
 function transitFacts(item) {
   const m = Transit.muni(item), b = Transit.bike(item);
@@ -2858,7 +3116,7 @@ function overlayInfo(e, s) {
 }
 function setOverlay(k, v, write = true) {
   if (!(k in OVERLAY_DEFAULT)) return;
-  const ok = k === 'contours' ? ['off', 'on'] : ['off', 'close', 'always'];
+  const ok = k === 'contours' || (OVERLAYS[k] && OVERLAYS[k].onOff) ? ['off', 'on'] : ['off', 'close', 'always'];
   if (!ok.includes(v)) return;
   overlayMode[k] = v;
   document.querySelectorAll(`[data-lyr="${k}"] .lseg button`).forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
@@ -2878,18 +3136,21 @@ function setupMapMenus() {
     muni: '<svg viewBox="0 0 26 16"><line x1="3" y1="8" x2="23" y2="8" stroke="#D9480F" stroke-opacity=".35" stroke-width="11" stroke-linecap="round"/><rect x="7" y="3.5" width="12" height="9" rx="2.5" fill="#D9480F"/></svg>',
     bike: '<svg viewBox="0 0 26 16"><line x1="2" y1="5" x2="24" y2="5" stroke="#1A7F37" stroke-width="3"/><line x1="2" y1="11" x2="24" y2="11" stroke="#1A7F37" stroke-width="1.6" stroke-dasharray="3 2.5"/></svg>',
     slow: '<svg viewBox="0 0 26 16"><line x1="3" y1="8" x2="23" y2="8" stroke="#2457D6" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0.1 7"/></svg>',
+    landuse: '<svg viewBox="0 0 26 16"><rect x="1" y="2" width="8" height="12" fill="#E9C845" fill-opacity=".55"/><rect x="9" y="2" width="8" height="12" fill="#F0A04B" fill-opacity=".55"/><rect x="17" y="2" width="8" height="12" fill="#9C6FB6" fill-opacity=".55"/><rect x="1" y="2" width="24" height="12" fill="none" stroke="#8A8478" stroke-width=".6"/></svg>',
     lands: '<svg viewBox="0 0 26 16"><rect x="2" y="2" width="22" height="12" rx="2" fill="#8A5A00" fill-opacity=".12" stroke="#8A5A00" stroke-width="1.2"/></svg>',
     schools: '<svg viewBox="0 0 26 16"><rect x="6" y="1" width="14" height="14" rx="3.5" fill="#8A5A00"/><path d="M9 8.5 L13 5 L17 8.5 V12.5 H9Z" fill="#fff"/></svg>',
     stations: '<svg viewBox="0 0 26 16"><circle cx="7" cy="8" r="6.5" fill="#C92A2A"/><text x="7" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">F</text><circle cx="19" cy="8" r="6.5" fill="#1E3A8A"/><text x="19" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">P</text></svg>',
     health: '<svg viewBox="0 0 26 16"><rect x="0.5" y="1.5" width="13" height="13" rx="3" fill="#0B7285"/><text x="7" y="11.5" font-size="9" font-weight="700" text-anchor="middle" fill="#fff">H</text><circle cx="20" cy="8" r="5.5" fill="#0B7285"/><path d="M20 5v6M17 8h6" stroke="#fff" stroke-width="1.8"/></svg>',
     contours: '<svg viewBox="0 0 26 16"><rect width="26" height="16" rx="3" fill="#E2DFDA"/><path d="M1 11 C8 3 16 14 25 5" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M1 15 C9 8 16 16 25 10" fill="none" stroke="#fff" stroke-width="1.5"/></svg>',
   };
-  const row = (k, opts) => `<div class="lyr-row" data-lyr="${k}">${SW[k]}<b>${esc(t('lyr_' + k))}${k === 'contours' ? `<small>${esc(t('lyr_contoursHint'))}</small>` : ''}</b>
+  const row = (k, opts) => `<div class="lyr-row" data-lyr="${k}">${SW[k]}<b>${esc(t('lyr_' + k))}${t('lyr_' + k + 'Hint') !== 'lyr_' + k + 'Hint' ? `<small>${esc(t('lyr_' + k + 'Hint'))}</small>` : ''}</b>
     <div class="lseg" role="group" aria-label="${esc(t('lyr_' + k))}">${opts.map(([v, label]) =>
       `<button type="button" data-v="${v}" aria-pressed="${overlayMode[k] === v}">${esc(t(label))}</button>`).join('')}</div></div>`;
   const three = [['off', 'lyrOff'], ['close', 'lyrClose'], ['always', 'lyrAlways']];
   const landChips = `<div class="land-chips">${LAND_CATS.map(([k, c]) => `<label class="land-chip"><input type="checkbox" data-land="${k}" ${landCats.has(k) ? 'checked' : ''}><i style="background:${c}"></i>${esc(t('land_' + k))}</label>`).join('')}</div>`;
-  rowsEl.innerHTML = Object.keys(OVERLAYS).map(k => row(k, three) + (k === 'lands' ? landChips : '')).join('') + row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]);
+  const useKey = `<div class="land-chips">${LANDUSE.map(([k, c]) => `<span class="land-chip key"><i style="background:${c}"></i>${esc(landuseName(k))}</span>`).join('')}</div>`;
+  rowsEl.innerHTML = Object.keys(OVERLAYS).map(k => OVERLAYS[k].onOff ? row(k, [['off', 'lyrOff'], ['on', 'lyrOn']]) + useKey
+    : row(k, three) + (k === 'lands' ? landChips : '')).join('') + row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]);
   rowsEl.addEventListener('change', e => {
     if (e.target.dataset.land) setLandCats([...rowsEl.querySelectorAll('[data-land]:checked')].map(i => i.dataset.land));
   });

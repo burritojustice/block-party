@@ -2,6 +2,13 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v32
+- **Land use and zoning** layer from `data/Land_Use_with_Active_Parcel_Information.pmtiles` (SF Planning land use 2023 joined to active parcels, DataSF `h5vv-2u24`): parcels tinted by land use with faint outlines, off by default (Off / On in the Layers menu, with a color key), drawn from zoom 15. Hovering a parcel shows its lot, land use, homes, and zoning. Loaded with the PMTiles library (4.5.0), which needs a server with range requests (GitHub Pages; `npx http-server` locally, not `python3 -m http.server`).
+- Block cards add **Zoning** (districts with lot counts), **Parcels** (lots and homes), and a **Land use** table, read from the same file for the lots beside the block, whether or not the layer is on. Lots count when they're within 14 m of the middle 70% of the block's centerline, or 25 m when their address is on the block's street; lots are counted once per map block-lot, since condos repeat. Copy-card text and exports add `lots`, `homes`, `land_use_2023`, and `zoning`.
+
+## v31
+- Basemap: hides Mission Creek and other creeks OSM tags as rivers (some run underground), ported from Selecter. Streams are hidden, and river lines and waterway labels named "Creek" or "Arroyo" are filtered out. The style's own river/stream filter is kept and added to rather than replaced.
+
 ## v30
 - **Next to** on block cards: the city-owned land the block runs alongside (Mission Dolores Park, Parks), plus schools, fire and police stations, and health facilities from the point layers within 35 m, which adds private schools and clinics City Lands leaves out. A parcel counts when at least 2 points sampled every ~10 m along the block (ignoring the last 10% at each end) are inside it or within 20 m of its edge, so parcels across a cross street don't count. Intersection cards list what's within 20 m of the corner. Lists every category, whatever the map's checkboxes say. Copy-card text and exports add `next_to`.
 
