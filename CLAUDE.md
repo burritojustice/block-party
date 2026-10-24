@@ -25,7 +25,7 @@ A San Francisco street-block (CNN) lookup for block party organizers. Live at ht
 
 Top to bottom (search for these names):
 
-- **`CONFIG`, `HOOD_SETS`, `I18N`**: settings, the neighborhood sets shown on cards, and all UI strings (`t(key)`).
+- **`CONFIG`, `HOOD_SETS`, `I18N`**: settings, the neighborhood sets shown on cards, and all UI strings (`t(key)`). The set shown on closed cards is `hoodSet` (`hoodsHTML`), saved in localStorage as `bp-hoodset`.
 - **`Logic`**: loads `streets.json` and handles everything that isn't the map:
   - street name normalizing and search
   - cross streets in order (Dijkstra along the street)

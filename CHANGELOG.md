@@ -2,6 +2,9 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v36
+- **Pick the neighborhood set:** in the opened Neighborhood list, click a set (Analysis, SF Find, Planning, Realtor, Who's on First, Streets file) to show that one when the list is closed, with the set's name beside it. Analysis stays the default; the choice is remembered in this browser and applies to every card.
+
 ## v35
 - **Neighborhoods on cards:** one Neighborhood row shows the Analysis neighborhood; click it for every set the block falls in: Analysis, SF Find, Planning, Realtor, Who's on First, and the streets file's own (DPW) neighborhood. A block on a boundary lists both sides. Replaces the separate Neighborhood (which was the streets file's DPW/realtor-style name) and Analysis neighborhood rows. Exports add `hood_analysis`, `hood_sffind`, `hood_planning`, `hood_realtor`, `hood_wof`.
 - `data/streets.json` gains those `hood_*` fields (`build_data.py --areas`, from sf-blocks 2026.10.23), from boundary files in the new `data/boundaries/` (copied from civic-joy-fund/joiner). `planning_neighborhoods.geojson` moved there from `data/layers/`. Neighborhood groups use the block's `hood_planning`.
