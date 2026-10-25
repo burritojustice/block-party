@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v35 -->
+<!-- build: v36 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -321,6 +321,11 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 .hoods-table { border-collapse: collapse; margin-top: 4px; font-size: 13px; width: 100%; }
 .hoods-table td { padding: 1px 0; vertical-align: top; }
 .hoods-table td:first-child { color: var(--ink-soft); padding-right: 10px; white-space: nowrap; font-weight: 400; }
+.hoods-table tr { cursor: pointer; }
+.hoods-table tr:hover td { color: var(--ink); }
+.hoods-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--ink-soft); margin-right: 6px; vertical-align: 1px; }
+.hoods-table tr.on .hoods-dot { background: var(--ink); border-color: var(--ink); }
+.hoods-set { color: var(--ink-soft); font-size: 12px; font-weight: 400; }
 .lu-note { display: block; margin-top: 3px; font-size: 11.5px; color: var(--ink-soft); font-weight: 400; }
 
 .notice {
@@ -559,7 +564,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 <div class="toast" id="toast" role="status"></div>
 
 <script>
-const _BUILD_VERSION = 'v35';
+const _BUILD_VERSION = 'v36';
 
 /* =====================================================================
    CONFIG
@@ -640,7 +645,7 @@ const I18N = {
     between: '{a} to {b}',
     addrLabel: 'Addresses', district: 'Supervisor district', zip: 'ZIP code',
     nhood: 'Neighborhood', anhood: 'Analysis neighborhood',
-    hsAnalysis: 'Analysis', hsSffind: 'SF Find', hsPlanning: 'Planning', hsRealtor: 'Realtor', hsWof: 'Who’s on First', hsStreets: 'Streets file (DPW)', layerLabel: 'Street type',
+    hsAnalysis: 'Analysis', hsSffind: 'SF Find', hsPlanning: 'Planning', hsRealtor: 'Realtor', hsWof: 'Who’s on First', hsStreets: 'Streets file (DPW)', hoodPick: 'Show this set when the list is closed', layerLabel: 'Street type',
     noAddr: 'No addresses on this block',
     odd: 'Odd', even: 'Even',
     sideOf: '{side} side',
@@ -1883,6 +1888,8 @@ function setupResultsEvents() {
     if (rm) { removeCard(+rm.dataset.remove); return; }
     const cc = e.target.closest('[data-copy-card]');
     if (cc) { const s = state.results.find(r => r.cnn === +cc.dataset.copyCard); if (s) copyText(cardText(s), t('copiedCard')); return; }
+    const hs = e.target.closest('[data-hoodset]');
+    if (hs) { setHoodSet(hs.dataset.hoodset); return; }
     const cg = e.target.closest('[data-copy-groups]');
     if (cg) { const s = state.results.find(r => r.cnn === +cg.dataset.copyGroups); const r = s && Groups.of(s); if (r) copyText(groupsText(r), t('ngCopied', { n: r.groups.length + r.citywide.length })); return; }
     const li = e.target.closest('.seg'); if (!li) return;
@@ -3319,14 +3326,19 @@ function groupsFacts(item) {
         <span>${esc(t('ngSource', { date: (Groups.source || {}).list_date || '' }))} <a href="${esc((Groups.source || {}).page || '#')}" target="_blank" rel="noopener">${esc(t('ngSourceLink'))}</a></span></p>
     </details></dd>`;
 }
-// Analysis neighborhood by default; click for every set the block falls in
+// one neighborhood set shown when closed (Analysis unless the viewer picked another); open for every set
+const HOOD_KEY = 'bp-hoodset';
+let hoodSet = (() => { try { return localStorage.getItem(HOOD_KEY) || 'analysis'; } catch (e) { return 'analysis'; } })();
+function setHoodSet(k) { hoodSet = k; try { localStorage.setItem(HOOD_KEY, k); } catch (e) { } render(); }
 function hoodsHTML(x) {
-  const main = (x.hoods && x.hoods.analysis) || x.anhood || '';
-  const rows = HOOD_SETS.filter(([k]) => x.hoods && x.hoods[k]).map(([k, label]) => [t(label), x.hoods[k]]);
-  if (x.nhood) rows.push([t('hsStreets'), x.nhood]);
-  if (!rows.length) return esc(main);
-  return `<details class="hoods"><summary>${esc(main.replace(/; /g, ' / '))}</summary><table class="hoods-table">${rows.map(([l, v]) =>
-    `<tr><td>${esc(l)}</td><td>${esc(v.replace(/; /g, ' / ').replace(/, /g, ' / '))}</td></tr>`).join('')}</table></details>`;
+  const rows = HOOD_SETS.filter(([k]) => x.hoods && x.hoods[k]).map(([k, label]) => [k, t(label), x.hoods[k]]);
+  if (x.nhood) rows.push(['streets', t('hsStreets'), x.nhood]);
+  const fmt = v => v.replace(/; /g, ' / ').replace(/, /g, ' / ');
+  if (!rows.length) return esc(x.anhood || '');
+  const pick = rows.find(r => r[0] === hoodSet) || rows.find(r => r[0] === 'analysis') || rows[0];
+  const tag = pick[0] === 'analysis' ? '' : ` <span class="hoods-set">${esc(pick[1])}</span>`;
+  return `<details class="hoods"><summary>${esc(fmt(pick[2]))}${tag}</summary><table class="hoods-table">${rows.map(([k, l, v]) =>
+    `<tr data-hoodset="${k}" class="${k === pick[0] ? 'on' : ''}" title="${esc(t('hoodPick'))}"><td><span class="hoods-dot"></span>${esc(l)}</td><td>${esc(fmt(v))}</td></tr>`).join('')}</table></details>`;
 }
 const nextToText = list => list.map(o => `${o.name} (${o.kind})`).join('; ');
 function transitFacts(item) {
