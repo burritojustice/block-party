@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Build data/neighborhood_groups.json from SF Planning's neighborhood group notification list.
+# Copied from burritojustice/sf-blocks 2026.10.27. Make changes there, then copy the new version here.
+"""Build reference/neighborhood-groups/neighborhood_groups.json from SF Planning's neighborhood group notification list.
 
     python3 scripts/build_neighborhood_groups.py
 
@@ -11,7 +12,7 @@ Source: https://sfplanning.org/resource/neighborhood-group-organizations
 Each group lists the Planning Neighborhoods it wants to hear about ("NEIGHBORHOOD OF INTEREST", comma
 separated, sometimes misspelled). Those are the 37 neighborhoods of DataSF's Planning Neighborhood Groups
 Map (mw29-m2za), in data/boundaries/planning_neighborhoods.geojson; Block Party works out which of them a
-block is in.
+block is in. Names spelled differently on the list ("South Bayshore") are in data/aliases.json.
 
 The page only needs who the groups are, so the JSON keeps organization, contact name, email, and
 notification preference. Street addresses and phone numbers stay in the reference copy.
@@ -23,15 +24,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / 'reference' / 'neighborhood-groups'
 HOODS_FILE = ROOT / 'data' / 'boundaries' / 'planning_neighborhoods.geojson'
-OUT = ROOT / 'data' / 'neighborhood_groups.json'
+OUT = SRC / 'neighborhood_groups.json'
 PAGE = 'https://sfplanning.org/resource/neighborhood-group-organizations'
 
-# names on the list that aren't spelled like the boundaries (after the forgiving match below)
-ALIASES = {
-    'south bayshore': 'Bayview',          # the Bayview Hunters Point area plan's name
-    'upper market': 'Castro/Upper Market',
-    'treasure island': 'Treasure Island/YBI',
-}
+# names on the list that aren't spelled like the boundaries (after the forgiving match below): data/aliases.json
+ALIASES = {k.lower(): v for k, v in json.loads((ROOT / 'data' / 'aliases.json').read_text())['planning_neighborhoods'].items()}
 
 
 def key(s):

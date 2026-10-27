@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Build the small map overlay files in data/layers/ from the raw downloads in layers/.
+# Copied from burritojustice/sf-blocks 2026.10.27. Make changes there, then copy the new version here.
+"""Build the small map overlay files in data/layers/ from the raw downloads in data/uploads/.
 
-    python3 scripts/build_layers.py              # reads layers/, writes data/layers/
+    python3 scripts/build_layers.py              # reads data/uploads/, writes data/layers/
     python3 scripts/build_layers.py --download   # fetch fresh copies of every dataset first
 
-Standard library only. Any dataset in SOURCES with no file in layers/ is downloaded from DataSF's API
+Standard library only. Any dataset in SOURCES with no file in data/uploads/ is downloaded from DataSF's API
 first, named like a DataSF Export: dataset title plus a date stamp ("Muni_Simple_Routes_20261011.geojson").
 A manual Export works too; leave the file name alone. The script finds each file by title, taking the
 newest stamp when there are several, so old downloads can stay. Older hand-renamed files
@@ -25,7 +26,7 @@ from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC, OUT = ROOT / 'layers', ROOT / 'data' / 'layers'
+SRC, OUT = ROOT / 'data' / 'uploads', ROOT / 'data' / 'layers'
 
 # out name -> where it comes from. 'title' is the DataSF dataset title, which is also how downloads are named.
 SOURCES = {
