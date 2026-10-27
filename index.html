@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v36 -->
+<!-- build: v37 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -119,7 +119,7 @@ button, input { font: inherit; color: inherit; }
 .qchip .n { margin-left: auto; font-size: 13px; color: var(--ink-soft); }
 .quiet-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
 .brand { display: flex; align-items: center; gap: 14px; margin: 6px 0 10px; }
-.brand .logo { width: clamp(52px, 8vw, 64px); height: auto; flex: none; }
+.brand .logo { width: clamp(52px, 8vw, 64px); height: auto; flex: none; border-radius: 50%; }
 .brand h1 { margin: 0; }
 h1 {
   font-family: var(--display);
@@ -403,10 +403,10 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
   <header class="head">
     <svg class="bunting" id="bunting" viewBox="0 0 600 64" preserveAspectRatio="none" aria-hidden="true"></svg>
     <div class="brand">
-      <img class="logo" src="img/civic-joy.png" alt="Civic Joy Fund" width="64" height="64">
+      <img class="logo" src="img/burritojustice.jpg" alt="" width="64" height="64">
       <h1 data-i18n="title" id="app-title">Block Party</h1>
     </div>
-    <p class="intro" data-i18n="intro">Find the exact block for your street event, and get the city’s block ID (called a CNN) to include with your application.</p>
+    <p class="intro" data-i18n="intro">Find the exact block for a San Francisco street, and get all sorts of useful info about it, like its city ID (CNN), Muni lines and bike lanes, slope, district and neighborhood info, nearby landuse and parcels, and more.</p>
   </header>
 
   <section class="lookup" aria-label="Find a block">
@@ -564,13 +564,87 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 <div class="toast" id="toast" role="status"></div>
 
 <script>
-const _BUILD_VERSION = 'v36';
+// sf-blocks: San Francisco's map data (streets, boundaries, aliases, layers) from burritojustice/sf-blocks.
+// Every file is read live from its GitHub Pages site. If the site can't be reached, or a file is missing
+// there, the copy in this repo at the same path is used instead. data/sf-blocks.json says which sf-blocks
+// version those copies are; scripts/copy_sf_blocks.py refreshes them.
+//   ?sfblocks=local   use only the copies here
+//   ?sfblocks=<url>   read from another copy of sf-blocks (a fork, or a local server while testing)
+// The same code is in Joiner (js/sfblocks.js) and Block Party (inline, here); keep them in step.
+const SFBlocks = (() => {
+    const LIVE = 'https://burritojustice.github.io/sf-blocks/';
+    const STAMP = 'data/sf-blocks.json';
+    const WAIT = 8000;   // ms to wait for the live site to start answering
+    const param = new URLSearchParams(location.search).get('sfblocks');
+    let base = param === 'local' ? '' : /^https?:\/\//.test(param || '') ? param.replace(/\/?$/, '/') : LIVE;
+    const info = { live: false, version: null, base: '', copy: null, fellBack: [] };
+    let region = null;
+
+    // fetch with a deadline for the first byte (big files may take longer to finish)
+    const get = (url, ms = WAIT) => {
+        const ctl = new AbortController();
+        const timer = setTimeout(() => ctl.abort(), ms);
+        return fetch(url, { signal: ctl.signal }).then(r => {
+            clearTimeout(timer);
+            if (!r.ok) throw new Error(`${r.status} ${url}`);
+            return r;
+        }, err => { clearTimeout(timer); throw err; });
+    };
+    async function file(path) {
+        if (base) {
+            try { return await get(base + path); }
+            catch (err) {
+                console.warn(`[sf-blocks] ${path}: live copy failed, using the one here`, err);
+                info.fellBack.push(path);
+            }
+        }
+        return get(path, 60000);
+    }
+    const ready = (async () => {
+        info.copy = await get(STAMP).then(r => r.json()).catch(() => null);
+        if (base) {
+            try {
+                const [reg, ver] = await Promise.all([get(base + 'region.json').then(r => r.json()),
+                    get(base + 'VERSION').then(r => r.text())]);
+                region = reg;
+                Object.assign(info, { live: true, version: ver.trim(), base });
+                console.log(`[sf-blocks] ${info.version}, live from ${base}`);
+                return region;
+            } catch (err) {
+                console.warn('[sf-blocks] live site unreachable, using the copies here', err);
+                base = '';
+            }
+        }
+        region = await get('region.json').then(r => r.json());
+        info.version = info.copy?.version || null;
+        console.log(`[sf-blocks] ${info.version || '(unstamped)'}, copy in this repo`);
+        return region;
+    })();
+
+    return {
+        ready,                                        // resolves to region.json
+        get region() { return region; },
+        info,                                         // { live, version, base, copy, fellBack }
+        json: path => file(path).then(r => r.json()),
+        text: path => file(path).then(r => r.text()),
+        // absolute URL for readers that fetch on their own (PMTiles); no per-file fallback
+        url: path => new URL(base + path, location.href).href,
+        // the Protomaps key allowed for this page's origin, from region.json
+        basemapKey: fallback => region?.basemap?.keys?.[location.origin] || fallback,
+        // "sf-blocks 2026.10.27 (live)" for titles and footers
+        describe: () => `sf-blocks ${info.version || '?'}${info.live ? (info.fellBack.length ? ' (live, some files from the copy here)' : ' (live)') : ' (copy in this repo)'}`,
+    };
+})();
+</script>
+<script>
+const _BUILD_VERSION = 'v37';
 
 /* =====================================================================
    CONFIG
    ===================================================================== */
 const CONFIG = {
-  PROTOMAPS_KEY: 'ffc24a4325d458ce',
+  // Protomaps key for burritojustice.github.io (and any localhost); region.json can name another for other origins
+  PROTOMAPS_KEY: '071e272e8d5e13b7',
   styleUrl: key => `https://api.protomaps.com/styles/v5/light/en.json?key=${key}`,
   DEM_TILES: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
   TERRAIN_EXAGGERATION: 1.5,
@@ -581,7 +655,6 @@ const CONFIG = {
   // middle, because printed-on-the-ground text gets hard to read. Try ?label3d=45 to compare.
   LABEL_3D_PITCH: +(new URLSearchParams(location.search).get('label3d') || 30),
   SATELLITE_TILES: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  DATA_URL: 'data/streets.json',
   // Layers people can hold an event on. Everything else (freeways, paper streets, etc.)
   // only shows up with "Include retired, freeway, and paper streets" checked.
   PUBLIC_LAYERS: new Set([
@@ -602,7 +675,7 @@ const HOOD_SETS = [['analysis', 'hsAnalysis'], ['sffind', 'hsSffind'], ['plannin
 const I18N = {
   en: {
     title: 'Block Party',
-    intro: 'Find the exact block for your street event, and get the city’s block ID (called a CNN) to include with your application.',
+    intro: 'Find the exact block for a San Francisco street, and get all sorts of useful info about it, like its city ID (CNN), Muni lines and bike lanes, slope, district and neighborhood info, nearby landuse and parcels, and more.',
     streetLabel: 'Your street',
     streetPh: 'Start typing, like Valencia or 24th',
     modeCross: 'Cross streets',
@@ -621,7 +694,7 @@ const I18N = {
     lgContours: '{n} ft contours',
     clearSel: 'Clear selections',
     loading: 'Loading streets…',
-    loadFailed: 'Street data couldn’t load. Check that data/streets.json is in the repo, then reload.',
+    loadFailed: 'Street data couldn’t load from sf-blocks or the copy here. Reload to try again.',
     bmMap: 'Map', bmSat: 'Satellite',
     legend: 'Map key', lgChecked: 'Your blocks / intersections', lgCross: 'Cross streets', lgUnchecked: 'Matches',
     lgPreview: 'Preview', lgStreet: 'Your whole street', lgEnds: 'Corners', lgOther: 'Other streets',
@@ -2119,7 +2192,7 @@ const LABEL_FONT = ['Noto Sans Medium'];
 function initMap() {
   map = new maplibregl.Map({
     container: 'map',
-    style: CONFIG.styleUrl(CONFIG.PROTOMAPS_KEY),
+    style: CONFIG.styleUrl(SFBlocks.basemapKey(CONFIG.PROTOMAPS_KEY)),
     bounds: CONFIG.SF_BOUNDS,
     fitBoundsOptions: { padding: 20 },
     attributionControl: { compact: true },
@@ -2562,17 +2635,17 @@ const LAND_DEFAULT = LAND_CATS.filter(c => c[2]).map(c => c[0]);
 let landCats = new Set(LAND_DEFAULT);
 const landColor = ['match', ['get', 'cat'], ...LAND_CATS.flatMap(([k, c]) => [k, c]), '#5F5E5A'];
 const OVERLAYS = {
-  muni:     { url: 'data/layers/muni.geojson',     layers: ['bp-lyr-muni', 'bp-lyr-muni-label'] },
-  bike:     { url: 'data/layers/bike.geojson',     layers: ['bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-bike-label'] },
-  slow:     { url: 'data/layers/slow.geojson',     layers: ['bp-lyr-slow', 'bp-lyr-slow-label'] },
+  muni:     { url: 'muni.geojson',     layers: ['bp-lyr-muni', 'bp-lyr-muni-label'] },
+  bike:     { url: 'bike.geojson',     layers: ['bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-bike-label'] },
+  slow:     { url: 'slow.geojson',     layers: ['bp-lyr-slow', 'bp-lyr-slow-label'] },
   // vector tiles straight from a .pmtiles file (no GeoJSON to load); On / Off, from zoom 15
   landuse:  { pmtiles: 'data/Land_Use_with_Active_Parcel_Information.pmtiles', minzoom: 15,
               modes: [['off', 'lyrOff'], ['landuse', 'lyrLanduse'], ['zoning', 'lyrZoning']],
               layers: ['bp-lyr-landuse-fill', 'bp-lyr-landuse-line', 'bp-lyr-landuse-label'] },
-  lands:    { url: 'data/layers/lands.geojson',    layers: ['bp-lyr-lands-fill', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-lands-label'] },
-  schools:  { url: 'data/layers/schools.geojson',  layers: ['bp-lyr-schools'] },
-  stations: { url: 'data/layers/stations.geojson', layers: ['bp-lyr-stations'] },
-  health:   { url: 'data/layers/health.geojson',   layers: ['bp-lyr-health'] },
+  lands:    { url: 'lands.geojson',    layers: ['bp-lyr-lands-fill', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-lands-label'] },
+  schools:  { url: 'schools.geojson',  layers: ['bp-lyr-schools'] },
+  stations: { url: 'stations.geojson', layers: ['bp-lyr-stations'] },
+  health:   { url: 'health.geojson',   layers: ['bp-lyr-health'] },
 };
 const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', slow: 'close', landuse: 'off', lands: 'close', schools: 'close', stations: 'close', health: 'close', contours: 'off' };
 const overlayMode = { ...OVERLAY_DEFAULT };
@@ -2586,7 +2659,7 @@ function addOverlayLayers(popup) {
   map.addSource('lyr-muni-lbl', { type: 'geojson', data: EMPTY });
   if (window.pmtiles) {
     maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
-    map.addSource('lyr-landuse', { type: 'vector', url: 'pmtiles://' + new URL(OVERLAYS.landuse.pmtiles, location.href).href,
+    map.addSource('lyr-landuse', { type: 'vector', url: 'pmtiles://' + SFBlocks.url(OVERLAYS.landuse.pmtiles),
       attribution: 'Land use 2023: <a href="https://data.sf.gov/d/h5vv-2u24">SF Planning / DataSF</a>' });
   }
   for (const k of Object.keys(OVERLAYS)) if (!OVERLAYS[k].pmtiles) map.addSource('lyr-' + k, { type: 'geojson', data: EMPTY, attribution: 'Layers: <a href="https://data.sf.gov">DataSF</a>' });
@@ -2789,7 +2862,7 @@ function updateOverlays() {
 // one fetch per layer file, shared by the map and the cards
 const layerFetches = {};
 function fetchLayer(k) {
-  return layerFetches[k] ||= fetch(OVERLAYS[k].url).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  return layerFetches[k] ||= SFBlocks.ready.then(reg => SFBlocks.json(reg.layers + OVERLAYS[k].url))
     .catch(err => { delete layerFetches[k]; throw err; });
 }
 async function loadOverlay(k) {
@@ -3224,7 +3297,7 @@ const Parcels = (() => {
       if (!window.pmtiles || isInt(s)) return Promise.resolve(null);
       if (cache.has(s.cnn)) return Promise.resolve(cache.get(s.cnn));
       if (!pending.has(s.cnn)) {
-        pm ||= new pmtiles.PMTiles(new URL(OVERLAYS.landuse.pmtiles, location.href).href);
+        pm ||= new pmtiles.PMTiles(SFBlocks.url(OVERLAYS.landuse.pmtiles));
         pending.set(s.cnn, compute(s).then(r => { cache.set(s.cnn, r); pending.delete(s.cnn); return r; })
           .catch(err => { console.warn('[block-party] parcels', err); pending.delete(s.cnn); return null; }));
       }
@@ -3273,8 +3346,9 @@ const Groups = (() => {
     get ready() { return ready; },
     get source() { return data && data.source; },
     ensure() {
-      return promise ||= Promise.all([fetch('data/boundaries/planning_neighborhoods.geojson').then(r => r.json()),
-        fetch('data/neighborhood_groups.json').then(r => r.json())]).then(([g, d]) => {
+      return promise ||= SFBlocks.ready.then(reg => Promise.all([
+        SFBlocks.json(reg.boundaries.replace(/[^/]*$/, '') + 'planning_neighborhoods.geojson'),
+        SFBlocks.json(reg.reference + 'neighborhood-groups/neighborhood_groups.json')])).then(([g, d]) => {
         polys = g.features.map(f => ({ name: f.properties.neighborho,
           parts: f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates }));
         data = d; ready = true;
@@ -3588,11 +3662,14 @@ function drawBunting() {
   drawBunting();
   if (window.innerWidth <= 860) $('legend').open = false;
   $('app-title').title = `Block Party ${_BUILD_VERSION}`;
+  SFBlocks.ready.finally(() => { $('app-title').title = `Block Party ${_BUILD_VERSION} · ${SFBlocks.describe()}`; });
   setupForm();
   setupResultsEvents();
   console.log(`[block-party] ${_BUILD_VERSION} · ${new Date().toLocaleString()}`);
 
-  const dataP = fetch(CONFIG.DATA_URL).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+  // street data and the region (paths, basemap key) come from sf-blocks, live or the copy here
+  const dataP = SFBlocks.ready.then(reg => SFBlocks.json(reg.streets.built));
+  await SFBlocks.ready.catch(() => {});
   const mapP = initMap();
   try {
     const raw = await dataP;

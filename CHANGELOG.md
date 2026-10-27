@@ -2,6 +2,15 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v37
+Block Party moves to burritojustice and reads its data from sf-blocks.
+
+- **Data from sf-blocks, live:** streets, map layers, boundaries, parcels and the neighborhood groups list load from https://burritojustice.github.io/sf-blocks/, using the paths in its `region.json`. If the site can't be reached (or a file is missing there), the page uses the copies in this repo, which are sf-blocks 2026.10.27 (`data/sf-blocks.json`). Hovering the title shows the version and whether it's live. `?sfblocks=local` forces the copies.
+- **One list of aliases:** `build_neighborhood_groups.py` is now sf-blocks' copy and reads `data/aliases.json`, so "South Bayshore" and the rest are kept in one place for every app.
+- **Files moved to match sf-blocks:** `layers/` is now `data/uploads/`, and `data/neighborhood_groups.json` is now `reference/neighborhood-groups/neighborhood_groups.json`. `build_layers.py` is sf-blocks' copy; the rebuilt layers are byte-identical.
+- **New intro** listing what the cards tell you, the burritojustice avatar in place of the Civic Joy Fund logo, and the burritojustice.github.io Protomaps key.
+- `scripts/copy_sf_blocks.py` refreshes the copies from a checkout of sf-blocks.
+
 ## v36
 - **Pick the neighborhood set:** in the opened Neighborhood list, click a set (Analysis, SF Find, Planning, Realtor, Who's on First, Streets file) to show that one when the list is closed, with the set's name beside it. Analysis stays the default; the choice is remembered in this browser and applies to every card.
 

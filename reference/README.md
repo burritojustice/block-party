@@ -4,4 +4,4 @@ Lists and documents Block Party uses that aren't maps. Each folder keeps the cop
 
 | Folder | What | Used by |
 |---|---|---|
-| `neighborhood-groups/` | SF Planning's neighborhood group notification list | `scripts/build_neighborhood_groups.py` → `data/neighborhood_groups.json` → the "Neighborhood groups" row on cards |
+| `neighborhood-groups/` | SF Planning's neighborhood group notification list | `scripts/build_neighborhood_groups.py` → `neighborhood-groups/neighborhood_groups.json` → the "Neighborhood groups" row on cards |

@@ -1,29 +1,41 @@
 # Block Party
 
-Find a San Francisco street block and its city ID (CNN) for a block party application.
-Live site: https://civic-joy-fund.github.io/block-party/
+Find the exact block for a San Francisco street, and get all sorts of useful info about it, like its city ID (CNN), Muni lines and bike lanes, slope, district and neighborhood info, nearby landuse and parcels, and more.
+Live site: https://burritojustice.github.io/block-party/
 
-Single page, hosted on GitHub Pages: `index.html` + `data/streets.json`.
+Single page, hosted on GitHub Pages: `index.html`, with its data read live from [sf-blocks](https://burritojustice.github.io/sf-blocks/).
+
+## Where the data comes from
+
+Streets, boundaries, map layers, parcels and the neighborhood groups list all come from [burritojustice/sf-blocks](https://github.com/burritojustice/sf-blocks), the main copy of San Francisco's map data. The page reads its `region.json` for the paths and then loads each file live from https://burritojustice.github.io/sf-blocks/. If that site can't be reached, or a file is missing there, it uses the backup copy in this repo at the same path. `data/sf-blocks.json` lists those copies and the sf-blocks version they came from; hovering the title shows which one the page is using.
+
+- `?sfblocks=local` uses only the copies here; `?sfblocks=<url>` reads another copy of sf-blocks (handy for testing a branch).
+- To refresh the copies: `python3 scripts/copy_sf_blocks.py ../sf-blocks` (with sf-blocks checked out next to this repo). `--check` lists what differs without copying.
+- Change data in sf-blocks, not here.
 
 ## Files
 
 | Path | What it is |
 |---|---|
 | `index.html` | The whole app (HTML, CSS, JS) |
-| `img/civic-joy.png` | Civic Joy Fund logo shown next to the title |
+| `img/burritojustice.jpg` | Avatar shown next to the title |
+| `region.json` | Copy of sf-blocks' region file: paths, home view and basemap keys |
+| `data/sf-blocks.json` | Which sf-blocks files are copied here, and their version |
+| `data/aliases.json` | Copy of sf-blocks' other names for areas (used by `build_neighborhood_groups.py`) |
+| `scripts/copy_sf_blocks.py` | Refreshes the sf-blocks copies |
 | `data/streets.json` | Compact lookup data built from the DataSF exports (~2.5 MB, ~650 KB gzipped) |
 | `data/sf_streets.csv` | DataSF "Streets – Active and Retired" export (source) |
 | `data/sf_intersections.csv` | DataSF "Street Intersections" export (source, used for intersection lookups) |
 | `scripts/build_data.py` | Rebuilds `data/streets.json` from the CSVs |
 | `scripts/match_blocks.py` | Matches free-text block descriptions in a CSV to CNNs |
-| `layers/` | Raw downloads for the map layers (Muni, bike network, schools, fire/police, health care) |
+| `data/uploads/` | Raw downloads for the map layers (Muni, bike network, schools, fire/police, health care) |
 | `data/layers/*.geojson` | Trimmed copies the map loads (~1.7 MB total, ~230 KB gzipped) |
-| `data/boundaries/` | Neighborhood boundary sets (Analysis, SF Find, Planning, Realtor, Who's on First), copied from civic-joy-fund/joiner; `build_data.py --areas` tags blocks with them |
+| `data/boundaries/` | Neighborhood boundary sets (Analysis, SF Find, Planning, Realtor, Who's on First), copied from sf-blocks; `build_data.py --areas` tags blocks with them |
 | `reference/` | Non-map reference lists, kept as published (SF Planning's neighborhood group notification list) |
-| `scripts/build_neighborhood_groups.py` | `reference/neighborhood-groups/` → `data/neighborhood_groups.json` |
-| `scripts/build_layers.py` | Rebuilds `data/layers/` from `layers/` |
+| `scripts/build_neighborhood_groups.py` | `reference/neighborhood-groups/` → `reference/neighborhood-groups/neighborhood_groups.json` |
+| `scripts/build_layers.py` | Rebuilds `data/layers/` from `data/uploads/` |
 
-`data/streets.json`, `scripts/build_data.py`, and `scripts/match_blocks.py` are copies from [burritojustice/sf-blocks](https://github.com/burritojustice/sf-blocks), which keeps the master copy of the street data and matching logic (it's shared with other projects). Block Party doesn't depend on that repo to run or build; the copies are complete. Each script's first lines say which version it came from.
+The data files and `scripts/build_data.py`, `match_blocks.py`, `build_layers.py` and `build_neighborhood_groups.py` are copies from [burritojustice/sf-blocks](https://github.com/burritojustice/sf-blocks), which keeps the master copy of the street data and matching logic (it's shared with other projects). Block Party reads sf-blocks live, but still runs and builds from the copies here if it can't. Each script's first lines say which version it came from.
 
 ## Data sources
 
@@ -95,7 +107,7 @@ python3 -m http.server 8000   # then open http://localhost:8000
 
 | Hash | Result |
 |---|---|
-| `#cnn=13060000` (e.g. https://civic-joy-fund.github.io/block-party/#cnn=13060000) | One block, checked, map zoomed to it |
+| `#cnn=13060000` (e.g. https://burritojustice.github.io/block-party/#cnn=13060000) | One block, checked, map zoomed to it |
 | `#cnn=4883101,4883201` | Several blocks (both sides of a divided street, or a run of blocks) |
 | `#street=dolores` | Street filled in, whole street shown |
 | `#street=dolores,27th` | That intersection, in intersection mode |
@@ -124,7 +136,7 @@ Street names in the hash are matched the same way as the search box (case-insens
 
 The **Layers** menu on the map has Off / Close up / Always for each layer, plus Contours (Off / On). "Close up" (the default) shows a layer from zoom 16 in (`CLOSE_ZOOM`); names and route numbers appear from there too, or from zoom 14 with "Always". Each file loads the first time its layer is about to show.
 
-| Layer | DataSF dataset (download into `layers/`) | Style |
+| Layer | DataSF dataset (download into `data/uploads/`) | Style |
 |---|---|---|
 | Muni routes | [Muni Simple Routes](https://data.sf.gov/Transportation/Muni-Simple-Routes/9exe-acju/about_data) (`9exe-acju`), GeoJSON | Pale orange band along the street (under basemap labels), orange route-number shields. Solid on the map so overlapping routes don't darken; see-through orange over satellite |
 | Bike network | [MTA Bike Network Linear Features](https://data.sf.gov/Transportation/MTA-Bike-Network-Linear-Features/ygmz-vaxd/about_data) (`ygmz-vaxd`), GeoJSON | Dark green #1A7F37 (light green over satellite). Separated bikeway 3 px, bike lane and path 2 px, bike route and Neighborway dashed 1.6 px (at zoom 16). Label like "Separated bikeway · parking, posts" |
@@ -141,7 +153,7 @@ Hovering a street adds the block's Muni routes (with service type) and bike faci
 
 Bike facilities join to blocks by the `cnn` in the bike data. Muni lines have no CNN, so `Transit` in `index.html` matches them when the files load: a route runs along a block when it's within 15 m (`MATCH_M`) at 25%, 50%, and 75% of the way along and heading the same way within 30°, which keeps out routes that only cross at a corner. An intersection lists routes within 15 m of the corner. Route shields come from the same matching, one per block listing every route on it. Later, GTFS can replace the route lines as the input; the block matching stays the same.
 
-To update: run `python3 scripts/build_layers.py`. Any dataset with no file in `layers/` is downloaded from DataSF's API first (named like an Export, `Slow_Streets_20261013.geojson`); `--download` fetches fresh copies of all of them except schools, whose file has hand-added columns. A manual Export from the dataset page works too: save it into `layers/` without renaming it. The script finds each by its title and uses the newest date stamp, so old downloads can stay or go. The dataset list (title, id, URL) is `SOURCES` at the top of the script, and each built file in `data/layers/` records which dataset and download it came from, plus the data's "as of" date where the download has one. The script keeps only the fields the map uses and rounds coordinates to about 1 m. Muni lines are passed through as published, one line per route and direction, except the rail-replacement bus patterns (FBUS, KBUS, NBUS, TBUS), which are dropped.
+To update: run `python3 scripts/build_layers.py`. Any dataset with no file in `data/uploads/` is downloaded from DataSF's API first (named like an Export, `Slow_Streets_20261013.geojson`); `--download` fetches fresh copies of all of them except schools, whose file has hand-added columns. A manual Export from the dataset page works too: save it into `layers/` without renaming it. The script finds each by its title and uses the newest date stamp, so old downloads can stay or go. The dataset list (title, id, URL) is `SOURCES` at the top of the script, and each built file in `data/layers/` records which dataset and download it came from, plus the data's "as of" date where the download has one. The script keeps only the fields the map uses and rounds coordinates to about 1 m. Muni lines are passed through as published, one line per route and direction, except the rail-replacement bus patterns (FBUS, KBUS, NBUS, TBUS), which are dropped.
 
 Later, the script can pull these straight from the Socrata API using the same ids (`https://data.sf.gov/resource/<id>.geojson`), so Muni and bike routes stay current without hand downloads.
 
