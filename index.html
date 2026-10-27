@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v37 -->
+<!-- build: v38 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -637,7 +637,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v37';
+const _BUILD_VERSION = 'v38';
 
 /* =====================================================================
    CONFIG
@@ -664,6 +664,30 @@ const CONFIG = {
   // National Park Service roads stay visible even when minor streets are hidden
   ALWAYS_SHOWN_LAYERS: new Set(['PARKS_NPS_PRESIDIO', 'PARKS_NPS_FTMASON']),
   SF_BOUNDS: [[-122.52, 37.70], [-122.35, 37.835]],
+  // The "Apply for a Block Party" button under the results.
+  APPLY: {
+    // Off on burritojustice's build; a copy run by a block party fund turns it on. ?apply=1 or ?apply=0
+    // in the page's address overrides it, for testing.
+    show: false,
+    // The application form the button opens, in a new tab. Empty: the button shows the
+    // "Applications open soon" note instead.
+    url: '',
+    // What the form gets about the checked blocks, added to its address: parameter name → field of the
+    // CSV export (record()). Several blocks' values are joined with ", " (repeats dropped); 'link' is one
+    // Block Party link to all of them. Airtable forms prefill a field from prefill_<Field name> (exactly as
+    // the field is named) and can hide it with hide_<Field name>=true.
+    // TO SETTLE with the form's owners: the field names below are placeholders until the form exists.
+    params: {
+      'prefill_CNN': 'cnn',
+      'prefill_Street': 'streetname',
+      'prefill_From street': 'from_street',
+      'prefill_To street': 'to_street',
+      'prefill_Supervisor district': 'supervisor_district',
+      'prefill_ZIP code': 'zip_code',
+      'prefill_Neighborhood': 'analysis_neighborhood',
+      'prefill_Block Party link': 'link',
+    },
+  },
 };
 
 /* =====================================================================
@@ -1571,8 +1595,15 @@ function setupForm() {
     refreshMapFilter();
     rerunLookup();
   });
-  // placeholder until the application form is connected
-  $('apply').addEventListener('click', () => toast(t('applySoon')));
+  // Apply: hidden unless CONFIG.APPLY.show (or ?apply=1); opens the form with the blocks filled in, or says
+  // applications open soon while there's no form yet
+  const applyParam = new URLSearchParams(location.search).get('apply');
+  $('apply').hidden = !(applyParam == null ? CONFIG.APPLY.show : applyParam === '1');
+  $('apply').addEventListener('click', () => {
+    const segs = checkedSegs();
+    if (!CONFIG.APPLY.url || !segs.length) { toast(t('applySoon')); return; }
+    window.open(applyUrl(segs), '_blank', 'noopener');
+  });
   $('search-all').addEventListener('change', e => {
     Logic.setSearchAll(e.target.checked);
     refreshMapFilter();
@@ -2050,6 +2081,17 @@ function toCSV(segs) {
   const cols = Object.keys(rows[0]);
   const cell = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   return [cols.join(','), ...rows.map(r => cols.map(c => cell(r[c])).join(','))].join('\n');
+}
+// the application form's address with the checked blocks' details (CONFIG.APPLY.params) added
+function applyUrl(segs) {
+  const rows = segs.map(record);
+  const u = new URL(CONFIG.APPLY.url, location.href);
+  for (const [param, field] of Object.entries(CONFIG.APPLY.params || {})) {
+    const value = field === 'link' ? linkFor(segs)
+      : [...new Set(rows.map(r => r[field]).filter(v => v !== '' && v != null).map(String))].join(', ');
+    if (value) u.searchParams.set(param, value);
+  }
+  return u.href;
 }
 const baseUrl = () => location.origin + location.pathname;
 function linkFor(segs) { return baseUrl() + '#cnn=' + segs.map(s => s.cnn).join(','); }

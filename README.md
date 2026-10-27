@@ -37,6 +37,14 @@ Streets, boundaries, map layers, parcels and the neighborhood groups list all co
 
 The data files and `scripts/build_data.py`, `match_blocks.py`, `build_layers.py` and `build_neighborhood_groups.py` are copies from [burritojustice/sf-blocks](https://github.com/burritojustice/sf-blocks), which keeps the master copy of the street data and matching logic (it's shared with other projects). Block Party reads sf-blocks live, but still runs and builds from the copies here if it can't. Each script's first lines say which version it came from.
 
+## The Apply button
+
+"Apply for a Block Party" under the results is set by `CONFIG.APPLY` near the top of `index.html`:
+
+- `show`: whether the button appears. Off here; a block party fund's copy turns it on. `?apply=1` (or `?apply=0`) in the page's address overrides it, for testing.
+- `url`: the application form. The button opens it in a new tab with the checked blocks' details added to the address. With no URL, it says applications open soon.
+- `params`: which details the form gets, as parameter → CSV export field (`cnn`, `streetname`, `from_street`, `to_street`, `supervisor_district`, `zip_code`, `analysis_neighborhood`, `link`, or any other export column). Several blocks are joined with ", ". Airtable forms fill a field from `prefill_<Field name>` and can hide it with `hide_<Field name>=true`, so match the names to the form's fields.
+
 ## Data sources
 
 From DataSF:
