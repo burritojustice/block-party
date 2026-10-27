@@ -12,6 +12,7 @@ A San Francisco street-block (CNN) lookup for block party organizers. Live at ht
 - **Write plainly:** UI text, README, and CHANGELOG are short and concrete. User-facing strings go in `I18N.en`; don't hard-code them in HTML builders.
 - **Leave the source files:** keep raw downloads in `data/uploads/` and `reference/` as published. Scripts trim them into `data/`.
 - **Data comes from sf-blocks:** the page loads `region.json`, streets, layers, boundaries, parcels and the groups list live from https://burritojustice.github.io/sf-blocks/ through `SFBlocks` (the first `<script>`, the same code as Joiner's `js/sfblocks.js`), and falls back to the copies here at the same paths. Change data in sf-blocks, then run `python3 scripts/copy_sf_blocks.py ../sf-blocks`, which updates `data/sf-blocks.json`. Aliases live only in sf-blocks' `data/aliases.json`.
+- **Apply button:** `CONFIG.APPLY` (`show`, `url`, `params`). Off on this build; civic-joy-fund's copy turns it on. See the README.
 - **Basemap key:** Protomaps `071e272e8d5e13b7` (allowed origin burritojustice.github.io; localhost works with any key). `SFBlocks.basemapKey()` picks another origin's key from `region.json`.
 
 ## Related repos

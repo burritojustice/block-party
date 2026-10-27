@@ -2,6 +2,12 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v38
+Builds on v37 (#1): merge that first.
+
+- **"Apply for a Block Party" is off here:** `CONFIG.APPLY.show` turns the button on, for a copy run by a block party fund (civic-joy-fund's). `?apply=1` shows it anyway, for testing.
+- **Where it goes:** `CONFIG.APPLY.url` is the application form, opened in a new tab with the checked blocks filled in: CNNs, street, cross streets, district, ZIP, neighborhood and a Block Party link, as set in `CONFIG.APPLY.params` (Airtable's `prefill_<Field name>` style; the field names are placeholders until the form exists). With no URL, the button shows "Applications open soon" as before.
+
 ## v37
 Block Party moves to burritojustice and reads its data from sf-blocks.
 
