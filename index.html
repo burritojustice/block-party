@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<!-- build: v38 -->
+<!-- build: v39 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Block Party: find your block</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎉</text></svg>">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="img/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -368,6 +370,9 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 .legend summary { font-weight: 700; cursor: pointer; list-style-position: inside; }
 .legend ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; }
 .legend li { display: flex; align-items: center; gap: 8px; }
+.legend li:has(.lg-toggle) { display: block; }
+.legend .lg-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.legend .lg-toggle input { width: 14px; height: 14px; margin: 0 0 0 auto; accent-color: var(--pool); flex: none; }
 .legend .sw { display: inline-flex; align-items: center; gap: 3px; flex: none; }
 .legend .sw svg { width: 24px; height: 12px; overflow: visible; }
 .legend .sw svg.dot { width: 16px; height: 16px; }
@@ -522,7 +527,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
         <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#FFC53D" stroke-width="10" stroke-linecap="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="#FF3D7F" stroke-width="5" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="7.5" fill="#FFC53D"/><circle cx="8" cy="8" r="4.5" fill="#FF3D7F"/><circle cx="8" cy="8" r="1.8" fill="#fff"/></svg></span><span data-i18n="lgChecked">Your blocks / intersections</span></li>
         <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#6D4AF5" stroke-width="4" stroke-dasharray="6 4"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="6" fill="#fff" stroke="#6D4AF5" stroke-width="2" stroke-dasharray="3 2.5"/><circle cx="8" cy="8" r="2" fill="#6D4AF5"/></svg></span><span data-i18n="lgUnchecked">Matches</span></li>
         <li><span class="sw lg-halo"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#fff" stroke-width="10" stroke-linecap="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="#6D4AF5" stroke-width="5" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="7" fill="#fff"/><circle cx="8" cy="8" r="5" fill="#6D4AF5"/></svg></span><span data-i18n="lgPreview">Preview</span></li>
-        <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#0EA5C6" stroke-width="4"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgCross">Cross streets</span></li>
+        <li><label class="lg-toggle" data-i18n-title="lgCrossTitle" title="Show cross streets after you choose a block"><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#0EA5C6" stroke-width="4"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgCross">Cross streets</span><input type="checkbox" id="lg-cross" checked></label></li>
         <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#6D4AF5" stroke-opacity=".55" stroke-width="5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgStreet">Your whole street</span></li>
         <li><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="4" fill="#fff" stroke="#1E2340" stroke-width="2"/></svg></span><span data-i18n="lgEnds">Corners</span></li>
         <li><span class="sw"><svg viewBox="0 0 24 12"><line class="lg-other" x1="3" y1="6" x2="21" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOther">Other streets</span></li>
@@ -637,7 +642,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v38';
+const _BUILD_VERSION = 'v39';
 
 /* =====================================================================
    CONFIG
@@ -720,6 +725,7 @@ const I18N = {
     loading: 'Loading streets…',
     loadFailed: 'Street data couldn’t load from sf-blocks or the copy here. Reload to try again.',
     bmMap: 'Map', bmSat: 'Satellite',
+    lgCrossTitle: 'Show cross streets after you choose a block',
     legend: 'Map key', lgChecked: 'Your blocks / intersections', lgCross: 'Cross streets', lgUnchecked: 'Matches',
     lgPreview: 'Preview', lgStreet: 'Your whole street', lgEnds: 'Corners', lgOther: 'Other streets',
     lgHint: 'Tap any street or corner to add it.',
@@ -818,6 +824,7 @@ function applyI18n() {
   document.documentElement.lang = LANG;
   document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t(el.dataset.i18n));
   document.querySelectorAll('[data-i18n-ph]').forEach(el => el.placeholder = t(el.dataset.i18nPh));
+  document.querySelectorAll('[data-i18n-title]').forEach(el => el.title = t(el.dataset.i18nTitle));
 }
 
 /* =====================================================================
@@ -1599,6 +1606,12 @@ function setupForm() {
   // applications open soon while there's no form yet
   const applyParam = new URLSearchParams(location.search).get('apply');
   $('apply').hidden = !(applyParam == null ? CONFIG.APPLY.show : applyParam === '1');
+  $('lg-cross').checked = showCross;
+  $('lg-cross').addEventListener('change', e => {
+    showCross = e.target.checked;
+    try { localStorage.setItem(CROSS_KEY, showCross ? '1' : '0'); } catch (err) { }
+    updateCross();
+  });
   $('apply').addEventListener('click', () => {
     const segs = checkedSegs();
     if (!CONFIG.APPLY.url || !segs.length) { toast(t('applySoon')); return; }
@@ -1725,7 +1738,19 @@ function setResults(segs, title, kind, checkedCnns) {
 function checkedSegs() { return state.results.filter(s => state.checked.has(s.cnn)); }
 
 /* ---------- results rendering ---------- */
+// Cross streets (cyan, with names): always shown while choosing; once a block is checked, only while
+// "Cross streets" in the map key is ticked (remembered in this browser). Faded with opacity because the
+// 3D label mode switches these layers' visibility.
+const CROSS_KEY = 'bp-cross';
+let showCross = (() => { try { return localStorage.getItem(CROSS_KEY) !== '0'; } catch (e) { return true; } })();
+function updateCross() {
+  if (typeof map === 'undefined' || !map || !map.getLayer('bp-context')) return;
+  const on = showCross || !state.checked.size;
+  map.setPaintProperty('bp-context', 'line-opacity', on ? 1 : 0);
+  for (const id of ['bp-context-label', 'bp-context-label-3d']) if (map.getLayer(id)) map.setPaintProperty(id, 'text-opacity', on ? 1 : 0);
+}
 function render() {
+  updateCross();
   const box = $('results');
   const segs = state.results;
   box.hidden = !segs.length && !state.title;
@@ -1751,6 +1776,7 @@ function render() {
   if (segs.length && !Transit.ready) Transit.ensure().then(() => { if (Transit.ready) render(); });
   if (segs.length && !Nearby.ready) Nearby.ensure().then(() => { if (Nearby.ready) render(); });
   if (segs.length && !Groups.ready) Groups.ensure().then(() => { if (Groups.ready) render(); });
+  if (segs.length && !Areas.ready) Areas.ensure().then(() => { if (Areas.ready) render(); });
   // land use per block: read the parcel tiles for any card that doesn't have it yet, then redraw once
   const needParcels = segs.filter(s => !isInt(s) && !Parcels.peek(s));
   if (needParcels.length && Parcels.available()) Promise.all(needParcels.map(s => Parcels.fetch(s))).then(rs => { if (rs.some(Boolean)) render(); });
@@ -1779,6 +1805,7 @@ function intCardHTML(i) {
       <dt>${esc(t('nhood'))}</dt><dd>${hoodsHTML(i)}</dd>
       <dt>${esc(t('elevation'))}</dt><dd data-elev="${i.cnn}">${esc(elev)}</dd>
       ${transitFacts(i)}
+      ${Areas.facts(i)}
       ${groupsFacts(i)}
     </dl>
   </li>`;
@@ -1864,6 +1891,7 @@ function cardHTML(s) {
       <dt>${esc(t('slope'))}</dt><dd data-slope="${s.cnn}">${slopeHTML(s)}</dd>
       ${transitFacts(s)}
       ${parcelFacts(s)}
+      ${Areas.facts(s)}
       ${groupsFacts(s)}
     </dl>
     <div class="profile" data-profile="${s.cnn}" aria-label="${esc(t('profileTitle'))}">${profileHTML(s)}</div>
@@ -2031,7 +2059,7 @@ function elevFields(s) {
 }
 async function exportSegs() {
   const segs = checkedSegs();
-  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure(), Nearby.ensure(), Groups.ensure(), ...segs.map(s => Parcels.fetch(s))]);
+  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure(), Nearby.ensure(), Groups.ensure(), Areas.ensure(), ...segs.map(s => Parcels.fetch(s))]);
   return segs;
 }
 // "14 (Frequent Local); 14R (Rapid Bus)" and "Bike lane · posts"
@@ -2052,7 +2080,7 @@ function record(s) {
       from_street: s.streets.slice(1).join(' & '), to_street: '',
       supervisor_district: s.sup, zip_code: s.zip, nhood: s.nhood, analysis_neighborhood: s.anhood,
       ...Object.fromEntries(HOOD_SETS.map(([k]) => ['hood_' + k, (s.hoods && s.hoods[k]) || ''])),
-      elev_from_ft: e == null ? '' : Math.round(e * M2FT), ...transitFields(s), wkt: wktOf(s), link: linkFor([s]) };
+      elev_from_ft: e == null ? '' : Math.round(e * M2FT), ...transitFields(s), ...Areas.fields(s), wkt: wktOf(s), link: linkFor([s]) };
   }
   const sides = Logic.addressSides(s);
   const side = p => { const x = sides.find(y => y.parity === p); return x ? x.side : ''; };
@@ -2071,6 +2099,7 @@ function record(s) {
     length_ft: fmtFt(s.len),
     ...elevFields(s),
     ...transitFields(s),
+    ...Areas.fields(s),
     wkt: wktOf(s),
     link: linkFor([s]),
   };
@@ -2736,6 +2765,7 @@ function addOverlayLayers(popup) {
     paint: { 'line-color': landColor, 'line-width': zw(0.6, 1.2, 1.6), 'line-opacity': 0.75 } }, landBelow);
   map.addLayer({ id: 'bp-lyr-lands-park', type: 'line', source: 'lyr-lands', filter: landFilter(['==', ['get', 'cat'], 'park']),
     paint: { 'line-color': landColor, 'line-width': zw(0.7, 1.4, 1.8), 'line-opacity': 0.8, 'line-dasharray': [3, 2] } }, landBelow);
+  Areas.addLayers('bp-all', 'bp-context-label');
   map.addLayer({ id: 'bp-lyr-muni', type: 'line', source: 'lyr-muni', layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': MUNI_BAND.map, 'line-opacity': 1, 'line-width': zw(3, 11, 16) } }, firstBasemapLabel ? firstBasemapLabel.id : 'bp-sat');
   // bike network: on top of the gray street lines, under quiet matches and selections
@@ -2904,7 +2934,7 @@ function updateOverlays() {
 // one fetch per layer file, shared by the map and the cards
 const layerFetches = {};
 function fetchLayer(k) {
-  return layerFetches[k] ||= SFBlocks.ready.then(reg => SFBlocks.json(reg.layers + OVERLAYS[k].url))
+  return layerFetches[k] ||= SFBlocks.ready.then(reg => SFBlocks.json(OVERLAYS[k].path || reg.layers + OVERLAYS[k].url))
     .catch(err => { delete layerFetches[k]; throw err; });
 }
 async function loadOverlay(k) {
@@ -3370,6 +3400,104 @@ const landuseText = r => r ? r.uses.map(([k, n]) => `${landuseName(k)} ${n}`).jo
    Neighborhood comes from the 37 boundaries in data/boundaries/planning_neighborhoods.geojson, tested at 25%,
    50%, and 75% along the block, so a block on a boundary lists both sides; an intersection is tested at
    the corner and 15 m each way. */
+/* ---------- Area layers: boundary sets from sf-blocks on the map and on cards ----------
+   Each entry names a set in sf-blocks' data/boundaries/ by id. Its title, file and the property that names
+   each area come from that folder's index.json, so adding a set here is one line. A set sf-blocks doesn't
+   have (yet) is skipped. Each gets a Layers menu row (off at first), a map key line, a card row when the
+   block or corner is inside one, and an export column. */
+const AREA_LAYERS = [
+  { k: 'historic', set: 'historic_districts', color: '#A8441B', layer: 'Historic districts', row: 'Historic district' },
+];
+const Areas = (() => {
+  const sets = new Map();     // k → { c, meta, polys }
+  const cache = new Map();    // k|cnn → [names]
+  let promise = null, ready = false;
+  const inRing = (x, y, r) => { let a = false; for (let i = 0, j = r.length - 1; i < r.length; j = i++)
+    if ((r[i][1] > y) !== (r[j][1] > y) && x < (r[j][0] - r[i][0]) * (y - r[i][1]) / (r[j][1] - r[i][1]) + r[i][0]) a = !a; return a; };
+  function along(coords, f) {
+    let total = 0; const seg = [];
+    for (let k = 1; k < coords.length; k++) { const d = Math.hypot(coords[k][0] - coords[k - 1][0], coords[k][1] - coords[k - 1][1]); seg.push(d); total += d; }
+    let d = total * f, k = 0;
+    while (k < seg.length - 1 && d > seg[k]) d -= seg[k++];
+    const u = seg[k] ? d / seg[k] : 0, a = coords[k], b = coords[k + 1] || a;
+    return [a[0] + u * (b[0] - a[0]), a[1] + u * (b[1] - a[1])];
+  }
+  // the area's name: the set's nameTemplate ("District {sup_dist}") or its name property
+  const nameOf = (meta, p) => meta.nameTemplate ? meta.nameTemplate.replace(/\{(\w+)\}/g, (_, k) => p[k] ?? '') : String(p[meta.name] ?? p[meta.key] ?? '');
+  return {
+    get keys() { return [...sets.keys()]; },
+    get ready() { return ready; },
+    conf: k => sets.get(k).c,
+    // before the map layers are added: find which sets sf-blocks has and add them to OVERLAYS
+    async register() {
+      let index, dir;
+      try {
+        const reg = await SFBlocks.ready;
+        dir = reg.boundaries.replace(/[^/]*$/, '');
+        index = await SFBlocks.json(reg.boundaries);
+      } catch (err) { console.warn('[block-party] area layers', err); return; }
+      for (const c of AREA_LAYERS) {
+        const meta = index.layers.find(l => l.id === c.set);
+        if (!meta) { console.info(`[block-party] ${c.set} isn't in sf-blocks yet; no ${c.k} layer`); continue; }
+        sets.set(c.k, { c, meta, polys: null });
+        OVERLAYS[c.k] = { path: dir + meta.file, area: true, color: c.color,
+          layers: [`bp-lyr-${c.k}-fill`, `bp-lyr-${c.k}-line`, `bp-lyr-${c.k}-label`] };
+        OVERLAY_DEFAULT[c.k] = overlayMode[c.k] = c.mode || 'off';
+        I18N.en['lyr_' + c.k] ??= c.layer || meta.label;
+        I18N.en['area_' + c.k] ??= c.row || meta.label;
+        const li = document.createElement('li');
+        li.id = 'lg-lyr-' + c.k; li.hidden = true;
+        li.innerHTML = `<span class="sw"><svg viewBox="0 0 24 12"><rect x="1" y="1" width="22" height="10" rx="2" fill="${c.color}" fill-opacity=".14" stroke="${c.color}" stroke-width="1.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span>${esc(t('lyr_' + c.k))}</span>`;
+        $('lg-contours').before(li);
+      }
+    },
+    // map layers for each set: a light fill, an outline and the names, under the streets
+    addLayers(below, labelsBelow) {
+      for (const [k, { c, meta }] of sets) {
+        const src = 'lyr-' + k;
+        map.addLayer({ id: `bp-lyr-${k}-fill`, type: 'fill', source: src, layout: { visibility: 'none' },
+          paint: { 'fill-color': c.color, 'fill-opacity': 0.1 } }, below);
+        map.addLayer({ id: `bp-lyr-${k}-line`, type: 'line', source: src, layout: { visibility: 'none', 'line-join': 'round' },
+          paint: { 'line-color': c.color, 'line-opacity': 0.8, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1.2, 16, 2.5] } }, below);
+        map.addLayer({ id: `bp-lyr-${k}-label`, type: 'symbol', source: src,
+          layout: { visibility: 'none', 'text-field': meta.nameTemplate ? ['to-string', ['get', meta.name]] : ['to-string', ['get', meta.name || meta.key]],
+            'text-font': LABEL_FONT, 'text-size': 12, 'text-max-width': 9, 'text-padding': 8 },
+          paint: { 'text-color': c.color, 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.6 } }, labelsBelow);
+      }
+    },
+    // load every set's polygons (shared with the map layer's fetch), for cards and exports
+    ensure() {
+      if (!sets.size) { ready = true; return Promise.resolve(); }
+      return promise ||= Promise.all([...sets].map(([k, st]) => fetchLayer(k).then(fc => {
+        st.polys = fc.features.map(f => ({ name: nameOf(st.meta, f.properties || {}),
+          parts: f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates }));
+      }))).then(() => { ready = true; }).catch(err => { promise = null; console.warn('[block-party] area layers', err); });
+    },
+    // the set's areas a block (at 25/50/75% along) or a corner (and 15 m around it) is in; null until loaded
+    of(k, item) {
+      const st = sets.get(k);
+      if (!st || !st.polys) return null;
+      const ck = k + '|' + item.cnn;
+      if (cache.has(ck)) return cache.get(ck);
+      const dx = 15 / 88000, dy = 15 / 110540;
+      const pts = isInt(item) ? [[item.x, item.y], [item.x + dx, item.y], [item.x - dx, item.y], [item.x, item.y + dy], [item.x, item.y - dy]]
+        : [0.25, 0.5, 0.75].map(f => along(item.coords, f));
+      const names = [...new Set(pts.flatMap(([x, y]) => st.polys.filter(p => p.parts.some(pp => inRing(x, y, pp[0]) && !pp.slice(1).some(h => inRing(x, y, h)))).map(p => p.name)))];
+      cache.set(ck, names);
+      return names;
+    },
+    facts(item) {
+      return [...sets.keys()].map(k => {
+        const names = Areas.of(k, item);
+        return names && names.length ? `<dt>${esc(t('area_' + k))}</dt><dd>${esc(names.join('; '))}</dd>` : '';
+      }).join('');
+    },
+    fields(item) {
+      return Object.fromEntries([...sets.keys()].map(k => [sets.get(k).c.set.replace(/s$/, ''), (Areas.of(k, item) || []).join('; ')]));
+    },
+  };
+})();
+
 const Groups = (() => {
   let promise = null, ready = false, polys = [], data = null;
   const cache = new Map();
@@ -3506,6 +3634,7 @@ function setupMapMenus() {
     health: '<svg viewBox="0 0 26 16"><rect x="0.5" y="1.5" width="13" height="13" rx="3" fill="#0B7285"/><text x="7" y="11.5" font-size="9" font-weight="700" text-anchor="middle" fill="#fff">H</text><circle cx="20" cy="8" r="5.5" fill="#0B7285"/><path d="M20 5v6M17 8h6" stroke="#fff" stroke-width="1.8"/></svg>',
     contours: '<svg viewBox="0 0 26 16"><rect width="26" height="16" rx="3" fill="#E2DFDA"/><path d="M1 11 C8 3 16 14 25 5" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M1 15 C9 8 16 16 25 10" fill="none" stroke="#fff" stroke-width="1.5"/></svg>',
   };
+  for (const k of Areas.keys) SW[k] = `<svg viewBox="0 0 26 16"><rect x="2" y="2" width="22" height="12" rx="2" fill="${OVERLAYS[k].color}" fill-opacity=".14" stroke="${OVERLAYS[k].color}" stroke-width="1.5"/></svg>`;
   const row = (k, opts) => `<div class="lyr-row" data-lyr="${k}">${SW[k]}<b>${esc(t('lyr_' + k))}${t('lyr_' + k + 'Hint') !== 'lyr_' + k + 'Hint' ? `<small>${esc(t('lyr_' + k + 'Hint'))}</small>` : ''}</b>
     <div class="lseg" role="group" aria-label="${esc(t('lyr_' + k))}">${opts.map(([v, label]) =>
       `<button type="button" data-v="${v}" aria-pressed="${overlayMode[k] === v}">${esc(t(label))}</button>`).join('')}</div></div>`;
@@ -3723,6 +3852,7 @@ function drawBunting() {
     return;
   }
   await mapP;
+  await Areas.register();
   addMapLayers();
   $('map-loading').remove();
   setupQuiet();
