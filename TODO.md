@@ -4,7 +4,7 @@ Gathered from the build conversation, October 2026. Check items off or move them
 
 ## Waiting on someone
 
-- [ ] **Airtable:** prefill the form from a link vs. embed it — waiting on stakeholders. The "Apply for a Block Party" button is still a placeholder.
+- [ ] **Airtable:** prefill the form from a link vs. embed it — waiting on stakeholders. The link route is built (v38: `CONFIG.APPLY` url and `params`, off on this build); it needs the form's URL and its exact field names.
 - [ ] **Slimmer parcels pmtiles:** rebuild with only the fields we use and zoom 15 only (command in the v32 notes); same filename, nothing else changes.
 - [ ] **Schools enrollment:** join California Department of Education enrollment; document the workflow (maybe its own repo, since it works statewide). Then add the enrollment column to `build_layers.py`'s school fields.
 
