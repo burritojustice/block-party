@@ -4,7 +4,7 @@ A San Francisco street-block (CNN) lookup for block party organizers. Live at ht
 
 ## Working rules
 
-- **Ship as a PR:** for any code change, make a branch, commit, push it, and open the PR (`gh api repos/burritojustice/block-party/pulls -f head=<branch> -f base=main ...`; GraphQL is blocked here, so plain `gh pr create` may fail). Don't leave a branch pushed without a PR.
+- **Ship as a PR, always to `main`:** for any code change, make a branch, commit, push it, and open the PR against `main`, even when it builds on an unmerged PR (branch from that one and say "Includes #NN"). Never target another PR's branch: GitHub merged two stacked PRs into their parent branches after those had gone to `main`, stranding them. (`gh api repos/burritojustice/block-party/pulls -f head=<branch> -f base=main ...`; GraphQL is blocked here, so plain `gh pr create` may fail). Don't leave a branch pushed without a PR.
 - **Version every change:** this applies to app and data changes; docs-only changes like this file don't need it. Bump both `<!-- build: vNN -->` near the top of `index.html` and `const _BUILD_VERSION = 'vNN'`, and add a `## vNN` entry at the top of `CHANGELOG.md`. Hovering the title shows the version, which is how John checks what's deployed.
 - **Dates are YYYY-MM-DD** everywhere: data, CHANGELOG, card text, exports.
 - **The creek fix applies to every map:** hide Protomaps `water_stream`, and filter names containing "Creek" or "Arroyo" out of `water_river` and waterway labels (`hideCreeks()`). John wants the same fix on all his maps, Selecter included.
@@ -12,6 +12,8 @@ A San Francisco street-block (CNN) lookup for block party organizers. Live at ht
 - **Write plainly:** UI text, README, and CHANGELOG are short and concrete. User-facing strings go in `I18N.en`; don't hard-code them in HTML builders.
 - **Leave the source files:** keep raw downloads in `data/uploads/` and `reference/` as published. Scripts trim them into `data/`.
 - **Data comes from sf-blocks:** the page loads `region.json`, streets, layers, boundaries, parcels and the groups list live from https://burritojustice.github.io/sf-blocks/ through `SFBlocks` (the first `<script>`, the same code as Joiner's `js/sfblocks.js`), and falls back to the copies here at the same paths. Change data in sf-blocks, then run `python3 scripts/copy_sf_blocks.py ../sf-blocks`, which updates `data/sf-blocks.json`. Aliases live only in sf-blocks' `data/aliases.json`.
+- **Area layers:** `AREA_LAYERS` lists sf-blocks boundary sets (by id) to show as map layers, card rows and export columns (`Areas` module).
+- **Cross streets toggle:** `showCross` / `updateCross()`, the checkbox in the map key; fades `bp-context*` by opacity.
 - **Apply button:** `CONFIG.APPLY` (`show`, `url`, `params`). Off on this build; civic-joy-fund's copy turns it on. See the README.
 - **Basemap key:** Protomaps `071e272e8d5e13b7` (allowed origin burritojustice.github.io; localhost works with any key). `SFBlocks.basemapKey()` picks another origin's key from `region.json`.
 

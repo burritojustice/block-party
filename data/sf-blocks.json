@@ -2,8 +2,8 @@
   "_about": "Backup copies of burritojustice/sf-blocks files, at the same paths as on https://burritojustice.github.io/sf-blocks/. The app reads them live and falls back to these. Refresh with scripts/copy_sf_blocks.py; don't edit them here.",
   "repo": "burritojustice/sf-blocks",
   "live": "https://burritojustice.github.io/sf-blocks/",
-  "version": "2026.10.27",
-  "copied": "2026-10-27",
+  "version": "2026.10.27.2",
+  "copied": "2026-10-28",
   "files": [
     "region.json",
     "data/aliases.json",
@@ -33,6 +33,8 @@
     "reference/neighborhood-groups/neighborhood_groups.json",
     "reference/neighborhood-groups/SF_Planning_Complete_notification_list_20260925.csv",
     "reference/neighborhood-groups/NeighborhoodGroupList_20260925.xlsx",
-    "reference/neighborhood-groups/README.md"
+    "reference/neighborhood-groups/README.md",
+    "data/boundaries/index.json",
+    "data/boundaries/historic_districts.geojson"
   ]
 }

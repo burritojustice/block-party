@@ -2,6 +2,14 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v39
+Includes v38 (#3): merging this brings both to `main`.
+
+- **Cross streets can be turned off:** "Cross streets" in the map key is now a checkbox. Unticked, the cyan cross streets and their names hide once a block is checked; while you're still choosing they always show. Remembered in this browser.
+- **Area layers from sf-blocks:** `AREA_LAYERS` (next to the `Areas` module) lists boundary sets in sf-blocks by id. Each one sf-blocks has gets a Layers menu row (off at first), a map key line, a card row when the block or corner is inside one ("Historic district: …", checked at 25/50/75% along the block), and a column in the CSV/JSON exports. Historic Districts is listed and appears once sf-blocks has `historic_districts`. Adding another set is one line.
+- **Favicon:** a chosen block (pink, with the yellow glow) between two corners, with its cross streets, on the ink tile; plus 32 px and Apple touch icons.
+- **Backup copies:** `copy_sf_blocks.py` takes wildcards in `data/sf-blocks.json`, and also copies `data/boundaries/index.json` (needed for area layers offline). The new **Refresh sf-blocks copies** Action opens a PR each Monday when sf-blocks changed (needs Actions allowed to create pull requests in Settings → Actions → General).
+
 ## v38
 Builds on v37 (#1): merge that first.
 

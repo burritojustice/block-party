@@ -10,7 +10,7 @@ Single page, hosted on GitHub Pages: `index.html`, with its data read live from 
 Streets, boundaries, map layers, parcels and the neighborhood groups list all come from [burritojustice/sf-blocks](https://github.com/burritojustice/sf-blocks), the main copy of San Francisco's map data. The page reads its `region.json` for the paths and then loads each file live from https://burritojustice.github.io/sf-blocks/. If that site can't be reached, or a file is missing there, it uses the backup copy in this repo at the same path. `data/sf-blocks.json` lists those copies and the sf-blocks version they came from; hovering the title shows which one the page is using.
 
 - `?sfblocks=local` uses only the copies here; `?sfblocks=<url>` reads another copy of sf-blocks (handy for testing a branch).
-- To refresh the copies: `python3 scripts/copy_sf_blocks.py ../sf-blocks` (with sf-blocks checked out next to this repo). `--check` lists what differs without copying.
+- To refresh the copies: the **Refresh sf-blocks copies** Action does it every Monday and opens a PR, or run `python3 scripts/copy_sf_blocks.py ../sf-blocks` (with sf-blocks checked out next to this repo). `--check` lists what differs without copying.
 - Change data in sf-blocks, not here.
 
 ## Files
@@ -36,6 +36,16 @@ Streets, boundaries, map layers, parcels and the neighborhood groups list all co
 | `scripts/build_layers.py` | Rebuilds `data/layers/` from `data/uploads/` |
 
 The data files and `scripts/build_data.py`, `match_blocks.py`, `build_layers.py` and `build_neighborhood_groups.py` are copies from [burritojustice/sf-blocks](https://github.com/burritojustice/sf-blocks), which keeps the master copy of the street data and matching logic (it's shared with other projects). Block Party reads sf-blocks live, but still runs and builds from the copies here if it can't. Each script's first lines say which version it came from.
+
+## Area layers
+
+Boundary sets from sf-blocks (`data/boundaries/`) can show as a map layer and a card row. They're listed in `AREA_LAYERS`, just above the `Areas` module in `index.html`:
+
+```js
+{ k: 'historic', set: 'historic_districts', color: '#A8441B', layer: 'Historic districts', row: 'Historic district' },
+```
+
+`set` is the set's id in sf-blocks, `k` a short key for the layer and the address bar, `layer` the Layers menu name, `row` the card row's label. The area names come from the set's own name field in sf-blocks. A set sf-blocks doesn't have yet is skipped. To have it in the offline backup too, add `data/boundaries/<set>.geojson` to `data/sf-blocks.json`. Adding sets to sf-blocks is covered in its [ADDING-DATA.md](https://github.com/burritojustice/sf-blocks/blob/main/ADDING-DATA.md).
 
 ## The Apply button
 
