@@ -21,6 +21,7 @@ Streets, boundaries, map layers, parcels and the neighborhood groups list all co
 | `img/burritojustice.jpg` | Avatar shown next to the title |
 | `region.json` | Copy of sf-blocks' region file: paths, home view and basemap keys |
 | `data/sf-blocks.json` | Which sf-blocks files are copied here, and their version |
+| `data/README.md` | How the page loads sf-blocks live, falls back to these copies, and how to refresh them |
 | `data/aliases.json` | Copy of sf-blocks' other names for areas (used by `build_neighborhood_groups.py`) |
 | `scripts/copy_sf_blocks.py` | Refreshes the sf-blocks copies |
 | `data/streets.json` | Compact lookup data built from the DataSF exports (~2.5 MB, ~650 KB gzipped) |
