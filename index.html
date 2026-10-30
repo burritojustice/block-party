@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v39 -->
+<!-- build: v41 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -104,6 +104,15 @@ button, input { font: inherit; color: inherit; }
 .lseg button { border: 0; background: none; font: inherit; font-size: 12.5px; font-weight: 600; padding: 4px 9px; cursor: pointer; color: var(--ink); white-space: nowrap; }
 .lseg button + button { border-left: 1.5px solid var(--ink); }
 .lseg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.lseg.dim { opacity: .45; }
+.areas-cap { margin: 10px 0 2px; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
+.areas-cap:first-child { margin-top: 0; }
+.areas-cap span { font-weight: 400; }
+.areas-later { margin: 2px 0 8px; font-size: 13px; color: var(--ink-soft); }
+.lyr-row.lyr-sub { border-top: 0; padding-top: 0; }
+.area-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.area-chip { border: 1.5px solid var(--c); color: color-mix(in srgb, var(--c) 80%, #000); border-radius: 999px; padding: 0 8px; font-size: 13.5px; line-height: 1.55; }
+dl.facts dt.facts-cap { grid-column: 1 / -1; margin-top: 4px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
 .pop-hint { margin: 0; font-size: 12.5px; color: var(--ink-soft); }
 .land-chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 0 8px 34px; }
 .land-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 2px 8px 2px 4px; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; color: var(--ink-soft); }
@@ -501,12 +510,18 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
       <div class="map-toggle single">
         <button type="button" id="layers-btn" aria-expanded="false" aria-controls="layers-panel"><span data-i18n="btnLayers">Layers</span> ▾</button>
       </div>
+      <div class="map-toggle single">
+        <button type="button" id="areas-btn" aria-expanded="false" aria-controls="areas-panel"><span data-i18n="btnAreas">Areas</span> ▾</button>
+      </div>
       <div class="map-toggle single sun">
         <button type="button" id="quiet-btn" aria-expanded="false" aria-controls="quiet-panel">✦ <span data-i18n="quietBtn">Quiet streets</span><span class="badge" id="quiet-badge" hidden></span> ▾</button>
       </div>
       <div class="map-pop" id="layers-panel" hidden>
         <p class="pop-hint" data-i18n="layersHint">“Close up” shows a layer once you zoom in to a few blocks.</p>
         <div id="layers-rows"></div>
+      </div>
+      <div class="map-pop" id="areas-panel" hidden>
+        <div id="areas-rows"></div>
       </div>
       <div class="map-pop" id="quiet-panel" hidden>
         <p class="quiet-count" id="quiet-count" aria-live="polite"></p>
@@ -543,6 +558,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
         <li id="lg-lyr-health" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect x="12" y="0" width="12" height="12" rx="3" fill="#0B7285" stroke="#fff"/><text x="18" y="9.5" font-size="8.5" font-weight="700" text-anchor="middle" fill="#fff">H</text></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="6" fill="#0B7285" stroke="#fff"/><path d="M8 5v6M5 8h6" stroke="#fff" stroke-width="2"/></svg></span><span data-i18n="lgHealth">Hospitals / clinics</span></li>
         <li id="lg-contours" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect class="lg-contour-bg" width="24" height="12" rx="2" fill="#E2DFDA"/><path class="lg-contour" d="M1 8 C7 2 15 11 23 4" fill="none" stroke="#FFFFFF" stroke-width="1.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span id="lg-contours-text"></span></li>
       </ul>
+      <ul id="lg-areas" class="lg-areas"></ul>
       <p class="legend-hint" data-i18n="lgHint">Tap any street to add it.</p>
     </details>
   </div>
@@ -586,18 +602,24 @@ const SFBlocks = (() => {
     let region = null;
 
     // fetch with a deadline for the first byte (big files may take longer to finish)
-    const get = (url, ms = WAIT) => {
+    const get = (url, ms = WAIT, opts = {}) => {
         const ctl = new AbortController();
         const timer = setTimeout(() => ctl.abort(), ms);
-        return fetch(url, { signal: ctl.signal }).then(r => {
+        return fetch(url, { ...opts, signal: ctl.signal }).then(r => {
             clearTimeout(timer);
             if (!r.ok) throw new Error(`${r.status} ${url}`);
             return r;
         }, err => { clearTimeout(timer); throw err; });
     };
+    // GitHub Pages lets browsers keep files for 10 minutes. region.json and VERSION are checked with the
+    // server every time (cheap when unchanged), and every other file's address carries the version
+    // (?v=2026.10.30), so a new sf-blocks version is seen on the next page load, not 10 minutes later.
+    const fresh = { cache: 'no-cache' };
+    const versioned = path => base + path + (info.version ? (path.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(info.version) : '');
     async function file(path) {
+        await ready.catch(() => {});
         if (base) {
-            try { return await get(base + path); }
+            try { return await get(versioned(path)); }
             catch (err) {
                 console.warn(`[sf-blocks] ${path}: live copy failed, using the one here`, err);
                 info.fellBack.push(path);
@@ -609,8 +631,8 @@ const SFBlocks = (() => {
         info.copy = await get(STAMP).then(r => r.json()).catch(() => null);
         if (base) {
             try {
-                const [reg, ver] = await Promise.all([get(base + 'region.json').then(r => r.json()),
-                    get(base + 'VERSION').then(r => r.text())]);
+                const [reg, ver] = await Promise.all([get(base + 'region.json', WAIT, fresh).then(r => r.json()),
+                    get(base + 'VERSION', WAIT, fresh).then(r => r.text())]);
                 region = reg;
                 Object.assign(info, { live: true, version: ver.trim(), base });
                 console.log(`[sf-blocks] ${info.version}, live from ${base}`);
@@ -633,7 +655,7 @@ const SFBlocks = (() => {
         json: path => file(path).then(r => r.json()),
         text: path => file(path).then(r => r.text()),
         // absolute URL for readers that fetch on their own (PMTiles); no per-file fallback
-        url: path => new URL(base + path, location.href).href,
+        url: path => new URL(base ? versioned(path) : path, location.href).href,
         // the Protomaps key allowed for this page's origin, from region.json
         basemapKey: fallback => region?.basemap?.keys?.[location.origin] || fallback,
         // "sf-blocks 2026.10.27 (live)" for titles and footers
@@ -642,7 +664,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v39';
+const _BUILD_VERSION = 'v41';
 
 /* =====================================================================
    CONFIG
@@ -794,6 +816,14 @@ const I18N = {
     land_ocii: 'Former Redevelopment', land_other: 'Other',
     lyr_muni: 'Muni routes', lyr_bike: 'Bike network', lyr_slow: 'Slow Streets', lgSlow: 'Slow Streets',
     slowStreet: 'Slow Street', slowPlanned: 'Slow Street (planned)', slowRow: 'Slow Street', yesHere: 'Yes', slowOn: 'Slow Street{corridor}{status}', lyr_schools: 'Schools', lyr_stations: 'Fire and police', lyr_health: 'Hospitals and clinics',
+    btnAreas: 'Areas', areasElected: 'Elected districts', areasSpecial: 'Special districts', areasSpecialNote: '(not elected)',
+    areasAdmin: 'Administrative', areasAdminLater: 'ZIP codes, neighborhoods and census tracts are on the cards; map layers later.', areasShow: 'Show',
+    areasShadeHint: '<b>Shade</b> tints the area your blocks are in; the rest of that set shows as borders. One set is shaded at a time.',
+    aOff: 'Off', aBorders: 'Borders', aShade: 'Shade',
+    area_sup: 'Supervisor', area_asm: 'State Assembly', area_sen: 'State Senate', area_house: 'US House', area_bart: 'BART board',
+    area_cbd: 'CBD', area_cult: 'Cultural', area_hist: 'Historic',
+    lgAreaBorders: '{set} districts', lgAreaSet: '{set}', lgAreaShaded: '(yours shaded)',
+    cardElected: 'Elected districts', cardSpecial: 'Special districts', cardAdmin: 'Administrative',
     lyr_contours: 'Contours', lyr_contoursHint: 'Elevation lines', lyrOff: 'Off', lyrClose: 'Close up', lyrAlways: 'Always', lyrOn: 'On',
     lgMuni: 'Muni routes', lgBike: 'Bike lanes (dashed: shared routes)', lgSchools: 'Schools', lgStations: 'Fire / police stations', lgHealth: 'Hospitals / clinics',
     bike_separated: 'Separated bikeway', bike_lane: 'Bike lane', bike_path: 'Bike path', bike_route: 'Bike route', bike_neighborway: 'Neighborway',
@@ -1751,6 +1781,7 @@ function updateCross() {
 }
 function render() {
   updateCross();
+  Areas.updateShade();
   const box = $('results');
   const segs = state.results;
   box.hidden = !segs.length && !state.title;
@@ -1800,12 +1831,11 @@ function intCardHTML(i) {
     </div>
     <dl class="facts">
       <dt>${esc(t('streetsHere'))}</dt><dd>${esc(i.streets.map(P).join(', '))}</dd>
-      <dt>${esc(t('district'))}</dt><dd>${esc(i.sup)}</dd>
+      ${Areas.facts(i)}
       <dt>${esc(t('zip'))}</dt><dd>${esc(i.zip)}</dd>
       <dt>${esc(t('nhood'))}</dt><dd>${hoodsHTML(i)}</dd>
       <dt>${esc(t('elevation'))}</dt><dd data-elev="${i.cnn}">${esc(elev)}</dd>
       ${transitFacts(i)}
-      ${Areas.facts(i)}
       ${groupsFacts(i)}
     </dl>
   </li>`;
@@ -1838,7 +1868,7 @@ function cardText(s) {
     a: P(s.oneway === 'F' ? s.f : s.t), b: P(s.oneway === 'F' ? s.t : s.f) }).trim(), CLASS_KEYS[s.classcode] && t(CLASS_KEYS[s.classcode]),
     !s.accepted && t('notAccepted')].filter(Boolean);
   if (tags.length) lines.push(tags.join(', '));
-  lines.push(`${t('district')}: ${s.sup}`, `${t('zip')}: ${s.zip}`, `${t('nhood')}: ${HOOD_SETS.filter(([k]) => s.hoods && s.hoods[k]).map(([k, l]) => `${t(l)} ${s.hoods[k]}`).join('; ') || s.nhood}`, `${t('length')}: ${t('ft', { n: fmtFt(s.len) })}`);
+  lines.push(...Areas.text(s), `${t('zip')}: ${s.zip}`, `${t('nhood')}: ${HOOD_SETS.filter(([k]) => s.hoods && s.hoods[k]).map(([k, l]) => `${t(l)} ${s.hoods[k]}`).join('; ') || s.nhood}`, `${t('length')}: ${t('ft', { n: fmtFt(s.len) })}`);
   if (p) lines.push(`${t('slope')}: ${t('slopeAvg', { pct: Math.abs(p.net).toFixed(1) })}`);
   const m = Transit.muni(s), b = Transit.bike(s);
   if (m) lines.push(`${t('muniRow')}: ${m.length ? muniText(m) : t('noneHere')}`);
@@ -1884,14 +1914,13 @@ function cardHTML(s) {
     ${tags.length ? `<div class="tags">${tags.map(([c, x]) => `<span class="tag ${c}">${esc(x)}</span>`).join('')}</div>` : ''}
     <dl class="facts">
       <dt>${esc(t('addrLabel'))}</dt><dd>${addr}</dd>
-      <dt>${esc(t('district'))}</dt><dd>${esc(s.sup)}</dd>
+      ${Areas.facts(s)}
       <dt>${esc(t('zip'))}</dt><dd>${esc(s.zip)}</dd>
       <dt>${esc(t('nhood'))}</dt><dd>${hoodsHTML(s)}</dd>
       <dt>${esc(t('length'))}</dt><dd>${esc(t('ft', { n: fmtFt(s.len) }))}</dd>
       <dt>${esc(t('slope'))}</dt><dd data-slope="${s.cnn}">${slopeHTML(s)}</dd>
       ${transitFacts(s)}
       ${parcelFacts(s)}
-      ${Areas.facts(s)}
       ${groupsFacts(s)}
     </dl>
     <div class="profile" data-profile="${s.cnn}" aria-label="${esc(t('profileTitle'))}">${profileHTML(s)}</div>
@@ -2144,6 +2173,8 @@ function writeHash() {
   if (q.length) parts.push('quiet=' + q.join(','));
   const lyr = typeof layerHash === 'function' ? layerHash() : '';
   if (lyr) parts.push('layers=' + lyr);
+  const ar = typeof areaHash === 'function' ? areaHash() : '';
+  if (ar) parts.push('areas=' + ar);
   if (typeof landCats !== 'undefined' && [...landCats].sort().join() !== [...LAND_DEFAULT].sort().join())
     parts.push('lands=' + ([...landCats].join(',') || 'none'));
   if (LANG !== 'en') parts.push('lang=' + LANG);
@@ -2154,7 +2185,8 @@ function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   const list = k => (p.get(k) || '').split(',').map(s => s.trim()).filter(Boolean);
   return { cnn: list('cnn').map(Number).filter(Boolean), street: list('street'), all: p.get('all') === '1', minor: p.get('minor') !== '0', lang: p.get('lang'), quiet: list('quiet'),
-    layers: Object.fromEntries(list('layers').map(x => x.split(':')).filter(x => x.length === 2)), lands: p.get('lands') };
+    layers: Object.fromEntries(list('layers').map(x => x.split(':')).filter(x => x.length === 2)), lands: p.get('lands'),
+    areas: Object.fromEntries(list('areas').map(x => x.split(':')).filter(x => x.length === 2)) };
 }
 function applyHash() {
   const h = readHash();
@@ -2163,6 +2195,8 @@ function applyHash() {
     document.querySelectorAll('[data-quiet]').forEach(i => i.checked = h.quiet.includes(i.dataset.quiet));
   }
   for (const [k, v] of Object.entries(h.layers)) setOverlay(k, v, false);
+  for (const k of ['special', 'specialMode']) if (h.areas[k]) setArea(k, h.areas[k], false);
+  for (const [k, v] of Object.entries(h.areas)) if (k !== 'special' && k !== 'specialMode') setArea(k, v, false);
   if (h.lands) setLandCats(h.lands.split(','), false);
   if (h.minor !== Logic.db.includeMinor) { $('include-minor').checked = h.minor; Logic.setIncludeMinor(h.minor); refreshMapFilter(); }
   if (h.all !== Logic.db.searchAll) { $('search-all').checked = h.all; Logic.setSearchAll(h.all); refreshMapFilter(); }
@@ -2300,6 +2334,7 @@ function hideCreeks() {
 }
 function addMapLayers() {
   hideCreeks();
+  map.on('movestart', e => { if (e.originalEvent) fitToken++; });   // the person moved the map: no refit
   map.addSource('sat', { type: 'raster', tiles: [CONFIG.SATELLITE_TILES], tileSize: 256, maxzoom: 19,
     attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' });
   map.addLayer({ id: 'bp-sat', type: 'raster', source: 'sat', layout: { visibility: 'none' } });
@@ -2479,6 +2514,7 @@ function addMapLayers() {
   basemapLabelIds = map.getStyle().layers.filter(l => l.type === 'symbol' && !l.id.startsWith('bp-')).map(l => l.id);
   mapReady = true;
   refreshMapFilter();
+  Areas.apply();
 }
 // Terrain is always on. Up to CONFIG.LABEL_3D_PITCH, labels follow the streets, printed on the ground.
 // Past it, they're swapped for flat-on-screen labels at each block's midpoint.
@@ -3400,20 +3436,48 @@ const landuseText = r => r ? r.uses.map(([k, n]) => `${landuseName(k)} ${n}`).jo
    Neighborhood comes from the 37 boundaries in data/boundaries/planning_neighborhoods.geojson, tested at 25%,
    50%, and 75% along the block, so a block on a boundary lists both sides; an intersection is tested at
    the corner and 15 m each way. */
-/* ---------- Area layers: boundary sets from sf-blocks on the map and on cards ----------
-   Each entry names a set in sf-blocks' data/boundaries/ by id. Its title, file and the property that names
-   each area come from that folder's index.json, so adding a set here is one line. A set sf-blocks doesn't
-   have (yet) is skipped. Each gets a Layers menu row (off at first), a map key line, a card row when the
-   block or corner is inside one, and an export column. */
-const AREA_LAYERS = [
-  { k: 'historic', set: 'historic_districts', color: '#A8441B', layer: 'Historic districts', row: 'Historic district' },
+/* ---------- Areas: boundary sets from sf-blocks, on the map (Areas ▾), the map key and the cards ----------
+   Three kinds, kept apart on purpose:
+   - elected: districts with elected officials (Supervisor, State Assembly, State Senate, US House, BART board).
+     They cover the whole city and always border another, so they show as borders with the districts' names
+     paired across each border (D8 above the line, D9 below).
+   - special: areas with boards and budgets but no elected officials (Community Benefit Districts, Cultural
+     and Historic Districts). They're scattered, so one is shown at a time, with names inside.
+   - administrative (ZIP codes, neighborhoods, census tracts): on the cards already; not on the Areas menu yet.
+   Each set is Off, Borders or Shade. Shade tints only the areas your checked blocks are in; one set is
+   shaded at a time. Cards always list every set, whatever the map shows.
+   `set` is the set's id in sf-blocks' data/boundaries/; a set sf-blocks doesn't have is skipped. */
+const AREA_SETS = [
+  { k: 'sup', set: 'supervisor_districts', kind: 'elected', label: 'Supervisor', color: '#6D4AF5', width: 3,
+    short: p => 'D' + p.sup_dist, chip: p => `Supervisor D${p.sup_dist}` + (p.sup_name ? ` · ${p.sup_name.trim().split(/\s+/).pop()}` : ''),
+    col: 'supervisor', colVal: p => p.sup_name || '' },
+  { k: 'asm', set: 'assembly_districts', kind: 'elected', label: 'State Assembly', color: '#1A7F6E', width: 2.4, dash: [2.5, 1.5],
+    short: p => 'AD' + p.assemb22, chip: p => 'Assembly ' + p.assemb22, col: 'assembly_district', colVal: p => p.assemb22 },
+  { k: 'sen', set: 'state_senate_districts', kind: 'elected', label: 'State Senate', color: '#B5179E', width: 2.6, dash: [0.4, 1.6], round: true,
+    short: p => 'SD' + p.sen22, chip: p => 'State Senate ' + p.sen22, col: 'state_senate_district', colVal: p => p.sen22 },
+  { k: 'house', set: 'us_house_districts', kind: 'elected', label: 'US House', color: '#2457D6', width: 2.4, dash: [4, 1.5, 1, 1.5],
+    short: p => 'CA-' + p.cong22, chip: p => 'US House CA-' + p.cong22, col: 'us_house_district', colVal: p => p.cong22 },
+  { k: 'bart', set: 'bart_districts', kind: 'elected', label: 'BART board', color: '#4D7C0F', width: 2.4, dash: [6, 2],
+    short: p => 'BART ' + p.bart22, chip: p => 'BART District ' + p.bart22, col: 'bart_district', colVal: p => p.bart22 },
+  { k: 'cbd', set: 'community_benefit_district', kind: 'special', label: 'CBD', title: 'Community Benefit Districts', color: '#A8441B',
+    strip: /\s*(Community Benefit|Business Improvement) District$/i, chip: n => 'CBD: ' + n, col: 'community_benefit_district' },
+  { k: 'cult', set: 'cultural_districts', kind: 'special', label: 'Cultural', title: 'Cultural Districts', color: '#A8441B',
+    strip: /\s*(Arts\s*(&|and)\s*)?Cultural District$/i, chip: n => 'Cultural: ' + n, col: 'cultural_district' },
+  { k: 'hist', set: 'historic_districts', kind: 'special', label: 'Historic', title: 'Historic Districts', color: '#A8441B',
+    strip: /\s*Historic District$/i, chip: n => 'Historic: ' + n, col: 'historic_district' },
 ];
+const AREA_DEFAULT = { sup: 'borders', special: 'off', specialMode: 'shade' };
+const areaMode = { ...AREA_DEFAULT };
+const SHORT_MAX = 34;   // card chips longer than this are cut, with the full name on hover
+const shorten = n => n.length > SHORT_MAX ? n.slice(0, SHORT_MAX - 1).replace(/[\s&,·-]+$/, '') + '…' : n;
 const Areas = (() => {
-  const sets = new Map();     // k → { c, meta, polys }
-  const cache = new Map();    // k|cnn → [names]
-  let promise = null, ready = false;
+  const sets = new Map();     // k → { c, meta, polys, fc, pairs, promise }
+  const cache = new Map();    // k|cnn → [areas]
+  let dir = '', ready = false, allPromise = null;
+  const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
   const inRing = (x, y, r) => { let a = false; for (let i = 0, j = r.length - 1; i < r.length; j = i++)
     if ((r[i][1] > y) !== (r[j][1] > y) && x < (r[j][0] - r[i][0]) * (y - r[i][1]) / (r[j][1] - r[i][1]) + r[i][0]) a = !a; return a; };
+  const inPoly = (x, y, parts) => parts.some(pp => inRing(x, y, pp[0]) && !pp.slice(1).some(h => inRing(x, y, h)));
   function along(coords, f) {
     let total = 0; const seg = [];
     for (let k = 1; k < coords.length; k++) { const d = Math.hypot(coords[k][0] - coords[k - 1][0], coords[k][1] - coords[k - 1][1]); seg.push(d); total += d; }
@@ -3422,56 +3486,147 @@ const Areas = (() => {
     const u = seg[k] ? d / seg[k] : 0, a = coords[k], b = coords[k + 1] || a;
     return [a[0] + u * (b[0] - a[0]), a[1] + u * (b[1] - a[1])];
   }
-  // the area's name: the set's nameTemplate ("District {sup_dist}") or its name property
-  const nameOf = (meta, p) => meta.nameTemplate ? meta.nameTemplate.replace(/\{(\w+)\}/g, (_, k) => p[k] ?? '') : String(p[meta.name] ?? p[meta.key] ?? '');
+  // the area's full name, short name (map labels) and chip text
+  function describe(c, meta, p) {
+    if (c.kind === 'elected') return { name: c.short(p), short: c.short(p), chip: c.chip(p), col: c.colVal(p) };
+    const full = String(p[meta.name] ?? p[meta.key] ?? '').trim(), bare = c.strip ? full.replace(c.strip, '') || full : full;
+    return { name: full, short: bare, chip: c.chip(bare), col: full };
+  }
+  // Paired labels for elected sets: points every ~800 m along each border between two districts, each with
+  // both names ("D8\nD9", the one above the line first) and the border's angle, so the pair straddles it.
+  function borderPairs(st) {
+    const out = [], seen = new Set(), STEP = 800, EPS = 20;
+    const at = (x, y) => st.polys.find(p => inPoly(x, y, p.parts));
+    for (const poly of st.polys) for (const part of poly.parts) for (const ring of part) {
+      let acc = STEP / 2;
+      for (let i = 1; i < ring.length; i++) {
+        const [x0, y0] = ring[i - 1], [x1, y1] = ring[i];
+        let dx = (x1 - x0) * KX, dy = (y1 - y0) * KY;
+        const len = Math.hypot(dx, dy);
+        if (!len) continue;
+        let pos = STEP - acc;
+        while (pos <= len) {
+          const u = pos / len, x = x0 + (x1 - x0) * u, y = y0 + (y1 - y0) * u;
+          const key = Math.round(x * KX / (STEP / 2)) + ',' + Math.round(y * KY / (STEP / 2));
+          if (!seen.has(key)) {
+            let ux = dx / len, uy = dy / len;
+            if (ux < 0 || (ux === 0 && uy < 0)) { ux = -ux; uy = -uy; }          // read left to right
+            const nx = -uy, ny = ux;                                              // "up" side of the line
+            const top = at(x + nx * EPS / KX, y + ny * EPS / KY), bottom = at(x - nx * EPS / KX, y - ny * EPS / KY);
+            if (top && bottom && top !== bottom) {
+              seen.add(key);
+              out.push({ type: 'Feature', geometry: { type: 'Point', coordinates: [x, y] },
+                properties: { pair: top.short + '\n' + bottom.short, rot: -Math.atan2(uy, ux) * 180 / Math.PI } });
+            }
+          }
+          pos += STEP;
+        }
+        acc = (acc + len) % STEP;
+      }
+    }
+    return { type: 'FeatureCollection', features: out };
+  }
+  function load(k) {
+    const st = sets.get(k);
+    return st.promise ||= SFBlocks.json(dir + st.meta.file).then(fc => {
+      st.polys = fc.features.map(f => ({ ...describe(st.c, st.meta, f.properties || {}), props: f.properties || {},
+        parts: f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates }));
+      fc.features.forEach((f, i) => { f.properties = { ...f.properties, _n: st.polys[i].name, _s: st.polys[i].short }; });
+      st.fc = fc;
+      if (st.c.kind === 'elected') st.pairs = borderPairs(st);
+      if (mapReady && map.getSource('area-' + k)) {
+        map.getSource('area-' + k).setData(fc);
+        if (st.pairs) map.getSource('area-' + k + '-pairs').setData(st.pairs);
+        Areas.updateShade();
+      }
+    }).catch(err => { st.promise = null; console.warn(`[block-party] area set ${st.c.set}`, err); });
+  }
+  const modeOf = k => {
+    const c = sets.get(k).c;
+    if (c.kind === 'elected') return areaMode[k] || 'off';
+    return areaMode.special === k ? areaMode.specialMode : 'off';
+  };
   return {
     get keys() { return [...sets.keys()]; },
     get ready() { return ready; },
+    has: k => sets.has(k),
     conf: k => sets.get(k).c,
-    // before the map layers are added: find which sets sf-blocks has and add them to OVERLAYS
+    modeOf,
+    // before the map layers are added: which sets sf-blocks has
     async register() {
-      let index, dir;
       try {
         const reg = await SFBlocks.ready;
         dir = reg.boundaries.replace(/[^/]*$/, '');
-        index = await SFBlocks.json(reg.boundaries);
-      } catch (err) { console.warn('[block-party] area layers', err); return; }
-      for (const c of AREA_LAYERS) {
-        const meta = index.layers.find(l => l.id === c.set);
-        if (!meta) { console.info(`[block-party] ${c.set} isn't in sf-blocks yet; no ${c.k} layer`); continue; }
-        sets.set(c.k, { c, meta, polys: null });
-        OVERLAYS[c.k] = { path: dir + meta.file, area: true, color: c.color,
-          layers: [`bp-lyr-${c.k}-fill`, `bp-lyr-${c.k}-line`, `bp-lyr-${c.k}-label`] };
-        OVERLAY_DEFAULT[c.k] = overlayMode[c.k] = c.mode || 'off';
-        I18N.en['lyr_' + c.k] ??= c.layer || meta.label;
-        I18N.en['area_' + c.k] ??= c.row || meta.label;
-        const li = document.createElement('li');
-        li.id = 'lg-lyr-' + c.k; li.hidden = true;
-        li.innerHTML = `<span class="sw"><svg viewBox="0 0 24 12"><rect x="1" y="1" width="22" height="10" rx="2" fill="${c.color}" fill-opacity=".14" stroke="${c.color}" stroke-width="1.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span>${esc(t('lyr_' + c.k))}</span>`;
-        $('lg-contours').before(li);
-      }
+        const index = await SFBlocks.json(reg.boundaries);
+        for (const c of AREA_SETS) {
+          const meta = index.layers.find(l => l.id === c.set);
+          if (meta) sets.set(c.k, { c, meta, polys: null });
+          else console.info(`[block-party] ${c.set} isn't in sf-blocks; no ${c.k} areas`);
+        }
+      } catch (err) { console.warn('[block-party] area sets', err); }
     },
-    // map layers for each set: a light fill, an outline and the names, under the streets
+    // a shade, a white casing, the colored line and names for each set, all hidden until turned on
     addLayers(below, labelsBelow) {
-      for (const [k, { c, meta }] of sets) {
-        const src = 'lyr-' + k;
-        map.addLayer({ id: `bp-lyr-${k}-fill`, type: 'fill', source: src, layout: { visibility: 'none' },
-          paint: { 'fill-color': c.color, 'fill-opacity': 0.1 } }, below);
-        map.addLayer({ id: `bp-lyr-${k}-line`, type: 'line', source: src, layout: { visibility: 'none', 'line-join': 'round' },
-          paint: { 'line-color': c.color, 'line-opacity': 0.8, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1.2, 16, 2.5] } }, below);
-        map.addLayer({ id: `bp-lyr-${k}-label`, type: 'symbol', source: src,
-          layout: { visibility: 'none', 'text-field': meta.nameTemplate ? ['to-string', ['get', meta.name]] : ['to-string', ['get', meta.name || meta.key]],
-            'text-font': LABEL_FONT, 'text-size': 12, 'text-max-width': 9, 'text-padding': 8 },
-          paint: { 'text-color': c.color, 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.6 } }, labelsBelow);
+      for (const [k, { c }] of sets) {
+        const src = 'area-' + k, w = c.width || 2;
+        map.addSource(src, { type: 'geojson', data: EMPTY, attribution: 'Areas: <a href="https://data.sf.gov">DataSF</a>' });
+        map.addLayer({ id: `bp-area-${k}-fill`, type: 'fill', source: src, layout: { visibility: 'none' },
+          filter: ['in', ['get', '_n'], ['literal', []]], paint: { 'fill-color': c.color, 'fill-opacity': 0.16 } }, below);
+        map.addLayer({ id: `bp-area-${k}-case`, type: 'line', source: src, layout: { visibility: 'none', 'line-join': 'round' },
+          paint: { 'line-color': '#FFFFFF', 'line-opacity': 0.8, 'line-width': ['interpolate', ['linear'], ['zoom'], 11, w + 1.5, 16, w + 4] } }, below);
+        map.addLayer({ id: `bp-area-${k}-line`, type: 'line', source: src, layout: { visibility: 'none', 'line-join': 'round', 'line-cap': c.round ? 'round' : 'butt' },
+          paint: { 'line-color': c.color, 'line-width': ['interpolate', ['linear'], ['zoom'], 11, w * 0.6, 16, w * 1.2], ...(c.dash ? { 'line-dasharray': c.dash } : {}) } }, below);
+        if (c.kind === 'elected') {
+          map.addSource(src + '-pairs', { type: 'geojson', data: EMPTY });
+          map.addLayer({ id: `bp-area-${k}-label`, type: 'symbol', source: src + '-pairs', minzoom: 12, layout: { visibility: 'none',
+            'text-field': ['get', 'pair'], 'text-rotate': ['get', 'rot'], 'text-rotation-alignment': 'map', 'text-pitch-alignment': 'map',
+            'text-font': LABEL_FONT, 'text-size': 12.5, 'text-line-height': 2.1, 'text-padding': 24 },
+            paint: { 'text-color': c.color, 'text-halo-color': '#FFFFFF', 'text-halo-width': 2 } }, labelsBelow);
+        } else {
+          map.addLayer({ id: `bp-area-${k}-label`, type: 'symbol', source: src, minzoom: 13, layout: { visibility: 'none',
+            'text-field': ['get', '_s'], 'text-font': LABEL_FONT, 'text-size': 12, 'text-max-width': 9, 'text-padding': 8 },
+            paint: { 'text-color': c.color, 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.8 } }, labelsBelow);
+        }
       }
     },
-    // load every set's polygons (shared with the map layer's fetch), for cards and exports
+    // show each set as its mode says, load what's needed, and redo the map key
+    apply() {
+      if (!mapReady) return;
+      for (const k of sets.keys()) {
+        const m = modeOf(k), on = m !== 'off';
+        for (const x of ['case', 'line', 'label']) map.setLayoutProperty(`bp-area-${k}-${x}`, 'visibility', on ? 'visible' : 'none');
+        map.setLayoutProperty(`bp-area-${k}-fill`, 'visibility', m === 'shade' ? 'visible' : 'none');
+        if (on) load(k);
+      }
+      Areas.updateShade();
+      Areas.legend();
+    },
+    // the shaded set tints the areas the checked blocks and corners are in
+    updateShade() {
+      if (!mapReady) return;
+      const items = state.results.filter(s => state.checked.has(s.cnn));
+      for (const [k, st] of sets) {
+        if (modeOf(k) !== 'shade' || !st.polys) continue;
+        const names = [...new Set(items.flatMap(it => (Areas.of(k, it) || []).map(a => a.name)))];
+        map.setFilter(`bp-area-${k}-fill`, ['in', ['get', '_n'], ['literal', names]]);
+      }
+    },
+    legend() {
+      const ul = $('lg-areas');
+      if (!ul) return;
+      ul.innerHTML = [...sets].filter(([k]) => modeOf(k) !== 'off').map(([k, { c }]) => {
+        const sw = c.kind === 'elected'
+          ? `<svg viewBox="0 0 24 12"><line x1="0" y1="6" x2="24" y2="6" stroke="#fff" stroke-width="${(c.width || 2) + 3}"/><line x1="0" y1="6" x2="24" y2="6" stroke="${c.color}" stroke-width="${c.width || 2}" ${c.dash ? `stroke-dasharray="${c.dash.map(d => d * (c.width || 2)).join(' ')}"` : ''} ${c.round ? 'stroke-linecap="round"' : ''}/></svg>`
+          : `<svg viewBox="0 0 24 12"><rect x="1" y="1" width="22" height="10" rx="2" fill="${c.color}" fill-opacity=".16" stroke="${c.color}" stroke-width="1.5"/></svg>`;
+        const txt = t(c.kind === 'elected' ? 'lgAreaBorders' : 'lgAreaSet', { set: c.kind === 'elected' ? c.label : c.title })
+          + (modeOf(k) === 'shade' ? ' ' + t('lgAreaShaded') : '');
+        return `<li><span class="sw">${sw}<svg viewBox="0 0 16 16" class="dot"></svg></span><span>${esc(txt)}</span></li>`;
+      }).join('');
+    },
+    // every set's polygons, for cards and exports
     ensure() {
       if (!sets.size) { ready = true; return Promise.resolve(); }
-      return promise ||= Promise.all([...sets].map(([k, st]) => fetchLayer(k).then(fc => {
-        st.polys = fc.features.map(f => ({ name: nameOf(st.meta, f.properties || {}),
-          parts: f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates }));
-      }))).then(() => { ready = true; }).catch(err => { promise = null; console.warn('[block-party] area layers', err); });
+      return allPromise ||= Promise.all([...sets.keys()].map(load)).then(() => { ready = true; }, () => { allPromise = null; });
     },
     // the set's areas a block (at 25/50/75% along) or a corner (and 15 m around it) is in; null until loaded
     of(k, item) {
@@ -3479,24 +3634,97 @@ const Areas = (() => {
       if (!st || !st.polys) return null;
       const ck = k + '|' + item.cnn;
       if (cache.has(ck)) return cache.get(ck);
-      const dx = 15 / 88000, dy = 15 / 110540;
+      const dx = 15 / KX, dy = 15 / KY;
       const pts = isInt(item) ? [[item.x, item.y], [item.x + dx, item.y], [item.x - dx, item.y], [item.x, item.y + dy], [item.x, item.y - dy]]
         : [0.25, 0.5, 0.75].map(f => along(item.coords, f));
-      const names = [...new Set(pts.flatMap(([x, y]) => st.polys.filter(p => p.parts.some(pp => inRing(x, y, pp[0]) && !pp.slice(1).some(h => inRing(x, y, h)))).map(p => p.name)))];
-      cache.set(ck, names);
-      return names;
+      const hits = st.polys.filter(p => pts.some(([x, y]) => inPoly(x, y, p.parts)));
+      cache.set(ck, hits);
+      return hits;
     },
+    // card rows: elected districts as chips (a block on a border gets "D8 | D9"), then special districts
     facts(item) {
-      return [...sets.keys()].map(k => {
-        const names = Areas.of(k, item);
-        return names && names.length ? `<dt>${esc(t('area_' + k))}</dt><dd>${esc(names.join('; '))}</dd>` : '';
+      if (!sets.size) return `<dt>${esc(t('district'))}</dt><dd>${esc(item.sup)}</dd>`;
+      const chip = (c, text, title) => `<span class="area-chip" style="--c:${c.color}"${title ? ` title="${esc(title)}"` : ''}>${esc(text)}</span>`;
+      const elected = [...sets.values()].filter(st => st.c.kind === 'elected'), special = [...sets.values()].filter(st => st.c.kind === 'special');
+      if (!ready) return `<dt>${esc(t('cardElected'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
+      const eChips = elected.map(st => {
+        const a = Areas.of(st.c.k, item) || [];
+        if (!a.length) return '';
+        return a.length === 1 ? chip(st.c, a[0].chip) : chip(st.c, `${st.c.label} ${a.map(x => x.short).join(' | ')}`);
       }).join('');
+      const sChips = special.flatMap(st => (Areas.of(st.c.k, item) || []).map(a => chip(st.c, shorten(a.chip), a.chip !== shorten(a.chip) ? a.name : ''))).join('');
+      return `<dt>${esc(t('cardElected'))}</dt><dd class="area-chips">${eChips || esc(item.sup)}</dd>`
+        + (sChips ? `<dt>${esc(t('cardSpecial'))}</dt><dd class="area-chips">${sChips}</dd>` : '')
+        + `<dt class="facts-cap">${esc(t('cardAdmin'))}</dt>`;
     },
+    // plain-text lines for the ⧉ copy
+    text(item) {
+      if (!ready) return [`${t('district')}: ${item.sup}`];
+      const line = kind => [...sets.values()].filter(st => st.c.kind === kind)
+        .flatMap(st => (Areas.of(st.c.k, item) || []).map(a => kind === 'elected' ? a.chip : `${st.c.label}: ${a.name}`));
+      const e = line('elected'), sp = line('special');
+      return [`${t('cardElected')}: ${e.join('; ') || item.sup}`, ...(sp.length ? [`${t('cardSpecial')}: ${sp.join('; ')}`] : [])];
+    },
+    // export columns, full names
     fields(item) {
-      return Object.fromEntries([...sets.keys()].map(k => [sets.get(k).c.set.replace(/s$/, ''), (Areas.of(k, item) || []).join('; ')]));
+      return Object.fromEntries([...sets.values()].map(st => [st.c.col, (Areas.of(st.c.k, item) || []).map(a => a.col).join('; ')]));
     },
   };
 })();
+
+// Areas ▾ menu
+function setupAreasMenu() {
+  const rowsEl = $('areas-rows');
+  const has = Areas.keys;
+  const sw = c => c.kind === 'elected'
+    ? `<svg viewBox="0 0 26 16"><line x1="1" y1="8" x2="25" y2="8" stroke="#fff" stroke-width="${(c.width || 2) + 3}"/><line x1="1" y1="8" x2="25" y2="8" stroke="${c.color}" stroke-width="${c.width || 2}" ${c.dash ? `stroke-dasharray="${c.dash.map(d => d * (c.width || 2)).join(' ')}"` : ''} ${c.round ? 'stroke-linecap="round"' : ''}/></svg>`
+    : `<svg viewBox="0 0 26 16"><rect x="2" y="2" width="22" height="12" rx="2" fill="${c.color}" fill-opacity=".16" stroke="${c.color}" stroke-width="1.5"/></svg>`;
+  const seg = (name, opts, on) => `<div class="lseg" role="group" data-area="${name}">${opts.map(([v, l]) =>
+    `<button type="button" data-v="${v}" aria-pressed="${on === v}">${esc(t(l))}</button>`).join('')}</div>`;
+  const three = [['off', 'aOff'], ['borders', 'aBorders'], ['shade', 'aShade']];
+  const elected = AREA_SETS.filter(c => c.kind === 'elected' && has.includes(c.k));
+  const special = AREA_SETS.filter(c => c.kind === 'special' && has.includes(c.k));
+  rowsEl.innerHTML = (elected.length ? `<p class="areas-cap">${esc(t('areasElected'))}</p>` : '')
+    + elected.map(c => `<div class="lyr-row">${sw(c)}<b>${esc(t('area_' + c.k))}</b>${seg(c.k, three, Areas.modeOf(c.k))}</div>`).join('')
+    + (special.length ? `<p class="areas-cap">${esc(t('areasSpecial'))} <span>${esc(t('areasSpecialNote'))}</span></p>
+      <div class="lyr-row">${sw(special[0])}<b>${esc(t('areasShow'))}</b>${seg('special', [['off', 'aOff'], ...special.map(c => [c.k, 'area_' + c.k])], areaMode.special)}</div>
+      <div class="lyr-row lyr-sub"><span></span><b></b>${seg('specialMode', three.slice(1), areaMode.specialMode)}</div>` : '')
+    + `<p class="areas-cap">${esc(t('areasAdmin'))}</p><p class="areas-later">${esc(t('areasAdminLater'))}</p>
+      <p class="pop-hint">${t('areasShadeHint')}</p>`;
+  syncAreasMenu();
+  rowsEl.onclick = e => {
+    const b = e.target.closest('.lseg button'); if (!b) return;
+    setArea(b.closest('[data-area]').dataset.area, b.dataset.v);
+  };
+}
+// pressed buttons follow areaMode (no rebuild: a click on a replaced button would read as a click outside)
+function syncAreasMenu() {
+  const rowsEl = $('areas-rows');
+  if (!rowsEl) return;
+  for (const g of rowsEl.querySelectorAll('[data-area]')) {
+    const k = g.dataset.area, cur = k === 'special' || k === 'specialMode' ? areaMode[k] : Areas.modeOf(k);
+    g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === cur));
+  }
+  rowsEl.querySelector('[data-area="specialMode"]')?.classList.toggle('dim', areaMode.special === 'off');
+}
+function setArea(k, v, write = true) {
+  if (k === 'special') { if (v !== 'off' && !Areas.has(v)) return; areaMode.special = v; }
+  else if (k === 'specialMode') { if (!['borders', 'shade'].includes(v)) return; areaMode.specialMode = v; }
+  else { if (!Areas.has(k) || !['off', 'borders', 'shade'].includes(v)) return; areaMode[k] = v; }
+  // one set shaded at a time: the others go back to borders
+  const shading = k === 'specialMode' ? (v === 'shade' && areaMode.special !== 'off' ? 'special' : null)
+    : k === 'special' ? (v !== 'off' && areaMode.specialMode === 'shade' ? 'special' : null) : (v === 'shade' ? k : null);
+  if (shading) {
+    for (const x of Areas.keys) if (Areas.conf(x).kind === 'elected' && x !== shading && areaMode[x] === 'shade') areaMode[x] = 'borders';
+    if (shading !== 'special' && areaMode.special !== 'off' && areaMode.specialMode === 'shade') areaMode.specialMode = 'borders';
+  }
+  syncAreasMenu();
+  Areas.apply();
+  if (write) writeHash();
+}
+// only what differs from the defaults goes in the link: &areas=sup:off,asm:borders,special:cbd
+const areaHash = () => Object.keys({ ...AREA_DEFAULT, ...areaMode }).filter(k => (areaMode[k] || 'off') !== (AREA_DEFAULT[k] || 'off'))
+  .map(k => `${k}:${areaMode[k] || 'off'}`).join(',');
 
 const Groups = (() => {
   let promise = null, ready = false, polys = [], data = null;
@@ -3634,7 +3862,6 @@ function setupMapMenus() {
     health: '<svg viewBox="0 0 26 16"><rect x="0.5" y="1.5" width="13" height="13" rx="3" fill="#0B7285"/><text x="7" y="11.5" font-size="9" font-weight="700" text-anchor="middle" fill="#fff">H</text><circle cx="20" cy="8" r="5.5" fill="#0B7285"/><path d="M20 5v6M17 8h6" stroke="#fff" stroke-width="1.8"/></svg>',
     contours: '<svg viewBox="0 0 26 16"><rect width="26" height="16" rx="3" fill="#E2DFDA"/><path d="M1 11 C8 3 16 14 25 5" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M1 15 C9 8 16 16 25 10" fill="none" stroke="#fff" stroke-width="1.5"/></svg>',
   };
-  for (const k of Areas.keys) SW[k] = `<svg viewBox="0 0 26 16"><rect x="2" y="2" width="22" height="12" rx="2" fill="${OVERLAYS[k].color}" fill-opacity=".14" stroke="${OVERLAYS[k].color}" stroke-width="1.5"/></svg>`;
   const row = (k, opts) => `<div class="lyr-row" data-lyr="${k}">${SW[k]}<b>${esc(t('lyr_' + k))}${t('lyr_' + k + 'Hint') !== 'lyr_' + k + 'Hint' ? `<small>${esc(t('lyr_' + k + 'Hint'))}</small>` : ''}</b>
     <div class="lseg" role="group" aria-label="${esc(t('lyr_' + k))}">${opts.map(([v, label]) =>
       `<button type="button" data-v="${v}" aria-pressed="${overlayMode[k] === v}">${esc(t(label))}</button>`).join('')}</div></div>`;
@@ -3649,7 +3876,8 @@ function setupMapMenus() {
     const b = e.target.closest('.lseg button'); if (!b) return;
     setOverlay(b.closest('[data-lyr]').dataset.lyr, b.dataset.v);
   });
-  const menus = [['layers-btn', 'layers-panel'], ['quiet-btn', 'quiet-panel']];
+  setupAreasMenu();
+  const menus = [['layers-btn', 'layers-panel'], ['areas-btn', 'areas-panel'], ['quiet-btn', 'quiet-panel']];
   const close = except => menus.forEach(([b, p]) => { if (b !== except) { $(p).hidden = true; $(b).setAttribute('aria-expanded', 'false'); } });
   for (const [b, p] of menus) $(b).addEventListener('click', () => {
     const open = $(p).hidden; close(b);
@@ -3799,9 +4027,37 @@ function fitSegs(segs) {
     map.easeTo({ center: segs[0].coords[0], zoom: Math.max(map.getZoom(), 17), duration: reducedMotion() ? 0 : 900 });
     return;
   }
-  const small = window.innerWidth <= 860;
-  map.fitBounds(b, { padding: small ? 50 : 90, maxZoom: 18, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900 });
+  const small = window.innerWidth <= 860, pad = small ? 50 : 90;
+  const token = ++fitToken;
+  // fitBounds measures the blocks at sea level. Once the terrain under them has loaded, hills sit closer
+  // to the camera and look bigger, so a fit made before then (opening a #cnn= link) can spill off screen.
+  // After the move, once the terrain there has loaded, measure again and zoom out just enough. Moving the
+  // map yourself in between cancels it.
+  const refit = () => {
+    if (token !== fitToken) return;
+    const c = map.getCanvas(), w = c.clientWidth, h = c.clientHeight;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const s of segs) for (const q of s.coords) { const p = map.project(q); x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
+    const ratio = Math.max((x1 - x0) / Math.max(w - 2 * pad, 50), (y1 - y0) / Math.max(h - 2 * pad, 50));
+    if (ratio <= 1.02 && x0 >= 0 && y0 >= 0 && x1 <= w && y1 <= h) return;
+    fitToken++;
+    map.easeTo({ center: map.unproject([(x0 + x1) / 2, (y0 + y1) / 2]), zoom: map.getZoom() - Math.log2(Math.max(ratio, 1)) - 0.05,
+      duration: reducedMotion() ? 0 : 500 });
+  };
+  // poll (events for one source's tiles aren't reliable): up to 10 s after the move, until the terrain is in
+  let tries = 0;
+  const wait = () => {
+    if (token !== fitToken) return;
+    // the terrain is in once it gives a height under the blocks (the waterfront can be ~0: then the
+    // check runs at the end anyway, and there's little to correct)
+    const mid = segs[0].coords[Math.floor(segs[0].coords.length / 2)];
+    const ready = !map.isMoving() && map.isSourceLoaded('dem-terrain') && map.terrain && map.terrain.getElevationForLngLatZoom(maplibregl.LngLat.convert(mid), Math.floor(map.getZoom())) > 1;
+    if (ready || ++tries >= 40) refit(); else setTimeout(wait, 250);
+  };
+  map.once('moveend', () => setTimeout(wait, 100));
+  map.fitBounds(b, { padding: pad, maxZoom: 18, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900 });
 }
+let fitToken = 0;
 function resetView() {
   if (!mapReady) return;
   map.fitBounds(CONFIG.SF_BOUNDS, { padding: 20, duration: 600 });
