@@ -2,6 +2,18 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v41
+Includes v40 (#6).
+
+- **Areas ▾ menu**, next to Layers, in three groups:
+  - **Elected districts:** Supervisor, State Assembly, State Senate, US House and BART board, each Off, Borders or Shade. Supervisor borders are on at first. Borders carry both districts' names, one on each side of the line (D8 above, D9 below), so you can read which side is which.
+  - **Special districts (not elected):** Community Benefit, Cultural and Historic Districts. One shows at a time (Off · CBD · Cultural · Historic), as Borders or Shade, with names inside.
+  - **Administrative:** ZIP codes, neighborhoods and census tracts stay on the cards; map layers later.
+- **Shade** tints only the area your checked blocks are in; the rest of that set shows as borders. One set is shaded at a time: shading another turns the first back to borders.
+- **Cards** list every set, whatever the map shows: "Elected districts" chips (Supervisor D8 · Mandelman, Assembly 17, State Senate 11, US House CA-11, BART District 9; a block on a border gets "D8 | D9"), "Special districts" chips (names shortened, the full name on hover), then ZIP code and neighborhood under "Administrative". The copied text and the CSV/JSON exports have every set, in full: `supervisor`, `assembly_district`, `state_senate_district`, `us_house_district`, `bart_district`, `community_benefit_district`, `cultural_district`, `historic_district`.
+- The map key lists each set that's on. Area settings go in the link (`&areas=special:cbd,asm:borders`).
+- Replaces v39's one-set `AREA_LAYERS` (the Community Benefit Districts row in Layers is now under Areas). Backup copies include all eight sets.
+
 ## v40
 - **Links with blocks (`#cnn=…`) show all of them:** the map fits the blocks before the terrain under them has loaded, and on hills that left them zoomed in too far, running off screen. Once the terrain is in, the map now measures again and zooms out just enough (moving the map yourself first cancels it).
 - **New sf-blocks data shows up on the next load:** GitHub Pages lets browsers keep files for 10 minutes, so a new boundary set could take that long to appear. `region.json` and `VERSION` are now checked with the server every time, and every other sf-blocks file is asked for with the version in its address (`…?v=2026.10.30`).
