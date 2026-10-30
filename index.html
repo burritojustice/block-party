@@ -3413,7 +3413,8 @@ const landuseText = r => r ? r.uses.map(([k, n]) => `${landuseName(k)} ${n}`).jo
    have (yet) is skipped. Each gets a Layers menu row (off at first), a map key line, a card row when the
    block or corner is inside one, and an export column. */
 const AREA_LAYERS = [
-  { k: 'historic', set: 'historic_districts', color: '#A8441B', layer: 'Historic districts', row: 'Historic district' },
+  // { k: 'historic', set: 'historic_districts', color: '#A8441B', layer: 'Historic districts', row: 'Historic district' },
+  { k: 'CBD', set: 'community_benefit_district', color: '#A8441B',  layer: 'CBD', row: Community Benefit District' },
 ];
 const Areas = (() => {
   const sets = new Map();     // k → { c, meta, polys }
