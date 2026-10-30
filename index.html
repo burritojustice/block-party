@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v39 -->
+<!-- build: v40 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -586,18 +586,24 @@ const SFBlocks = (() => {
     let region = null;
 
     // fetch with a deadline for the first byte (big files may take longer to finish)
-    const get = (url, ms = WAIT) => {
+    const get = (url, ms = WAIT, opts = {}) => {
         const ctl = new AbortController();
         const timer = setTimeout(() => ctl.abort(), ms);
-        return fetch(url, { signal: ctl.signal }).then(r => {
+        return fetch(url, { ...opts, signal: ctl.signal }).then(r => {
             clearTimeout(timer);
             if (!r.ok) throw new Error(`${r.status} ${url}`);
             return r;
         }, err => { clearTimeout(timer); throw err; });
     };
+    // GitHub Pages lets browsers keep files for 10 minutes. region.json and VERSION are checked with the
+    // server every time (cheap when unchanged), and every other file's address carries the version
+    // (?v=2026.10.30), so a new sf-blocks version is seen on the next page load, not 10 minutes later.
+    const fresh = { cache: 'no-cache' };
+    const versioned = path => base + path + (info.version ? (path.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(info.version) : '');
     async function file(path) {
+        await ready.catch(() => {});
         if (base) {
-            try { return await get(base + path); }
+            try { return await get(versioned(path)); }
             catch (err) {
                 console.warn(`[sf-blocks] ${path}: live copy failed, using the one here`, err);
                 info.fellBack.push(path);
@@ -609,8 +615,8 @@ const SFBlocks = (() => {
         info.copy = await get(STAMP).then(r => r.json()).catch(() => null);
         if (base) {
             try {
-                const [reg, ver] = await Promise.all([get(base + 'region.json').then(r => r.json()),
-                    get(base + 'VERSION').then(r => r.text())]);
+                const [reg, ver] = await Promise.all([get(base + 'region.json', WAIT, fresh).then(r => r.json()),
+                    get(base + 'VERSION', WAIT, fresh).then(r => r.text())]);
                 region = reg;
                 Object.assign(info, { live: true, version: ver.trim(), base });
                 console.log(`[sf-blocks] ${info.version}, live from ${base}`);
@@ -633,7 +639,7 @@ const SFBlocks = (() => {
         json: path => file(path).then(r => r.json()),
         text: path => file(path).then(r => r.text()),
         // absolute URL for readers that fetch on their own (PMTiles); no per-file fallback
-        url: path => new URL(base + path, location.href).href,
+        url: path => new URL(base ? versioned(path) : path, location.href).href,
         // the Protomaps key allowed for this page's origin, from region.json
         basemapKey: fallback => region?.basemap?.keys?.[location.origin] || fallback,
         // "sf-blocks 2026.10.27 (live)" for titles and footers
@@ -642,7 +648,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v39';
+const _BUILD_VERSION = 'v40';
 
 /* =====================================================================
    CONFIG
@@ -2300,6 +2306,7 @@ function hideCreeks() {
 }
 function addMapLayers() {
   hideCreeks();
+  map.on('movestart', e => { if (e.originalEvent) fitToken++; });   // the person moved the map: no refit
   map.addSource('sat', { type: 'raster', tiles: [CONFIG.SATELLITE_TILES], tileSize: 256, maxzoom: 19,
     attribution: 'Imagery © Esri, Maxar, Earthstar Geographics' });
   map.addLayer({ id: 'bp-sat', type: 'raster', source: 'sat', layout: { visibility: 'none' } });
@@ -3406,7 +3413,8 @@ const landuseText = r => r ? r.uses.map(([k, n]) => `${landuseName(k)} ${n}`).jo
    have (yet) is skipped. Each gets a Layers menu row (off at first), a map key line, a card row when the
    block or corner is inside one, and an export column. */
 const AREA_LAYERS = [
-  { k: 'historic', set: 'historic_districts', color: '#A8441B', layer: 'Historic districts', row: 'Historic district' },
+  // { k: 'historic', set: 'historic_districts', color: '#A8441B', layer: 'Historic districts', row: 'Historic district' },
+  { k: 'cbd', set: 'community_benefit_district', color: '#A8441B', layer: 'Community Benefit Districts', row: 'Community Benefit District' },
 ];
 const Areas = (() => {
   const sets = new Map();     // k → { c, meta, polys }
@@ -3799,9 +3807,37 @@ function fitSegs(segs) {
     map.easeTo({ center: segs[0].coords[0], zoom: Math.max(map.getZoom(), 17), duration: reducedMotion() ? 0 : 900 });
     return;
   }
-  const small = window.innerWidth <= 860;
-  map.fitBounds(b, { padding: small ? 50 : 90, maxZoom: 18, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900 });
+  const small = window.innerWidth <= 860, pad = small ? 50 : 90;
+  const token = ++fitToken;
+  // fitBounds measures the blocks at sea level. Once the terrain under them has loaded, hills sit closer
+  // to the camera and look bigger, so a fit made before then (opening a #cnn= link) can spill off screen.
+  // After the move, once the terrain there has loaded, measure again and zoom out just enough. Moving the
+  // map yourself in between cancels it.
+  const refit = () => {
+    if (token !== fitToken) return;
+    const c = map.getCanvas(), w = c.clientWidth, h = c.clientHeight;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const s of segs) for (const q of s.coords) { const p = map.project(q); x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
+    const ratio = Math.max((x1 - x0) / Math.max(w - 2 * pad, 50), (y1 - y0) / Math.max(h - 2 * pad, 50));
+    if (ratio <= 1.02 && x0 >= 0 && y0 >= 0 && x1 <= w && y1 <= h) return;
+    fitToken++;
+    map.easeTo({ center: map.unproject([(x0 + x1) / 2, (y0 + y1) / 2]), zoom: map.getZoom() - Math.log2(Math.max(ratio, 1)) - 0.05,
+      duration: reducedMotion() ? 0 : 500 });
+  };
+  // poll (events for one source's tiles aren't reliable): up to 10 s after the move, until the terrain is in
+  let tries = 0;
+  const wait = () => {
+    if (token !== fitToken) return;
+    // the terrain is in once it gives a height under the blocks (the waterfront can be ~0: then the
+    // check runs at the end anyway, and there's little to correct)
+    const mid = segs[0].coords[Math.floor(segs[0].coords.length / 2)];
+    const ready = !map.isMoving() && map.isSourceLoaded('dem-terrain') && map.terrain && map.terrain.getElevationForLngLatZoom(maplibregl.LngLat.convert(mid), Math.floor(map.getZoom())) > 1;
+    if (ready || ++tries >= 40) refit(); else setTimeout(wait, 250);
+  };
+  map.once('moveend', () => setTimeout(wait, 100));
+  map.fitBounds(b, { padding: pad, maxZoom: 18, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900 });
 }
+let fitToken = 0;
 function resetView() {
   if (!mapReady) return;
   map.fitBounds(CONFIG.SF_BOUNDS, { padding: 20, duration: 600 });

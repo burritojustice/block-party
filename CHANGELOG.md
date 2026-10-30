@@ -2,6 +2,13 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v40
+- **Links with blocks (`#cnn=…`) show all of them:** the map fits the blocks before the terrain under them has loaded, and on hills that left them zoomed in too far, running off screen. Once the terrain is in, the map now measures again and zooms out just enough (moving the map yourself first cancels it).
+- **New sf-blocks data shows up on the next load:** GitHub Pages lets browsers keep files for 10 minutes, so a new boundary set could take that long to appear. `region.json` and `VERSION` are now checked with the server every time, and every other sf-blocks file is asked for with the version in its address (`…?v=2026.10.30`).
+- **Community Benefit Districts in place of Historic Districts** in `AREA_LAYERS` (from `area-test`): a Layers menu row, map key line, card row and export column for sf-blocks' `community_benefit_district` set. The backup copies are now sf-blocks 2026.10.30 and include it.
+- **Favicon:** block-c, a chosen block between two cross streets with a flag on it.
+- The Refresh sf-blocks copies Action uses `actions/checkout@v5` (Node 24).
+
 ## v39
 Includes v38 (#3): merging this brings both to `main`.
 
