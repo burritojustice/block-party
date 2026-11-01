@@ -38,15 +38,14 @@ Streets, boundaries, map layers, parcels and the neighborhood groups list all co
 
 The data files and `scripts/build_data.py`, `match_blocks.py`, `build_layers.py` and `build_neighborhood_groups.py` are copies from [burritojustice/sf-blocks](https://github.com/burritojustice/sf-blocks), which keeps the master copy of the street data and matching logic (it's shared with other projects). Block Party reads sf-blocks live, but still runs and builds from the copies here if it can't. Each script's first lines say which version it came from.
 
-## Area layers
+## Areas
 
-Boundary sets from sf-blocks (`data/boundaries/`) can show as a map layer and a card row. They're listed in `AREA_LAYERS`, just above the `Areas` module in `index.html`:
+The **Areas ▾** menu shows boundary sets from sf-blocks (`data/boundaries/`). They're listed in `AREA_SETS`, above the `Areas` module in `index.html`, in two kinds:
 
-```js
-{ k: 'historic', set: 'historic_districts', color: '#A8441B', layer: 'Historic districts', row: 'Historic district' },
-```
+- `kind: 'elected'`: districts with elected officials. They cover the city and always border each other, so they're drawn as borders, with both districts' names paired across each border. Each has a `short` label (D8) and a card `chip` (Supervisor D8 · Mandelman).
+- `kind: 'special'`: areas with boards but no elected officials (CBD, Cultural, Historic). Scattered, so one shows at a time, with names inside. `strip` drops the shared ending ("Cultural District") for the chip and the map label.
 
-`set` is the set's id in sf-blocks, `k` a short key for the layer and the address bar, `layer` the Layers menu name, `row` the card row's label. The area names come from the set's own name field in sf-blocks. A set sf-blocks doesn't have yet is skipped. To have it in the offline backup too, add `data/boundaries/<set>.geojson` to `data/sf-blocks.json`. Adding sets to sf-blocks is covered in its [ADDING-DATA.md](https://github.com/burritojustice/sf-blocks/blob/main/ADDING-DATA.md).
+Each set is Off, Borders or Shade (Shade tints only the area your checked blocks are in; one set at a time). `AREA_DEFAULT` says what's on at first (Supervisor borders). Cards always list every set, and `col` names its export column. A set sf-blocks doesn't have is skipped. To add one, add the set to sf-blocks ([ADDING-DATA.md](https://github.com/burritojustice/sf-blocks/blob/main/ADDING-DATA.md)), then a line here, and its file to `data/sf-blocks.json` for the offline copy.
 
 ## The Apply button
 

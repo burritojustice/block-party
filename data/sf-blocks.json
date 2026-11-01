@@ -35,6 +35,13 @@
     "reference/neighborhood-groups/NeighborhoodGroupList_20260925.xlsx",
     "reference/neighborhood-groups/README.md",
     "data/boundaries/index.json",
-    "data/boundaries/community_benefit_district.geojson"
+    "data/boundaries/community_benefit_district.geojson",
+    "data/boundaries/supervisor_districts.geojson",
+    "data/boundaries/assembly_districts.geojson",
+    "data/boundaries/state_senate_districts.geojson",
+    "data/boundaries/us_house_districts.geojson",
+    "data/boundaries/bart_districts.geojson",
+    "data/boundaries/cultural_districts.geojson",
+    "data/boundaries/historic_districts.geojson"
   ]
 }
