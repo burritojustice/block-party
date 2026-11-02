@@ -42,6 +42,8 @@
     "data/boundaries/us_house_districts.geojson",
     "data/boundaries/bart_districts.geojson",
     "data/boundaries/cultural_districts.geojson",
-    "data/boundaries/historic_districts.geojson"
+    "data/boundaries/historic_districts.geojson",
+    "data/boundaries/census_blocks.geojson",
+    "data/boundaries/census_tracts.geojson"
   ]
 }
