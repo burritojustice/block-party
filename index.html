@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v43 -->
+<!-- build: v44 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -109,6 +109,7 @@ button, input { font: inherit; color: inherit; }
 .lseg button:disabled { opacity: .35; cursor: default; }
 .lyr-opt b { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); align-self: start; margin-top: 5px; }
 .lyr-opt[hidden] { display: none; }
+.opt-check { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; white-space: nowrap; cursor: pointer; }
 .opt-stack { display: grid; gap: 4px; justify-items: end; }
 .dens-pal { display: flex; gap: 6px; align-items: flex-start; }
 .pal-pick { position: relative; }
@@ -569,6 +570,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
         <li id="lg-quiet" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#B5179E" stroke-width="6" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgQuiet">Quiet street matches</span></li>
         <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/><path d="M15 6 l-6 -4 v8z" fill="#545B7F"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOneway">One-way</span></li>
         <li id="lg-lyr-muni" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="2" y1="6" x2="22" y2="6" stroke="#D9480F" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/><line x1="2" y1="6" x2="22" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1" y="3" width="14" height="10" rx="3" fill="#D9480F"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg></span><span data-i18n="lgMuni">Muni routes</span></li>
+        <li id="lg-muni-nums" hidden><label class="lg-toggle" data-i18n-title="lgMuniNumsTitle" title="Show the route numbers on the map (there are a lot downtown)"><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1" y="3" width="14" height="10" rx="3" fill="#D9480F"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg></span><span data-i18n="lgMuniNums">Route numbers</span><input type="checkbox" id="lg-muni-nums-check" checked></label></li>
         <li id="lg-lyr-bike" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3" x2="23" y2="3" stroke="#1A7F37" stroke-width="3"/><line x1="1" y1="9.5" x2="23" y2="9.5" stroke="#1A7F37" stroke-width="1.6" stroke-dasharray="3 2.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBike">Bike lanes (dashed: shared routes)</span></li>
         <li id="lg-lyr-landuse" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12"><rect width="6" height="12" fill="#E9C845" fill-opacity=".6"/><rect x="6" width="6" height="12" fill="#F0A04B" fill-opacity=".6"/><rect x="12" width="6" height="12" fill="#9C6FB6" fill-opacity=".6"/><rect x="18" width="6" height="12" fill="#4C9A3F" fill-opacity=".6"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span id="lg-landuse-title">Land use (2023)</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-landuse-table"></table></details></li>
         <li id="lg-lyr-lands" hidden><span class="sw"><svg viewBox="0 0 24 12" id="lg-lands-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLands">City-owned land</span></li>
@@ -684,7 +686,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v43';
+const _BUILD_VERSION = 'v44';
 
 /* =====================================================================
    CONFIG
@@ -839,7 +841,8 @@ const I18N = {
     btnAreas: 'Areas', areasElected: 'Elected districts', areasSpecial: 'Special districts', areasSpecialNote: '(not elected)',
     areasAdmin: 'Administrative', areasAdminLater: 'ZIP codes and neighborhoods are on the cards; map layers later.', areasShow: 'Show',
     areasPop: 'Population', areasPopHint: '2020 Census', aDensity: 'Density', area_cblk: 'Blocks', area_ctract: 'Tracts',
-    aNoneHint: 'With borders only, there has to be a line', aColors: 'Colors', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick',
+    aNoneHint: 'With borders only, there has to be a line', aColors: 'Colors', aQuietBase: 'Hide parks and places on the map',
+    lgMuniNums: 'Route numbers', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick',
     lgNoOne: 'no one lives there (parks, water): clear', lgParcelLines: 'Parcels (lot lines)',
     lgDensity: '{set}: {what} ({src})', densityUnit: 'people per sq mi',
     censusRow: 'Population', censusEst: 'About {people} people and {homes} homes', censusNote: '2020 Census, estimated from the blocks on both sides',
@@ -1661,6 +1664,12 @@ function setupForm() {
   // applications open soon while there's no form yet
   const applyParam = new URLSearchParams(location.search).get('apply');
   $('apply').hidden = !(applyParam == null ? CONFIG.APPLY.show : applyParam === '1');
+  $('lg-muni-nums-check').checked = showMuniNums;
+  $('lg-muni-nums-check').addEventListener('change', e => {
+    showMuniNums = e.target.checked;
+    try { localStorage.setItem(MUNI_NUMS_KEY, showMuniNums ? '1' : '0'); } catch (err) { }
+    updateOverlays();
+  });
   $('lg-cross').checked = showCross;
   $('lg-cross').addEventListener('change', e => {
     showCross = e.target.checked;
@@ -1796,7 +1805,8 @@ function checkedSegs() { return state.results.filter(s => state.checked.has(s.cn
 // Cross streets (cyan, with names): always shown while choosing; once a block is checked, only while
 // "Cross streets" in the map key is ticked (remembered in this browser). Faded with opacity because the
 // 3D label mode switches these layers' visibility.
-const CROSS_KEY = 'bp-cross';
+const CROSS_KEY = 'bp-cross', MUNI_NUMS_KEY = 'bp-muni-nums';
+let showMuniNums = (() => { try { return localStorage.getItem(MUNI_NUMS_KEY) !== '0'; } catch (e) { return true; } })();
 let showCross = (() => { try { return localStorage.getItem(CROSS_KEY) !== '0'; } catch (e) { return true; } })();
 function updateCross() {
   if (typeof map === 'undefined' || !map || !map.getLayer('bp-context')) return;
@@ -2770,7 +2780,8 @@ const LAND_DEFAULT = LAND_CATS.filter(c => c[2]).map(c => c[0]);
 let landCats = new Set(LAND_DEFAULT);
 const landColor = ['match', ['get', 'cat'], ...LAND_CATS.flatMap(([k, c]) => [k, c]), '#5F5E5A'];
 const OVERLAYS = {
-  muni:     { url: 'muni.geojson',     layers: ['bp-lyr-muni', 'bp-lyr-muni-label'] },
+  // routes from a zoom before Close up, route numbers from a zoom after (and only with the checkbox)
+  muni:     { url: 'muni.geojson',     layers: ['bp-lyr-muni', 'bp-lyr-muni-label'], shift: { min: -1, label: 1 } },
   bike:     { url: 'bike.geojson',     layers: ['bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-bike-label'] },
   slow:     { url: 'slow.geojson',     layers: ['bp-lyr-slow', 'bp-lyr-slow-label'] },
   // vector tiles straight from a .pmtiles file (no GeoJSON to load); On / Off, from zoom 15
@@ -2964,9 +2975,9 @@ function setLandCats(cats, write = true) {
   if (write) writeHash();
 }
 const overlayMinZoom = k => OVERLAYS[k].minzoom != null ? OVERLAYS[k].minzoom : overlayMinZoomStd(k);
-const overlayMinZoomStd = k => overlayMode[k] === 'always' ? 0 : CLOSE_ZOOM;
+const overlayMinZoomStd = k => overlayMode[k] === 'always' ? 0 : CLOSE_ZOOM + ((OVERLAYS[k] || {}).shift?.min || 0);
 // labels: from CLOSE_ZOOM in Close up, a little sooner in Always
-const overlayLabelZoom = k => overlayMode[k] === 'always' ? 14 : CLOSE_ZOOM;
+const overlayLabelZoom = k => (overlayMode[k] === 'always' ? 14 : CLOSE_ZOOM) + ((OVERLAYS[k] || {}).shift?.label || 0);
 function applyOverlay(k) {
   if (k === 'landuse' && map.getLayer('bp-lyr-landuse-fill')) {
     map.setPaintProperty('bp-lyr-landuse-fill', 'fill-color', overlayMode.landuse === 'zoning' ? zoningColor : landuseColor);
@@ -2987,12 +2998,13 @@ function updateOverlays() {
   for (const k of Object.keys(OVERLAYS)) {
     const on = overlayMode[k] !== 'off' && !(OVERLAYS[k].pmtiles && !map.getSource('lyr-' + k));
     for (const id of OVERLAYS[k].layers) {
-      const vis = on && z >= (id.endsWith('-label') ? overlayLabelZoom(k) : overlayMinZoom(k)) ? 'visible' : 'none';
+      const vis = on && z >= (id.endsWith('-label') ? overlayLabelZoom(k) : overlayMinZoom(k)) && !(id === 'bp-lyr-muni-label' && !showMuniNums) ? 'visible' : 'none';
       if (overlayVis[id] !== vis && map.getLayer(id)) { map.setLayoutProperty(id, 'visibility', vis); overlayVis[id] = vis; }
     }
     const showing = on && z >= overlayMinZoom(k);
     if (overlayMode[k] !== 'off' && z >= overlayMinZoom(k) - 1) loadOverlay(k);
     const li = $('lg-lyr-' + k); if (li) li.hidden = !showing;
+    if (k === 'muni') $('lg-muni-nums').hidden = !showing;
   }
 }
 // one fetch per layer file, shared by the map and the cards
@@ -3513,7 +3525,7 @@ const AREA_SETS = [
   { k: 'cblk', set: 'census_blocks', kind: 'admin', label: 'Blocks', title: 'Census blocks', color: '#5B6478', width: 1, col: 'census_block' },
   { k: 'ctract', set: 'census_tracts', kind: 'admin', label: 'Tracts', title: 'Census tracts', color: '#5B6478', width: 1.6, col: 'census_tract' },
 ];
-// Population density palettes: the Viridis family (matplotlib, and mako / rocket from seaborn), 9 stops
+// Population density palettes (Magma, flipped so more people is darker, by default): the Viridis family (matplotlib, and mako / rocket from seaborn), 9 stops
 // low → high. Classes are sampled from them; Flip runs a palette the other way. Same list in Joiner.
 const SEQ_PALETTES = {
   viridis: ['#440154', '#472D7B', '#3B528B', '#2C728E', '#21918C', '#28AE80', '#5EC962', '#ADDC30', '#FDE725'],
@@ -3545,9 +3557,12 @@ const ADMIN_LINE = { black: ['#1E1E1E', 0.7], grey: ['#6B7080', 0.75], white: ['
 const adminLineWidth = (w, s) => { const k = (w === 'thick' ? 2.2 : 1) * s;
   return ['interpolate', ['linear'], ['zoom'], 11, 0.25 * k, 14, 0.6 * k, 16, 1.1 * k, 18, 2 * k]; };
 const AREA_DEFAULT = { sup: 'borders', special: 'off', specialMode: 'shade', admin: 'cblk', adminMode: 'off',
-  densPal: 'viridis', densFlip: 'off', adminLine: 'grey', adminWidth: 'thin' };
+  densPal: 'magma', densFlip: 'on', adminLine: 'grey', adminWidth: 'thin', quietBase: 'on' };
 // settings shared by a group of sets (the rest of areaMode is one entry per elected set)
-const AREA_GROUP_KEYS = ['special', 'specialMode', 'admin', 'adminMode', 'densPal', 'densFlip', 'adminLine', 'adminWidth'];
+const AREA_GROUP_KEYS = ['special', 'specialMode', 'admin', 'adminMode', 'densPal', 'densFlip', 'adminLine', 'adminWidth', 'quietBase'];
+// the basemap's colored land (parks, schools, hospitals…) and its places (shops, theatres…): hidden under
+// population density when "Hide parks and places" is on. Piers, runways and plazas stay (they're shapes).
+const QUIET_BASE = l => (l['source-layer'] === 'landuse' && !/pier|runway|pedestrian/.test(l.id)) || l['source-layer'] === 'pois';
 const areaMode = { ...AREA_DEFAULT };
 const Areas = (() => {
   const sets = new Map();     // k → { c, meta, polys, fc, pairs, promise }
@@ -3694,6 +3709,8 @@ const Areas = (() => {
       if (!mapReady) return;
       const dens = Areas.densityShown();
       for (const id of waterOver) map.setLayoutProperty(id, 'visibility', dens && !satOn ? 'visible' : 'none');
+      const quiet = dens && areaMode.quietBase === 'on';
+      for (const l of map.getStyle().layers) if (QUIET_BASE(l)) map.setLayoutProperty(l.id, 'visibility', quiet ? 'none' : 'visible');
       for (const k of sets.keys()) {
         const m = modeOf(k), on = m !== 'off', c = sets.get(k).c;
         for (const x of ['case', 'line', 'label']) if (map.getLayer(`bp-area-${k}-${x}`)) map.setLayoutProperty(`bp-area-${k}-${x}`, 'visibility', on ? 'visible' : 'none');
@@ -3875,10 +3892,12 @@ function setupAreasMenu() {
       <div class="lyr-row lyr-sub"><span></span><b></b>${seg('adminMode', [['off', 'aOff'], ['borders', 'aBorders'], ['density', 'aDensity']], areaMode.adminMode)}</div>
       <div class="lyr-row lyr-sub lyr-opt" data-opt="density"><span></span><b>${esc(t('aColors'))}</b><div class="dens-pal"><details class="pal-pick"><summary></summary>
         <div class="pal-list">${Object.keys(SEQ_PALETTES).map(k => `<button type="button" data-pal="${k}"><i class="pal-sw"></i>${esc(SEQ_LABELS[k])}</button>`).join('')}</div></details>${seg('densFlip', [['on', 'aFlip']], areaMode.densFlip)}</div></div>
+      <div class="lyr-row lyr-sub lyr-opt" data-opt="density"><span></span><b></b><label class="opt-check"><input type="checkbox" data-check="quietBase"> ${esc(t('aQuietBase'))}</label></div>
       <div class="lyr-row lyr-sub lyr-opt" data-opt="lines"><span></span><b>${esc(t('aLines'))}</b><div class="opt-stack">${seg('adminLine', [['black', 'aBlack'], ['grey', 'aGrey'], ['white', 'aWhite']], areaMode.adminLine)}${seg('adminWidth', [['none', 'aNone'], ['thin', 'aThin'], ['thick', 'aThick']], areaMode.adminWidth)}</div></div>` : '')
     + `<p class="areas-later">${esc(t('areasAdminLater'))}</p>
       <p class="pop-hint">${t('areasShadeHint')}</p>`;
   syncAreasMenu();
+  rowsEl.onchange = e => { const k = e.target.dataset.check; if (k) setArea(k, e.target.checked ? 'on' : 'off'); };
   rowsEl.onclick = e => {
     const p = e.target.closest('[data-pal]');
     if (p) { p.closest('details').open = false; setArea('densPal', p.dataset.pal); return; }
@@ -3903,6 +3922,7 @@ function syncAreasMenu() {
   rowsEl.querySelectorAll('.lyr-opt').forEach(r => r.hidden = r.dataset.opt === 'density' ? areaMode.adminMode !== 'density' : areaMode.adminMode === 'off');
   const none = rowsEl.querySelector('[data-area="adminWidth"] [data-v="none"]');
   if (none) { none.disabled = areaMode.adminMode !== 'density'; none.title = none.disabled ? t('aNoneHint') : ''; }
+  rowsEl.querySelectorAll('[data-check]').forEach(i => i.checked = areaMode[i.dataset.check] === 'on');
   const sw = rowsEl.querySelector('.dens-sw'); if (sw) sw.innerHTML = densSwatch();
   const sum = rowsEl.querySelector('.pal-pick summary');
   if (sum) sum.innerHTML = `<i class="pal-sw" style="background:${palGradient(areaMode.densPal)}"></i>${esc(SEQ_LABELS[areaMode.densPal] || '')} ▾`;
@@ -3916,6 +3936,7 @@ function setArea(k, v, write = true) {
   else if (k === 'densPal') { if (!SEQ_PALETTES[v]) return; areaMode.densPal = v; }
   else if (k === 'densFlip') { if (!['on', 'off'].includes(v)) return; areaMode.densFlip = v; }
   else if (k === 'adminLine') { if (!ADMIN_LINE[v]) return; areaMode.adminLine = v; }
+  else if (k === 'quietBase') { if (!['on', 'off'].includes(v)) return; areaMode.quietBase = v; }
   else if (k === 'adminWidth') { if (!['none', 'thin', 'thick'].includes(v)) return; areaMode.adminWidth = v; }
   else { if (!Areas.has(k) || !['off', 'borders', 'shade'].includes(v)) return; areaMode[k] = v; }
   // one set shaded at a time (population density counts): the others go back to borders
