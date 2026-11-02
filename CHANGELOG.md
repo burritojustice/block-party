@@ -2,6 +2,15 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v43
+Uses the density breaks in sf-blocks #12; until it's merged the same breaks are built in.
+
+- **Density reads more clearly:** the census borders no longer have a white casing (block edges run down the middle of streets, so they looked like doubled roads). The bay and lakes draw over the colors, and blocks where no one lives (parks, water) are left clear instead of the darkest color. The colors are a little stronger (60%).
+- **Same scale as Joiner:** 7 classes, each break double the last (5k, 10k, 20k, 40k, 80k, 160k people per sq mi: a log scale), read from sf-blocks, so the Mission and the Tenderloin no longer share a color.
+- **Population settings** in Areas ▾, under Density: **Colors**, a menu of the Viridis family (Viridis, Magma, Inferno, Plasma, Cividis, Mako, Rocket, Turbo), and **Flip** to run them the other way; **Borders**: Black · Grey · White and None · Thin · Thick, wider as you zoom in (None only with Density). All of them go in the link.
+- **Parcels: Borders**, lot lines without the land use colors. While population density shows, Land use and Zoning turn to lot lines too, over the density colors (hovering a lot still names its use).
+- **Map buttons:** black when on or open, white when off. 3D and Quiet streets are no longer yellow; yellow is for what you pick on the map.
+
 ## v42
 Needs sf-blocks #11 (census blocks, and population on the tracts) merged first; until then the Population row and card line don't appear.
 
