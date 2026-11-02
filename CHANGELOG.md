@@ -2,6 +2,14 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v42
+Needs sf-blocks #11 (census blocks, and population on the tracts) merged first; until then the Population row and card line don't appear.
+
+- **Population on the Areas menu:** under Administrative, Population (2020 Census): Blocks or Tracts, Off · Borders · Density. Off at first. Density colors every block or tract by people per square mile in Viridis (under 5k to 120k+), with the scale in the map key. It counts as the one shaded set: shading another set turns it back to borders, and the other way round.
+- **Population on cards:** "About 75 people and 25 homes" for each block: the census blocks on both sides of the street, each counted by the share of its outline the block runs along. Rounded, and marked as an estimate. Exports get `census_people_est`, `census_homes_est`, and `census_block` / `census_tract` listing the blocks and tracts on both sides.
+- **Smaller special-district chips:** one line each, a little smaller; a long name ends in "…" with the full name on hover.
+- **One-way arrows** start a zoom level later (16).
+
 ## v41
 Includes v40 (#6).
 
