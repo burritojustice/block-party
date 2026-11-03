@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v44 -->
+<!-- build: v45 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -359,6 +359,19 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 .hoods-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--ink-soft); margin-right: 6px; vertical-align: 1px; }
 .hoods-table tr.on .hoods-dot { background: var(--ink); border-color: var(--ink); }
 .hoods-set { color: var(--ink-soft); font-size: 12px; font-weight: 400; }
+details.calc { display: inline; }
+details.calc > summary { display: inline-block; list-style: none; cursor: pointer; margin-left: 4px; vertical-align: 1px; }
+details.calc > summary::-webkit-details-marker { display: none; }
+.info-i { display: inline-grid; place-items: center; width: 16px; height: 16px; border: 1.5px solid var(--ink-soft); border-radius: 50%; font: italic 700 11px/1 Georgia, serif; color: var(--ink-soft); }
+details.calc[open] .info-i, details.calc > summary:hover .info-i { background: var(--ink); border-color: var(--ink); color: #fff; }
+details.calc[open] { display: block; margin-top: 6px; padding: 8px 10px; border: 1.5px solid var(--line); border-radius: 10px; font-size: 12.5px; font-weight: 400; }
+details.calc p { margin: 4px 0; }
+.calc-wrap { overflow-x: auto; }
+.calc-table { border-collapse: collapse; font-size: 12px; margin: 4px 0; white-space: nowrap; }
+.calc-table th, .calc-table td { padding: 2px 8px 2px 0; text-align: right; font-weight: 500; }
+.calc-table th:first-child, .calc-table td:first-child { text-align: left; }
+.calc-table thead th { font-weight: 700; color: var(--ink-soft); border-bottom: 1px solid var(--line); }
+.calc-table tfoot th, .calc-table tfoot td { font-weight: 700; border-top: 1px solid var(--line); }
 .lu-note { display: block; margin-top: 3px; font-size: 11.5px; color: var(--ink-soft); font-weight: 400; }
 
 .notice {
@@ -402,6 +415,8 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 .legend li { display: flex; align-items: center; gap: 8px; }
 .legend li:has(.lg-toggle) { display: block; }
 .legend .lg-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.legend .lg-shield { width: 16px; height: 12px; vertical-align: -1px; }
+.legend .lg-toggle input:disabled { opacity: .45; }
 .legend .lg-toggle input { width: 14px; height: 14px; margin: 0 0 0 auto; accent-color: var(--pool); flex: none; }
 .legend .sw { display: inline-flex; align-items: center; gap: 3px; flex: none; }
 .legend .sw svg { width: 24px; height: 12px; overflow: visible; }
@@ -568,9 +583,8 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
         <li><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="4" fill="#fff" stroke="#1E2340" stroke-width="2"/></svg></span><span data-i18n="lgEnds">Corners</span></li>
         <li><span class="sw"><svg viewBox="0 0 24 12"><line class="lg-other" x1="3" y1="6" x2="21" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOther">Other streets</span></li>
         <li id="lg-quiet" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#B5179E" stroke-width="6" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgQuiet">Quiet street matches</span></li>
-        <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/><path d="M15 6 l-6 -4 v8z" fill="#545B7F"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOneway">One-way</span></li>
-        <li id="lg-lyr-muni" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="2" y1="6" x2="22" y2="6" stroke="#D9480F" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/><line x1="2" y1="6" x2="22" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1" y="3" width="14" height="10" rx="3" fill="#D9480F"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg></span><span data-i18n="lgMuni">Muni routes</span></li>
-        <li id="lg-muni-nums" hidden><label class="lg-toggle" data-i18n-title="lgMuniNumsTitle" title="Show the route numbers on the map (there are a lot downtown)"><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1" y="3" width="14" height="10" rx="3" fill="#D9480F"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg></span><span data-i18n="lgMuniNums">Route numbers</span><input type="checkbox" id="lg-muni-nums-check" checked></label></li>
+        <li id="lg-oneway" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/><path d="M15 6 l-6 -4 v8z" fill="#545B7F"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOneway">One-way</span></li>
+        <li id="lg-lyr-muni" hidden><label class="lg-toggle" data-i18n-title="lgMuniNumsTitle" title="Show the route numbers on the map (there are a lot downtown)"><span class="sw"><svg viewBox="0 0 24 12"><line x1="2" y1="6" x2="22" y2="6" stroke="#D9480F" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/><line x1="2" y1="6" x2="22" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span><span data-i18n="lgMuni">Muni routes</span>, <svg class="lg-shield" viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="1" width="16" height="10" rx="3" fill="#D9480F"/><text x="8" y="9" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg> <span data-i18n="lgMuniNums">numbers</span></span><input type="checkbox" id="lg-muni-nums-check" checked></label></li>
         <li id="lg-lyr-bike" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3" x2="23" y2="3" stroke="#1A7F37" stroke-width="3"/><line x1="1" y1="9.5" x2="23" y2="9.5" stroke="#1A7F37" stroke-width="1.6" stroke-dasharray="3 2.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBike">Bike lanes (dashed: shared routes)</span></li>
         <li id="lg-lyr-landuse" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12"><rect width="6" height="12" fill="#E9C845" fill-opacity=".6"/><rect x="6" width="6" height="12" fill="#F0A04B" fill-opacity=".6"/><rect x="12" width="6" height="12" fill="#9C6FB6" fill-opacity=".6"/><rect x="18" width="6" height="12" fill="#4C9A3F" fill-opacity=".6"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span id="lg-landuse-title">Land use (2023)</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-landuse-table"></table></details></li>
         <li id="lg-lyr-lands" hidden><span class="sw"><svg viewBox="0 0 24 12" id="lg-lands-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLands">City-owned land</span></li>
@@ -686,7 +700,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v44';
+const _BUILD_VERSION = 'v45';
 
 /* =====================================================================
    CONFIG
@@ -842,10 +856,15 @@ const I18N = {
     areasAdmin: 'Administrative', areasAdminLater: 'ZIP codes and neighborhoods are on the cards; map layers later.', areasShow: 'Show',
     areasPop: 'Population', areasPopHint: '2020 Census', aDensity: 'Density', area_cblk: 'Blocks', area_ctract: 'Tracts',
     aNoneHint: 'With borders only, there has to be a line', aColors: 'Colors', aQuietBase: 'Hide parks and places on the map',
-    lgMuniNums: 'Route numbers', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick',
+    lgMuniNums: 'numbers', lgMuniNumsOut: 'Route numbers show from zoom {z}', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick',
     lgNoOne: 'no one lives there (parks, water): clear', lgParcelLines: 'Parcels (lot lines)',
     lgDensity: '{set}: {what} ({src})', densityUnit: 'people per sq mi',
-    censusRow: 'Population', censusEst: 'About {people} people and {homes} homes', censusNote: '2020 Census, estimated from the blocks on both sides',
+    censusRow: 'Census estimates', censusEst: 'About {people} people and {homes} homes', censusNote: '2020 Census, extrapolated from the edges of census blocks on both sides of this street',
+    calcSummary: 'How this is worked out', calcBlock: 'Census block', calcEdge: 'Share of its edge', calcPeople: 'People', calcHomes: 'Homes',
+    calcOf: '{a} of {b}', calcTotal: 'Total', calcEdgeM: '{a} of {b} ft',
+    calcHow: 'A street is the line between census blocks, so the census has no count for a street. For each census block on either side, we take its 2020 people and homes and count the share that matches how much of its edge this block makes up ({len} ft). A census block with streets on four sides is split four ways. The card rounds the total.',
+    calcSafe: 'Block counts are rough on purpose: the Census Bureau adds noise to small areas to protect privacy.', calcSafeLink: 'Census statistical safeguards',
+    homesFacing: 'Homes on the facing lots', homesFacingN: '{n} (SF Planning, 2023)',
     areasShadeHint: '<b>Shade</b> tints the area your blocks are in; the rest of that set shows as borders. One set is shaded at a time.',
     aOff: 'Off', aBorders: 'Borders', aShade: 'Shade',
     area_sup: 'Supervisor', area_asm: 'State Assembly', area_sen: 'State Senate', area_house: 'US House', area_bart: 'BART board',
@@ -1915,7 +1934,7 @@ function cardText(s) {
   if (ng && ng.hoods.length) lines.push(`${t('planningNhood')}: ${ng.hoods.join(', ')} (${t('ngSummary', { hoods: '', n: ng.groups.length }).replace(/^: /, '')})`);
   const pr = Parcels.peek(s);
   if (pr && pr.lots) lines.push(`${t('zoningRow')}: ${pr.zones.map(z => `${z.code} ${zoneName(z.name)} (${z.n})`).join('; ')}`,
-    `${t('parcelsRow')}: ${pr.homes ? t('lotsHomes', { lots: pr.lots, homes: pr.homes }) : t('lotsOnly', { lots: pr.lots })}`,
+    `${t('parcelsRow')}: ${t('lotsOnly', { lots: pr.lots })}`, ...(pr.homes ? [`${t('homesFacing')}: ${t('homesFacingN', { n: pr.homes })}`] : []),
     `${t('landuseRow')} (2023): ${landuseText(pr)}`);
   lines.push(linkFor([s]));
   return lines.join('\n');
@@ -2780,8 +2799,8 @@ const LAND_DEFAULT = LAND_CATS.filter(c => c[2]).map(c => c[0]);
 let landCats = new Set(LAND_DEFAULT);
 const landColor = ['match', ['get', 'cat'], ...LAND_CATS.flatMap(([k, c]) => [k, c]), '#5F5E5A'];
 const OVERLAYS = {
-  // routes from a zoom before Close up, route numbers from a zoom after (and only with the checkbox)
-  muni:     { url: 'muni.geojson',     layers: ['bp-lyr-muni', 'bp-lyr-muni-label'], shift: { min: -1, label: 1 } },
+  // routes from a zoom before Close up; route numbers from Close up, with the checkbox in the map key
+  muni:     { url: 'muni.geojson',     layers: ['bp-lyr-muni', 'bp-lyr-muni-label'], shift: { min: -1 } },
   bike:     { url: 'bike.geojson',     layers: ['bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-bike-label'] },
   slow:     { url: 'slow.geojson',     layers: ['bp-lyr-slow', 'bp-lyr-slow-label'] },
   // vector tiles straight from a .pmtiles file (no GeoJSON to load); On / Off, from zoom 15
@@ -2995,6 +3014,9 @@ const overlayVis = {};
 function updateOverlays() {
   if (!map || !map.getSource('lyr-muni')) return;
   const z = map.getZoom();
+  // one-way arrows: in the map key only from the zoom they draw at
+  const ow = map.getLayer('bp-oneway');
+  $('lg-oneway').hidden = !(ow && z >= ow.minzoom && map.getLayoutProperty('bp-oneway', 'visibility') !== 'none');
   for (const k of Object.keys(OVERLAYS)) {
     const on = overlayMode[k] !== 'off' && !(OVERLAYS[k].pmtiles && !map.getSource('lyr-' + k));
     for (const id of OVERLAYS[k].layers) {
@@ -3004,7 +3026,12 @@ function updateOverlays() {
     const showing = on && z >= overlayMinZoom(k);
     if (overlayMode[k] !== 'off' && z >= overlayMinZoom(k) - 1) loadOverlay(k);
     const li = $('lg-lyr-' + k); if (li) li.hidden = !showing;
-    if (k === 'muni') $('lg-muni-nums').hidden = !showing;
+    if (k === 'muni') {
+      // checked only while the numbers are on the map; zoomed out, unchecked and greyed until they can show
+      const box = $('lg-muni-nums-check'), inZoom = z >= overlayLabelZoom('muni');
+      box.checked = showMuniNums && inZoom; box.disabled = !inZoom;
+      box.closest('label').title = inZoom ? t('lgMuniNumsTitle') : t('lgMuniNumsOut', { z: overlayLabelZoom('muni') });
+    }
   }
 }
 // one fetch per layer file, shared by the map and the cards
@@ -3477,7 +3504,8 @@ function parcelFacts(s) {
   const color = Object.fromEntries(LANDUSE);
   const uses = `<table class="lu-table">${r.uses.map(([k, n]) => `<tr><td><i style="background:${color[k] || '#D8D5CE'}"></i>${esc(landuseName(k))}</td><td>${n}</td></tr>`).join('')}</table>`;
   return `<dt>${esc(t('zoningRow'))}</dt><dd>${zones}</dd>
-      <dt>${esc(t('parcelsRow'))}</dt><dd>${esc(r.homes ? t('lotsHomes', { lots: r.lots, homes: r.homes }) : t('lotsOnly', { lots: r.lots }))}</dd>
+      <dt>${esc(t('parcelsRow'))}</dt><dd>${esc(t('lotsOnly', { lots: r.lots }))}</dd>
+      ${r.homes ? `<dt>${esc(t('homesFacing'))}</dt><dd>${esc(t('homesFacingN', { n: r.homes.toLocaleString() }))}</dd>` : ''}
       <dt>${esc(t('landuseRow'))}</dt><dd>${uses}<small class="lu-note">${esc(t('landuseNote'))}</small></dd>`;
 }
 function parcelFields(r) {
@@ -3838,12 +3866,14 @@ const Areas = (() => {
         }
       }
       let people = 0, homes = 0;
+      const parts = [];
       for (const p of hits.values()) {
         p.perim ??= p.parts.reduce((m, part) => m + len(part[0]), 0);
-        const share = Math.min(1, segLen / (p.perim || Infinity));
-        people += (+p.props.pop20 || 0) * share; homes += (+p.props.housing20 || 0) * share;
+        const share = Math.min(1, segLen / (p.perim || Infinity)), pop = +p.props.pop20 || 0, hu = +p.props.housing20 || 0;
+        people += pop * share; homes += hu * share;
+        parts.push({ id: p.name, perim: p.perim, share, pop, homes: hu });
       }
-      const r = { people, homes, blocks: [...hits.values()].map(p => p.name) };
+      const r = { people, homes, segLen, parts, blocks: [...hits.values()].map(p => p.name) };
       cache.set(ck, r);
       return r;
     },
@@ -3867,7 +3897,22 @@ function censusFacts(s) {
   if (!Areas.has('cblk') || isInt(s)) return '';
   const e = Areas.census(s);
   if (!e) return Areas.ready ? '' : `<dt>${esc(t('censusRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
-  return `<dt>${esc(t('censusRow'))}</dt><dd>${esc(censusText(e))}<br><small class="muted">${esc(t('censusNote'))}</small></dd>`;
+  return `<dt>${esc(t('censusRow'))}</dt><dd>${esc(censusText(e))}<br><small class="muted">${esc(t('censusNote'))}</small>${censusCalc(e)}</dd>`;
+}
+// the (i) under Census estimates: each census block used, its full counts and the share given to this street
+const FT = 3.28084;   // the card gives lengths in feet
+const blockLabel = id => id.length === 15 ? `${(+id.slice(5, 9)) + (id.slice(9, 11) === '00' ? '' : '.' + id.slice(9, 11))} · ${id.slice(11)}` : id;
+function censusCalc(e) {
+  const n = v => Math.round(v).toLocaleString();
+  const sum = k => e.parts.reduce((m, p) => m + p[k], 0);
+  const rows = e.parts.sort((a, b) => b.share - a.share).map(p => `<tr><td title="GEOID ${esc(p.id)}">${esc(blockLabel(p.id))}</td>
+    <td>${esc(t('calcEdgeM', { a: n(p.share * p.perim * FT), b: n(p.perim * FT) }))} <span class="muted">(${Math.round(p.share * 100)}%)</span></td>
+    <td>${esc(t('calcOf', { a: n(p.pop * p.share), b: n(p.pop) }))}</td><td>${esc(t('calcOf', { a: n(p.homes * p.share), b: n(p.homes) }))}</td></tr>`).join('');
+  return `<details class="calc"><summary title="${esc(t('calcSummary'))}" aria-label="${esc(t('calcSummary'))}"><span class="info-i" aria-hidden="true">i</span></summary>
+    <p>${esc(t('calcHow', { len: n(e.segLen * FT) }))}</p>
+    <div class="calc-wrap"><table class="calc-table"><thead><tr><th>${esc(t('calcBlock'))}</th><th>${esc(t('calcEdge'))}</th><th>${esc(t('calcPeople'))}</th><th>${esc(t('calcHomes'))}</th></tr></thead>
+    <tbody>${rows}</tbody><tfoot><tr><th>${esc(t('calcTotal'))}</th><td></td><td>${esc(t('calcOf', { a: n(e.people), b: n(sum('pop')) }))}</td><td>${esc(t('calcOf', { a: n(e.homes), b: n(sum('homes')) }))}</td></tr></tfoot></table></div>
+    <p class="muted">${esc(t('calcSafe'))} <a href="https://www.census.gov/about/policies/privacy/statistical_safeguards.html" target="_blank" rel="noopener">${esc(t('calcSafeLink'))}</a></p></details>`;
 }
 // Areas ▾ menu
 function setupAreasMenu() {

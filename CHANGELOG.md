@@ -2,6 +2,12 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v45
+- **Census estimates** (was "Population"): "2020 Census, extrapolated from the edges of census blocks on both sides of this street". A circled **i** opens how it's worked out: each census block used, how much of its edge this block makes up (in feet), its full people and homes and the share given to this street, with totals for both, and a link to the Census Bureau's statistical safeguards (block counts have noise added for privacy).
+- **Homes on the facing lots** is its own card row: "16 (SF Planning, 2023)". Parcels now just counts the lots. Copied text follows.
+- **Muni route numbers** from zoom 16 again (the bands still start at 15). The checkbox is now in the Muni row of the map key: "Muni routes, [14] numbers". Zoomed out, it's unchecked and greyed until the numbers can show.
+- **One-way** is in the map key only once the arrows are on the map (zoom 16).
+
 ## v44
 - **Density in Magma, flipped:** more people is darker, so the lightest class (a pale yellow) sits next to the clear blocks where no one lives instead of jumping out. Viridis and the others are still in the Colors menu, and Flip turns it back.
 - **Hide parks and places on the map:** a checkbox under Density, on by default. While density shows, the basemap's colored land (parks, schools, hospitals) and its places (shops, theatres) are hidden. Piers, runways and plazas stay.
