@@ -2,6 +2,11 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v44
+- **Density in Magma, flipped:** more people is darker, so the lightest class (a pale yellow) sits next to the clear blocks where no one lives instead of jumping out. Viridis and the others are still in the Colors menu, and Flip turns it back.
+- **Hide parks and places on the map:** a checkbox under Density, on by default. While density shows, the basemap's colored land (parks, schools, hospitals) and its places (shops, theatres) are hidden. Piers, runways and plazas stay.
+- **Muni:** the route bands show a zoom sooner (15) in Close up, and the route numbers a zoom later (17). A **Route numbers** checkbox in the map key, under Muni routes, hides them; it's remembered in this browser.
+
 ## v43
 Uses the density breaks in sf-blocks #12; until it's merged the same breaks are built in.
 
