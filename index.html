@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v48 -->
+<!-- build: v49 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -712,7 +712,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v48';
+const _BUILD_VERSION = 'v49';
 
 /* =====================================================================
    CONFIG
@@ -878,7 +878,7 @@ const I18N = {
     btnAreas: 'Areas', areasElected: 'Elected districts', areasSpecial: 'Special districts', areasSpecialNote: '(not elected)',
     areasAdmin: 'Administrative', areasAdminLater: 'ZIP codes and neighborhoods are on the cards; map layers later.', areasShow: 'Show',
     areasPop: 'Population', areasPopHint: '2020 Census', aDensity: 'Density', area_cblk: 'Blocks', area_ctract: 'Tracts',
-    aNoneHint: 'With borders only, there has to be a line', aColors: 'Colors', aQuietBase: 'Hide parks and places on the map',
+    aNoneHint: 'With borders only, there has to be a line', aColors: 'Colors', grpAround: 'Getting around', grpStreet: 'On the street', grpLand: 'Land and buildings', grpTerrain: 'Terrain', grpMore: 'More', aQuietBase: 'Hide parks and places on the map',
     lgMuniNums: 'numbers', lgMuniNumsOut: 'Route numbers show from zoom {z}', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick',
     lgNoOne: 'no one lives there (parks, water): clear', lgParcelLines: 'Parcels (lot lines)',
     lgDensity: '{set}: {what} ({src})', densityUnit: 'people per sq mi',
@@ -2616,6 +2616,7 @@ function addMapLayers() {
   collectLineLabelLayers();
   basemapLabelIds = map.getStyle().layers.filter(l => l.type === 'symbol' && !l.id.startsWith('bp-')).map(l => l.id);
   mapReady = true;
+  arrangeLayers();
   refreshMapFilter();
   Areas.apply();
 }
@@ -2709,13 +2710,40 @@ const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').match
 // Basemap labels (street and place names) normally sit under the satellite layer. In satellite mode we
 // lift them above it so people don't get lost, and lift the contours with them (just under the labels).
 let basemapLabelIds = [], satOn = false;
+// The drawing order, bottom to top. The basemap's ground (land, water, roads, its flat buildings), the
+// hillshade and the satellite stay at the bottom; everything else is moved into these groups, in this
+// order, whenever layers are added or the basemap changes:
+//   shading      density, shaded districts, land use, city-owned land, building footprints
+//   edges        contours, curbs, lot lines, district and census borders
+//   streets      the Muni band under the street lines; bike lanes and Slow Streets on them; quiet matches
+//   points       trees, businesses, schools, stations, clinics
+//   selection    the whole street, previews, cross streets, candidates, chosen blocks, hover, corners
+//   3D           buildings, when tilted
+//   labels       all of them, the basemap's (street and place names) included, so nothing above covers a name
+const LAYER_ORDER = [
+  ['shading', id => /^bp-area-.*-fill$/.test(id) || /^bp-water-over-/.test(id) || ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill', 'bp-lyr-buildings-fill'].includes(id)],
+  ['edges', id => id === CONTOUR_LINE || ['bp-lyr-curbs', 'bp-lyr-landuse-line', 'bp-adj-lots-casing', 'bp-adj-lots', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-buildings-line'].includes(id)
+    || /^bp-area-.*-(case|line)$/.test(id)],
+  ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
+  ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', ...POI_LAYERS].includes(id)],
+  ['selection', id => ['bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends'].includes(id)],
+  ['3d', id => id === 'bp-lyr-buildings-3d'],
+  ['labels', (id, l) => l.type === 'symbol'],
+];
+function orderLayers() {
+  const layers = map.getStyle().layers, placed = new Set();
+  const groups = LAYER_ORDER.map(([name, test]) => {
+    const ids = layers.filter(l => !placed.has(l.id) && test(l.id, l)).map(l => l.id);
+    ids.forEach(id => placed.add(id));
+    return ids;
+  });
+  // anything of ours not listed goes with the streets, and says so
+  const stray = layers.filter(l => l.id.startsWith('bp-') && !placed.has(l.id) && !['bp-hillshade', 'bp-sat'].includes(l.id)).map(l => l.id);
+  if (stray.length) { console.info('[block-party] layers not in LAYER_ORDER, drawn with the streets:', stray.join(', ')); groups[2].push(...stray); }
+  for (const id of groups.flat()) map.moveLayer(id);   // each to the top, in order
+}
 function arrangeLayers() {
-  const target = satOn ? 'bp-all' : 'bp-sat';      // bp-all is the first Block Party layer above the satellite
-  for (const id of basemapLabelIds) map.moveLayer(id, target);
-  const firstLabel = basemapLabelIds[0] || target;
-  const overDensity = Areas.densityShown() && overlayMode.landuse !== 'off' && Areas.overDensity();
-  for (const id of ['bp-lyr-landuse-fill', 'bp-lyr-landuse-line', 'bp-lyr-lands-fill', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-muni', CONTOUR_LINE, CONTOUR_LABEL])
-    if (map.getLayer(id)) map.moveLayer(id, id === 'bp-lyr-landuse-line' && overDensity ? overDensity : firstLabel);
+  orderLayers();
   // on satellite the clickable streets turn white, so contours go pale yellow to stay distinct
   if (map.getLayer(CONTOUR_LINE)) map.setPaintProperty(CONTOUR_LINE, 'line-color', satOn ? '#FFE7A3' : '#FFFFFF');
 }
@@ -2865,6 +2893,13 @@ const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', slow: 'close', landuse: 
 const overlayMode = { ...OVERLAY_DEFAULT };
 const overlayLoaded = new Set();
 const POI_LAYERS = ['bp-lyr-schools', 'bp-lyr-stations', 'bp-lyr-health'];
+// the Layers menu, in sections
+const LAYER_SECTIONS = [
+  ['grpAround', ['muni', 'bike', 'slow']],
+  ['grpStreet', ['trees', 'businesses', 'schools', 'stations', 'health']],
+  ['grpLand', ['landuse', 'lands', 'buildings', 'curbs']],
+  ['grpTerrain', ['contours']],
+];
 let overHover = false;   // the pointer is on a point or building (their popups win over areas)
 let popOwner = null;     // which hover opened the shared popup: only it closes it (handlers fire in no set order)
 const BIKE_SOLID = ['separated', 'lane', 'path'];
@@ -4533,8 +4568,13 @@ function setupMapMenus() {
     curbs: '<svg viewBox="0 0 26 16"><path d="M1 12 H16 Q22 12 22 6 V1" fill="none" stroke="#9CA2AD" stroke-width="1.4"/><path d="M5 6 H12" stroke="#B4B9C3" stroke-width="1.2"/></svg>',
     buildings: '<svg viewBox="0 0 26 16"><rect x="3" y="3" width="9" height="11" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/><rect x="14" y="6" width="9" height="8" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/></svg>' };
   Object.assign(SW, SWT);
-  rowsEl.innerHTML = Object.keys(OVERLAYS).map(k => OVERLAYS[k].modes ? row(k, OVERLAYS[k].modes)
-    : row(k, three) + (k === 'lands' ? landChips : k === 'trees' ? treeChips() : k === 'businesses' ? bizChips() : '')).join('') + row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]);
+  const rowFor = k => k === 'contours' ? row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]) : OVERLAYS[k].modes ? row(k, OVERLAYS[k].modes)
+    : row(k, three) + (k === 'lands' ? landChips : k === 'trees' ? treeChips() : k === 'businesses' ? bizChips() : '');
+  // in sections; a layer sf-blocks adds later that isn't in one goes at the end
+  const listed = new Set(LAYER_SECTIONS.flatMap(([, ks]) => ks));
+  const sections = [...LAYER_SECTIONS.map(([cap, ks]) => [cap, ks.filter(k => k === 'contours' || OVERLAYS[k])]),
+    ['grpMore', Object.keys(OVERLAYS).filter(k => !listed.has(k))]].filter(([, ks]) => ks.length);
+  rowsEl.innerHTML = sections.map(([cap, ks]) => `<p class="areas-cap">${esc(t(cap))}</p>` + ks.map(rowFor).join('')).join('');
   rowsEl.addEventListener('change', e => {
     if (e.target.dataset.land) setLandCats([...rowsEl.querySelectorAll('[data-land]:checked')].map(i => i.dataset.land));
     if (e.target.dataset.genus) { treeGenera = new Set([...rowsEl.querySelectorAll('[data-genus]:checked')].map(i => i.dataset.genus)); Tiles.filter(); }
