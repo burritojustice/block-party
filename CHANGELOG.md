@@ -2,6 +2,19 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v51
+Includes v48–v50 (#15–#17). The business colors and records need sf-blocks #15.
+
+- **Boundary streets show both districts.** A block was checked at three points on its centerline; when a district line runs down the middle of the street those can all land on one side. Now each point is also checked 12 m to either side, so Waller St (Shrader–Stanyan) shows Supervisor D5 | D8, Guerrero (16th–Camp) D9 | D8, Ocean Ave (Granada–Miramar) D11 | D7, 19th Ave (Taraval–Ulloa) D7 | D4. The same goes for Assembly, Senate, House, BART and special districts. 778 of 17,176 blocks are on a supervisor border.
+- **Shorter card rows:** Elected districts shows the Supervisor chip, with the others folded; Zoning shows the codes ("NCT (22), NCT|RTO-M (1)"), with the names folded.
+- **Land use "Vacant (unverified)":** the 2023 land use marks some lots vacant that aren't, so treat it with caution.
+- **Businesses in four colors:** food & drink, retail, services (hair, nails, repair, laundry…) and everything else, from each business's industry code (sf-blocks #15). Chips and the map key have all four. Landlords registering rentals are hidden with the other non-storefronts until "Show all registrations".
+- **Click a tree or a business** for its full record: a tree's species, trunk, status, planted date, site, caretaker, address and CNN; every business at an address with its owner, mailing address (with city and ZIP), license, industry, and start date. Clicking a point no longer picks the block under it.
+- **Opening a card's tree or business list rings them on the map** (in yellow, with a dot when the layer is off); closing the list clears them.
+- **Layers ▾ → Basemap:** checkboxes for the basemap's places (shops, restaurants, landmarks) and buildings, remembered in this browser.
+- **Map key:** City-owned land opens to list its categories, like Land use, Street trees and Businesses.
+- **"Quiet streets" is now "Filter"**, for more kinds of filters to come.
+
 ## v50
 Includes v48 (#15) and v49 (#16).
 
