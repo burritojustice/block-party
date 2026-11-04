@@ -2,6 +2,14 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v49
+Includes v48 (#15).
+
+- **One drawing order**, bottom to top: the basemap and satellite; shading (population density, shaded districts, land use, city-owned land, building footprints); edges (contours, curbs, lot lines, district and census borders); the Muni band, the street lines, and bike lanes and Slow Streets on them; points (trees, businesses, schools, stations, clinics); your selection (the street, previews, cross streets, chosen blocks, corners); 3D buildings; and every label on top.
+- **Street names above everything else:** the basemap's street and place names used to sit under the density colors, shaded districts, bike lanes and the selection on the map style. Now all labels (street names, business names, Muni route numbers, district names, your blocks' labels) are above the Muni band and bike lanes, on both Map and Satellite.
+- **Your chosen blocks above trees and businesses**, so a row of trees doesn't hide the block.
+- **Layers ▾ in sections:** Getting around (Muni, bike, Slow Streets), On the street (trees, businesses, schools, fire and police, hospitals and clinics), Land and buildings (parcels, city-owned land, buildings, curbs), Terrain (contours).
+
 ## v48
 Business names on the map need sf-blocks #15; until then the dots show without names.
 
