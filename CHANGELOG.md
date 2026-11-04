@@ -2,6 +2,17 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v50
+Includes v48 (#15) and v49 (#16).
+
+- **Shorter cards:** rows are one line with a count or summary, and a ▸ to open the details:
+  - **Census estimates** and **Within a block** show just "180 people, 70 homes"; the note and the tables of census blocks are folded underneath (the i button is gone; its table is in the fold).
+  - **Street trees** show "38 (12 kinds)"; the kinds and their counts are folded.
+  - **Next to** shows how many places when there are several.
+  - Open folds stay open when the card redraws. The label column is narrower, so values wrap less.
+- **Layers ▾ is shorter:** the chips for city-owned land, street trees and businesses fold under a line with counts ("11 of 11 kinds · 138,778 trees", "2 of 2 kinds · 100,913 at 69,727 addresses"); the Off / Close up / Always pills stay in view.
+- **Map key:** Street trees and Businesses open like Land use, with each genus or color and how many there are, and what the dot size means.
+
 ## v49
 Includes v48 (#15).
 
