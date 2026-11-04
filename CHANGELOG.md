@@ -2,6 +2,14 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v52
+
+- **Businesses at the same spot:** the city puts many addresses on one point: 1601 Church (Sun Valley Market) and 1603 Church, every suite in an office building, mailbox stores like 548 Market. About half of all business addresses shared a point with another, so one dot hid the others and a click picked one at random. sf-blocks #17 stacks them into one dot (its size and color cover all of them, labelled with the first storefront); hovering and clicking list every address there ("1601 Church St & 1603 Church St · 7 businesses"), storefronts first, and cards still list each business under its own address. Before #17 is merged, hover and click already gather the dots drawn at the same spot.
+- Parcel and card text say "1 home", not "1 homes".
+- **Parcel hover shows the lot's street addresses** from the parcels file ("301–401 Van Ness Ave", or one number), with the lot number under it.
+- **Map key:** the size-and-color note under Businesses wraps instead of widening the key, and Businesses and Street trees show the month of their data ("Data from Nov 2026").
+- **Terrain in 3D (Layers › Basemap):** "Always" (as before) or "Only when tilted", which turns terrain off looking straight down and raises it over the first 20° of tilt so nothing jumps. Saved in the browser, to try out.
+
 ## v51
 Includes v48–v50 (#15–#17). The business colors and records need sf-blocks #15.
 
