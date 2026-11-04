@@ -2,6 +2,16 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v48
+Business names on the map need sf-blocks #15; until then the dots show without names.
+
+- **Hover order:** corners, then points (schools, stations, clinics, trees, businesses), then buildings, then parcels and city-owned land, then street blocks. A tree or business on a parcel or building now shows its own popup; the shapes under it no longer take over. Popups no longer close when they open under the pointer (near the map's edges, or on small dots).
+- **Buildings rise as you tilt:** they start to stand up as soon as the map tilts and reach full height at 45°, in six steps, and they're much more see-through (40%).
+- **Census estimates** note: "2020 census, extrapolated from edges of blocks along street".
+- **Within a block:** a new card row with everyone in the census blocks touching either end of the block, in full: in a plain grid, the two along the block and two more at each corner (six). "About 1,620 people and 800 homes", the neighbors who could see a block party and walk over. The i table lists those blocks too, and exports get `census_within_block_people`, `census_within_block_homes` and `census_within_block_blocks`.
+- **Business names** under the dots from zoom 18 (a person's own name is left off the map).
+- **Zoom level** under the zoom buttons ("z16.4").
+
 ## v47
 - **Curbs on by default** from zoom 15 (Always: from 13), in a lighter grey so they don't compete with the streets.
 - **Buildings stand up when the map tilts** (3D, or tilting past the label angle): each footprint rises to its median roof height from the 2010 LiDAR, and lies flat again when you tilt back.

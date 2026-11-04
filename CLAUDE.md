@@ -17,6 +17,8 @@ A San Francisco street-block (CNN) lookup for block party organizers. Live at ht
 - **sf-blocks caching:** `SFBlocks` fetches `region.json` / `VERSION` with `cache: 'no-cache'` and other files with `?v=<version>`, so new data shows up on the next load despite Pages' 10-minute cache.
 - **Cross streets toggle:** `showCross` / `updateCross()`, the checkbox in the map key; fades `bp-context*` by opacity.
 - **Apply button:** `CONFIG.APPLY` (`show`, `url`, `params`). Off on this build; civic-joy-fund's copy turns it on. See the README.
+- **Hover order:** corners > points (`HOVER.points`: POIs, trees, businesses) > buildings > parcels and city land > street blocks; each handler checks `onPoi` / `onBuilding` / `onArea` and gives way. The shared popup has an owner (`popOwner`): only the handler that opened it closes it. Popups take no pointer events (CSS), or one opening under the pointer fires the map's mouseout.
+- **3D buildings:** `Tiles.tilt()` on every pitch change: the extrusion layer shows while tilted, at `BLDG_STEPS` heights up to `BLDG_FULL_PITCH`.
 - **Buttons:** black when on or open, white when off; yellow only for what's picked on the map.
 - **Basemap key:** Protomaps `071e272e8d5e13b7` (allowed origin burritojustice.github.io; localhost works with any key). `SFBlocks.basemapKey()` picks another origin's key from `region.json`.
 

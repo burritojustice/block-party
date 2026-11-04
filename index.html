@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v47 -->
+<!-- build: v48 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -95,6 +95,9 @@ button, input { font: inherit; color: inherit; }
 .map-toggle button[aria-expanded="true"] { background: var(--ink); color: #fff; }
 .map-toggle .badge { display: inline-block; min-width: 1.6em; margin-left: 4px; padding: 0 6px; border-radius: 999px; background: #B5179E; color: #fff; font-size: 12px; line-height: 1.5; text-align: center; }
 .map-toggle .badge[hidden] { display: none; }
+/* zoom level, under the map's zoom buttons */
+.zoom-read { position: absolute; top: 118px; right: 10px; z-index: 2; min-width: 29px; padding: 2px 4px; text-align: center; font-size: 11px; font-weight: 700;
+  font-variant-numeric: tabular-nums; color: var(--ink-soft); background: rgba(255,255,255,.85); border-radius: 4px; box-shadow: 0 0 0 1px rgba(0,0,0,.12); pointer-events: none; }
 .quiet-count { font-size: 14px; color: var(--ink); font-weight: 700; margin: 0; }
 .lyr-row { display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px; padding: 4px 0; }
 .lyr-row + .lyr-row { border-top: 1px solid var(--line); }
@@ -434,6 +437,8 @@ details.calc p { margin: 4px 0; }
 .lg-table i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; opacity: .75; vertical-align: -1px; }
 .legend-hint { margin: 6px 0 0; font-size: 12px; color: var(--ink-soft); }
 .map-loading { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 600; color: var(--ink-soft); z-index: 4; pointer-events: none; }
+/* hover popups only (no links): the pointer passes through, so a popup that opens under it doesn't count as leaving the map */
+.maplibregl-popup, .maplibregl-popup .maplibregl-popup-content { pointer-events: none; }
 .maplibregl-popup-content { font-family: var(--body); border-radius: 12px; padding: 8px 12px; font-size: 14px; box-shadow: 0 4px 0 rgba(30,35,64,.25); }
 .maplibregl-popup-content b { font-weight: 700; }
 .maplibregl-popup-content .pop-lyr { font-size: 13px; color: var(--ink-soft); }
@@ -554,6 +559,7 @@ details.calc p { margin: 4px 0; }
       <div class="map-toggle single sun">
         <button type="button" id="quiet-btn" aria-expanded="false" aria-controls="quiet-panel">✦ <span data-i18n="quietBtn">Quiet streets</span><span class="badge" id="quiet-badge" hidden></span> ▾</button>
       </div>
+      <div class="zoom-read" id="zoom-read" data-i18n-title="zoomRead" title="Zoom level"></div>
       <div class="map-pop" id="layers-panel" hidden>
         <p class="pop-hint" data-i18n="layersHint">“Close up” shows a layer once you zoom in to a few blocks.</p>
         <div id="layers-rows"></div>
@@ -706,7 +712,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v47';
+const _BUILD_VERSION = 'v48';
 
 /* =====================================================================
    CONFIG
@@ -876,7 +882,10 @@ const I18N = {
     lgMuniNums: 'numbers', lgMuniNumsOut: 'Route numbers show from zoom {z}', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick',
     lgNoOne: 'no one lives there (parks, water): clear', lgParcelLines: 'Parcels (lot lines)',
     lgDensity: '{set}: {what} ({src})', densityUnit: 'people per sq mi',
-    censusRow: 'Census estimates', censusEst: 'About {people} people and {homes} homes', censusNote: '2020 Census, extrapolated from the edges of census blocks on both sides of this street',
+    censusRow: 'Census estimates', censusEst: 'About {people} people and {homes} homes', censusNote: '2020 census, extrapolated from edges of blocks along street',
+    cornersRow: 'Within a block', cornersEst: 'About {people} people and {homes} homes',
+    cornersNote: 'Everyone in the {n} census blocks touching either end of this block (full counts): neighbors who could see it and walk over',
+    calcCorners: 'Within a block: the census blocks touching either end, counted in full', calcFull: 'People', zoomRead: 'Zoom level',
     calcSummary: 'How this is worked out', calcBlock: 'Census block', calcEdge: 'Share of its edge', calcPeople: 'People', calcHomes: 'Homes',
     calcOf: '{a} of {b}', calcTotal: 'Total', calcEdgeM: '{a} of {b} ft',
     calcHow: 'A street is the line between census blocks, so the census has no count for a street. For each census block on either side, we take its 2020 people and homes and count the share that matches how much of its edge this block makes up ({len} ft). A census block with streets on four sides is split four ways. The card rounds the total.',
@@ -2554,11 +2563,11 @@ function addMapLayers() {
     map.getCanvas().style.cursor = 'pointer';
     map.getSource('hover').setData(EMPTY);
     map.getSource('preview-int').setData(fc([pointFeature(i)]));
-    popup.setLngLat([i.x, i.y]).setHTML(`<b>${esc(intName(i))}</b><br>${esc(t('intKind'))}, CNN ${i.cnn}`).addTo(map);
+    popup.setLngLat([i.x, i.y]).setHTML(`<b>${esc(intName(i))}</b><br>${esc(t('intKind'))}, CNN ${i.cnn}`).addTo(map); popOwner = 'corner';
     hoverCardFromMap(i.cnn);
   });
   map.on('mouseleave', 'bp-corners-hit', () => {
-    map.getCanvas().style.cursor = ''; popup.remove(); map.getSource('preview-int').setData(EMPTY);
+    map.getCanvas().style.cursor = ''; if (popOwner === 'corner') { popup.remove(); popOwner = null; } map.getSource('preview-int').setData(EMPTY);
     hoverCardFromMap(null);
   });
   const clickInt = e => {
@@ -2569,18 +2578,20 @@ function addMapLayers() {
   map.on('click', 'bp-corners-hit', clickInt);
   map.on('click', 'bp-ints', e => { if (!map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit'] }).length) clickInt(e); });
   map.on('mousemove', 'bp-all-hit', e => {
-    if (onCorner(e) || onPoi(e)) return;
+    if (onCorner(e) || onPoi(e) || onBuilding(e) || onArea(e)) {
+      map.getSource('hover').setData(EMPTY); hoverCardFromMap(null); if (popOwner === 'street') popOwner = null; return;
+    }
     const f = e.features[0]; if (!f) return;
     const s = Logic.db.byCnn.get(f.properties.cnn);
     map.getCanvas().style.cursor = 'pointer';
     map.getSource('hover').setData(fc([segFeature(s)]));
     const ranges = addrRanges(s);
     const extra = [slopeHover(s), ...overlayInfo(e, s)].filter(Boolean).map(x => `<br><span class="pop-lyr">${esc(x)}</span>`).join('');
-    popup.setLngLat(e.lngLat).setHTML(`<b>${esc(P(s.street))}</b><br>${esc(betweenText(s))}<br>CNN ${s.cnn}${ranges ? `<br>${esc(ranges)}` : ''}${extra}`).addTo(map);
+    popup.setLngLat(e.lngLat).setHTML(`<b>${esc(P(s.street))}</b><br>${esc(betweenText(s))}<br>CNN ${s.cnn}${ranges ? `<br>${esc(ranges)}` : ''}${extra}`).addTo(map); popOwner = 'street';
     hoverCardFromMap(s.cnn);
   });
   map.on('mouseleave', 'bp-all-hit', () => {
-    map.getCanvas().style.cursor = ''; popup.remove(); map.getSource('hover').setData(EMPTY);
+    map.getCanvas().style.cursor = ''; if (popOwner === 'street') { popup.remove(); popOwner = null; } map.getSource('hover').setData(EMPTY);
     hoverCardFromMap(null);
   });
   map.on('click', 'bp-all-hit', e => {
@@ -2598,6 +2609,8 @@ function addMapLayers() {
   map.on('pitchend', () => $('btn-3d').setAttribute('aria-pressed', map.getPitch() > 5));
   map.on('pitch', () => setLabelMode(map.getPitch() > LABEL_3D_PITCH));
   map.on('zoomend', () => { updateContourLegend(); updateOverlays(); });
+  const zr = () => { $('zoom-read').textContent = 'z' + map.getZoom().toFixed(1); };
+  map.on('zoom', zr); zr();
   map.on('pitchend', () => setLabelMode(map.getPitch() > LABEL_3D_PITCH));
   addOverlayLayers(popup);
   collectLineLabelLayers();
@@ -2632,7 +2645,7 @@ function setLabelMode(tilted) {
   for (const id of ['bp-all-label-3d', 'bp-context-label-3d', 'bp-results-label-3d'])
     map.setLayoutProperty(id, 'visibility', tilted ? 'visible' : 'none');
   map.setLayoutProperty('bp-results-label', 'visibility', tilted ? 'none' : 'visible');
-  Tiles.tilt(tilted);
+  Tiles.tilt();
 }
 /* ---------- contours (ported from Selecter's terrain contours, feet, "fine" detail) ---------- */
 const CONTOUR_SRC = 'contour-source', CONTOUR_LINE = 'bp-contour-line', CONTOUR_MAJOR = 'bp-contour-major', CONTOUR_LABEL = 'bp-contour-label';
@@ -2852,8 +2865,24 @@ const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', slow: 'close', landuse: 
 const overlayMode = { ...OVERLAY_DEFAULT };
 const overlayLoaded = new Set();
 const POI_LAYERS = ['bp-lyr-schools', 'bp-lyr-stations', 'bp-lyr-health'];
+let overHover = false;   // the pointer is on a point or building (their popups win over areas)
+let popOwner = null;     // which hover opened the shared popup: only it closes it (handlers fire in no set order)
 const BIKE_SOLID = ['separated', 'lane', 'path'];
-const onPoi = e => map.queryRenderedFeatures(e.point, { layers: POI_LAYERS.filter(id => map.getLayer(id)) }).length > 0;
+// What the pointer is over, in hover order: corners, then points (schools, stations, health, trees,
+// businesses), then buildings, then parcels and city-owned land, then street blocks. Each hover handler
+// gives way to anything above it, so shapes never hide the points on them.
+const HOVER = {
+  points: () => [...POI_LAYERS, 'bp-lyr-trees', 'bp-lyr-businesses'],
+  buildings: () => ['bp-lyr-buildings-fill', 'bp-lyr-buildings-3d'],
+  areas: () => ['bp-lyr-lands-fill', 'bp-lyr-landuse-fill'],
+};
+const hoverHit = (e, ids) => {
+  const live = ids.filter(id => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none');
+  return live.length > 0 && map.queryRenderedFeatures(e.point, { layers: live }).length > 0;
+};
+const onPoi = e => hoverHit(e, HOVER.points());
+const onBuilding = e => hoverHit(e, HOVER.buildings());
+const onArea = e => hoverHit(e, HOVER.areas());
 
 function addOverlayLayers(popup) {
   addOverlayIcons();
@@ -2954,19 +2983,21 @@ function addOverlayLayers(popup) {
       const kind = id === 'bp-lyr-stations' ? t(p.kind === 'fire' ? 'fireStation' : 'policeStation')
         : id === 'bp-lyr-health' ? [p.type, p.services].filter(Boolean).join(', ') : p.type;
       map.getSource('hover').setData(EMPTY);
-      popup.setLngLat(f.geometry.coordinates).setHTML(`<b>${esc(p.name || '')}</b>${kind ? `<br><span class="pop-lyr">${esc(kind)}</span>` : ''}`).addTo(map);
+      popup.setLngLat(f.geometry.coordinates).setHTML(`<b>${esc(p.name || '')}</b>${kind ? `<br><span class="pop-lyr">${esc(kind)}</span>` : ''}`).addTo(map); popOwner = id;
     });
-    map.on('mouseleave', id, () => popup.remove());
+    map.on('mouseleave', id, () => { if (popOwner === id) { popup.remove(); popOwner = null; } });
   }
   // area features (city-owned land, land use parcels): one popup, only when no street, corner, or
   // icon is under the cursor (those have their own)
   let areaPopup = false;
   map.on('mousemove', e => {
     const ids = ['bp-lyr-lands-fill', 'bp-lyr-landuse-fill'].filter(id => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none');
-    const busy = map.queryRenderedFeatures(e.point, { layers: ['bp-all-hit', 'bp-corners-hit', ...POI_LAYERS].filter(id => map.getLayer(id)) }).length;
-    const hits = busy || !ids.length ? [] : map.queryRenderedFeatures(e.point, { layers: ids });
+    const busy = map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit'].filter(id => map.getLayer(id)) }).length || onPoi(e) || onBuilding(e);
+    overHover = !!busy;
+    if (busy) { areaPopup = false; return; }   // a point or building above has the popup
+    const hits = !ids.length ? [] : map.queryRenderedFeatures(e.point, { layers: ids });
     const land = hits.find(f => f.layer.id === 'bp-lyr-lands-fill'), parcel = hits.find(f => f.layer.id === 'bp-lyr-landuse-fill');
-    if (!land && !parcel) { if (areaPopup) { popup.remove(); areaPopup = false; } return; }
+    if (!land && !parcel) { if (areaPopup && popOwner === 'area') { popup.remove(); popOwner = null; } areaPopup = false; return; }
     const parts = [];
     if (land) {
       const p = land.properties;
@@ -2978,9 +3009,9 @@ function addOverlayLayers(popup) {
         + `<br><span class="pop-lyr">${esc(zoneName(p.parcelsactiveandretired_zoning_district))}${p.parcelsactiveandretired_zoning_code ? ` (${esc(p.parcelsactiveandretired_zoning_code)})` : ''}</span>`);
     }
     popup.setLngLat(e.lngLat).setHTML(parts.join('<br>')).addTo(map);
-    areaPopup = true;
+    areaPopup = true; popOwner = 'area';
   });
-  map.on('mouseout', () => { if (areaPopup) { popup.remove(); areaPopup = false; } });
+  map.on('mouseout', () => { if (areaPopup && popOwner === 'area') { popup.remove(); popOwner = null; } areaPopup = false; });
   map.on('zoom', updateOverlays);
   map.on('moveend', updateParcelLabels);
   map.on('sourcedata', e => { if (e.sourceId === 'lyr-landuse' && e.isSourceLoaded) updateParcelLabelsSoon(); });
@@ -3053,7 +3084,7 @@ const overlayVis = {};
 function updateOverlays() {
   if (!map || !map.getSource('lyr-muni')) return;
   const z = map.getZoom();
-  setTimeout(() => Tiles.tilt(labels3d));   // after the layers below are shown or hidden
+  setTimeout(() => Tiles.tilt());   // after the layers below are shown or hidden
   // one-way arrows: in the map key only from the zoom they draw at
   const ow = map.getLayer('bp-oneway');
   $('lg-oneway').hidden = !(ow && z >= ow.minzoom && map.getLayoutProperty('bp-oneway', 'visibility') !== 'none');
@@ -3577,10 +3608,11 @@ const Tiles = (() => {
           paint: { 'line-color': '#8A8478', 'line-opacity': 0.6, 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 0.3, 18, 1] } }, polyBelow);
         // tilted (3D, or past LABEL_3D_PITCH), buildings stand up to their median roof height (2010 LiDAR)
         map.addLayer({ id: 'bp-lyr-buildings-3d', type: 'fill-extrusion', ...src('buildings'), paint: {
-          'fill-extrusion-color': '#CFC9BE', 'fill-extrusion-opacity': 0.85, 'fill-extrusion-vertical-gradient': true,
-          'fill-extrusion-height': ['max', ['coalesce', ['get', 'height_m'], 3], 2], 'fill-extrusion-base': 0 } }, polyBelow);
+          'fill-extrusion-color': '#CFC9BE', 'fill-extrusion-opacity': 0.4, 'fill-extrusion-vertical-gradient': true,
+          'fill-extrusion-height': 0, 'fill-extrusion-base': 0 } }, polyBelow);
         OVERLAYS.buildings.layers = ['bp-lyr-buildings-fill', 'bp-lyr-buildings-line'];
-        Tiles.tilt(labels3d);
+        Tiles.tilt();
+        map.on('pitch', () => Tiles.tilt());
       }
       if (meta.has('curbs')) {
         map.addLayer({ id: 'bp-lyr-curbs', type: 'line', ...src('curbs'),
@@ -3611,16 +3643,21 @@ const Tiles = (() => {
           filter: ['>', ['coalesce', ['get', 'n'], 1], 1],
           layout: { visibility: 'none', 'text-field': ['to-string', count], 'text-font': LABEL_FONT, 'text-size': 10.5, 'text-allow-overlap': true },
           paint: { 'text-color': '#FFFFFF' } }, pointBelow);
-        OVERLAYS.businesses.layers = ['bp-lyr-businesses', 'bp-lyr-businesses-label'];
+        // from zoom 18, the first storefront's name under each dot (sf-blocks' `name`; `name_all` with Show all)
+        map.addLayer({ id: 'bp-lyr-businesses-name-label', type: 'symbol', ...src('businesses'), minzoom: 18,
+          layout: { visibility: 'none', 'text-field': ['coalesce', ['get', bizAll ? 'name_all' : 'name'], ''], 'text-font': LABEL_FONT, 'text-size': 11,
+            'text-anchor': 'top', 'text-offset': [0, 1.1], 'text-max-width': 9, 'text-padding': 2, 'text-optional': true },
+          paint: { 'text-color': '#3D2C8D', 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.6 } }, pointBelow);
+        OVERLAYS.businesses.layers = ['bp-lyr-businesses', 'bp-lyr-businesses-label', 'bp-lyr-businesses-name-label'];
       }
       Tiles.filter();
-      const hoverTip = (id, html) => {
+      const hoverTip = (id, html, above = () => false) => {
         map.on('mousemove', id, e => {
           const f = e.features[0];
-          if (!f || map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit', 'bp-ints'].filter(i => map.getLayer(i)) }).length) return;
-          popup.setLngLat(f.geometry.type === 'Point' ? f.geometry.coordinates : e.lngLat).setHTML(html(f.properties)).addTo(map);
+          if (!f || map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit', 'bp-ints'].filter(i => map.getLayer(i)) }).length || above(e)) return;
+          popup.setLngLat(f.geometry.type === 'Point' ? f.geometry.coordinates : e.lngLat).setHTML(html(f.properties)).addTo(map); popOwner = id;
         });
-        map.on('mouseleave', id, () => popup.remove());
+        map.on('mouseleave', id, () => { if (popOwner === id) { popup.remove(); popOwner = null; } });
       };
       if (meta.has('trees')) hoverTip('bp-lyr-trees', p => `<b>${esc(p.common || p.species || p.genus || t('lyr_trees'))}</b>`
         + (p.species && p.common ? `<br><span class="pop-lyr"><i>${esc(p.species)}</i></span>` : '')
@@ -3634,18 +3671,24 @@ const Tiles = (() => {
           + (shown.length > 4 ? `<br><span class="pop-lyr">…</span>` : '');
       });
       if (meta.has('buildings')) hoverTip('bp-lyr-buildings-fill', p => p.height_m > 0
-        ? `<b>${esc(t('bldgHeight', { m: Math.round(p.height_m), ft: Math.round(p.height_m * M2FT) }))}</b><br><span class="pop-lyr">${esc(t('bldgYear'))}</span>` : esc(t('lyr_buildings')));
+        ? `<b>${esc(t('bldgHeight', { m: Math.round(p.height_m), ft: Math.round(p.height_m * M2FT) }))}</b><br><span class="pop-lyr">${esc(t('bldgYear'))}</span>` : esc(t('lyr_buildings')), onPoi);
     },
-    // buildings: flat footprints, or standing up when the map is tilted. The 3D layer is drawn only while
-    // tilted and Buildings shows (extruding every building all the time is heavy downtown); the flat
-    // fill stays, see-through, for hovering.
-    tilt(tilted) {
+    // buildings: flat footprints, rising as the map tilts: they pop up as soon as it starts and reach their
+    // median roof height (2010 LiDAR) at BLDG_FULL_PITCH. The 3D layer is drawn only while tilted and
+    // Buildings shows (extruding every building all the time is heavy downtown); the flat fill stays,
+    // see-through, for hovering.
+    tilt() {
       if (!map || !map.getLayer('bp-lyr-buildings-3d')) return;
-      const on = tilted && map.getLayoutProperty('bp-lyr-buildings-fill', 'visibility') === 'visible';
+      const pitch = map.getPitch(), k = Math.min(1, Math.ceil(pitch / BLDG_FULL_PITCH * BLDG_STEPS) / BLDG_STEPS);
+      const on = pitch > 1 && map.getLayoutProperty('bp-lyr-buildings-fill', 'visibility') === 'visible';
       if (map.getLayoutProperty('bp-lyr-buildings-3d', 'visibility') !== (on ? 'visible' : 'none'))
         map.setLayoutProperty('bp-lyr-buildings-3d', 'visibility', on ? 'visible' : 'none');
-      map.setPaintProperty('bp-lyr-buildings-fill', 'fill-opacity', tilted ? 0 : 0.35);
-      map.setPaintProperty('bp-lyr-buildings-line', 'line-opacity', tilted ? 0 : 0.6);
+      if (on && k !== bldgK) {
+        bldgK = k;
+        map.setPaintProperty('bp-lyr-buildings-3d', 'fill-extrusion-height', ['*', k, ['max', ['coalesce', ['get', 'height_m'], 3], 2]]);
+      }
+      map.setPaintProperty('bp-lyr-buildings-fill', 'fill-opacity', on ? 0 : 0.35);
+      map.setPaintProperty('bp-lyr-buildings-line', 'line-opacity', on ? 0 : 0.6);
     },
     // tree genera and business chips, and whether non-storefront registrations show
     filter() {
@@ -3664,6 +3707,10 @@ const Tiles = (() => {
         map.setFilter('bp-lyr-businesses-label', ['all', f, ['>', ['coalesce', ['get', bizAll ? 'n' : 'shown'], ['get', 'n'], 1], 1]]);
         const count = ['coalesce', ['get', bizAll ? 'n' : 'shown'], ['get', 'n'], 1];
         map.setLayoutProperty('bp-lyr-businesses-label', 'text-field', ['to-string', count]);
+        if (map.getLayer('bp-lyr-businesses-name-label')) {
+          map.setFilter('bp-lyr-businesses-name-label', f);
+          map.setLayoutProperty('bp-lyr-businesses-name-label', 'text-field', ['coalesce', ['get', bizAll ? 'name_all' : 'name'], '']);
+        }
       }
     },
     // card rows: trees (by CNN) and businesses (by address on this block), or null while being read
@@ -3678,6 +3725,9 @@ const Tiles = (() => {
   };
 })();
 let TREE_TOP = [];
+const BLDG_FULL_PITCH = 45;   // degrees of tilt where buildings reach full height
+const BLDG_STEPS = 6;         // heights in steps: each step rebuilds every building's 3D shape
+let bldgK = -1;
 const bizShown = list => list.map(a => ({ ...a, shown: a.items.filter(i => bizAll || !i.kind) }));
 function tileFacts(s) {
   if (isInt(s) || !Tiles.has('trees') && !Tiles.has('businesses')) return '';
@@ -4137,7 +4187,8 @@ const Areas = (() => {
       const e = line('elected'), sp = line('special');
       const est = Areas.census(item);
       return [`${t('cardElected')}: ${e.join('; ') || item.sup}`, ...(sp.length ? [`${t('cardSpecial')}: ${sp.join('; ')}`] : []),
-        ...(est ? [`${t('censusRow')}: ${censusText(est)} (${t('censusNote')})`] : [])];
+        ...(est ? [`${t('censusRow')}: ${censusText(est)} (${t('censusNote')})`] : []),
+        ...((c => c ? [`${t('cornersRow')}: ${t('cornersEst', { people: roundEst(c.people).toLocaleString(), homes: roundEst(c.homes).toLocaleString() })} (${t('cornersNote', { n: c.parts.length })})`] : [])(Areas.corners(item)))];
     },
     // About how many people and homes are along a block: the census blocks on each side (found 12 m off the
     // street at 25/50/75%), each counted by the share of its outline the street runs along. Null for corners
@@ -4172,6 +4223,32 @@ const Areas = (() => {
       cache.set(ck, r);
       return r;
     },
+    // "Within a block": every census block touching either end of the block (its intersections), in
+    // full. In a plain grid that's six: the two along the block and two more at each corner.
+    corners(item) {
+      const st = sets.get('cblk');
+      if (isInt(item) || !st || !st.polys) return null;
+      const ck = 'corners|' + item.cnn;
+      if (cache.has(ck)) return cache.get(ck);
+      if (!st.bbox) Areas.census(item);
+      const R = 20, ends = [item.coords[0], item.coords[item.coords.length - 1]], hits = new Map();
+      const dSeg = (x, y, a, b) => {
+        const ax = a[0] * KX, ay = a[1] * KY, vx = b[0] * KX - ax, vy = b[1] * KY - ay, L2 = vx * vx + vy * vy || 1;
+        const u = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / L2));
+        return Math.hypot(ax + u * vx - x, ay + u * vy - y);
+      };
+      for (const [ex, ey] of ends) st.polys.forEach((p, j) => {
+        const b = st.bbox[j];
+        if (ex < b[0] - R / KX || ex > b[2] + R / KX || ey < b[1] - R / KY || ey > b[3] + R / KY) return;
+        let d = inPoly(ex, ey, p.parts) ? 0 : Infinity;
+        for (const part of p.parts) for (const ring of part) for (let i = 1; i < ring.length && d > R; i++) d = Math.min(d, dSeg(ex * KX, ey * KY, ring[i - 1], ring[i]));
+        if (d <= R) hits.set(j, p);
+      });
+      const parts = [...hits.values()].map(p => ({ id: p.name, pop: +p.props.pop20 || 0, homes: +p.props.housing20 || 0 }));
+      const r = { people: parts.reduce((a, x) => a + x.pop, 0), homes: parts.reduce((a, x) => a + x.homes, 0), parts };
+      cache.set(ck, r);
+      return r;
+    },
     // export columns, full names
     fields(item) {
       const est = Areas.census(item);
@@ -4180,7 +4257,9 @@ const Areas = (() => {
       return { ...Object.fromEntries([...sets.values()].map(st => [st.c.col, st.c.k === 'cblk' && est ? sides.join('; ')
           : st.c.k === 'ctract' && est ? [...new Set(sides.map(g => g.slice(0, 11)))].join('; ')
           : (Areas.of(st.c.k, item) || []).map(a => a.col).join('; ')])),
-        ...(sets.has('cblk') ? { census_people_est: est ? Math.round(est.people) : '', census_homes_est: est ? Math.round(est.homes) : '' } : {}) };
+        ...(sets.has('cblk') ? { census_people_est: est ? Math.round(est.people) : '', census_homes_est: est ? Math.round(est.homes) : '',
+          ...(() => { const c = Areas.corners(item); return { census_within_block_people: c ? c.people : '', census_within_block_homes: c ? c.homes : '',
+            census_within_block_blocks: c ? c.parts.map(x => x.id).join('; ') : '' }; })() } : {}) };
     },
   };
 })();
@@ -4192,12 +4271,14 @@ function censusFacts(s) {
   if (!Areas.has('cblk') || isInt(s)) return '';
   const e = Areas.census(s);
   if (!e) return Areas.ready ? '' : `<dt>${esc(t('censusRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
-  return `<dt>${esc(t('censusRow'))}</dt><dd>${esc(censusText(e))}<br><small class="muted">${esc(t('censusNote'))}</small>${censusCalc(e)}</dd>`;
+  const c = Areas.corners(s);
+  return `<dt>${esc(t('censusRow'))}</dt><dd>${esc(censusText(e))}<br><small class="muted">${esc(t('censusNote'))}</small>${censusCalc(e, c)}</dd>`
+    + (c && c.parts.length ? `<dt>${esc(t('cornersRow'))}</dt><dd>${esc(t('cornersEst', { people: roundEst(c.people).toLocaleString(), homes: roundEst(c.homes).toLocaleString() }))}<br><small class="muted">${esc(t('cornersNote', { n: c.parts.length }))}</small></dd>` : '');
 }
 // the (i) under Census estimates: each census block used, its full counts and the share given to this street
 const FT = 3.28084;   // the card gives lengths in feet
 const blockLabel = id => id.length === 15 ? `${(+id.slice(5, 9)) + (id.slice(9, 11) === '00' ? '' : '.' + id.slice(9, 11))} · ${id.slice(11)}` : id;
-function censusCalc(e) {
+function censusCalc(e, c) {
   const n = v => Math.round(v).toLocaleString();
   const sum = k => e.parts.reduce((m, p) => m + p[k], 0);
   const rows = e.parts.sort((a, b) => b.share - a.share).map(p => `<tr><td title="GEOID ${esc(p.id)}">${esc(blockLabel(p.id))}</td>
@@ -4207,6 +4288,9 @@ function censusCalc(e) {
     <p>${esc(t('calcHow', { len: n(e.segLen * FT) }))}</p>
     <div class="calc-wrap"><table class="calc-table"><thead><tr><th>${esc(t('calcBlock'))}</th><th>${esc(t('calcEdge'))}</th><th>${esc(t('calcPeople'))}</th><th>${esc(t('calcHomes'))}</th></tr></thead>
     <tbody>${rows}</tbody><tfoot><tr><th>${esc(t('calcTotal'))}</th><td></td><td>${esc(t('calcOf', { a: n(e.people), b: n(sum('pop')) }))}</td><td>${esc(t('calcOf', { a: n(e.homes), b: n(sum('homes')) }))}</td></tr></tfoot></table></div>
+    ${c && c.parts.length ? `<p><b>${esc(t('calcCorners'))}</b></p><div class="calc-wrap"><table class="calc-table"><thead><tr><th>${esc(t('calcBlock'))}</th><th>${esc(t('calcFull'))}</th><th>${esc(t('calcHomes'))}</th></tr></thead>
+      <tbody>${[...c.parts].sort((a, b) => b.pop - a.pop).map(x => `<tr><td title="GEOID ${esc(x.id)}">${esc(blockLabel(x.id))}</td><td>${n(x.pop)}</td><td>${n(x.homes)}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><th>${esc(t('calcTotal'))}</th><td>${n(c.people)}</td><td>${n(c.homes)}</td></tr></tfoot></table></div>` : ''}
     <p class="muted">${esc(t('calcSafe'))} <a href="https://www.census.gov/about/policies/privacy/statistical_safeguards.html" target="_blank" rel="noopener">${esc(t('calcSafeLink'))}</a></p></details>`;
 }
 // Areas ▾ menu
