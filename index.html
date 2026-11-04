@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v45 -->
+<!-- build: v46 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -113,6 +113,8 @@ button, input { font: inherit; color: inherit; }
 .opt-stack { display: grid; gap: 4px; justify-items: end; }
 .dens-pal { display: flex; gap: 6px; align-items: flex-start; }
 .pal-pick { position: relative; }
+details.biz .biz-all { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; margin: 0 8px; }
+.land-chips[data-chips] { margin: -2px 0 4px 34px; }
 .pal-pick summary { list-style: none; display: flex; align-items: center; gap: 6px; cursor: pointer; border: 1.5px solid var(--ink); border-radius: 999px; padding: 3px 9px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
 .pal-pick summary::-webkit-details-marker { display: none; }
 .pal-pick[open] summary { background: var(--ink); color: #fff; }
@@ -589,6 +591,10 @@ details.calc p { margin: 4px 0; }
         <li id="lg-lyr-landuse" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12"><rect width="6" height="12" fill="#E9C845" fill-opacity=".6"/><rect x="6" width="6" height="12" fill="#F0A04B" fill-opacity=".6"/><rect x="12" width="6" height="12" fill="#9C6FB6" fill-opacity=".6"/><rect x="18" width="6" height="12" fill="#4C9A3F" fill-opacity=".6"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span id="lg-landuse-title">Land use (2023)</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-landuse-table"></table></details></li>
         <li id="lg-lyr-lands" hidden><span class="sw"><svg viewBox="0 0 24 12" id="lg-lands-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLands">City-owned land</span></li>
         <li id="lg-lyr-slow" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#2457D6" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0.1 7"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlow">Slow Streets</span></li>
+        <li id="lg-lyr-trees" hidden class="lg-expand"><span class="sw"><svg viewBox="0 0 24 12" id="lg-trees-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgTrees">Street trees</span></li>
+        <li id="lg-lyr-businesses" hidden><span class="sw"><svg viewBox="0 0 24 12"><circle cx="6" cy="6" r="3" fill="#C2255C"/><circle cx="16" cy="6" r="5" fill="#5F3DC4" fill-opacity=".85"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBusinesses">Businesses (size: how many)</span></li>
+        <li id="lg-lyr-curbs" hidden><span class="sw"><svg viewBox="0 0 24 12"><path d="M1 9 H15 Q20 9 20 4 V1" fill="none" stroke="#2F3542" stroke-width="1.4"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgCurbs">Curbs and islands (2016)</span></li>
+        <li id="lg-lyr-buildings" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect x="3" y="1" width="8" height="10" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/><rect x="13" y="4" width="8" height="7" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBuildings">Buildings (2016)</span></li>
         <li id="lg-lyr-schools" hidden><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1.5" y="1.5" width="13" height="13" rx="3.5" fill="#8A5A00" stroke="#fff"/><path d="M4.5 8 L8 5 L11.5 8 V11.5 H4.5Z" fill="#fff"/></svg></span><span data-i18n="lgSchools">Schools</span></li>
         <li id="lg-lyr-stations" hidden><span class="sw"><svg viewBox="0 0 24 12"><circle cx="18" cy="6" r="6" fill="#C92A2A" stroke="#fff"/><text x="18" y="9" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">F</text></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="7" fill="#1E3A8A" stroke="#fff"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">P</text></svg></span><span data-i18n="lgStations">Fire / police stations</span></li>
         <li id="lg-lyr-health" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect x="12" y="0" width="12" height="12" rx="3" fill="#0B7285" stroke="#fff"/><text x="18" y="9.5" font-size="8.5" font-weight="700" text-anchor="middle" fill="#fff">H</text></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="6" fill="#0B7285" stroke="#fff"/><path d="M8 5v6M5 8h6" stroke="#fff" stroke-width="2"/></svg></span><span data-i18n="lgHealth">Hospitals / clinics</span></li>
@@ -700,7 +706,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v45';
+const _BUILD_VERSION = 'v46';
 
 /* =====================================================================
    CONFIG
@@ -837,6 +843,17 @@ const I18N = {
     lyr_lands: 'City-owned land', lgLands: 'City-owned land',
     lyr_landuse: 'Parcels', lyr_landuseHint: 'SF Planning 2023, from zoom 15', lgLanduse: 'Land use (2023)', lgZoning: 'Zoning',
     lyrLanduse: 'Land use', lyrZoning: 'Zoning', lyrBorders: 'Borders',
+    lyr_trees: 'Street trees', lyr_treesHint: 'DPW tree inventory', lyr_businesses: 'Businesses', lyr_businessesHint: 'Active business registrations',
+    lyr_curbs: 'Curbs and islands', lyr_curbsHint: '2016', lyr_buildings: 'Buildings', lyr_buildingsHint: '2016, heights from 2010 LiDAR',
+    lgTrees: 'Street trees', lgBusinesses: 'Businesses (size: how many)', lgCurbs: 'Curbs and islands (2016)', lgBuildings: 'Buildings (2016)',
+    genusOther: 'Other', bizFood: 'Food & drink', bizOther: 'Everything else', bizAll: 'Show all registrations',
+    bizAllHint: 'Include contractors at client sites, parking operators, antennas, ATMs and landlords',
+    treesRow: 'Street trees', treesN: '{n} ({top})', treesMore: '{n} more kinds', treesNone: 'None listed',
+    treesSource: 'DPW street tree inventory, as of {date}', trunkIn: 'trunk {n} in', plantedY: 'planted {y}', sigTree: 'Significant tree',
+    bizRow: 'Businesses facing this block', bizN: '{n} at {a} addresses', bizN1: '{n} at 1 address', bizHidden: '+{n} not shown ({kinds})',
+    bizSource: 'Active Business Locations (DataSF), as of {date}.', bizSourceLink: 'Source', bizCopy: 'Copy list', bizCopied: 'Copied {n} businesses',
+    bizOwner: 'owner', bizMail: 'mail to', bizSince: 'since {y}', bizHere: '{n} businesses', bldgHeight: 'Building, about {m} m ({ft} ft) tall',
+    kind_contractor: 'contractors', kind_parking: 'parking', kind_telecom: 'antennas', kind_atm: 'ATMs', kind_property: 'landlords', 'kind_multi-site': 'many-address registrations',
     zRH: 'Houses (RH)', zRM: 'Apartments (RM, RC)', zRTO: 'Transit-oriented residential (RTO)', zNC: 'Neighborhood commercial (NC, NCD)',
     zNCT: 'Neighborhood commercial transit (NCT)', zC: 'Downtown and community business (C-2, C-3)', zCh: 'Chinatown (CCB, CRNC, CVR)',
     zPDR: 'Production, distribution, repair (PDR)', zM: 'Industrial (M)', zMU: 'Eastern Neighborhoods mixed use (UMU, MUG, MUO, MUR)',
@@ -1854,7 +1871,7 @@ function render() {
   const openNg = new Set([...document.querySelectorAll('#seg-list details.ng[open], #seg-list details.hoods[open]')].map(dkey));
   $('seg-list').innerHTML = full.map(s => isInt(s) ? intCardHTML(s) : cardHTML(s)).join('') +
     (legs.length ? `<li class="legs-head"><b>${esc(t('legsTitle'))}</b><span>${esc(t('legsHint'))}</span></li>` + legs.map(s => legHTML(s, ints)).join('') : '');
-  document.querySelectorAll('#seg-list details.ng, #seg-list details.hoods').forEach(d => { if (openNg.has(dkey(d))) d.open = true; });
+  document.querySelectorAll('#seg-list details.ng, #seg-list details.hoods, #seg-list details.calc').forEach(d => { if (openNg.has(dkey(d))) d.open = true; });
   $('clear-sel-bottom').hidden = !segs.length;
   hydrateElevation();
   // Muni and bike rows fill in once those files have loaded (the first time cards appear)
@@ -1865,6 +1882,8 @@ function render() {
   // land use per block: read the parcel tiles for any card that doesn't have it yet, then redraw once
   const needParcels = segs.filter(s => !isInt(s) && !Parcels.peek(s));
   if (needParcels.length && Parcels.available()) Promise.all(needParcels.map(s => Parcels.fetch(s))).then(rs => { if (rs.some(Boolean)) render(); });
+  const needTiles = segs.filter(s => !isInt(s) && !Tiles.peek(s));
+  if (needTiles.length) Promise.all(needTiles.map(s => Tiles.fetch(s))).then(rs => { if (rs.some(Boolean)) render(); });
   updateAdjLots();
   const d = Logic.db && Logic.db.dataAsOf;
   $('foot-note').textContent = d ? t('dataNote', { date: d.slice(0, 10) }) : '';
@@ -1936,6 +1955,12 @@ function cardText(s) {
   if (pr && pr.lots) lines.push(`${t('zoningRow')}: ${pr.zones.map(z => `${z.code} ${zoneName(z.name)} (${z.n})`).join('; ')}`,
     `${t('parcelsRow')}: ${t('lotsOnly', { lots: pr.lots })}`, ...(pr.homes ? [`${t('homesFacing')}: ${t('homesFacingN', { n: pr.homes })}`] : []),
     `${t('landuseRow')} (2023): ${landuseText(pr)}`);
+  const tr = Tiles.peek(s);
+  if (tr && tr.trees) lines.push(`${t('treesRow')}: ${tr.trees.n ? t('treesN', { n: tr.trees.n, top: tr.trees.kinds.slice(0, 3).map(([k, n]) => `${n} ${k}`).join(', ') }) : t('treesNone')}`);
+  if (tr && tr.businesses && tr.businesses.length) {
+    const list = bizShown(tr.businesses).filter(x => x.shown.length);
+    lines.push(`${t('bizRow')}: ${list.map(x => `${x.address} (${x.shown.map(i => i.dba || i.owner).join('; ')})`).join('; ')}`);
+  }
   lines.push(linkFor([s]));
   return lines.join('\n');
 }
@@ -1976,6 +2001,7 @@ function cardHTML(s) {
       <dt>${esc(t('slope'))}</dt><dd data-slope="${s.cnn}">${slopeHTML(s)}</dd>
       ${transitFacts(s)}
       ${parcelFacts(s)}
+      ${tileFacts(s)}
       ${groupsFacts(s)}
     </dl>
     <div class="profile" data-profile="${s.cnn}" aria-label="${esc(t('profileTitle'))}">${profileHTML(s)}</div>
@@ -2106,6 +2132,9 @@ function setupResultsEvents() {
     if (cc) { const s = state.results.find(r => r.cnn === +cc.dataset.copyCard); if (s) copyText(cardText(s), t('copiedCard')); return; }
     const hs = e.target.closest('[data-hoodset]');
     if (hs) { setHoodSet(hs.dataset.hoodset); return; }
+    const cb2 = e.target.closest('[data-copy-biz]');
+    if (cb2) { const s = state.results.find(r => r.cnn === +cb2.dataset.copyBiz); const r = s && Tiles.peek(s); if (r && r.businesses) copyText(bizText(r), t('bizCopied', { n: bizText(r).split('\n').length - 1 })); return; }
+    if (e.target.matches && e.target.matches('[data-biz-all]')) { setBizAll(e.target.checked); return; }
     const cg = e.target.closest('[data-copy-groups]');
     if (cg) { const s = state.results.find(r => r.cnn === +cg.dataset.copyGroups); const r = s && Groups.of(s); if (r) copyText(groupsText(r), t('ngCopied', { n: r.groups.length + r.citywide.length })); return; }
     const li = e.target.closest('.seg'); if (!li) return;
@@ -2143,7 +2172,7 @@ function elevFields(s) {
 }
 async function exportSegs() {
   const segs = checkedSegs();
-  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure(), Nearby.ensure(), Groups.ensure(), Areas.ensure(), ...segs.map(s => Parcels.fetch(s))]);
+  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure(), Nearby.ensure(), Groups.ensure(), Areas.ensure(), ...segs.map(s => Parcels.fetch(s)), ...segs.map(s => Tiles.fetch(s))]);
   return segs;
 }
 // "14 (Frequent Local); 14R (Rapid Bus)" and "Bike lane · posts"
@@ -2184,9 +2213,15 @@ function record(s) {
     ...elevFields(s),
     ...transitFields(s),
     ...Areas.fields(s),
+    ...tileFields(s),
     wkt: wktOf(s),
     link: linkFor([s]),
   };
+}
+function tileFields(s) {
+  const r = Tiles.peek(s), b = r && r.businesses ? bizShown(r.businesses).filter(x => x.shown.length) : null;
+  return { street_trees: r && r.trees ? r.trees.n : '', street_tree_kinds: r && r.trees ? r.trees.kinds.map(([k, n]) => `${k} (${n})`).join('; ') : '',
+    businesses: b ? b.reduce((a, x) => a + x.shown.length, 0) : '', business_addresses: b ? b.length : '' };
 }
 function toCSV(segs) {
   const rows = segs.map(record);
@@ -2860,6 +2895,7 @@ function addOverlayLayers(popup) {
   map.addLayer({ id: 'bp-lyr-lands-park', type: 'line', source: 'lyr-lands', filter: landFilter(['==', ['get', 'cat'], 'park']),
     paint: { 'line-color': landColor, 'line-width': zw(0.7, 1.4, 1.8), 'line-opacity': 0.8, 'line-dasharray': [3, 2] } }, landBelow);
   Areas.addLayers('bp-all', 'bp-context-label');
+  Tiles.addLayers('bp-all', 'bp-context-label', popup);
   map.addLayer({ id: 'bp-lyr-muni', type: 'line', source: 'lyr-muni', layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: { 'line-color': MUNI_BAND.map, 'line-opacity': 1, 'line-width': zw(3, 11, 16) } }, firstBasemapLabel ? firstBasemapLabel.id : 'bp-sat');
   // bike network: on top of the gray street lines, under quiet matches and selections
@@ -2993,10 +3029,12 @@ function setLandCats(cats, write = true) {
   if (sw) sw.innerHTML = LAND_CATS.filter(c => landCats.has(c[0])).slice(0, 5).map(([, c]) => `<rect width="4" height="10" fill="${c}" fill-opacity=".35" stroke="${c}"/>`).map((r, i) => r.replace('<rect', `<rect x="${i * 5}" y="1"`)).join('');
   if (write) writeHash();
 }
-const overlayMinZoom = k => OVERLAYS[k].minzoom != null ? OVERLAYS[k].minzoom : overlayMinZoomStd(k);
+const overlayMinZoom = k => OVERLAYS[k].zooms ? OVERLAYS[k].zooms[overlayMode[k] === 'always' ? 'always' : 'close']
+  : OVERLAYS[k].minzoom != null ? OVERLAYS[k].minzoom : overlayMinZoomStd(k);
 const overlayMinZoomStd = k => overlayMode[k] === 'always' ? 0 : CLOSE_ZOOM + ((OVERLAYS[k] || {}).shift?.min || 0);
 // labels: from CLOSE_ZOOM in Close up, a little sooner in Always
-const overlayLabelZoom = k => (overlayMode[k] === 'always' ? 14 : CLOSE_ZOOM) + ((OVERLAYS[k] || {}).shift?.label || 0);
+const overlayLabelZoom = k => OVERLAYS[k] && OVERLAYS[k].zooms ? OVERLAYS[k].zooms.label
+  : (overlayMode[k] === 'always' ? 14 : CLOSE_ZOOM) + ((OVERLAYS[k] || {}).shift?.label || 0);
 function applyOverlay(k) {
   if (k === 'landuse' && map.getLayer('bp-lyr-landuse-fill')) {
     map.setPaintProperty('bp-lyr-landuse-fill', 'fill-color', overlayMode.landuse === 'zoning' ? zoningColor : landuseColor);
@@ -3018,7 +3056,7 @@ function updateOverlays() {
   const ow = map.getLayer('bp-oneway');
   $('lg-oneway').hidden = !(ow && z >= ow.minzoom && map.getLayoutProperty('bp-oneway', 'visibility') !== 'none');
   for (const k of Object.keys(OVERLAYS)) {
-    const on = overlayMode[k] !== 'off' && !(OVERLAYS[k].pmtiles && !map.getSource('lyr-' + k));
+    const on = overlayMode[k] !== 'off' && !(OVERLAYS[k].pmtiles && !map.getSource('lyr-' + k)) && !(OVERLAYS[k].tiled && !map.getSource('tl-' + k));
     for (const id of OVERLAYS[k].layers) {
       const vis = on && z >= (id.endsWith('-label') ? overlayLabelZoom(k) : overlayMinZoom(k)) && !(id === 'bp-lyr-muni-label' && !showMuniNums) ? 'visible' : 'none';
       if (overlayVis[id] !== vis && map.getLayer(id)) { map.setLayoutProperty(id, 'visibility', vis); overlayVis[id] = vis; }
@@ -3041,7 +3079,7 @@ function fetchLayer(k) {
     .catch(err => { delete layerFetches[k]; throw err; });
 }
 async function loadOverlay(k) {
-  if (overlayLoaded.has(k) || OVERLAYS[k].pmtiles) return;
+  if (overlayLoaded.has(k) || OVERLAYS[k].pmtiles || OVERLAYS[k].tiled) return;
   overlayLoaded.add(k);
   try {
     const data = await fetchLayer(k);
@@ -3398,12 +3436,13 @@ function decodeMVT(buf, wantLayer) {
   function skip(wt) { if (wt === 0) varint(); else if (wt === 1) pos += 8; else if (wt === 2) pos += varint(); else if (wt === 5) pos += 4; }
   function feature(fb, keys, vals, extent) {
     const save = [buf, pos]; buf = fb; pos = 0;
-    const props = {}, rings = []; let geom = null;
+    const props = {}, rings = []; let geom = null, type = 0;
     const packed = () => { const l = varint(), e = pos + l, a = []; while (pos < e) a.push(varint()); return a; };
     while (pos < buf.length) {
       const t = varint(), f = t >> 3, w = t & 7;
       if (f === 2 && w === 2) { const tags = packed(); for (let i = 0; i < tags.length; i += 2) props[keys[tags[i]]] = vals[tags[i + 1]]; }
       else if (f === 4 && w === 2) geom = packed();
+      else if (f === 3 && w === 0) type = varint();
       else skip(w);
     }
     let x = 0, y = 0, ring = null;
@@ -3416,10 +3455,248 @@ function decodeMVT(buf, wantLayer) {
         if (cmd === 1) { if (ring) rings.push(ring); ring = [[x, y]]; } else ring.push([x, y]);
       }
     }
-    if (ring && ring.length > 1) rings.push(ring);
+    if (ring && (ring.length > 1 || type === 1)) rings.push(ring);   // a point is a one-vertex ring
     [buf, pos] = save;
     return { props, rings, extent };
   }
+}
+/* ---------- map layers from sf-blocks' data/tiles: street trees, businesses, curbs, buildings ----------
+   sf-blocks lists them in data/tiles/index.json (region.json "tiles"), each with a stats file. A layer shows
+   in Layers ▾ only if sf-blocks has it. Trees and businesses also give card rows, read from the same tiles
+   at their detail zoom (like Parcels): trees by CNN, businesses by address on this block. */
+const TILE_SETS = {
+  trees:      { set: 'street_trees', modes: 'three' },
+  businesses: { set: 'businesses',   modes: 'three' },
+  curbs:      { set: 'curbs',        modes: 'three' },
+  buildings:  { set: 'buildings',    modes: 'onoff' },
+};
+const GENUS_COLORS = ['#1B9E77', '#D95F02', '#7570B3', '#E7298A', '#66A61E', '#E6AB02', '#A6761D', '#1F78B4', '#8DA0CB', '#B15928'];
+const GENUS_OTHER = '#6B8E5A';
+const BIZ_COLOR = { food: '#C2255C', other: '#5F3DC4' };
+const BIZ_ALL_KEY = 'bp-biz-all';
+let bizAll = (() => { try { return localStorage.getItem(BIZ_ALL_KEY) === '1'; } catch (e) { return false; } })();
+let treeGenera = null, bizCats = new Set(['food', 'other']);
+const Tiles = (() => {
+  const meta = new Map(), stats = new Map(), readers = new Map(), tiles = new Map(), cache = new Map(), pending = new Map();
+  const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
+  let dir = '';
+  const tx = (lon, z) => (lon + 180) / 360 * 2 ** z;
+  const ty = (lat, z) => (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * 2 ** z;
+  const lon = (x, z) => x / 2 ** z * 360 - 180;
+  const lat = (y, z) => Math.atan(Math.sinh(Math.PI * (1 - 2 * y / 2 ** z))) * 180 / Math.PI;
+  const segDist = (x, y, a, b) => {
+    const vx = b[0] - a[0], vy = b[1] - a[1], L2 = vx * vx + vy * vy || 1;
+    const u = Math.max(0, Math.min(1, ((x - a[0]) * vx + (y - a[1]) * vy) / L2));
+    return Math.hypot(a[0] + u * vx - x, a[1] + u * vy - y);
+  };
+  const streetKey = s => (s || '').toUpperCase().replace(/\b0+(\d)/g, '$1').split(' ').filter(w => !/^(ST|AVE?|BLVD|WAY|DR|CT|PL|TER|LN|RD|ALY|CIR|HWY|PARK|PLZ|EXPY|WALK|STWY|TUNL)$/.test(w)).join(' ');
+  // points of one layer near a block, at the layer's detail zoom, in metres
+  function tile(k, x, y) {
+    const m = meta.get(k), z = m.detailzoom || 15, key = k + '/' + x + '/' + y;
+    if (!tiles.has(key)) tiles.set(key, readers.get(k).getZxy(z, x, y).then(r => !r ? [] :
+      decodeMVT(new Uint8Array(r.data), m.layer).map(f => {
+        const [px, py] = f.rings[0] ? f.rings[0][0] : [0, 0];
+        return { p: f.props, x: lon(x + px / f.extent, z) * KX, y: lat(y + py / f.extent, z) * KY };
+      })).catch(err => { console.warn('[block-party] tile', key, err); tiles.delete(key); return []; }));
+    return tiles.get(key);
+  }
+  async function near(k, s, padM) {
+    const z = meta.get(k).detailzoom || 15;
+    const xs = s.coords.map(c => c[0]), ys = s.coords.map(c => c[1]);
+    const x0 = Math.floor(tx(Math.min(...xs) - padM / KX, z)), x1 = Math.floor(tx(Math.max(...xs) + padM / KX, z));
+    const y0 = Math.floor(ty(Math.max(...ys) + padM / KY, z)), y1 = Math.floor(ty(Math.min(...ys) - padM / KY, z));
+    const jobs = [];
+    for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) jobs.push(tile(k, x, y));
+    const pts = s.coords.map(c => [c[0] * KX, c[1] * KY]);
+    const seen = new Set();
+    return (await Promise.all(jobs)).flat().filter(f => {
+      let d = Infinity; for (let i = 1; i < pts.length; i++) d = Math.min(d, segDist(f.x, f.y, pts[i - 1], pts[i]));
+      const id = JSON.stringify(f.p); if (d > padM || seen.has(id)) return false; seen.add(id); return true;
+    });
+  }
+  async function compute(s) {
+    const out = {};
+    if (meta.has('trees')) {
+      const trees = (await near('trees', s, 40)).filter(f => +f.p.cnn === s.cnn);
+      const kinds = new Map();
+      for (const f of trees) { const n = f.p.common || f.p.species || f.p.genus || '?'; kinds.set(n, (kinds.get(n) || 0) + 1); }
+      out.trees = { n: trees.length, kinds: [...kinds].sort((a, b) => b[1] - a[1]) };
+    }
+    if (meta.has('businesses')) {
+      const sides = Logic.addressSides(s), mine = streetKey(s.street);
+      const at = (await near('businesses', s, 60)).filter(f => {
+        const m = /^(\d+)[A-Za-z]?(?:-\d+)?\s+(.+)$/.exec(f.p.address || '');
+        if (!m || streetKey(m[2].replace(/\s*(#|Ste|Unit|Fl|Apt)\b.*$/i, '')) !== mine) return false;
+        const n = +m[1];
+        return !sides.length || sides.some(x => n >= x.from && n <= x.to);
+      }).map(f => ({ address: f.p.address, items: (() => { try { return JSON.parse(f.p.items || '[]'); } catch (e) { return []; } })() }));
+      at.sort((a, b) => (parseInt(a.address) || 0) - (parseInt(b.address) || 0));
+      out.businesses = at;
+    }
+    return out;
+  }
+  return {
+    has: k => meta.has(k),
+    meta: k => meta.get(k),
+    stats: k => stats.get(k),
+    asOf: k => { const m = meta.get(k); return m && (m.year && m.year !== 'current' ? m.year : m.retrieved); },
+    // before the map layers: which layers sf-blocks has, and their stats (genus list for the tree colors)
+    async register() {
+      try {
+        const reg = await SFBlocks.ready;
+        if (!reg.tiles) return;
+        dir = reg.tiles.replace(/[^/]*$/, '');
+        const index = await SFBlocks.json(reg.tiles);
+        for (const [k, c] of Object.entries(TILE_SETS)) {
+          const m = index.layers.find(l => l.id === c.set);
+          if (!m || m.format !== 'pmtiles') continue;
+          meta.set(k, m);
+          const close = m.detailzoom || 15, always = m.minzoom ?? close;
+          OVERLAYS[k] = { tiled: dir + m.file, layers: [], modes: c.modes === 'onoff' ? [['off', 'lyrOff'], ['close', 'lyrOn']] : null,
+            zooms: { close, always, label: close + 1 } };
+          OVERLAY_DEFAULT[k] = 'off'; overlayMode[k] = overlayMode[k] || 'off';
+        }
+        await Promise.all([...meta].map(([k, m]) => SFBlocks.json(dir + m.stats).then(st => stats.set(k, st)).catch(() => {})));
+        const g = stats.get('trees') && stats.get('trees').fields.genus;
+        TREE_TOP = g ? Object.keys(g.values).slice(0, GENUS_COLORS.length) : [];
+        treeGenera = new Set([...TREE_TOP, 'other']);
+      } catch (err) { console.warn('[block-party] map layers (data/tiles)', err); }
+    },
+    addLayers(polyBelow, pointBelow, popup) {
+      for (const [k, m] of meta) {
+        map.addSource('tl-' + k, { type: 'vector', url: 'pmtiles://' + SFBlocks.url(dir + m.file),
+          attribution: `${esc(m.label)}: <a href="${esc(m.page || 'https://data.sf.gov')}">DataSF</a>` });
+        readers.set(k, new pmtiles.PMTiles(SFBlocks.url(dir + m.file)));
+      }
+      const src = k => ({ source: 'tl-' + k, 'source-layer': meta.get(k).layer, layout: { visibility: 'none' } });
+      if (meta.has('buildings')) {
+        map.addLayer({ id: 'bp-lyr-buildings-fill', type: 'fill', ...src('buildings'), paint: { 'fill-color': '#B9B4AC', 'fill-opacity': 0.35 } }, polyBelow);
+        map.addLayer({ id: 'bp-lyr-buildings-line', type: 'line', ...src('buildings'),
+          paint: { 'line-color': '#8A8478', 'line-opacity': 0.6, 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 0.3, 18, 1] } }, polyBelow);
+        OVERLAYS.buildings.layers = ['bp-lyr-buildings-fill', 'bp-lyr-buildings-line'];
+      }
+      if (meta.has('curbs')) {
+        map.addLayer({ id: 'bp-lyr-curbs', type: 'line', ...src('curbs'),
+          paint: { 'line-color': ['match', ['get', 'kind'], 'islands', '#56607A', '#2F3542'], 'line-opacity': 0.8,
+            'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.3, 16, 0.9, 19, 2] } }, polyBelow);
+        OVERLAYS.curbs.layers = ['bp-lyr-curbs'];
+      }
+      if (meta.has('trees')) {
+        map.addLayer({ id: 'bp-lyr-trees', type: 'circle', ...src('trees'), paint: {
+          'circle-color': ['match', ['get', 'genus'], ...TREE_TOP.flatMap((g, i) => [g, GENUS_COLORS[i]]), GENUS_OTHER],
+          // bigger trunk, bigger dot (trunk diameter in inches; most are 3–13)
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 0.8, 15, ['interpolate', ['linear'], ['coalesce', ['get', 'dbh_in'], 6], 3, 1.8, 30, 4.5],
+            18, ['interpolate', ['linear'], ['coalesce', ['get', 'dbh_in'], 6], 3, 4, 30, 11]],
+          'circle-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.5, 15, 0.85],
+          'circle-stroke-color': ['case', ['==', ['get', 'status'], 'Significant Tree'], '#1E2A1E', '#FFFFFF'],
+          'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 14, 0, 16, ['case', ['==', ['get', 'status'], 'Significant Tree'], 1.6, 0.6]] } }, pointBelow);
+        OVERLAYS.trees.layers = ['bp-lyr-trees'];
+      }
+      if (meta.has('businesses')) {
+        const count = ['coalesce', ['get', bizAll ? 'n' : 'shown'], ['get', 'n'], 1];
+        map.addLayer({ id: 'bp-lyr-businesses', type: 'circle', ...src('businesses'), paint: {
+          'circle-color': ['case', ['to-boolean', ['get', 'food']], BIZ_COLOR.food, BIZ_COLOR.other],
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 1, 15, ['interpolate', ['linear'], count, 1, 3, 10, 6, 100, 11],
+            18, ['interpolate', ['linear'], count, 1, 5, 10, 9, 100, 16]],
+          'circle-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.45, 15, 0.85],
+          'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 14, 0, 16, 1] } }, pointBelow);
+        map.addLayer({ id: 'bp-lyr-businesses-label', type: 'symbol', ...src('businesses'),
+          filter: ['>', ['coalesce', ['get', 'n'], 1], 1],
+          layout: { visibility: 'none', 'text-field': ['to-string', count], 'text-font': LABEL_FONT, 'text-size': 10.5, 'text-allow-overlap': true },
+          paint: { 'text-color': '#FFFFFF' } }, pointBelow);
+        OVERLAYS.businesses.layers = ['bp-lyr-businesses', 'bp-lyr-businesses-label'];
+      }
+      Tiles.filter();
+      const hoverTip = (id, html) => {
+        map.on('mousemove', id, e => {
+          const f = e.features[0];
+          if (!f || map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit', 'bp-ints'].filter(i => map.getLayer(i)) }).length) return;
+          popup.setLngLat(f.geometry.type === 'Point' ? f.geometry.coordinates : e.lngLat).setHTML(html(f.properties)).addTo(map);
+        });
+        map.on('mouseleave', id, () => popup.remove());
+      };
+      if (meta.has('trees')) hoverTip('bp-lyr-trees', p => `<b>${esc(p.common || p.species || p.genus || t('lyr_trees'))}</b>`
+        + (p.species && p.common ? `<br><span class="pop-lyr"><i>${esc(p.species)}</i></span>` : '')
+        + `<br><span class="pop-lyr">${esc([p.dbh_in ? t('trunkIn', { n: p.dbh_in }) : '', p.planted ? t('plantedY', { y: String(p.planted).slice(0, 4) }) : '',
+          p.status === 'Significant Tree' ? t('sigTree') : ''].filter(Boolean).join(' · '))}</span>`);
+      if (meta.has('businesses')) hoverTip('bp-lyr-businesses', p => {
+        let items = []; try { items = JSON.parse(p.items || '[]'); } catch (e) { }
+        const shown = items.filter(i => bizAll || !i.kind);
+        return `<b>${esc(p.address || '')}</b>${p.n > 1 ? ` <span class="pop-lyr">· ${esc(t('bizHere', { n: p.n }))}</span>` : ''}`
+          + shown.slice(0, 4).map(i => `<br><span class="pop-lyr">${esc(i.dba || i.owner || '')}</span>`).join('')
+          + (shown.length > 4 ? `<br><span class="pop-lyr">…</span>` : '');
+      });
+      if (meta.has('buildings')) hoverTip('bp-lyr-buildings-fill', p => p.height_m > 0
+        ? esc(t('bldgHeight', { m: Math.round(p.height_m), ft: Math.round(p.height_m * M2FT) })) : esc(t('lyr_buildings')));
+    },
+    // tree genera and business chips, and whether non-storefront registrations show
+    filter() {
+      const sw = $('lg-trees-sw');
+      if (sw) sw.innerHTML = TREE_TOP.slice(0, 5).map((g, i) => `<circle cx="${2.5 + i * 4.8}" cy="6" r="2.2" fill="${GENUS_COLORS[i]}"/>`).join('');
+      if (!map || !map.getStyle()) return;
+      if (map.getLayer('bp-lyr-trees') && treeGenera) {
+        const g = ['coalesce', ['get', 'genus'], ''];
+        map.setFilter('bp-lyr-trees', ['any', ['in', g, ['literal', [...treeGenera]]],
+          treeGenera.has('other') ? ['!', ['in', g, ['literal', TREE_TOP]]] : false]);
+      }
+      if (map.getLayer('bp-lyr-businesses')) {
+        const cat = ['case', ['to-boolean', ['get', 'food']], 'food', 'other'];
+        const f = ['all', ['in', cat, ['literal', [...bizCats]]], bizAll ? true : ['any', ['!', ['has', 'shown']], ['>', ['get', 'shown'], 0]]];
+        map.setFilter('bp-lyr-businesses', f);
+        map.setFilter('bp-lyr-businesses-label', ['all', f, ['>', ['coalesce', ['get', bizAll ? 'n' : 'shown'], ['get', 'n'], 1], 1]]);
+        const count = ['coalesce', ['get', bizAll ? 'n' : 'shown'], ['get', 'n'], 1];
+        map.setLayoutProperty('bp-lyr-businesses-label', 'text-field', ['to-string', count]);
+      }
+    },
+    // card rows: trees (by CNN) and businesses (by address on this block), or null while being read
+    peek: s => cache.get(s.cnn) || null,
+    fetch(s) {
+      if (!meta.size || !window.pmtiles || isInt(s)) return Promise.resolve(null);
+      if (cache.has(s.cnn)) return Promise.resolve(cache.get(s.cnn));
+      if (!pending.has(s.cnn)) pending.set(s.cnn, compute(s).then(r => { cache.set(s.cnn, r); pending.delete(s.cnn); return r; })
+        .catch(err => { console.warn('[block-party] map layer rows', err); pending.delete(s.cnn); return null; }));
+      return pending.get(s.cnn);
+    },
+  };
+})();
+let TREE_TOP = [];
+const bizShown = list => list.map(a => ({ ...a, shown: a.items.filter(i => bizAll || !i.kind) }));
+function tileFacts(s) {
+  if (isInt(s) || !Tiles.has('trees') && !Tiles.has('businesses')) return '';
+  const r = Tiles.peek(s);
+  if (!r) return `<dt>${esc(t(Tiles.has('trees') ? 'treesRow' : 'bizRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
+  let html = '';
+  if (r.trees) {
+    const top = r.trees.kinds.slice(0, 3).map(([k, n]) => `${n} ${k}`).join(', ') + (r.trees.kinds.length > 3 ? ', ' + t('treesMore', { n: r.trees.kinds.length - 3 }) : '');
+    html += `<dt>${esc(t('treesRow'))}</dt><dd>${r.trees.n ? esc(t('treesN', { n: r.trees.n, top })) : esc(t('treesNone'))}<br><small class="muted">${esc(t('treesSource', { date: Tiles.asOf('trees') || '' }))}</small></dd>`;
+  }
+  if (r.businesses && r.businesses.length) {
+    const list = bizShown(r.businesses), n = list.reduce((a, x) => a + x.shown.length, 0), addrs = list.filter(x => x.shown.length).length;
+    const hidden = r.businesses.flatMap(x => x.items.filter(i => i.kind && !bizAll));
+    const kinds = [...new Set(hidden.map(i => t('kind_' + i.kind)))].join(', ');
+    const li = x => `<li><b>${esc(x.address)}</b>${x.shown.length > 1 ? ` <span class="muted">· ${x.shown.length}</span>` : ''}${x.shown.slice(0, 40).map(i =>
+      `<br><span>${esc(i.dba || i.owner || '')}${i.owner && i.dba && i.owner !== i.dba ? ` <small class="muted">· ${esc(t('bizOwner'))}: ${esc(i.owner)}</small>` : ''}</span>`).join('')}${x.shown.length > 40 ? '<br>…' : ''}</li>`;
+    const m = Tiles.meta('businesses');
+    html += `<dt>${esc(t('bizRow'))}</dt><dd><details class="ng biz"><summary>${esc(addrs === 1 ? t('bizN1', { n }) : t('bizN', { n, a: addrs }))}${hidden.length ? ` <small class="muted">${esc(t('bizHidden', { n: hidden.length, kinds }))}</small>` : ''}</summary>
+      <ul class="ng-list">${list.filter(x => x.shown.length).map(li).join('')}</ul>
+      <p class="ng-foot"><button type="button" class="btn small" data-copy-biz="${s.cnn}">${esc(t('bizCopy'))}</button>
+        <label class="biz-all" title="${esc(t('bizAllHint'))}"><input type="checkbox" data-biz-all ${bizAll ? 'checked' : ''}> ${esc(t('bizAll'))}</label>
+        <span>${esc(t('bizSource', { date: Tiles.asOf('businesses') || '' }))} <a href="${esc((m && m.page) || '#')}" target="_blank" rel="noopener">${esc(t('bizSourceLink'))}</a></span></p>
+    </details></dd>`;
+  }
+  return html;
+}
+// tab-separated, one business per line, for a spreadsheet or mail merge
+function bizText(r) {
+  const rows = [['address', 'business', 'owner', 'mailing_address', 'license', 'since']];
+  for (const x of bizShown(r.businesses)) for (const i of x.shown) rows.push([x.address, i.dba || '', i.owner || '', i.mail || x.address, i.lic || '', i.since || '']);
+  return rows.map(r => r.join('\t')).join('\n');
+}
+function setBizAll(on) {
+  bizAll = on;
+  try { localStorage.setItem(BIZ_ALL_KEY, on ? '1' : '0'); } catch (e) { }
+  document.querySelectorAll('[data-biz-all]').forEach(i => i.checked = on);
+  Tiles.filter(); render();
 }
 const Parcels = (() => {
   const Z = 15, NEAR_M = 14, ADDR_M = 25, PAD_M = 30;
@@ -4144,10 +4421,23 @@ function setupMapMenus() {
       `<button type="button" data-v="${v}" aria-pressed="${overlayMode[k] === v}">${esc(t(label))}</button>`).join('')}</div></div>`;
   const three = [['off', 'lyrOff'], ['close', 'lyrClose'], ['always', 'lyrAlways']];
   const landChips = `<div class="land-chips">${LAND_CATS.map(([k, c]) => `<label class="land-chip"><input type="checkbox" data-land="${k}" ${landCats.has(k) ? 'checked' : ''}><i style="background:${c}"></i>${esc(t('land_' + k))}</label>`).join('')}</div>`;
+  const treeChips = () => `<div class="land-chips" data-chips="trees">${[...TREE_TOP.map((g, i) => [g, GENUS_COLORS[i], g]), ['other', GENUS_OTHER, t('genusOther')]].map(([k, c, l]) =>
+    `<label class="land-chip"><input type="checkbox" data-genus="${esc(k)}" ${treeGenera && treeGenera.has(k) ? 'checked' : ''}><i style="background:${c}"></i>${esc(l)}</label>`).join('')}</div>`;
+  const bizChips = () => `<div class="land-chips" data-chips="businesses">${[['food', BIZ_COLOR.food, 'bizFood'], ['other', BIZ_COLOR.other, 'bizOther']].map(([k, c, l]) =>
+    `<label class="land-chip"><input type="checkbox" data-bizcat="${k}" ${bizCats.has(k) ? 'checked' : ''}><i style="background:${c}"></i>${esc(t(l))}</label>`).join('')}
+    <label class="land-chip" title="${esc(t('bizAllHint'))}"><input type="checkbox" data-biz-all ${bizAll ? 'checked' : ''}>${esc(t('bizAll'))}</label></div>`;
+  const SWT = { trees: `<svg viewBox="0 0 26 16">${GENUS_COLORS.slice(0, 4).map((c, i) => `<circle cx="${4 + i * 6}" cy="8" r="${2 + (i % 2)}" fill="${c}"/>`).join('')}</svg>`,
+    businesses: `<svg viewBox="0 0 26 16"><circle cx="7" cy="8" r="3.5" fill="${BIZ_COLOR.food}"/><circle cx="18" cy="8" r="6" fill="${BIZ_COLOR.other}" fill-opacity=".85"/></svg>`,
+    curbs: '<svg viewBox="0 0 26 16"><path d="M1 12 H16 Q22 12 22 6 V1" fill="none" stroke="#2F3542" stroke-width="1.4"/><path d="M5 6 H12" stroke="#56607A" stroke-width="1.2"/></svg>',
+    buildings: '<svg viewBox="0 0 26 16"><rect x="3" y="3" width="9" height="11" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/><rect x="14" y="6" width="9" height="8" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/></svg>' };
+  Object.assign(SW, SWT);
   rowsEl.innerHTML = Object.keys(OVERLAYS).map(k => OVERLAYS[k].modes ? row(k, OVERLAYS[k].modes)
-    : row(k, three) + (k === 'lands' ? landChips : '')).join('') + row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]);
+    : row(k, three) + (k === 'lands' ? landChips : k === 'trees' ? treeChips() : k === 'businesses' ? bizChips() : '')).join('') + row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]);
   rowsEl.addEventListener('change', e => {
     if (e.target.dataset.land) setLandCats([...rowsEl.querySelectorAll('[data-land]:checked')].map(i => i.dataset.land));
+    if (e.target.dataset.genus) { treeGenera = new Set([...rowsEl.querySelectorAll('[data-genus]:checked')].map(i => i.dataset.genus)); Tiles.filter(); }
+    if (e.target.dataset.bizcat) { bizCats = new Set([...rowsEl.querySelectorAll('[data-bizcat]:checked')].map(i => i.dataset.bizcat)); Tiles.filter(); }
+    if (e.target.matches('[data-biz-all]')) setBizAll(e.target.checked);
   });
   rowsEl.addEventListener('click', e => {
     const b = e.target.closest('.lseg button'); if (!b) return;
@@ -4386,6 +4676,7 @@ function drawBunting() {
   }
   await mapP;
   await Areas.register();
+  await Tiles.register();
   addMapLayers();
   $('map-loading').remove();
   setupQuiet();

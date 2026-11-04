@@ -55,6 +55,8 @@ Top to bottom (search for these names):
   - A lot counts within 14 m of the middle 70% of the block, or 25 m if its address is on the same street. Lots are de-duplicated by `mapblklot`.
   - The zoning palette is SF Planning's (`ZONING`, from their MapServer layer 3).
   - The white outlines on counted lots (`updateAdjLots`) show only while Parcels is on.
+- **`Tiles`**: map layers from sf-blocks' `data/tiles/index.json` (`region.json` `tiles`): `TILE_SETS` maps Block Party keys (trees, businesses, curbs, buildings) to sf-blocks ids; `Tiles.register()` adds them to `OVERLAYS` (with `zooms`: close / always / label) before the map layers, `Tiles.addLayers()` adds `tl-<k>` sources and `bp-lyr-<k>` layers, `Tiles.filter()` applies the genus and business chips and `bizAll` ("Show all registrations"). Cards read the same tiles at the detail zoom (`Tiles.fetch` / `peek`): trees by CNN, businesses by street name and address range. `decodeMVT` keeps point features (one-vertex rings).
+- **Contact data:** city-published registries (businesses, SF Planning's groups) show on cards and in Copy list and exports, owner names and mailing addresses included; never as map labels.
 - **`Groups`**: SF Planning neighborhood groups for the block's Planning neighborhood (`hood_planning`), with expand and "Copy list".
 
 ## Data
