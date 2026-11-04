@@ -2,6 +2,11 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v47
+- **Curbs on by default** from zoom 15 (Always: from 13), in a lighter grey so they don't compete with the streets.
+- **Buildings stand up when the map tilts** (3D, or tilting past the label angle): each footprint rises to its median roof height from the 2010 LiDAR, and lies flat again when you tilt back.
+- **Building height** on hover in feet and metres ("about 39 ft (12 m) tall"), with the data's years.
+
 ## v46
 Needs sf-blocks #14 (map layers in `data/tiles/`); until it's merged these layers and rows don't appear.
 

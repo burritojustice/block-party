@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v46 -->
+<!-- build: v47 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -593,7 +593,7 @@ details.calc p { margin: 4px 0; }
         <li id="lg-lyr-slow" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#2457D6" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0.1 7"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlow">Slow Streets</span></li>
         <li id="lg-lyr-trees" hidden class="lg-expand"><span class="sw"><svg viewBox="0 0 24 12" id="lg-trees-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgTrees">Street trees</span></li>
         <li id="lg-lyr-businesses" hidden><span class="sw"><svg viewBox="0 0 24 12"><circle cx="6" cy="6" r="3" fill="#C2255C"/><circle cx="16" cy="6" r="5" fill="#5F3DC4" fill-opacity=".85"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBusinesses">Businesses (size: how many)</span></li>
-        <li id="lg-lyr-curbs" hidden><span class="sw"><svg viewBox="0 0 24 12"><path d="M1 9 H15 Q20 9 20 4 V1" fill="none" stroke="#2F3542" stroke-width="1.4"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgCurbs">Curbs and islands (2016)</span></li>
+        <li id="lg-lyr-curbs" hidden><span class="sw"><svg viewBox="0 0 24 12"><path d="M1 9 H15 Q20 9 20 4 V1" fill="none" stroke="#9CA2AD" stroke-width="1.4"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgCurbs">Curbs and islands (2016)</span></li>
         <li id="lg-lyr-buildings" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect x="3" y="1" width="8" height="10" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/><rect x="13" y="4" width="8" height="7" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBuildings">Buildings (2016)</span></li>
         <li id="lg-lyr-schools" hidden><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1.5" y="1.5" width="13" height="13" rx="3.5" fill="#8A5A00" stroke="#fff"/><path d="M4.5 8 L8 5 L11.5 8 V11.5 H4.5Z" fill="#fff"/></svg></span><span data-i18n="lgSchools">Schools</span></li>
         <li id="lg-lyr-stations" hidden><span class="sw"><svg viewBox="0 0 24 12"><circle cx="18" cy="6" r="6" fill="#C92A2A" stroke="#fff"/><text x="18" y="9" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">F</text></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="7" fill="#1E3A8A" stroke="#fff"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">P</text></svg></span><span data-i18n="lgStations">Fire / police stations</span></li>
@@ -706,7 +706,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v46';
+const _BUILD_VERSION = 'v47';
 
 /* =====================================================================
    CONFIG
@@ -844,7 +844,7 @@ const I18N = {
     lyr_landuse: 'Parcels', lyr_landuseHint: 'SF Planning 2023, from zoom 15', lgLanduse: 'Land use (2023)', lgZoning: 'Zoning',
     lyrLanduse: 'Land use', lyrZoning: 'Zoning', lyrBorders: 'Borders',
     lyr_trees: 'Street trees', lyr_treesHint: 'DPW tree inventory', lyr_businesses: 'Businesses', lyr_businessesHint: 'Active business registrations',
-    lyr_curbs: 'Curbs and islands', lyr_curbsHint: '2016', lyr_buildings: 'Buildings', lyr_buildingsHint: '2016, heights from 2010 LiDAR',
+    lyr_curbs: 'Curbs and islands', lyr_curbsHint: '2016, from zoom 15', lyr_buildings: 'Buildings', lyr_buildingsHint: '2016, heights from 2010 LiDAR; tilt to stand them up',
     lgTrees: 'Street trees', lgBusinesses: 'Businesses (size: how many)', lgCurbs: 'Curbs and islands (2016)', lgBuildings: 'Buildings (2016)',
     genusOther: 'Other', bizFood: 'Food & drink', bizOther: 'Everything else', bizAll: 'Show all registrations',
     bizAllHint: 'Include contractors at client sites, parking operators, antennas, ATMs and landlords',
@@ -852,7 +852,7 @@ const I18N = {
     treesSource: 'DPW street tree inventory, as of {date}', trunkIn: 'trunk {n} in', plantedY: 'planted {y}', sigTree: 'Significant tree',
     bizRow: 'Businesses facing this block', bizN: '{n} at {a} addresses', bizN1: '{n} at 1 address', bizHidden: '+{n} not shown ({kinds})',
     bizSource: 'Active Business Locations (DataSF), as of {date}.', bizSourceLink: 'Source', bizCopy: 'Copy list', bizCopied: 'Copied {n} businesses',
-    bizOwner: 'owner', bizMail: 'mail to', bizSince: 'since {y}', bizHere: '{n} businesses', bldgHeight: 'Building, about {m} m ({ft} ft) tall',
+    bizOwner: 'owner', bizMail: 'mail to', bizSince: 'since {y}', bizHere: '{n} businesses', bldgHeight: 'Building, about {ft} ft ({m} m) tall', bldgYear: '2016 footprint, height from 2010 LiDAR',
     kind_contractor: 'contractors', kind_parking: 'parking', kind_telecom: 'antennas', kind_atm: 'ATMs', kind_property: 'landlords', 'kind_multi-site': 'many-address registrations',
     zRH: 'Houses (RH)', zRM: 'Apartments (RM, RC)', zRTO: 'Transit-oriented residential (RTO)', zNC: 'Neighborhood commercial (NC, NCD)',
     zNCT: 'Neighborhood commercial transit (NCT)', zC: 'Downtown and community business (C-2, C-3)', zCh: 'Chinatown (CCB, CRNC, CVR)',
@@ -2632,6 +2632,7 @@ function setLabelMode(tilted) {
   for (const id of ['bp-all-label-3d', 'bp-context-label-3d', 'bp-results-label-3d'])
     map.setLayoutProperty(id, 'visibility', tilted ? 'visible' : 'none');
   map.setLayoutProperty('bp-results-label', 'visibility', tilted ? 'none' : 'visible');
+  Tiles.tilt(tilted);
 }
 /* ---------- contours (ported from Selecter's terrain contours, feet, "fine" detail) ---------- */
 const CONTOUR_SRC = 'contour-source', CONTOUR_LINE = 'bp-contour-line', CONTOUR_MAJOR = 'bp-contour-major', CONTOUR_LABEL = 'bp-contour-label';
@@ -3052,6 +3053,7 @@ const overlayVis = {};
 function updateOverlays() {
   if (!map || !map.getSource('lyr-muni')) return;
   const z = map.getZoom();
+  setTimeout(() => Tiles.tilt(labels3d));   // after the layers below are shown or hidden
   // one-way arrows: in the map key only from the zoom they draw at
   const ow = map.getLayer('bp-oneway');
   $('lg-oneway').hidden = !(ow && z >= ow.minzoom && map.getLayoutProperty('bp-oneway', 'visibility') !== 'none');
@@ -3467,7 +3469,7 @@ function decodeMVT(buf, wantLayer) {
 const TILE_SETS = {
   trees:      { set: 'street_trees', modes: 'three' },
   businesses: { set: 'businesses',   modes: 'three' },
-  curbs:      { set: 'curbs',        modes: 'three' },
+  curbs:      { set: 'curbs',        modes: 'three', close: 15, default: 'close' },   // on at first, from zoom 15
   buildings:  { set: 'buildings',    modes: 'onoff' },
 };
 const GENUS_COLORS = ['#1B9E77', '#D95F02', '#7570B3', '#E7298A', '#66A61E', '#E6AB02', '#A6761D', '#1F78B4', '#8DA0CB', '#B15928'];
@@ -3551,10 +3553,10 @@ const Tiles = (() => {
           const m = index.layers.find(l => l.id === c.set);
           if (!m || m.format !== 'pmtiles') continue;
           meta.set(k, m);
-          const close = m.detailzoom || 15, always = m.minzoom ?? close;
+          const close = c.close || m.detailzoom || 15, always = m.minzoom ?? close;
           OVERLAYS[k] = { tiled: dir + m.file, layers: [], modes: c.modes === 'onoff' ? [['off', 'lyrOff'], ['close', 'lyrOn']] : null,
             zooms: { close, always, label: close + 1 } };
-          OVERLAY_DEFAULT[k] = 'off'; overlayMode[k] = overlayMode[k] || 'off';
+          OVERLAY_DEFAULT[k] = c.default || 'off'; overlayMode[k] = overlayMode[k] || OVERLAY_DEFAULT[k];
         }
         await Promise.all([...meta].map(([k, m]) => SFBlocks.json(dir + m.stats).then(st => stats.set(k, st)).catch(() => {})));
         const g = stats.get('trees') && stats.get('trees').fields.genus;
@@ -3573,11 +3575,16 @@ const Tiles = (() => {
         map.addLayer({ id: 'bp-lyr-buildings-fill', type: 'fill', ...src('buildings'), paint: { 'fill-color': '#B9B4AC', 'fill-opacity': 0.35 } }, polyBelow);
         map.addLayer({ id: 'bp-lyr-buildings-line', type: 'line', ...src('buildings'),
           paint: { 'line-color': '#8A8478', 'line-opacity': 0.6, 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 0.3, 18, 1] } }, polyBelow);
+        // tilted (3D, or past LABEL_3D_PITCH), buildings stand up to their median roof height (2010 LiDAR)
+        map.addLayer({ id: 'bp-lyr-buildings-3d', type: 'fill-extrusion', ...src('buildings'), paint: {
+          'fill-extrusion-color': '#CFC9BE', 'fill-extrusion-opacity': 0.85, 'fill-extrusion-vertical-gradient': true,
+          'fill-extrusion-height': ['max', ['coalesce', ['get', 'height_m'], 3], 2], 'fill-extrusion-base': 0 } }, polyBelow);
         OVERLAYS.buildings.layers = ['bp-lyr-buildings-fill', 'bp-lyr-buildings-line'];
+        Tiles.tilt(labels3d);
       }
       if (meta.has('curbs')) {
         map.addLayer({ id: 'bp-lyr-curbs', type: 'line', ...src('curbs'),
-          paint: { 'line-color': ['match', ['get', 'kind'], 'islands', '#56607A', '#2F3542'], 'line-opacity': 0.8,
+          paint: { 'line-color': ['match', ['get', 'kind'], 'islands', '#B4B9C3', '#9CA2AD'], 'line-opacity': 0.9,
             'line-width': ['interpolate', ['linear'], ['zoom'], 13, 0.3, 16, 0.9, 19, 2] } }, polyBelow);
         OVERLAYS.curbs.layers = ['bp-lyr-curbs'];
       }
@@ -3627,7 +3634,18 @@ const Tiles = (() => {
           + (shown.length > 4 ? `<br><span class="pop-lyr">…</span>` : '');
       });
       if (meta.has('buildings')) hoverTip('bp-lyr-buildings-fill', p => p.height_m > 0
-        ? esc(t('bldgHeight', { m: Math.round(p.height_m), ft: Math.round(p.height_m * M2FT) })) : esc(t('lyr_buildings')));
+        ? `<b>${esc(t('bldgHeight', { m: Math.round(p.height_m), ft: Math.round(p.height_m * M2FT) }))}</b><br><span class="pop-lyr">${esc(t('bldgYear'))}</span>` : esc(t('lyr_buildings')));
+    },
+    // buildings: flat footprints, or standing up when the map is tilted. The 3D layer is drawn only while
+    // tilted and Buildings shows (extruding every building all the time is heavy downtown); the flat
+    // fill stays, see-through, for hovering.
+    tilt(tilted) {
+      if (!map || !map.getLayer('bp-lyr-buildings-3d')) return;
+      const on = tilted && map.getLayoutProperty('bp-lyr-buildings-fill', 'visibility') === 'visible';
+      if (map.getLayoutProperty('bp-lyr-buildings-3d', 'visibility') !== (on ? 'visible' : 'none'))
+        map.setLayoutProperty('bp-lyr-buildings-3d', 'visibility', on ? 'visible' : 'none');
+      map.setPaintProperty('bp-lyr-buildings-fill', 'fill-opacity', tilted ? 0 : 0.35);
+      map.setPaintProperty('bp-lyr-buildings-line', 'line-opacity', tilted ? 0 : 0.6);
     },
     // tree genera and business chips, and whether non-storefront registrations show
     filter() {
@@ -4428,7 +4446,7 @@ function setupMapMenus() {
     <label class="land-chip" title="${esc(t('bizAllHint'))}"><input type="checkbox" data-biz-all ${bizAll ? 'checked' : ''}>${esc(t('bizAll'))}</label></div>`;
   const SWT = { trees: `<svg viewBox="0 0 26 16">${GENUS_COLORS.slice(0, 4).map((c, i) => `<circle cx="${4 + i * 6}" cy="8" r="${2 + (i % 2)}" fill="${c}"/>`).join('')}</svg>`,
     businesses: `<svg viewBox="0 0 26 16"><circle cx="7" cy="8" r="3.5" fill="${BIZ_COLOR.food}"/><circle cx="18" cy="8" r="6" fill="${BIZ_COLOR.other}" fill-opacity=".85"/></svg>`,
-    curbs: '<svg viewBox="0 0 26 16"><path d="M1 12 H16 Q22 12 22 6 V1" fill="none" stroke="#2F3542" stroke-width="1.4"/><path d="M5 6 H12" stroke="#56607A" stroke-width="1.2"/></svg>',
+    curbs: '<svg viewBox="0 0 26 16"><path d="M1 12 H16 Q22 12 22 6 V1" fill="none" stroke="#9CA2AD" stroke-width="1.4"/><path d="M5 6 H12" stroke="#B4B9C3" stroke-width="1.2"/></svg>',
     buildings: '<svg viewBox="0 0 26 16"><rect x="3" y="3" width="9" height="11" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/><rect x="14" y="6" width="9" height="8" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/></svg>' };
   Object.assign(SW, SWT);
   rowsEl.innerHTML = Object.keys(OVERLAYS).map(k => OVERLAYS[k].modes ? row(k, OVERLAYS[k].modes)
