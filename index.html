@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v50 -->
+<!-- build: v51 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -112,6 +112,7 @@ button, input { font: inherit; color: inherit; }
 .lseg button:disabled { opacity: .35; cursor: default; }
 .lyr-opt b { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); align-self: start; margin-top: 5px; }
 .lyr-opt[hidden] { display: none; }
+.lyr-checks { display: grid; gap: 4px; padding-left: 34px; grid-template-columns: 1fr; }
 .opt-check { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; white-space: nowrap; cursor: pointer; }
 .opt-stack { display: grid; gap: 4px; justify-items: end; }
 .dens-pal { display: flex; gap: 6px; align-items: flex-start; }
@@ -383,6 +384,7 @@ details.fold > summary::-webkit-details-marker { display: none; }
 details.fold > summary::after { content: ' ▸'; color: var(--grape); font-size: 12px; }
 details.fold[open] > summary::after { content: ' ▾'; }
 details.fold .fold-body { margin-top: 4px; font-weight: 400; }
+details.fold > summary .area-chips { display: inline-flex; vertical-align: middle; }
 .calc { font-size: 12.5px; }
 .calc p { margin: 4px 0; }
 .calc-table { border-collapse: collapse; font-size: 12px; margin: 4px 0; white-space: nowrap; }
@@ -453,6 +455,13 @@ details.fold .fold-body { margin-top: 4px; font-weight: 400; }
 .map-loading { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 600; color: var(--ink-soft); z-index: 4; pointer-events: none; }
 /* hover popups only (no links): the pointer passes through, so a popup that opens under it doesn't count as leaving the map */
 .maplibregl-popup, .maplibregl-popup .maplibregl-popup-content { pointer-events: none; }
+/* …except a clicked record, which scrolls and has a close button */
+.maplibregl-popup.bp-rec, .maplibregl-popup.bp-rec .maplibregl-popup-content { pointer-events: auto; }
+.bp-rec .rec-list { max-height: 260px; overflow: auto; margin-top: 6px; }
+.bp-rec .rec-biz + .rec-biz { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; }
+.rec-table { border-collapse: collapse; font-size: 12.5px; margin: 4px 0; }
+.rec-table th { text-align: left; font-weight: 600; color: var(--ink-soft); padding: 1px 10px 1px 0; vertical-align: top; white-space: nowrap; }
+.rec-table td { padding: 1px 0; }
 .maplibregl-popup-content { font-family: var(--body); border-radius: 12px; padding: 8px 12px; font-size: 14px; box-shadow: 0 4px 0 rgba(30,35,64,.25); }
 .maplibregl-popup-content b { font-weight: 700; }
 .maplibregl-popup-content .pop-lyr { font-size: 13px; color: var(--ink-soft); }
@@ -609,7 +618,7 @@ details.fold .fold-body { margin-top: 4px; font-weight: 400; }
         <li id="lg-lyr-muni" hidden><label class="lg-toggle" data-i18n-title="lgMuniNumsTitle" title="Show the route numbers on the map (there are a lot downtown)"><span class="sw"><svg viewBox="0 0 24 12"><line x1="2" y1="6" x2="22" y2="6" stroke="#D9480F" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/><line x1="2" y1="6" x2="22" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span><span data-i18n="lgMuni">Muni routes</span>, <svg class="lg-shield" viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="1" width="16" height="10" rx="3" fill="#D9480F"/><text x="8" y="9" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg> <span data-i18n="lgMuniNums">numbers</span></span><input type="checkbox" id="lg-muni-nums-check" checked></label></li>
         <li id="lg-lyr-bike" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3" x2="23" y2="3" stroke="#1A7F37" stroke-width="3"/><line x1="1" y1="9.5" x2="23" y2="9.5" stroke="#1A7F37" stroke-width="1.6" stroke-dasharray="3 2.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBike">Bike lanes (dashed: shared routes)</span></li>
         <li id="lg-lyr-landuse" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12"><rect width="6" height="12" fill="#E9C845" fill-opacity=".6"/><rect x="6" width="6" height="12" fill="#F0A04B" fill-opacity=".6"/><rect x="12" width="6" height="12" fill="#9C6FB6" fill-opacity=".6"/><rect x="18" width="6" height="12" fill="#4C9A3F" fill-opacity=".6"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span id="lg-landuse-title">Land use (2023)</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-landuse-table"></table></details></li>
-        <li id="lg-lyr-lands" hidden><span class="sw"><svg viewBox="0 0 24 12" id="lg-lands-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLands">City-owned land</span></li>
+        <li id="lg-lyr-lands" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12" id="lg-lands-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLands">City-owned land</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-lands-table"></table></details></li>
         <li id="lg-lyr-slow" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#2457D6" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0.1 7"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlow">Slow Streets</span></li>
         <li id="lg-lyr-trees" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12" id="lg-trees-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgTrees">Street trees</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-trees-table"></table></details></li>
         <li id="lg-lyr-businesses" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12"><circle cx="6" cy="6" r="3" fill="#C2255C"/><circle cx="16" cy="6" r="5" fill="#5F3DC4" fill-opacity=".85"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBusinesses">Businesses</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-biz-table"></table></details></li>
@@ -726,7 +735,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v50';
+const _BUILD_VERSION = 'v51';
 
 /* =====================================================================
    CONFIG
@@ -848,7 +857,7 @@ const I18N = {
     bound_north: 'northbound', bound_south: 'southbound', bound_east: 'eastbound', bound_west: 'westbound',
     class1: 'Freeway', class2: 'Major street', class3: 'Arterial', class4: 'Collector', class5: 'Residential', class6: 'Freeway ramp',
     copyCard: 'Copy this card’s details', copiedCard: 'Copied block details',
-    quietBtn: 'Quiet streets', quietTitle: 'Quiet streets for a party', quietShow: 'Show any of these',
+    quietBtn: 'Filter', quietTitle: 'Quiet streets for a party', quietShow: 'Show any of these',
     quietNarrow: 'Narrow them down', quiet_dead: 'Dead ends', quiet_ped: 'Pedestrian streets',
     quiet_unmaint: 'Not maintained by the city', quiet_res: 'Residential streets only',
     quiet_resHint: 'Leaves out collectors, arterials, and bigger', quiet_flat: 'Flat to moderate (under 10%)',
@@ -871,7 +880,7 @@ const I18N = {
     treesRow: 'Street trees', treesCount: '{n} ({k} kinds)', treesN: '{n} ({top})', treesMore: '{n} more kinds', treesNone: 'None listed',
     treesSource: 'DPW street tree inventory, as of {date}', trunkIn: 'trunk {n} in', plantedY: 'planted {y}', sigTree: 'Significant tree',
     bizRow: 'Businesses facing this block', bizN: '{n} at {a} addresses', bizN1: '{n} at 1 address', bizHidden: '+{n} not shown ({kinds})',
-    bizSource: 'Active Business Locations (DataSF), as of {date}.', bizSourceLink: 'Source', bizCopy: 'Copy list', bizCopied: 'Copied {n} businesses',
+    bizSource: 'Registered Business Locations (DataSF, open locations), as of {date}.', bizSourceLink: 'Source', bizCopy: 'Copy list', bizCopied: 'Copied {n} businesses',
     bizOwner: 'owner', bizMail: 'mail to', bizSince: 'since {y}', bizHere: '{n} businesses', bldgHeight: 'Building, about {ft} ft ({m} m) tall', bldgYear: '2016 footprint, height from 2010 LiDAR',
     kind_contractor: 'contractors', kind_parking: 'parking', kind_telecom: 'antennas', kind_atm: 'ATMs', kind_property: 'landlords', 'kind_multi-site': 'many-address registrations',
     zRH: 'Houses (RH)', zRM: 'Apartments (RM, RC)', zRTO: 'Transit-oriented residential (RTO)', zNC: 'Neighborhood commercial (NC, NCD)',
@@ -880,7 +889,7 @@ const I18N = {
     zSoMa: 'SoMa (SALI, SLI, SSO, RED, WMUG…)', zP: 'Public (P)', zSP: 'Special plan areas (Mission Bay, Parkmerced, Treasure Island…)',
     lu_RESIDENT: 'Residential', lu_MIXRES: 'Mixed residential', lu_MIXED: 'Mixed, no housing', 'lu_RETAIL/ENT': 'Retail and entertainment',
     lu_MIPS: 'Office', lu_CIE: 'Cultural, institutional, education', lu_MED: 'Medical', lu_VISITOR: 'Hotels', lu_PDR: 'Industrial (PDR)',
-    lu_OPENSPACE: 'Open space', lu_VACANT: 'Vacant', lu_none: 'No land use data',
+    lu_OPENSPACE: 'Open space', lu_VACANT: 'Vacant (unverified)', lu_none: 'No land use data',
     parcelLot: 'Lot {lot}', homesN: '{n} homes', zoningRow: 'Zoning', parcelsRow: 'Parcels', landuseRow: 'Land use',
     lotsHomes: '{lots} lots, {homes} homes', lotsOnly: '{lots} lots', landuseNote: 'Land use: SF Planning, 2023. Lots on both sides of the block.',
     land_school: 'Schools', land_park: 'Parks', land_fire: 'Fire', land_police: 'Police', land_health: 'Health',
@@ -892,8 +901,11 @@ const I18N = {
     btnAreas: 'Areas', areasElected: 'Elected districts', areasSpecial: 'Special districts', areasSpecialNote: '(not elected)',
     areasAdmin: 'Administrative', areasAdminLater: 'ZIP codes and neighborhoods are on the cards; map layers later.', areasShow: 'Show',
     areasPop: 'Population', areasPopHint: '2020 Census', aDensity: 'Density', area_cblk: 'Blocks', area_ctract: 'Tracts',
-    aNoneHint: 'With borders only, there has to be a line', aColors: 'Colors', chipsShown: '{n} of {of} kinds shown', chipsShownN: '{n} of {of} kinds · {total}', treesTotal: '{n} trees',
-    bizTotal: '{n} at {a} addresses', nextToN: '{n} places', lgBizSize: 'Bigger dot: more businesses at the address', lgTreeSize: 'Bigger dot: thicker trunk; dark ring: Significant Tree', grpAround: 'Getting around', grpStreet: 'On the street', grpLand: 'Land and buildings', grpTerrain: 'Terrain', grpMore: 'More', aQuietBase: 'Hide parks and places on the map',
+    aNoneHint: 'With borders only, there has to be a line', aColors: 'Colors', grpBasemap: 'Basemap', bmPois: 'Places (shops, restaurants, landmarks)', bmBuildings: 'Buildings (the basemap\'s outlines)',
+    bizRetail: 'Retail', bizServices: 'Services', recTree: 'Street tree', recTreeId: 'Tree {id}', recSpecies: 'Species', recGenus: 'Genus', recTrunk: 'Trunk', recStatus: 'Status',
+    recPlanted: 'Planted', recSite: 'Site', recCare: 'Cared for by', recAddress: 'Address', recCnn: 'Block (CNN)', recOwner: 'Owner', recMail: 'Mail to', recLicense: 'License',
+    recIndustry: 'Industry', recSince: 'Here since', recHidden: 'Hidden unless Show all: {kind}', recBizN: '{n} businesses here', recSource: 'Source: {src}', chipsShown: '{n} of {of} kinds shown', chipsShownN: '{n} of {of} kinds · {total}', treesTotal: '{n} trees',
+    bizTotal: '{n} at {a} addresses', nextToN: '{n} places', lgBizSize: 'Bigger dot: more businesses at the address; color: the most storefront-like one there', lgTreeSize: 'Bigger dot: thicker trunk; dark ring: Significant Tree', grpAround: 'Getting around', grpStreet: 'On the street', grpLand: 'Land and buildings', grpTerrain: 'Terrain', grpMore: 'More', aQuietBase: 'Hide parks and places on the map',
     lgMuniNums: 'numbers', lgMuniNumsOut: 'Route numbers show from zoom {z}', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick',
     lgNoOne: 'no one lives there (parks, water): clear', lgParcelLines: 'Parcels (lot lines)',
     lgDensity: '{set}: {what} ({src})', densityUnit: 'people per sq mi',
@@ -1896,6 +1908,8 @@ function render() {
   $('seg-list').innerHTML = full.map(s => isInt(s) ? intCardHTML(s) : cardHTML(s)).join('') +
     (legs.length ? `<li class="legs-head"><b>${esc(t('legsTitle'))}</b><span>${esc(t('legsHint'))}</span></li>` + legs.map(s => legHTML(s, ints)).join('') : '');
   document.querySelectorAll('#seg-list details.ng, #seg-list details.hoods, #seg-list details.fold').forEach(d => { if (openNg.has(dkey(d))) d.open = true; });
+  // rings from a card list that's no longer open (or whose card is gone)
+  if (Tiles.hlFor && !openNg.has(Tiles.hlFor.split('|')[0] + (Tiles.hlFor.endsWith('|trees') ? 'ftrees' : 'b'))) Tiles.highlight(null);
   $('clear-sel-bottom').hidden = !segs.length;
   hydrateElevation();
   // Muni and bike rows fill in once those files have loaded (the first time cards appear)
@@ -2147,6 +2161,14 @@ function setupResultsEvents() {
   const list = $('seg-list');
   list.addEventListener('mouseover', e => { const li = e.target.closest('.seg'); if (li) hoverSegFromCard(+li.dataset.cnn); });
   list.addEventListener('mouseleave', () => hoverSegFromCard(null));
+  // opening a card's tree or business list rings them on the map; closing it clears the rings
+  $('seg-list').addEventListener('toggle', e => {
+    const d = e.target, k = d.matches && (d.matches('details.fold[data-fold="trees"]') ? 'trees' : d.matches('details.biz') ? 'businesses' : null);
+    if (!k) return;
+    const cnn = +d.closest('[data-cnn]').dataset.cnn;
+    if (d.open) Tiles.highlight(cnn, k);
+    else if (Tiles.hlFor === cnn + '|' + k) Tiles.highlight(null, k);
+  }, true);
   $('seg-list').addEventListener('click', e => {
     const chip = e.target.closest('[data-copy]');
     if (chip) { copyText(chip.dataset.copy, t('copiedCnn', { cnn: chip.dataset.copy })); return; }
@@ -2610,7 +2632,7 @@ function addMapLayers() {
     hoverCardFromMap(null);
   });
   map.on('click', 'bp-all-hit', e => {
-    if (onCorner(e)) return;
+    if (onCorner(e) || hoverHit(e, ['bp-lyr-trees', 'bp-lyr-businesses'])) return;
     const f = e.features[0]; if (!f) return;
     toggleFromMap(Logic.db.byCnn.get(f.properties.cnn));
   });
@@ -2741,7 +2763,7 @@ const LAYER_ORDER = [
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends'].includes(id)],
+  ['selection', id => ['bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends'].includes(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
   ['labels', (id, l) => l.type === 'symbol'],
 ];
@@ -2915,7 +2937,7 @@ function syncChipCounts() {
   sum('lands', landCats.size, LAND_CATS.length);
   const tm = Tiles.meta('trees'), bm = Tiles.meta('businesses');
   if (tm && treeGenera) sum('trees', treeGenera.size, TREE_TOP.length + 1, t('treesTotal', { n: tm.records.toLocaleString() }));
-  if (bm) sum('businesses', bizCats.size, 2, t('bizTotal', { n: bm.records.toLocaleString(), a: bm.features.toLocaleString() }));
+  if (bm) sum('businesses', bizCats.size, BIZ_CATS.length, t('bizTotal', { n: bm.records.toLocaleString(), a: bm.features.toLocaleString() }));
 }
 // the Layers menu, in sections
 const LAYER_SECTIONS = [
@@ -2923,7 +2945,22 @@ const LAYER_SECTIONS = [
   ['grpStreet', ['trees', 'businesses', 'schools', 'stations', 'health']],
   ['grpLand', ['landuse', 'lands', 'buildings', 'curbs']],
   ['grpTerrain', ['contours']],
+  ['grpBasemap', ['basemap']],
 ];
+const BASEMAP_KEY = 'bp-basemap-hide';
+let basemapHide = (() => { try { return JSON.parse(localStorage.getItem(BASEMAP_KEY)) || {}; } catch (e) { return {}; } })();
+// the basemap's places and buildings, hidden by the Basemap checkboxes; places and colored land also under
+// population density when "Hide parks and places" is on
+function applyBasemap() {
+  if (!mapReady && !(map && map.getStyle())) return;
+  const quiet = Areas.densityShown() && areaMode.quietBase === 'on';
+  for (const l of map.getStyle().layers) {
+    if (l.id.startsWith('bp-')) continue;
+    const sl = l['source-layer'];
+    const hide = (quiet && QUIET_BASE(l)) || (basemapHide.pois && sl === 'pois') || (basemapHide.buildings && sl === 'buildings' && l.type !== 'symbol');
+    if (QUIET_BASE(l) || sl === 'pois' || sl === 'buildings') map.setLayoutProperty(l.id, 'visibility', hide ? 'none' : 'visible');
+  }
+}
 let overHover = false;   // the pointer is on a point or building (their popups win over areas)
 let popOwner = null;     // which hover opened the shared popup: only it closes it (handlers fire in no set order)
 const BIKE_SOLID = ['separated', 'lane', 'path'];
@@ -3118,6 +3155,8 @@ function setLandCats(cats, write = true) {
   }
   const sw = $('lg-lands-sw');
   if (sw) sw.innerHTML = LAND_CATS.filter(c => landCats.has(c[0])).slice(0, 5).map(([, c]) => `<rect width="4" height="10" fill="${c}" fill-opacity=".35" stroke="${c}"/>`).map((r, i) => r.replace('<rect', `<rect x="${i * 5}" y="1"`)).join('');
+  const lt = $('lg-lands-table');
+  if (lt) lt.innerHTML = LAND_CATS.filter(c => landCats.has(c[0])).map(([k, c]) => `<tr><td><i style="background:${c}"></i></td><td>${esc(t('land_' + k))}</td></tr>`).join('');
   if (write) writeHash();
 }
 const overlayMinZoom = k => OVERLAYS[k].zooms ? OVERLAYS[k].zooms[overlayMode[k] === 'always' ? 'always' : 'close']
@@ -3564,10 +3603,13 @@ const TILE_SETS = {
 };
 const GENUS_COLORS = ['#1B9E77', '#D95F02', '#7570B3', '#E7298A', '#66A61E', '#E6AB02', '#A6761D', '#1F78B4', '#8DA0CB', '#B15928'];
 const GENUS_OTHER = '#6B8E5A';
-const BIZ_COLOR = { food: '#C2255C', other: '#5F3DC4' };
+const BIZ_COLOR = { food: '#C2255C', retail: '#E67700', services: '#0C8599', other: '#5F3DC4' };
+const BIZ_CATS = [['food', 'bizFood'], ['retail', 'bizRetail'], ['services', 'bizServices'], ['other', 'bizOther']];
+// an address's category: sf-blocks' `cat` (food, retail, services, other), or its older `food` flag
+const BIZ_CAT = ['coalesce', ['get', 'cat'], ['case', ['to-boolean', ['get', 'food']], 'food', 'other']];
 const BIZ_ALL_KEY = 'bp-biz-all';
 let bizAll = (() => { try { return localStorage.getItem(BIZ_ALL_KEY) === '1'; } catch (e) { return false; } })();
-let treeGenera = null, bizCats = new Set(['food', 'other']);
+let treeGenera = null, bizCats = new Set(['food', 'retail', 'services', 'other']);
 const Tiles = (() => {
   const meta = new Map(), stats = new Map(), readers = new Map(), tiles = new Map(), cache = new Map(), pending = new Map();
   const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
@@ -3588,7 +3630,8 @@ const Tiles = (() => {
     if (!tiles.has(key)) tiles.set(key, readers.get(k).getZxy(z, x, y).then(r => !r ? [] :
       decodeMVT(new Uint8Array(r.data), m.layer).map(f => {
         const [px, py] = f.rings[0] ? f.rings[0][0] : [0, 0];
-        return { p: f.props, x: lon(x + px / f.extent, z) * KX, y: lat(y + py / f.extent, z) * KY };
+        const lo = lon(x + px / f.extent, z), la = lat(y + py / f.extent, z);
+        return { p: f.props, x: lo * KX, y: la * KY, ll: [lo, la] };
       })).catch(err => { console.warn('[block-party] tile', key, err); tiles.delete(key); return []; }));
     return tiles.get(key);
   }
@@ -3612,7 +3655,7 @@ const Tiles = (() => {
       const trees = (await near('trees', s, 40)).filter(f => +f.p.cnn === s.cnn);
       const kinds = new Map();
       for (const f of trees) { const n = f.p.common || f.p.species || f.p.genus || '?'; kinds.set(n, (kinds.get(n) || 0) + 1); }
-      out.trees = { n: trees.length, kinds: [...kinds].sort((a, b) => b[1] - a[1]) };
+      out.trees = { n: trees.length, kinds: [...kinds].sort((a, b) => b[1] - a[1]), pts: trees.map(f => f.ll) };
     }
     if (meta.has('businesses')) {
       const sides = Logic.addressSides(s), mine = streetKey(s.street);
@@ -3621,7 +3664,7 @@ const Tiles = (() => {
         if (!m || streetKey(m[2].replace(/\s*(#|Ste|Unit|Fl|Apt)\b.*$/i, '')) !== mine) return false;
         const n = +m[1];
         return !sides.length || sides.some(x => n >= x.from && n <= x.to);
-      }).map(f => ({ address: f.p.address, items: (() => { try { return JSON.parse(f.p.items || '[]'); } catch (e) { return []; } })() }));
+      }).map(f => ({ address: f.p.address, ll: f.ll, cat: f.p.cat, items: (() => { try { return JSON.parse(f.p.items || '[]'); } catch (e) { return []; } })() }));
       at.sort((a, b) => (parseInt(a.address) || 0) - (parseInt(b.address) || 0));
       out.businesses = at;
     }
@@ -3693,7 +3736,7 @@ const Tiles = (() => {
       if (meta.has('businesses')) {
         const count = ['coalesce', ['get', bizAll ? 'n' : 'shown'], ['get', 'n'], 1];
         map.addLayer({ id: 'bp-lyr-businesses', type: 'circle', ...src('businesses'), paint: {
-          'circle-color': ['case', ['to-boolean', ['get', 'food']], BIZ_COLOR.food, BIZ_COLOR.other],
+          'circle-color': ['match', BIZ_CAT, ...BIZ_CATS.flatMap(([k]) => [k, BIZ_COLOR[k]]), BIZ_COLOR.other],
           'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 1, 15, ['interpolate', ['linear'], count, 1, 3, 10, 6, 100, 11],
             18, ['interpolate', ['linear'], count, 1, 5, 10, 9, 100, 16]],
           'circle-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.45, 15, 0.85],
@@ -3710,6 +3753,20 @@ const Tiles = (() => {
         OVERLAYS.businesses.layers = ['bp-lyr-businesses', 'bp-lyr-businesses-label', 'bp-lyr-businesses-name-label'];
       }
       Tiles.filter();
+      // the ring around points from an open card list (yellow: what you picked), with a dot when the layer is off
+      map.addSource('card-hl', { type: 'geojson', data: EMPTY });
+      map.addLayer({ id: 'bp-card-hl-dot', type: 'circle', source: 'card-hl', paint: { 'circle-radius': 3.5,
+        'circle-color': ['match', ['get', 'k'], 'trees', GENUS_OTHER, BIZ_COLOR.other] } }, pointBelow);
+      map.addLayer({ id: 'bp-card-hl', type: 'circle', source: 'card-hl', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 14, 6, 18, 11],
+        'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': '#FFC53D', 'circle-stroke-width': 3, 'circle-stroke-opacity': 0.95 } }, pointBelow);
+      // a click on a tree or a business: its full record, in a popup that stays until closed
+      const rec = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '340px', className: 'bp-rec', offset: 10 });
+      const onCorner = e => map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit', 'bp-ints'].filter(i => map.getLayer(i)) }).length > 0;
+      for (const id of ['bp-lyr-trees', 'bp-lyr-businesses']) map.on('click', id, e => {
+        const f = e.features[0]; if (!f || onCorner(e)) return;
+        popup.remove(); popOwner = null;
+        rec.setLngLat(f.geometry.coordinates).setHTML(id === 'bp-lyr-trees' ? treeRecord(f.properties) : bizRecord(f.properties)).addTo(map);
+      });
       const hoverTip = (id, html, above = () => false) => {
         map.on('mousemove', id, e => {
           const f = e.features[0];
@@ -3762,7 +3819,9 @@ const Tiles = (() => {
           + `<tr><td></td><td colspan="2"><small>${esc(t('lgTreeSize'))}</small></td></tr>`;
       }
       const cs = (Tiles.stats('businesses') || { fields: {} }).fields.cat, bt = $('lg-biz-table');
-      if (bt) bt.innerHTML = [[BIZ_COLOR.food, t('bizFood'), cs && cs.values.food], [BIZ_COLOR.other, t('bizOther'), cs && (cs.n - (cs.values.food || 0))]]
+      const hasCats = cs && ['retail', 'services'].some(k => cs.values[k]);
+      if (bt) bt.innerHTML = (hasCats ? BIZ_CATS.map(([k, l]) => [BIZ_COLOR[k], t(l), cs.values[k]])
+        : [[BIZ_COLOR.food, t('bizFood'), cs && cs.values.food], [BIZ_COLOR.other, t('bizOther'), cs && (cs.n - (cs.values.food || 0))]])
         .map(([c, l, n]) => `<tr><td><i style="background:${c};border-radius:50%;width:10px"></i></td><td>${esc(l)}</td><td class="n">${n ? n.toLocaleString() : ''}</td></tr>`).join('')
         + `<tr><td></td><td colspan="2"><small>${esc(t('lgBizSize'))}</small></td></tr>`;
       if (!map || !map.getStyle()) return;
@@ -3772,8 +3831,7 @@ const Tiles = (() => {
           treeGenera.has('other') ? ['!', ['in', g, ['literal', TREE_TOP]]] : false]);
       }
       if (map.getLayer('bp-lyr-businesses')) {
-        const cat = ['case', ['to-boolean', ['get', 'food']], 'food', 'other'];
-        const f = ['all', ['in', cat, ['literal', [...bizCats]]], bizAll ? true : ['any', ['!', ['has', 'shown']], ['>', ['get', 'shown'], 0]]];
+        const f = ['all', ['in', BIZ_CAT, ['literal', [...bizCats]]], bizAll ? true : ['any', ['!', ['has', 'shown']], ['>', ['get', 'shown'], 0]]];
         map.setFilter('bp-lyr-businesses', f);
         map.setFilter('bp-lyr-businesses-label', ['all', f, ['>', ['coalesce', ['get', bizAll ? 'n' : 'shown'], ['get', 'n'], 1], 1]]);
         const count = ['coalesce', ['get', bizAll ? 'n' : 'shown'], ['get', 'n'], 1];
@@ -3784,6 +3842,15 @@ const Tiles = (() => {
         }
       }
     },
+    // a card's list opened: its trees or businesses ringed on the map (and shown even when the layer is off)
+    highlight(cnn, k) {
+      if (!mapReady || !map.getSource('card-hl')) return;
+      const r = cnn != null && cache.get(cnn);
+      const pts = !r ? [] : k === 'trees' ? (r.trees ? r.trees.pts : []) : (r.businesses || []).filter(x => x.items.some(i => bizAll || !i.kind)).map(x => x.ll);
+      map.getSource('card-hl').setData({ type: 'FeatureCollection', features: pts.map(c => ({ type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: { k } })) });
+      hlFor = r ? cnn + '|' + k : null;
+    },
+    get hlFor() { return hlFor; },
     // card rows: trees (by CNN) and businesses (by address on this block), or null while being read
     peek: s => cache.get(s.cnn) || null,
     fetch(s) {
@@ -3796,11 +3863,30 @@ const Tiles = (() => {
   };
 })();
 let TREE_TOP = [];
+let hlFor = null;   // which card list is ringed on the map ("cnn|trees")
 const BLDG_FULL_PITCH = 45;   // degrees of tilt where buildings reach full height
 const BLDG_STEPS = 6;         // heights in steps: each step rebuilds every building's 3D shape
 let bldgK = -1;
 // One card line: a count or summary, with the details folded underneath (open state kept across redraws)
 const foldDD = (summary, body, key) => body ? `<details class="fold" data-fold="${key}"><summary>${summary}</summary><div class="fold-body">${body}</div></details>` : summary;
+// full records for a click on the map
+const recRows = rows => `<table class="rec-table">${rows.filter(([, v]) => v != null && v !== '').map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</table>`;
+function treeRecord(p) {
+  const m = Tiles.meta('trees');
+  return `<div class="rec"><b>${esc(p.common || p.species || t('recTree'))}</b><br><span class="pop-lyr">${esc(t('recTreeId', { id: p.treeid || '' }))}</span>`
+    + recRows([[t('recSpecies'), p.species], [t('recGenus'), p.genus], [t('recTrunk'), p.dbh_in ? `${p.dbh_in} in` : ''], [t('recStatus'), p.status],
+      [t('recPlanted'), p.planted], [t('recSite'), p.site], [t('recCare'), p.caretaker], [t('recAddress'), p.address], [t('recCnn'), p.cnn]])
+    + `<small class="muted">${esc(t('recSource', { src: (m && m.label ? m.label + ', ' : '') + (Tiles.asOf('trees') || '') }))}</small></div>`;
+}
+function bizRecord(p) {
+  let items = []; try { items = JSON.parse(p.items || '[]'); } catch (e) { }
+  const one = i => `<div class="rec-biz">${(i.dba || i.owner) && (i.dba || i.owner) !== p.address ? `<b>${esc(i.dba || i.owner)}</b>` : ''}` + recRows([[t('recOwner'), i.owner],
+    [t('recMail'), i.mail ? [i.mail, i.mail_place].filter(Boolean).join(', ') : ''], [t('recLicense'), i.lic],
+    [t('recIndustry'), [i.sector, i.naics ? `NAICS ${i.naics}` : ''].filter(Boolean).join(' · ')], [t('recSince'), i.since]])
+    + (i.kind ? `<small class="muted">${esc(t('recHidden', { kind: t('kind_' + i.kind) }))}</small>` : '') + '</div>';
+  return `<div class="rec"><b>${esc(p.address || '')}</b>${items.length > 1 ? `<br><span class="pop-lyr">${esc(t('recBizN', { n: items.length }))}</span>` : ''}
+    <div class="rec-list">${items.map(one).join('')}</div><small class="muted">${esc(t('bizSource', { date: Tiles.asOf('businesses') || '' }))}</small></div>`;
+}
 const bizShown = list => list.map(a => ({ ...a, shown: a.items.filter(i => bizAll || !i.kind) }));
 function tileFacts(s) {
   if (isInt(s) || !Tiles.has('trees') && !Tiles.has('businesses')) return '';
@@ -3919,7 +4005,9 @@ function parcelFacts(s) {
   const r = Parcels.peek(s);
   if (!r) return `<dt>${esc(t('landuseRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
   if (!r.lots) return '';
-  const zones = r.zones.slice(0, 4).map(z => `<i class="zsw" style="background:${zoningOf(z.code)[1]}"></i>${esc(z.code)} <span class="svc">${esc(zoneName(z.name))}${r.zones.length > 1 ? ` (${z.n})` : ''}</span>`).join('<br>');
+  // one line of codes; the names folded
+  const codes = r.zones.slice(0, 4).map(z => `<i class="zsw" style="background:${zoningOf(z.code)[1]}"></i>${esc(z.code)}${r.zones.length > 1 ? ` <span class="svc">(${z.n})</span>` : ''}`).join(', ');
+  const zones = foldDD(codes, r.zones.map(z => `<i class="zsw" style="background:${zoningOf(z.code)[1]}"></i>${esc(z.code)} <span class="svc">${esc(zoneName(z.name))}${r.zones.length > 1 ? ` (${z.n})` : ''}</span>`).join('<br>'), 'zoning');
   const color = Object.fromEntries(LANDUSE);
   const uses = `<table class="lu-table">${r.uses.map(([k, n]) => `<tr><td><i style="background:${color[k] || '#D8D5CE'}"></i>${esc(landuseName(k))}</td><td>${n}</td></tr>`).join('')}</table>`;
   return `<dt>${esc(t('zoningRow'))}</dt><dd>${zones}</dd>
@@ -4003,6 +4091,7 @@ const densityRamp = n => sampleRamp(SEQ_PALETTES[areaMode.densPal] || SEQ_PALETT
 const ADMIN_LINE = { black: ['#1E1E1E', 0.7], grey: ['#6B7080', 0.75], white: ['#FFFFFF', 0.9] };
 const adminLineWidth = (w, s) => { const k = (w === 'thick' ? 2.2 : 1) * s;
   return ['interpolate', ['linear'], ['zoom'], 11, 0.25 * k, 14, 0.6 * k, 16, 1.1 * k, 18, 2 * k]; };
+const SIDE_M = 12;   // metres either side of a block's centerline when checking which areas it's in
 const AREA_DEFAULT = { sup: 'borders', special: 'off', specialMode: 'shade', admin: 'cblk', adminMode: 'off',
   densPal: 'magma', densFlip: 'on', adminLine: 'grey', adminWidth: 'thin', quietBase: 'on' };
 // settings shared by a group of sets (the rest of areaMode is one entry per elected set)
@@ -4156,8 +4245,7 @@ const Areas = (() => {
       if (!mapReady) return;
       const dens = Areas.densityShown();
       for (const id of waterOver) map.setLayoutProperty(id, 'visibility', dens && !satOn ? 'visible' : 'none');
-      const quiet = dens && areaMode.quietBase === 'on';
-      for (const l of map.getStyle().layers) if (QUIET_BASE(l)) map.setLayoutProperty(l.id, 'visibility', quiet ? 'none' : 'visible');
+      applyBasemap();
       for (const k of sets.keys()) {
         const m = modeOf(k), on = m !== 'off', c = sets.get(k).c;
         for (const x of ['case', 'line', 'label']) if (map.getLayer(`bp-area-${k}-${x}`)) map.setLayoutProperty(`bp-area-${k}-${x}`, 'visibility', on ? 'visible' : 'none');
@@ -4231,9 +4319,17 @@ const Areas = (() => {
       const ck = k + '|' + item.cnn;
       if (cache.has(ck)) return cache.get(ck);
       const dx = 15 / KX, dy = 15 / KY;
+      // a block: at 25/50/75% along it, on the centerline and 12 m to each side, so a street that is the
+      // border (the line runs down its middle) gets both districts; one that only ends at a border doesn't
       const pts = isInt(item) ? [[item.x, item.y], [item.x + dx, item.y], [item.x - dx, item.y], [item.x, item.y + dy], [item.x, item.y - dy]]
-        : [0.25, 0.5, 0.75].map(f => along(item.coords, f));
-      const hits = st.polys.filter(p => pts.some(([x, y]) => inPoly(x, y, p.parts)));
+        : [0.25, 0.5, 0.75].flatMap(f => {
+          const [x, y] = along(item.coords, f), [x2, y2] = along(item.coords, Math.min(1, f + 0.02));
+          let ux = (x2 - x) * KX, uy = (y2 - y) * KY; const L = Math.hypot(ux, uy) || 1; ux /= L; uy /= L;
+          return [[x, y], [x - uy * SIDE_M / KX, y + ux * SIDE_M / KY], [x + uy * SIDE_M / KX, y - ux * SIDE_M / KY]];
+        });
+      // most-covered first (the centerline's district usually)
+      const hits = st.polys.map(p => [p, pts.filter(([x, y]) => inPoly(x, y, p.parts)).length]).filter(([, n]) => n)
+        .sort((a, b) => b[1] - a[1]).map(([p]) => p);
       cache.set(ck, hits);
       return hits;
     },
@@ -4243,13 +4339,16 @@ const Areas = (() => {
       const chip = (c, text, title) => `<span class="area-chip" style="--c:${c.color}"${title ? ` title="${esc(title)}"` : ''}>${esc(text)}</span>`;
       const elected = [...sets.values()].filter(st => st.c.kind === 'elected'), special = [...sets.values()].filter(st => st.c.kind === 'special');
       if (!ready) return `<dt>${esc(t('cardElected'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
-      const eChips = elected.map(st => {
+      const eOne = st => {
         const a = Areas.of(st.c.k, item) || [];
         if (!a.length) return '';
         return a.length === 1 ? chip(st.c, a[0].chip) : chip(st.c, `${st.c.label} ${a.map(x => x.short).join(' | ')}`);
-      }).join('');
+      };
+      // Supervisor on the line; the other elected districts folded under it
+      const sup = elected.filter(st => st.c.k === 'sup').map(eOne).join(''), rest = elected.filter(st => st.c.k !== 'sup').map(eOne).join('');
+      const eChips = rest ? foldDD(`<span class="area-chips">${sup || esc(item.sup)}</span>`, `<span class="area-chips">${rest}</span>`, 'elected') : sup;
       const sChips = special.flatMap(st => (Areas.of(st.c.k, item) || []).map(a => chip(st.c, a.chip, a.name))).join('');
-      return `<dt>${esc(t('cardElected'))}</dt><dd class="area-chips">${eChips || esc(item.sup)}</dd>`
+      return `<dt>${esc(t('cardElected'))}</dt><dd>${eChips || esc(item.sup)}</dd>`
         + (sChips ? `<dt>${esc(t('cardSpecial'))}</dt><dd class="area-chips">${sChips}</dd>` : '')
         + `<dt class="facts-cap">${esc(t('cardAdmin'))}</dt>`;
     },
@@ -4605,7 +4704,7 @@ function setupMapMenus() {
   const landChips = `<div class="land-chips">${LAND_CATS.map(([k, c]) => `<label class="land-chip"><input type="checkbox" data-land="${k}" ${landCats.has(k) ? 'checked' : ''}><i style="background:${c}"></i>${esc(t('land_' + k))}</label>`).join('')}</div>`;
   const treeChips = () => `<div class="land-chips" data-chips="trees">${[...TREE_TOP.map((g, i) => [g, GENUS_COLORS[i], g]), ['other', GENUS_OTHER, t('genusOther')]].map(([k, c, l]) =>
     `<label class="land-chip"><input type="checkbox" data-genus="${esc(k)}" ${treeGenera && treeGenera.has(k) ? 'checked' : ''}><i style="background:${c}"></i>${esc(l)}</label>`).join('')}</div>`;
-  const bizChips = () => `<div class="land-chips" data-chips="businesses">${[['food', BIZ_COLOR.food, 'bizFood'], ['other', BIZ_COLOR.other, 'bizOther']].map(([k, c, l]) =>
+  const bizChips = () => `<div class="land-chips" data-chips="businesses">${BIZ_CATS.map(([k, l]) => [k, BIZ_COLOR[k], l]).map(([k, c, l]) =>
     `<label class="land-chip"><input type="checkbox" data-bizcat="${k}" ${bizCats.has(k) ? 'checked' : ''}><i style="background:${c}"></i>${esc(t(l))}</label>`).join('')}
     <label class="land-chip" title="${esc(t('bizAllHint'))}"><input type="checkbox" data-biz-all ${bizAll ? 'checked' : ''}>${esc(t('bizAll'))}</label></div>`;
   const SWT = { trees: `<svg viewBox="0 0 26 16">${GENUS_COLORS.slice(0, 4).map((c, i) => `<circle cx="${4 + i * 6}" cy="8" r="${2 + (i % 2)}" fill="${c}"/>`).join('')}</svg>`,
@@ -4613,11 +4712,13 @@ function setupMapMenus() {
     curbs: '<svg viewBox="0 0 26 16"><path d="M1 12 H16 Q22 12 22 6 V1" fill="none" stroke="#9CA2AD" stroke-width="1.4"/><path d="M5 6 H12" stroke="#B4B9C3" stroke-width="1.2"/></svg>',
     buildings: '<svg viewBox="0 0 26 16"><rect x="3" y="3" width="9" height="11" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/><rect x="14" y="6" width="9" height="8" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/></svg>' };
   Object.assign(SW, SWT);
-  const rowFor = k => k === 'contours' ? row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]) : OVERLAYS[k].modes ? row(k, OVERLAYS[k].modes)
+  const basemapRow = () => `<div class="lyr-row lyr-checks">${['pois', 'buildings'].map(k =>
+    `<label class="opt-check"><input type="checkbox" data-bmhide="${k}" ${basemapHide[k] ? '' : 'checked'}> ${esc(t(k === 'pois' ? 'bmPois' : 'bmBuildings'))}</label>`).join('')}</div>`;
+  const rowFor = k => k === 'basemap' ? basemapRow() : k === 'contours' ? row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]) : OVERLAYS[k].modes ? row(k, OVERLAYS[k].modes)
     : row(k, three) + (k === 'lands' ? chipsFold(k, landChips) : k === 'trees' ? chipsFold(k, treeChips()) : k === 'businesses' ? chipsFold(k, bizChips()) : '');
   // in sections; a layer sf-blocks adds later that isn't in one goes at the end
   const listed = new Set(LAYER_SECTIONS.flatMap(([, ks]) => ks));
-  const sections = [...LAYER_SECTIONS.map(([cap, ks]) => [cap, ks.filter(k => k === 'contours' || OVERLAYS[k])]),
+  const sections = [...LAYER_SECTIONS.map(([cap, ks]) => [cap, ks.filter(k => k === 'contours' || k === 'basemap' || OVERLAYS[k])]),
     ['grpMore', Object.keys(OVERLAYS).filter(k => !listed.has(k))]].filter(([, ks]) => ks.length);
   rowsEl.innerHTML = sections.map(([cap, ks]) => `<p class="areas-cap">${esc(t(cap))}</p>` + ks.map(rowFor).join('')).join('');
   syncChipCounts();
@@ -4627,6 +4728,11 @@ function setupMapMenus() {
     if (e.target.dataset.genus) { treeGenera = new Set([...rowsEl.querySelectorAll('[data-genus]:checked')].map(i => i.dataset.genus)); Tiles.filter(); }
     if (e.target.dataset.bizcat) { bizCats = new Set([...rowsEl.querySelectorAll('[data-bizcat]:checked')].map(i => i.dataset.bizcat)); Tiles.filter(); }
     if (e.target.matches('[data-biz-all]')) setBizAll(e.target.checked);
+    if (e.target.dataset.bmhide) {
+      basemapHide[e.target.dataset.bmhide] = !e.target.checked;
+      try { localStorage.setItem(BASEMAP_KEY, JSON.stringify(basemapHide)); } catch (err) { }
+      applyBasemap();
+    }
   });
   rowsEl.addEventListener('click', e => {
     const b = e.target.closest('.lseg button'); if (!b) return;
