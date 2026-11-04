@@ -2,6 +2,18 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v46
+Needs sf-blocks #14 (map layers in `data/tiles/`); until it's merged these layers and rows don't appear.
+
+- **Four new layers** in Layers ▾, read live from sf-blocks' tiles, off at first:
+  - **Street trees** (DPW inventory, current): a dot per tree, sized by trunk diameter, colored by genus (the ten most common, plus Other), with a dark ring for Significant Trees. Chips turn genera on and off. Close up from zoom 15; Always shows a thinned overview from zoom 10. Hover: common and Latin name, trunk, year planted.
+  - **Businesses** (Active Business Locations, current): one dot per address, sized and numbered by how many businesses are there, raspberry for food & drink and violet for everything else (chips for each). Contractors at client sites, parking operators, antennas, ATMs and landlords (sf-blocks' reviewed list) are hidden unless **Show all registrations** is checked. Hover: the address and its first few businesses.
+  - **Curbs and islands** (2016), from zoom 15 (Always: 13).
+  - **Buildings** (2016 footprints), from zoom 15. Hover: height in metres and feet (2010 LiDAR).
+- **Street trees** on cards: "38 (15 Brisbane Box, 12 Sycamore, London Plane, 11 California Sycamore)", the trees the inventory lists for this block's CNN.
+- **Businesses facing this block** on cards: how many, at how many addresses, and how many aren't shown (and of what kinds). Open it for each address and its businesses, with the owner when it's different. **Copy list** copies a tab-separated table (address, business, owner, mailing address, license, since) for a spreadsheet or mail merge; the mailing address is the business's own unless the registry gives another. Businesses count when their address is on this street and inside the block's address range.
+- Copied card text and CSV/JSON exports get `street_trees`, `street_tree_kinds`, `businesses` and `business_addresses`.
+
 ## v45
 - **Census estimates** (was "Population"): "2020 Census, extrapolated from the edges of census blocks on both sides of this street". A circled **i** opens how it's worked out: each census block used, how much of its edge this block makes up (in feet), its full people and homes and the share given to this street, with totals for both, and a link to the Census Bureau's statistical safeguards (block counts have noise added for privacy).
 - **Homes on the facing lots** is its own card row: "16 (SF Planning, 2023)". Parcels now just counts the lots. Copied text follows.
