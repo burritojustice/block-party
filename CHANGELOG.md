@@ -4,6 +4,7 @@ All changes are in `index.html` unless noted. `data/streets.json` and `scripts/b
 
 ## v53
 
+- **`scripts/match_blocks.py`** (copied from sf-blocks 2026.11.05) reads street and cross street from separate columns: `--street Street --cross Cross`. One cross street is matched as an intersection, two ("Bush and Sutter") as the block between them. The free-text mode is unchanged. Nothing on the page changes.
 - **Your files:** drop a CSV or GeoJSON anywhere on the page, or use "Add a CSV or GeoJSON…" at the top of Layers, and it shows as a layer in its own color. A CSV can locate rows by latitude/longitude columns, a WKT or "(lat, lon)" column, or a CNN column (one or more CNNs per row, drawn as those blocks). Hover for a row's name and a few fields; click a point or line for the whole row. Each file has Off/On and × in Layers and a line in the map key. Cards get a row per file listing what's within 50 m of the block, nearest first ("on the block" for its CNN or a polygon around it), and Copy includes them. Files stay in the tab: nothing is uploaded, and they're gone on reload.
 - **3D on or off (Layers › Basemap):** On is the default (tilt, terrain, 3D buildings). Off makes a flat map for older devices: no tilting, no terrain loaded, and the 3D button becomes Contours. Saved in the browser. This replaces v52's "Only when tilted", which jumped when tilting.
 - **Basemap addresses:** the basemap's house numbers have their own checkbox. Unchecking Buildings unchecks them too; check Addresses again to keep them for cross-referencing.
