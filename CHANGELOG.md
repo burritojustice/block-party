@@ -2,6 +2,10 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v53
+
+- **`scripts/match_blocks.py`** (copied from sf-blocks 2026.11.05) reads street and cross street from separate columns: `--street Street --cross Cross`. One cross street is matched as an intersection, two ("Bush and Sutter") as the block between them. The free-text mode is unchanged. Nothing on the page changes.
+
 ## v52
 
 - **Businesses at the same spot:** the city puts many addresses on one point: 1601 Church (Sun Valley Market) and 1603 Church, every suite in an office building, mailbox stores like 548 Market. About half of all business addresses shared a point with another, so one dot hid the others and a click picked one at random. sf-blocks #17 stacks them into one dot (its size and color cover all of them, labelled with the first storefront); hovering and clicking list every address there ("1601 Church St & 1603 Church St · 7 businesses"), storefronts first, and cards still list each business under its own address. Before #17 is merged, hover and click already gather the dots drawn at the same spot.
