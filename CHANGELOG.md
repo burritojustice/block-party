@@ -2,6 +2,22 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v54
+
+- **Nearby on cards, one setting for all your files** (Layers › Your files › Nearby on cards):
+  - **Blocks** (the default): rows on this block, or out to "Around the corner" (every block touching its ends) or "2 blocks". A row is on a block by its CNN when the file has a CNN column; otherwise when it's within 30 m of the block's centerline, or its polygon covers the block.
+  - **Area:** rows in the same neighborhood (the set picked on cards), supervisor district, census tract or block, or special district.
+  - **Radius:** 50, 100 or 200 m, for places without a regular street grid.
+  - Each row says where it is: "on this block", "20th St, around the corner", "Mission", "36 m".
+- **Shaded areas follow your files:** with an area set on Shade, the areas holding your files' rows are shaded too, along with the ones your blocks are in.
+- **Links:** paste a link under "Add a CSV or GeoJSON…": a Google Sheet shared "Anyone with the link" (or published), a DataSF dataset, or any CSV/GeoJSON a page may read. Links go in the address as `url=`, so a shared link opens with the same data. An Airtable shared link explains that it can't be read from here.
+- **Neighborhoods on the map (Areas › Neighborhoods):** Off, Borders or Shade, for the set picked on cards (Analysis, SF Find, Planning, Realtor, Who's on First). Changing the set in either place changes both. Cards have a "Map" checkbox next to the neighborhood list to show or hide them.
+- **Intersection cards get the block rows:** census estimates, Within a block, zoning, parcels, homes, land use, street trees, businesses and your files.
+  - Census estimates count halfway down each street from the corner.
+  - Within a block counts the census blocks touching the corner in full (four, usually).
+  - The other rows use the same half blocks: the half of each street nearest the corner.
+- Long file names on cards wrap instead of running over the list.
+
 ## v53
 
 - **`scripts/match_blocks.py`** (copied from sf-blocks 2026.11.05) reads street and cross street from separate columns: `--street Street --cross Cross`. One cross street is matched as an intersection, two ("Bush and Sutter") as the block between them. The free-text mode is unchanged. Nothing on the page changes.

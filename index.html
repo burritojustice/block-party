@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v53 -->
+<!-- build: v54 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -459,6 +459,13 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
 .drop-add { display: flex; gap: 10px; align-items: center; }
 .drop-add .btn { white-space: nowrap; flex: none; cursor: pointer; }
 .drop-add small { color: var(--ink-soft); }
+.drop-url { display: flex; gap: 6px; margin: 4px 0 6px; }
+.drop-url input { flex: 1; min-width: 0; font: inherit; font-size: 13px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
+.near-row { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 6px; }
+.hood-map { float: right; font-size: 13px; font-weight: 500; color: var(--ink-soft); display: inline-flex; gap: 4px; align-items: center; cursor: pointer; margin-left: 8px; }
+.hood-sel { font: inherit; font-size: 13px; padding: 3px 6px; border-radius: 8px; border: 1.5px solid var(--line); background: #fff; }
+.lyr-row.dim { opacity: .5; }
+.facts dt { overflow-wrap: anywhere; }
 .lg-table td small { display: block; white-space: normal; max-width: 190px; line-height: 1.3; color: var(--ink-soft); }
 .lg-table i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; opacity: .75; vertical-align: -1px; }
 .legend-hint { margin: 6px 0 0; font-size: 12px; color: var(--ink-soft); }
@@ -747,7 +754,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v53';
+const _BUILD_VERSION = 'v54';
 
 /* =====================================================================
    CONFIG
@@ -891,7 +898,7 @@ const I18N = {
     bizAllHint: 'Include contractors at client sites, parking operators, antennas, ATMs and landlords',
     treesRow: 'Street trees', treesCount: '{n} ({k} kinds)', treesN: '{n} ({top})', treesMore: '{n} more kinds', treesNone: 'None listed',
     treesSource: 'DPW street tree inventory, as of {date}', trunkIn: 'trunk {n} in', plantedY: 'planted {y}', sigTree: 'Significant tree',
-    bizRow: 'Businesses facing this block', bizN: '{n} at {a} addresses', bizN1: '{n} at 1 address', bizHidden: '+{n} not shown ({kinds})',
+    bizRow: 'Businesses facing this block', bizRowInt: 'Businesses on these streets', bizN: '{n} at {a} addresses', bizN1: '{n} at 1 address', bizHidden: '+{n} not shown ({kinds})',
     bizSource: 'Registered Business Locations (DataSF, open locations), as of {date}.', bizSourceLink: 'Source', bizCopy: 'Copy list', bizCopied: 'Copied {n} businesses',
     bizOwner: 'owner', bizMail: 'mail to', bizSince: 'since {y}', bizHere: '{n} businesses', bldgHeight: 'Building, about {ft} ft ({m} m) tall', bldgYear: '2016 footprint, height from 2010 LiDAR',
     kind_contractor: 'contractors', kind_parking: 'parking', kind_telecom: 'antennas', kind_atm: 'ATMs', kind_property: 'landlords', 'kind_multi-site': 'many-address registrations',
@@ -911,23 +918,37 @@ const I18N = {
     lyr_muni: 'Muni routes', lyr_bike: 'Bike network', lyr_slow: 'Slow Streets', lgSlow: 'Slow Streets',
     slowStreet: 'Slow Street', slowPlanned: 'Slow Street (planned)', slowRow: 'Slow Street', yesHere: 'Yes', slowOn: 'Slow Street{corridor}{status}', lyr_schools: 'Schools', lyr_stations: 'Fire and police', lyr_health: 'Hospitals and clinics',
     btnAreas: 'Areas', areasElected: 'Elected districts', areasSpecial: 'Special districts', areasSpecialNote: '(not elected)',
-    areasAdmin: 'Administrative', areasAdminLater: 'ZIP codes and neighborhoods are on the cards; map layers later.', areasShow: 'Show',
+    areasAdmin: 'Administrative', areasAdminLater: 'ZIP codes are on the cards; a map layer later.', areasShow: 'Show',
     areasPop: 'Population', areasPopHint: '2020 Census', aDensity: 'Density', area_cblk: 'Blocks', area_ctract: 'Tracts',
     aNoneHint: 'With borders only, there has to be a line', aColors: 'Colors', grpBasemap: 'Basemap', bmPois: 'Places (shops, restaurants, landmarks)', bmBuildings: 'Buildings (the basemap\'s outlines)',
     bizRetail: 'Retail', bizServices: 'Services', recTree: 'Street tree', recTreeId: 'Tree {id}', recSpecies: 'Species', recGenus: 'Genus', recTrunk: 'Trunk', recStatus: 'Status',
     recPlanted: 'Planted', recSite: 'Site', recCare: 'Cared for by', recAddress: 'Address', recCnn: 'Block (CNN)', recOwner: 'Owner', recMail: 'Mail to', recLicense: 'License',
     recIndustry: 'Industry', recSince: 'Here since', recHidden: 'Hidden unless Show all: {kind}', recBizN: '{n} businesses here', recSource: 'Source: {src}', chipsShown: '{n} of {of} kinds shown', chipsShownN: '{n} of {of} kinds · {total}', treesTotal: '{n} trees',
     bizTotal: '{n} at {a} addresses', nextToN: '{n} places', lgBizSize: 'Bigger dot: more businesses there. Color: the most storefront-like one.', lgAsOf: 'Data from {d}', bizAddrsHere: '{n} addresses here', bizMoreAddrs: '+{n} more addresses',
-    grpFiles: 'Your files', dropPick: 'Add a CSV or GeoJSON…', dropHint: 'or drop one on the page. It stays in this tab; nothing is uploaded.',
+    grpFiles: 'Your files', dropPick: 'Add a CSV or GeoJSON…', dropHint: 'or drop one on the page. Files stay in this tab; nothing is uploaded.',
     dropZone: 'Drop a CSV or GeoJSON to add it as a layer', dropCount: '{n} on the map', dropSkipped: '{n} without a location', dropRemove: 'Remove this file',
     dropAdded: 'Added {name}: {n} on the map', dropAddedSkip: 'Added {name}: {n} on the map, {k} rows without a location', dropBad: "Couldn't read {name}",
     dropNone: 'No locations in {name}: it needs lat/lon columns, WKT, a CNN column, or GeoJSON', dropYours: 'your file', dropUnnamed: '(no name)',
-    dropNear: '{n} within {m} m', dropNoneNear: 'None within {m} m', dropOn: 'on the block', dropM: '{m} m',
+    dropNear: '{n} within {m} m', dropNoneNear: 'None', dropOn: 'on this block', dropM: '{m} m', dropOnStreet: 'on {street}',
+    dropAround: '{street}, around the corner', dropAway: '{street}, {n} blocks out',
+    dropNearBlock: '{n} on this block', dropNearBlocks: '{n} within {k} block(s)', dropNearInt: '{n} on these streets', dropNearIntN: '{n} within {k} block(s)', dropNearArea: '{n} in {area}',
+    nearTitle: 'Nearby on cards', nearHint: 'How cards list your files’ rows', nearBlocks: 'Blocks', nearArea: 'Area', nearRadius: 'Radius',
+    nearStep0: 'This block', nearStep1: 'Around the corner', nearStep2: '2 blocks',
+    urlPh: 'Or paste a link: CSV, GeoJSON, Google Sheet, DataSF', urlAdd: 'Add', urlBad: 'That isn’t a link (it should start with https://)',
+    urlLoading: 'Loading…', urlSheetName: 'Google Sheet',
+    urlSheet: 'Couldn’t read that sheet. In Google Sheets, set Share › General access to “Anyone with the link” (Viewer), then try again.',
+    urlBlocked: 'Couldn’t load that link ({err}). The site may not let other pages read it; download the file and drop it here instead.',
+    urlAirtable: 'Airtable shared links can’t be read from another site. Use the view’s Download CSV and drop the file here.',
     bm3d: '3D', bm3dOn: 'On', bm3dOff: 'Off', bm3dHint: 'Tilt, hills and 3D buildings. Off: a flat map for older devices, and the 3D button shows contours.', bmAddresses: 'Addresses (the basemap\'s house numbers)', btnContoursTitle: 'Show contour lines (10 ft)', btn3dTitle: 'Tilt the map to see the hills',
     lgTreeSize: 'Bigger dot: thicker trunk; dark ring: Significant Tree', grpAround: 'Getting around', grpStreet: 'On the street', grpLand: 'Land and buildings', grpTerrain: 'Terrain', grpMore: 'More', aQuietBase: 'Hide parks and places on the map',
     lgMuniNums: 'numbers', lgMuniNumsOut: 'Route numbers show from zoom {z}', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick',
     lgNoOne: 'no one lives there (parks, water): clear', lgParcelLines: 'Parcels (lot lines)',
     lgDensity: '{set}: {what} ({src})', densityUnit: 'people per sq mi',
+    censusNoteInt: '2020 census, counted halfway down each street from the corner',
+    cornersNoteInt: 'Everyone in the {n} census blocks touching this corner (full counts): neighbors who could see it and walk over',
+    calcHowInt: 'Counted halfway down each of the {n} streets from the corner ({len} ft in all). For each census block on either side, we take its 2020 people and homes and count the share that matches how much of its edge those half blocks make up.',
+    calcCornersInt: 'Within a block: the census blocks touching this corner, counted in full',
+    areasHoods: 'Neighborhoods', areasHoodsHint: 'The set picked on cards', hoodMap: 'Map', hoodMapHint: 'Show these neighborhoods on the map',
     censusRow: 'Census estimates', censusEst: '{people} people, {homes} homes', censusNote: '2020 census, extrapolated from edges of blocks along street',
     cornersRow: 'Within a block', cornersEst: '{people} people, {homes} homes',
     cornersNote: 'Everyone in the {n} census blocks touching either end of this block (full counts): neighbors who could see it and walk over',
@@ -1937,9 +1958,9 @@ function render() {
   if (segs.length && !Groups.ready) Groups.ensure().then(() => { if (Groups.ready) render(); });
   if (segs.length && !Areas.ready) Areas.ensure().then(() => { if (Areas.ready) render(); });
   // land use per block: read the parcel tiles for any card that doesn't have it yet, then redraw once
-  const needParcels = segs.filter(s => !isInt(s) && !Parcels.peek(s));
+  const needParcels = segs.filter(s => !Parcels.peek(s));
   if (needParcels.length && Parcels.available()) Promise.all(needParcels.map(s => Parcels.fetch(s))).then(rs => { if (rs.some(Boolean)) render(); });
-  const needTiles = segs.filter(s => !isInt(s) && !Tiles.peek(s));
+  const needTiles = segs.filter(s => !Tiles.peek(s));
   if (needTiles.length) Promise.all(needTiles.map(s => Tiles.fetch(s))).then(rs => { if (rs.some(Boolean)) render(); });
   updateAdjLots();
   const d = Logic.db && Logic.db.dataAsOf;
@@ -1964,8 +1985,11 @@ function intCardHTML(i) {
       ${Areas.facts(i)}
       <dt>${esc(t('zip'))}</dt><dd>${esc(i.zip)}</dd>
       <dt>${esc(t('nhood'))}</dt><dd>${hoodsHTML(i)}</dd>
+      ${censusFacts(i)}
       <dt>${esc(t('elevation'))}</dt><dd data-elev="${i.cnn}">${esc(elev)}</dd>
       ${transitFacts(i)}
+      ${parcelFacts(i)}
+      ${tileFacts(i)}${Drops.facts(i)}
       ${groupsFacts(i)}
     </dl>
   </li>`;
@@ -2201,6 +2225,7 @@ function setupResultsEvents() {
     const cb2 = e.target.closest('[data-copy-biz]');
     if (cb2) { const s = state.results.find(r => r.cnn === +cb2.dataset.copyBiz); const r = s && Tiles.peek(s); if (r && r.businesses) copyText(bizText(r), t('bizCopied', { n: bizText(r).split('\n').length - 1 })); return; }
     if (e.target.matches && e.target.matches('[data-biz-all]')) { setBizAll(e.target.checked); return; }
+    if (e.target.matches && e.target.matches('[data-hood-map]')) { setArea('hood', e.target.checked ? (areaMode.hood === 'off' ? 'borders' : areaMode.hood) : 'off'); return; }
     const cg = e.target.closest('[data-copy-groups]');
     if (cg) { const s = state.results.find(r => r.cnn === +cg.dataset.copyGroups); const r = s && Groups.of(s); if (r) copyText(groupsText(r), t('ngCopied', { n: r.groups.length + r.citywide.length })); return; }
     const li = e.target.closest('.seg'); if (!li) return;
@@ -2334,6 +2359,7 @@ function writeHash() {
   if (typeof landCats !== 'undefined' && [...landCats].sort().join() !== [...LAND_DEFAULT].sort().join())
     parts.push('lands=' + ([...landCats].join(',') || 'none'));
   if (LANG !== 'en') parts.push('lang=' + LANG);
+  if (typeof Drops !== 'undefined') for (const u of Drops.urls()) parts.push('url=' + encodeURIComponent(u));
   const h = parts.length ? '#' + parts.join('&') : '';
   if (h !== location.hash) { writingHash = true; history.replaceState(null, '', baseUrl() + location.search + h); writingHash = false; }
 }
@@ -2342,7 +2368,7 @@ function readHash() {
   const list = k => (p.get(k) || '').split(',').map(s => s.trim()).filter(Boolean);
   return { cnn: list('cnn').map(Number).filter(Boolean), street: list('street'), all: p.get('all') === '1', minor: p.get('minor') !== '0', lang: p.get('lang'), quiet: list('quiet'),
     layers: Object.fromEntries(list('layers').map(x => x.split(':')).filter(x => x.length === 2)), lands: p.get('lands'),
-    areas: Object.fromEntries(list('areas').map(x => x.split(':')).filter(x => x.length === 2)) };
+    areas: Object.fromEntries(list('areas').map(x => x.split(':')).filter(x => x.length === 2)), urls: p.getAll('url') };
 }
 function applyHash() {
   const h = readHash();
@@ -2354,6 +2380,7 @@ function applyHash() {
   for (const k of AREA_GROUP_KEYS) if (h.areas[k]) setArea(k, h.areas[k], false);
   for (const [k, v] of Object.entries(h.areas)) if (!AREA_GROUP_KEYS.includes(k)) setArea(k, v, false);
   if (h.lands) setLandCats(h.lands.split(','), false);
+  for (const u of h.urls) Drops.addURL(u, true);
   if (h.minor !== Logic.db.includeMinor) { $('include-minor').checked = h.minor; Logic.setIncludeMinor(h.minor); refreshMapFilter(); }
   if (h.all !== Logic.db.searchAll) { $('search-all').checked = h.all; Logic.setSearchAll(h.all); refreshMapFilter(); }
   if (h.cnn.length) {
@@ -3702,10 +3729,26 @@ const Tiles = (() => {
       const id = JSON.stringify(f.p); if (d > padM || seen.has(id)) return false; seen.add(id); return true;
     });
   }
+  // an intersection's halves added up
+  function mergeTiles(rs) {
+    rs = rs.filter(Boolean);
+    const out = {};
+    if (rs.some(r => r.trees)) {
+      const kinds = new Map();
+      for (const r of rs) if (r.trees) for (const [k, n] of r.trees.kinds) kinds.set(k, (kinds.get(k) || 0) + n);
+      out.trees = { n: rs.reduce((a, r) => a + (r.trees ? r.trees.n : 0), 0), kinds: [...kinds].sort((a, b) => b[1] - a[1]), pts: rs.flatMap(r => r.trees ? r.trees.pts : []) };
+    }
+    if (rs.some(r => r.businesses)) {
+      const by = new Map();
+      for (const r of rs) for (const x of r.businesses || []) if (!by.has(x.address)) by.set(x.address, x);
+      out.businesses = [...by.values()].sort((a, b) => String(a.address).replace(/^\d+\S*\s+/, '').localeCompare(String(b.address).replace(/^\d+\S*\s+/, '')) || (parseInt(a.address) || 0) - (parseInt(b.address) || 0));
+    }
+    return out;
+  }
   async function compute(s) {
     const out = {};
     if (meta.has('trees')) {
-      const trees = (await near('trees', s, 40)).filter(f => +f.p.cnn === s.cnn);
+      const trees = (await near('trees', s, s.halfOf ? 15 : 40)).filter(f => +f.p.cnn === (s.halfOf || s.cnn));
       const kinds = new Map();
       for (const f of trees) { const n = f.p.common || f.p.species || f.p.genus || '?'; kinds.set(n, (kinds.get(n) || 0) + 1); }
       out.trees = { n: trees.length, kinds: [...kinds].sort((a, b) => b[1] - a[1]), pts: trees.map(f => f.ll) };
@@ -3908,9 +3951,9 @@ const Tiles = (() => {
     // card rows: trees (by CNN) and businesses (by address on this block), or null while being read
     peek: s => cache.get(s.cnn) || null,
     fetch(s) {
-      if (!meta.size || !window.pmtiles || isInt(s)) return Promise.resolve(null);
+      if (!meta.size || !window.pmtiles) return Promise.resolve(null);
       if (cache.has(s.cnn)) return Promise.resolve(cache.get(s.cnn));
-      if (!pending.has(s.cnn)) pending.set(s.cnn, compute(s).then(r => { cache.set(s.cnn, r); pending.delete(s.cnn); return r; })
+      if (!pending.has(s.cnn)) pending.set(s.cnn, (isInt(s) ? Promise.all(IntLegs.of(s).map(h => Tiles.fetch(h))).then(mergeTiles) : compute(s)).then(r => { cache.set(s.cnn, r); pending.delete(s.cnn); return r; })
         .catch(err => { console.warn('[block-party] map layer rows', err); pending.delete(s.cnn); return null; }));
       return pending.get(s.cnn);
     },
@@ -3921,6 +3964,34 @@ let hlFor = null;   // which card list is ringed on the map ("cnn|trees")
 const BLDG_FULL_PITCH = 45;   // degrees of tilt where buildings reach full height
 const BLDG_STEPS = 6;         // heights in steps: each step rebuilds every building's 3D shape
 let bldgK = -1;
+// Intersection cards: each street that meets the corner, cut halfway down from it. The halves stand in
+// for blocks (cnn "<block>h<corner>", halfOf the block), so the block rows (census, parcels, trees,
+// businesses) work on them and the card adds them up.
+const IntLegs = (() => {
+  const cache = new Map(), KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
+  function half(coords) {
+    const d = [0];
+    for (let i = 1; i < coords.length; i++) d.push(d[i - 1] + Math.hypot((coords[i][0] - coords[i - 1][0]) * KX, (coords[i][1] - coords[i - 1][1]) * KY));
+    const L = d[d.length - 1] / 2, out = [coords[0]];
+    for (let i = 1; i < coords.length; i++) {
+      if (d[i] < L) { out.push(coords[i]); continue; }
+      const u = (L - d[i - 1]) / ((d[i] - d[i - 1]) || 1), a = coords[i - 1], b = coords[i];
+      out.push([a[0] + u * (b[0] - a[0]), a[1] + u * (b[1] - a[1])]);
+      break;
+    }
+    return out;
+  }
+  return {
+    of(i) {
+      if (cache.has(i.cnn)) return cache.get(i.cnn);
+      const legs = (Logic.db.segsAtNode.get(i.cnn) || []).filter(Logic.eligible);
+      const hs = legs.map(L => ({ ...L, cnn: `${L.cnn}h${i.cnn}`, halfOf: L.cnn, len: L.len / 2,
+        coords: half(L.fn === i.cnn ? L.coords : [...L.coords].reverse()) }));
+      cache.set(i.cnn, hs);
+      return hs;
+    },
+  };
+})();
 // One card line: a count or summary, with the details folded underneath (open state kept across redraws)
 const foldDD = (summary, body, key) => body ? `<details class="fold" data-fold="${key}"><summary>${summary}</summary><div class="fold-body">${body}</div></details>` : summary;
 // full records for a click on the map
@@ -3983,7 +4054,7 @@ function monthYear(d) {
 const asOfRow = k => { const d = Tiles.asOf(k); return d ? `<tr><td></td><td colspan="2"><small>${esc(t('lgAsOf', { d: monthYear(d) }))}</small></td></tr>` : ''; };
 const bizShown = list => list.map(a => ({ ...a, shown: a.items.filter(i => bizAll || !i.kind) }));
 function tileFacts(s) {
-  if (isInt(s) || !Tiles.has('trees') && !Tiles.has('businesses')) return '';
+  if (!Tiles.has('trees') && !Tiles.has('businesses')) return '';
   const r = Tiles.peek(s);
   if (!r) return `<dt>${esc(t(Tiles.has('trees') ? 'treesRow' : 'bizRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
   let html = '';
@@ -3999,7 +4070,7 @@ function tileFacts(s) {
     const li = x => `<li><b>${esc(x.address)}</b>${x.shown.length > 1 ? ` <span class="muted">· ${x.shown.length}</span>` : ''}${x.shown.slice(0, 40).map(i =>
       `<br><span>${esc(i.dba || i.owner || '')}${i.owner && i.dba && i.owner !== i.dba ? ` <small class="muted">· ${esc(t('bizOwner'))}: ${esc(i.owner)}</small>` : ''}</span>`).join('')}${x.shown.length > 40 ? '<br>…' : ''}</li>`;
     const m = Tiles.meta('businesses');
-    html += `<dt>${esc(t('bizRow'))}</dt><dd><details class="ng biz"><summary>${esc(addrs === 1 ? t('bizN1', { n }) : t('bizN', { n, a: addrs }))}${hidden.length ? ` <small class="muted">${esc(t('bizHidden', { n: hidden.length, kinds }))}</small>` : ''}</summary>
+    html += `<dt>${esc(t(isInt(s) ? 'bizRowInt' : 'bizRow'))}</dt><dd><details class="ng biz"><summary>${esc(addrs === 1 ? t('bizN1', { n }) : t('bizN', { n, a: addrs }))}${hidden.length ? ` <small class="muted">${esc(t('bizHidden', { n: hidden.length, kinds }))}</small>` : ''}</summary>
       <ul class="ng-list">${list.filter(x => x.shown.length).map(li).join('')}</ul>
       <p class="ng-foot"><button type="button" class="btn small" data-copy-biz="${s.cnn}">${esc(t('bizCopy'))}</button>
         <label class="biz-all" title="${esc(t('bizAllHint'))}"><input type="checkbox" data-biz-all ${bizAll ? 'checked' : ''}> ${esc(t('bizAll'))}</label>
@@ -4023,11 +4094,17 @@ function setBizAll(on) {
 /* =====================================================================
    YOUR FILES: a CSV or GeoJSON dropped on the page (or picked in Layers) becomes a layer, kept in this
    tab only (nothing is uploaded). Locations come from GeoJSON geometry, or in a CSV from lat/lon columns,
-   a WKT or "(lat, lon)" column, or a CNN column (one or more CNNs, drawn as those blocks). Cards list
-   what's within DROP_NEAR_M of each block.
+   a WKT or "(lat, lon)" column, or a CNN column (one or more CNNs, drawn as those blocks). Links work too
+   (any CSV/GeoJSON a page may read, Google Sheets shared "Anyone with the link", DataSF), and go in the hash
+   as url= so the view can be shared. Cards list what's nearby, one way for every file (nearMode):
+   along the streets (this block, or N blocks out), in the same area, or within a radius.
    ===================================================================== */
 const DROP_COLORS = ['#E8590C', '#1971C2', '#2F9E44', '#C2255C', '#7048E8', '#0C8599'];
-const DROP_NEAR_M = 50;
+const DROP_NEAR_M = 50;      // radius, the default for "Radius"
+const DROP_ON_M = 30;        // a point this close to a block's centerline is on it (lots are deep)
+const NEAR_KEY = 'bp-near';
+const NEAR_DEFAULT = { by: 'blocks', steps: 0, area: 'hood', radius: 50 };
+let nearMode = (() => { try { return { ...NEAR_DEFAULT, ...JSON.parse(localStorage.getItem(NEAR_KEY) || '{}') }; } catch (e) { return { ...NEAR_DEFAULT }; } })();
 const Drops = (() => {
   const files = [];
   let seq = 0, rec = null, ready = false;   // ready: the map's layers are in (Drops.onMap)
@@ -4071,8 +4148,13 @@ const Drops = (() => {
       const y = parseFloat(r[cols.lat]), x = parseFloat(r[cols.lon]);
       if (okLL(x, y)) return { type: 'Point', coordinates: [x, y] };
     }
+    if (cols.geo != null && r[cols.geo] && typeof r[cols.geo] === 'object') {
+      const o = r[cols.geo];
+      if (o.type && o.coordinates) return o;
+      if (o.latitude != null && okLL(+o.longitude, +o.latitude)) return { type: 'Point', coordinates: [+o.longitude, +o.latitude] };
+    }
     if (cols.geo != null) {
-      const v = (r[cols.geo] || '').trim();
+      const v = String(r[cols.geo] || '').trim();
       const g = wkt(v); if (g) return g;
       const ll = /^\(?\s*(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)\s*\)?$/.exec(v);   // Socrata's "(37.76, -122.42)"
       if (ll && okLL(+ll[2], +ll[1])) return { type: 'Point', coordinates: [+ll[2], +ll[1]] };
@@ -4086,15 +4168,25 @@ const Drops = (() => {
   }
   function fromCSV(text) {
     const rows = parseCSV(text), head = rows.shift() || [];
-    const find = re => { const i = head.findIndex(h => re.test(h.trim())); return i < 0 ? null : i; };
+    return fromRows(head, rows);
+  }
+  // rows as arrays under a header (CSV) or as objects (JSON from Socrata and others)
+  function fromObjects(list) {
+    const head = [...new Set(list.flatMap(o => Object.keys(o)))].filter(k => !k.startsWith(':'));
+    return fromRows(head, list.map(o => head.map(k => o[k])));
+  }
+  function fromRows(head, rows) {
+    const find = re => { const i = head.findIndex(h => re.test(String(h).trim())); return i < 0 ? null : i; };
     const cols = { lat: find(LAT), lon: find(LON), geo: find(GEO), cnn: find(CNN) };
     const feats = []; let skipped = 0;
     for (const r of rows) {
       const g = rowGeom(r, cols);
       if (!g) { skipped++; continue; }
-      feats.push({ type: 'Feature', geometry: g, properties: Object.fromEntries(head.map((h, i) => [h.trim() || 'column ' + (i + 1), r[i] ?? ''])) });
+      const cnns = cols.cnn != null ? new Set(String(r[cols.cnn] || '').split(/[;,\s]+/).map(Number).filter(Boolean)) : null;
+      feats.push({ type: 'Feature', geometry: g, _cnns: cnns && cnns.size ? cnns : null, properties: Object.fromEntries(head.map((h, i) => [h.trim() || 'column ' + (i + 1),
+        r[i] != null && typeof r[i] === 'object' ? JSON.stringify(r[i]) : r[i] ?? ''])) });
     }
-    return { feats, skipped, fields: head.map((h, i) => h.trim() || 'column ' + (i + 1)), how: cols.cnn != null && cols.lat == null && cols.geo == null ? 'cnn' : 'xy' };
+    return { feats, skipped, fields: head.map((h, i) => String(h).trim() || 'column ' + (i + 1)), how: cols.cnn != null && cols.lat == null && cols.geo == null ? 'cnn' : 'xy' };
   }
   function fromGeoJSON(o) {
     const list = o.type === 'FeatureCollection' ? o.features : o.type === 'Feature' ? [o] : o.type ? [{ type: 'Feature', geometry: o, properties: {} }] : [];
@@ -4118,7 +4210,9 @@ const Drops = (() => {
     if (g.type === 'GeometryCollection') (g.geometries || []).forEach(x => walk(x.type, x.coordinates)); else walk(g.type, g.coordinates);
     const all = [...pts, ...lines.flat(), ...polys.flat(2)];
     const bb = all.reduce((b, [x, y]) => [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
-    return { pts, lines, polys, bb };
+    // up to ~60 points in lon/lat, for "in which area" tests
+    const ll = all.filter((_, i) => i % Math.max(1, Math.ceil(all.length / 60)) === 0).map(([x, y]) => [x / KX, y / KY]);
+    return { pts, lines, polys, bb, ll };
   }
   const segDist = (x, y, a, b) => {
     const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy;
@@ -4199,32 +4293,72 @@ const Drops = (() => {
     map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 60, maxZoom: 17, duration: reducedMotion() ? 0 : 700 });
   }
   async function add(file) {
-    const text = await file.text(), name = file.name.replace(/\.(csv|tsv|txt|geojson|json)$/i, '');
+    addText(await file.text(), file.name);
+  }
+  // a file's text (or parsed JSON rows) to a layer; url when it came from a link
+  function addText(text, fileName, url, json) {
+    const name = fileName.replace(/\.(csv|tsv|txt|geojson|json)$/i, '');
     let r;
     try {
-      if (/\.(geo)?json$/i.test(file.name) || /^\s*[{[]/.test(text)) r = fromGeoJSON(JSON.parse(text));
-      else r = fromCSV(text);
-    } catch (e) { toast(t('dropBad', { name: file.name })); return; }
-    if (!r.feats.length) { toast(t('dropNone', { name: file.name })); return; }
-    const f = { id: ++seq, name, color: DROP_COLORS[(seq - 1) % DROP_COLORS.length], on: true, feats: r.feats, fields: r.fields, skipped: r.skipped, how: r.how,
+      const o = json || (/\.(geo)?json$/i.test(fileName) || /^\s*[{[]/.test(text) ? JSON.parse(text) : null);
+      r = !o ? fromCSV(text) : Array.isArray(o) ? fromObjects(o) : fromGeoJSON(o);
+    } catch (e) { toast(t('dropBad', { name: fileName })); return; }
+    if (!r.feats.length) { toast(t('dropNone', { name: fileName })); return; }
+    const f = { id: ++seq, name, url: url || null, color: DROP_COLORS[(seq - 1) % DROP_COLORS.length], on: true, feats: r.feats, fields: r.fields, skipped: r.skipped, how: r.how,
       nameField: r.fields.find(k => NAME.test(k)) || r.fields.find(k => r.feats.some(x => typeof x.properties[k] === 'string' && x.properties[k] && isNaN(+x.properties[k]))) || null };
     for (const x of f.feats) x._sh = shape(x.geometry);
     files.push(f);
     addLayers(f); fit(f);
     toast(t(f.skipped ? 'dropAddedSkip' : 'dropAdded', { name, n: f.feats.length.toLocaleString(), k: f.skipped.toLocaleString() }));
-    renderMenu(); render();
+    renderMenu(); changed();
   }
+  // Links: Google Sheets (shared "Anyone with the link", or published), DataSF/Socrata datasets, or any
+  // CSV/JSON/GeoJSON a page may read (CORS). Same rules as Joiner's sources.js.
+  function resolveLink(input) {
+    const u = new URL(String(input).trim());
+    const gid = u.searchParams.get('gid') || (u.hash.match(/gid=(\d+)/) || [])[1] || '0';
+    let m = u.pathname.match(/^\/spreadsheets\/d\/e\/([\w-]+)/);
+    if (u.hostname === 'docs.google.com' && m) return { kind: 'sheet', gid, urls: [`https://docs.google.com/spreadsheets/d/e/${m[1]}/pub?output=csv&gid=${gid}`] };
+    m = u.pathname.match(/^\/spreadsheets\/d\/([\w-]+)/);
+    if (u.hostname === 'docs.google.com' && m) return { kind: 'sheet', gid, urls: [`https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv&gid=${gid}`,
+      `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv&gid=${gid}`] };
+    m = u.pathname.match(/\/resource\/([a-z0-9]{4}-[a-z0-9]{4})(\.(json|csv|geojson))?$/i);
+    const page = !m && u.pathname.split('/').filter(Boolean).filter(p => p !== 'about_data').pop();
+    const id = m ? m[1] : page && /^[a-z0-9]{4}-[a-z0-9]{4}$/.test(page) && /^data\.|\.gov$|socrata/.test(u.hostname) ? page : null;
+    if (id) return { kind: 'socrata', id, meta: `https://${u.host}/api/views/${id}.json`,
+      urls: [`https://${u.host}/resource/${id}.json?${new URLSearchParams({ ...Object.fromEntries(m ? u.searchParams : []), $limit: (m && u.searchParams.get('$limit')) || 50000 })}`] };
+    return { kind: 'url', urls: [u.href] };
+  }
+  async function addURL(input, quiet) {
+    input = String(input || '').trim(); if (!input) return;
+    if (files.some(f => f.url === input)) return;
+    let link; try { link = resolveLink(input); } catch (e) { toast(t('urlBad')); return; }
+    if (/(^|\.)airtable\.com$/.test(new URL(input).hostname)) { toast(t('urlAirtable')); return; }
+    if (!quiet) toast(t('urlLoading'));
+    let text = null, err;
+    for (const u of link.urls) { try { const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status); text = await r.text(); break; } catch (e) { err = e; } }
+    if (text == null || (link.kind === 'sheet' && /^\s*<(!doctype|html)/i.test(text))) {
+      toast(t(link.kind === 'sheet' ? 'urlSheet' : 'urlBlocked', { err: err ? err.message : '' })); return;
+    }
+    let name = decodeURIComponent(new URL(link.urls[0]).pathname.split('/').pop() || new URL(input).host);
+    if (link.kind === 'sheet') name = t('urlSheetName') + (link.gid !== '0' ? ` (tab ${link.gid})` : '');
+    if (link.kind === 'socrata') { name = link.id; try { const m = await (await fetch(link.meta)).json(); if (m && m.name) name = m.name; } catch (e) { } }
+    addText(text, link.kind === 'sheet' ? name + '.csv' : link.kind === 'socrata' ? name + '.json' : name, input);
+  }
+  const urls = () => files.map(f => f.url).filter(Boolean);
+  // after files change: cards, the map's shaded areas, the hash
+  function changed() { areaCache.clear(); render(); Areas.updateShade(); writeHash(); }
   function remove(id) {
     const i = files.findIndex(f => f.id === id); if (i < 0) return;
     const f = files[i]; files.splice(i, 1);
     if (ready) { for (const l of ids(f)) if (map.getLayer(l)) map.removeLayer(l); if (map.getSource('drop-' + f.id)) map.removeSource('drop-' + f.id); }
-    renderMenu(); render();
+    renderMenu(); changed();
   }
   function show(id, on) {
     const f = files.find(f => f.id === id); if (!f) return;
     f.on = on;
     if (ready) for (const l of ids(f)) if (map.getLayer(l)) map.setLayoutProperty(l, 'visibility', on ? 'visible' : 'none');
-    renderMenu(); render();
+    renderMenu(); changed();
   }
   const swatch = f => `<svg viewBox="0 0 26 16"><line x1="2" y1="12" x2="14" y2="4" stroke="${f.color}" stroke-width="3" stroke-linecap="round"/><circle cx="19" cy="9" r="4.5" fill="${f.color}" stroke="#fff"/></svg>`;
   // Layers menu ("Your files") and the map key
@@ -4233,7 +4367,9 @@ const Drops = (() => {
     if (el) el.innerHTML = `<p class="areas-cap">${esc(t('grpFiles'))}</p>` + files.map(f => `<div class="lyr-row" data-drop="${f.id}">${swatch(f)}<b>${esc(f.name)}<small>${esc(t('dropCount', { n: f.feats.length.toLocaleString() }))}${f.skipped ? ' · ' + esc(t('dropSkipped', { n: f.skipped.toLocaleString() })) : ''}</small></b>
         <div class="lseg" role="group" aria-label="${esc(f.name)}"><button type="button" data-drop-on="0" aria-pressed="${!f.on}">${esc(t('lyrOff'))}</button><button type="button" data-drop-on="1" aria-pressed="${f.on}">${esc(t('lyrOn'))}</button></div>
         <button type="button" class="drop-x" data-drop-x title="${esc(t('dropRemove'))}" aria-label="${esc(t('dropRemove'))}">×</button></div>`).join('')
-      + `<div class="lyr-row drop-add"><label class="btn small"><input type="file" accept=".csv,.tsv,.txt,.geojson,.json" multiple hidden data-drop-pick>${esc(t('dropPick'))}</label><small>${esc(t('dropHint'))}</small></div>`;
+      + `<div class="lyr-row drop-add"><label class="btn small"><input type="file" accept=".csv,.tsv,.txt,.geojson,.json" multiple hidden data-drop-pick>${esc(t('dropPick'))}</label><small>${esc(t('dropHint'))}</small></div>
+      <form class="drop-url" data-drop-url><input type="url" name="u" placeholder="${esc(t('urlPh'))}" aria-label="${esc(t('urlPh'))}"><button type="submit" class="btn small">${esc(t('urlAdd'))}</button></form>`
+      + (files.length ? nearHTML() : '');
     const ul = $('legend') && $('legend').querySelector('ul');
     if (ul) {
       ul.querySelectorAll('.lg-drop').forEach(li => li.remove());
@@ -4245,9 +4381,37 @@ const Drops = (() => {
       }
     }
   }
+  // "Nearby on cards": one setting for every file
+  const AREA_PICKS = () => [['hood', t('nhood')], ...['sup', 'ctract', 'cblk', 'cbd', 'cult', 'hist'].filter(k => Areas.has(k)).map(k => [k, Areas.conf(k).title || t('area_' + k)])];
+  function nearHTML() {
+    const seg = (k, opts) => `<div class="lseg" role="group" data-near="${k}">${opts.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${String(nearMode[k]) === String(v)}">${esc(l)}</button>`).join('')}</div>`;
+    return `<div class="lyr-row near-row"><span></span><b>${esc(t('nearTitle'))}<small>${esc(t('nearHint'))}</small></b>
+        ${seg('by', [['blocks', t('nearBlocks')], ['area', t('nearArea')], ['radius', t('nearRadius')]])}</div>
+      <div class="lyr-row lyr-sub" data-near-opt="blocks" ${nearMode.by === 'blocks' ? '' : 'hidden'}><span></span><b></b>${seg('steps', [[0, t('nearStep0')], [1, t('nearStep1')], [2, t('nearStep2')]])}</div>
+      <div class="lyr-row lyr-sub" data-near-opt="area" ${nearMode.by === 'area' ? '' : 'hidden'}><span></span><b></b><select class="hood-sel" data-near-area>${AREA_PICKS().map(([v, l]) =>
+        `<option value="${v}" ${nearMode.area === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
+      <div class="lyr-row lyr-sub" data-near-opt="radius" ${nearMode.by === 'radius' ? '' : 'hidden'}><span></span><b></b>${seg('radius', [[50, '50 m'], [100, '100 m'], [200, '200 m']])}</div>`;
+  }
+  function setNear(k, v) {
+    nearMode = { ...nearMode, [k]: k === 'steps' || k === 'radius' ? +v : v };
+    try { localStorage.setItem(NEAR_KEY, JSON.stringify(nearMode)); } catch (e) { }
+    const el = $('drop-rows');
+    el.querySelectorAll('[data-near]').forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(nearMode[g.dataset.near]) === b.dataset.v)));
+    el.querySelectorAll('[data-near-opt]').forEach(r => r.hidden = r.dataset.nearOpt !== nearMode.by);
+    if (nearMode.by === 'area') Areas.need(areaKey()).then(() => render());
+    render();
+  }
   function setupUI() {
     const el = $('drop-rows');
+    el.addEventListener('submit', e => {
+      if (!e.target.matches('[data-drop-url]')) return;
+      e.preventDefault();
+      const i = e.target.elements.u; addURL(i.value); i.value = '';
+    });
+    el.addEventListener('change', e => { if (e.target.matches('[data-near-area]')) setNear('area', e.target.value); });
     el.addEventListener('click', e => {
+      const nb = e.target.closest('[data-near] button');
+      if (nb) { setNear(nb.closest('[data-near]').dataset.near, nb.dataset.v); return; }
       const row = e.target.closest('[data-drop]'); if (!row) return;
       const id = +row.dataset.drop;
       // after this click is done: rebuilding the rows mid-click makes the menu's outside-click handler close it
@@ -4268,42 +4432,96 @@ const Drops = (() => {
     });
     renderMenu();
   }
-  // card rows: each shown file's features within DROP_NEAR_M of the block, nearest first
-  const cache = new Map();
-  function near(s) {
-    const blk = s.coords.map(toM);
-    const bb = blk.reduce((b, [x, y]) => [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
-    return files.filter(f => f.on).map(f => {
-      const k = f.id + '|' + s.cnn;
-      if (!cache.has(k)) {
-        const R = DROP_NEAR_M, hits = [];
-        for (const x of f.feats) {
-          const b = x._sh.bb;
-          if (b[0] > bb[2] + R || b[2] < bb[0] - R || b[1] > bb[3] + R || b[3] < bb[1] - R) continue;
-          const d = dist(blk, x._sh);
-          if (d <= R) hits.push({ d, p: x.properties, ll: x._sh.pts[0] ? [x._sh.pts[0][0] / KX, x._sh.pts[0][1] / KY] : null });
+  // card rows: each shown file's features near a block or corner, the one way nearMode says
+  const cache = new Map(), areaCache = new Map();
+  const areaKey = () => nearMode.area === 'hood' ? 'nh_' + (HOOD_SETS.some(([k]) => k === hoodSet) ? hoodSet : 'analysis') : nearMode.area;
+  const bbNear = (b, bb, R) => !(b[0] > bb[2] + R || b[2] < bb[0] - R || b[1] > bb[3] + R || b[3] < bb[1] - R);
+  const bbOf = pts => pts.reduce((b, [x, y]) => [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
+  // the blocks N steps out along the streets: from a block, itself, then every block touching its ends;
+  // from a corner, the blocks that meet there
+  function blocksOut(s, steps) {
+    const db = Logic.db, out = new Map();
+    let front = isInt(s) ? (db.segsAtNode.get(s.cnn) || []).filter(Logic.eligible) : [s];
+    front.forEach(b => out.set(b.cnn, { b, k: 0 }));
+    for (let k = 1; k <= steps; k++) {
+      const next = [];
+      for (const b of front) for (const n of [b.fn, b.tn]) for (const o of db.segsAtNode.get(n) || [])
+        if (Logic.eligible(o) && !out.has(o.cnn)) { out.set(o.cnn, { b: o, k }); next.push(o); }
+      front = next;
+    }
+    return [...out.values()];
+  }
+  function hitsFor(f, s) {
+    const hits = [];
+    if (nearMode.by === 'blocks') {
+      // on one of the blocks: its CNN, or (no CNN column) within DROP_ON_M of its centerline or a polygon over it
+      const blocks = blocksOut(s, nearMode.steps).map(({ b, k }) => { const m = b.coords.map(toM); return { b, k, m, bb: bbOf(m) }; });
+      for (const x of f.feats) {
+        let best = null;
+        for (const { b, k, m, bb } of blocks) {
+          if (best && best.k <= k) continue;
+          const on = x._cnns ? x._cnns.has(b.cnn) : bbNear(x._sh.bb, bb, DROP_ON_M) && dist(m, x._sh) <= DROP_ON_M;
+          if (on) best = { k, b };
         }
-        hits.sort((a, b) => a.d - b.d);
-        cache.set(k, hits);
+        if (best) hits.push({ d: best.k, p: x.properties, where: best.b.cnn === s.cnn ? t('dropOn')
+          : best.k === 0 ? t('dropOnStreet', { street: P(best.b.street) }) : t(best.k === 1 ? 'dropAround' : 'dropAway', { street: P(best.b.street), n: best.k }) });
       }
+    } else if (nearMode.by === 'area') {
+      const k = areaKey(), mine = Areas.loaded(k) ? (Areas.of(k, s) || []).map(a => a.name) : null;
+      if (!mine) return null;
+      for (const x of f.feats) {
+        const names = new Set(x._sh.ll.flatMap(([lo, la]) => Areas.areasAt(k, lo, la)));
+        const n = mine.find(a => names.has(a));
+        if (n) hits.push({ d: 0, p: x.properties, where: n });
+      }
+    } else {
+      const R = nearMode.radius, blk = isInt(s) ? [toM([s.x, s.y])] : s.coords.map(toM), bb = bbOf(blk);
+      const line = blk.length > 1 ? blk : [blk[0], blk[0]];
+      for (const x of f.feats) {
+        if (!bbNear(x._sh.bb, bb, R)) continue;
+        const d = x._cnns && x._cnns.has(s.cnn) ? 0 : dist(line, x._sh);
+        if (d <= R) hits.push({ d, p: x.properties, where: d < 1 ? t('dropOn') : t('dropM', { m: Math.round(d) }) });
+      }
+    }
+    return hits.sort((a, b) => a.d - b.d);
+  }
+  function near(s) {
+    const mode = nearMode.by + (nearMode.by === 'blocks' ? nearMode.steps : nearMode.by === 'area' ? areaKey() : nearMode.radius);
+    return files.filter(f => f.on).map(f => {
+      const k = f.id + '|' + s.cnn + '|' + mode;
+      if (!cache.has(k)) { const h = hitsFor(f, s); if (!h) return { f, hits: null }; cache.set(k, h); }
       return { f, hits: cache.get(k) };
     });
   }
+  const summary = (n, s) => nearMode.by === 'blocks' ? t(isInt(s) ? (nearMode.steps ? 'dropNearIntN' : 'dropNearInt') : nearMode.steps ? 'dropNearBlocks' : 'dropNearBlock', { n, k: nearMode.steps })
+    : nearMode.by === 'area' ? t('dropNearArea', { n, area: (Areas.of(areaKey(), s) || []).map(a => a.short || a.name).join(' / ') }) : t('dropNear', { n, m: nearMode.radius });
   function facts(s) {
-    if (isInt(s) || !files.length) return '';
+    if (!files.some(f => f.on)) return '';
+    if (nearMode.by === 'area' && !Areas.loaded(areaKey())) Areas.need(areaKey()).then(() => render());
     return near(s).map(({ f, hits }) => {
       const label = p => nameOf(f, p) || t('dropUnnamed');
-      const body = hits.length ? `<ul class="ng-list">${hits.slice(0, 50).map(h => `<li>${esc(label(h.p))} <span class="muted">· ${h.d < 1 ? esc(t('dropOn')) : esc(t('dropM', { m: Math.round(h.d) }))}</span></li>`).join('')}${hits.length > 50 ? '<li>…</li>' : ''}</ul>` : '';
-      return `<dt>${esc(f.name)}</dt><dd>${hits.length ? foldDD(esc(t('dropNear', { n: hits.length, m: DROP_NEAR_M })), body, 'drop' + f.id) : esc(t('dropNoneNear', { m: DROP_NEAR_M }))}</dd>`;
+      if (!hits) return `<dt>${esc(f.name)}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
+      const body = hits.length ? `<ul class="ng-list">${hits.slice(0, 50).map(h => `<li>${esc(label(h.p))} <span class="muted">· ${esc(h.where)}</span></li>`).join('')}${hits.length > 50 ? '<li>…</li>' : ''}</ul>` : '';
+      return `<dt>${esc(f.name)}</dt><dd>${hits.length ? foldDD(esc(summary(hits.length, s)), body, 'drop' + f.id) : esc(t('dropNoneNear'))}</dd>`;
     }).join('');
   }
   function text(s) {
-    if (isInt(s) || !files.length) return [];
-    return near(s).filter(x => x.hits.length).map(({ f, hits }) => `${f.name}: ${hits.map(h => nameOf(f, h.p) || t('dropUnnamed')).join('; ')}`);
+    if (!files.some(f => f.on)) return [];
+    return near(s).filter(x => x.hits && x.hits.length).map(({ f, hits }) => `${f.name}: ${hits.map(h => nameOf(f, h.p) || t('dropUnnamed')).join('; ')}`);
+  }
+  // the set's areas holding a shown file's features, for Areas' Shade
+  function areaNames(k) {
+    if (!files.some(f => f.on) || !Areas.loaded(k)) return [];
+    if (!areaCache.has(k)) {
+      const out = new Set();
+      for (const f of files.filter(f => f.on)) for (const x of f.feats) for (const [lo, la] of x._sh.ll) for (const n of Areas.areasAt(k, lo, la)) out.add(n);
+      areaCache.set(k, [...out]);
+    }
+    return areaCache.get(k);
   }
   // after the map is ready: layers for files dropped before it was
   function mapReady_(popup) { ready = true; wire(popup); for (const f of files) if (!map.getSource('drop-' + f.id)) addLayers(f); }
-  return { add, setupUI, facts, text, pointIds, onMap: mapReady_, files: () => files };
+  return { add, addURL, urls, setupUI, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
 })();
 const Parcels = (() => {
   const Z = 15, NEAR_M = 14, ADDR_M = 25, PAD_M = 30;
@@ -4357,10 +4575,13 @@ const Parcels = (() => {
       lots.set(lot, { use: f.p.landuse || '', zone: f.p.parcelsactiveandretired_zoning_district || '', code: f.p.parcelsactiveandretired_zoning_code || '',
         units: Math.max(+f.p.resunits || 0, prev ? prev.units : 0) });
     }
+    return summarize(lots);
+  }
+  function summarize(lots) {
     const count = key => { const m = new Map(); for (const l of lots.values()) { const k = key(l); m.set(k, (m.get(k) || 0) + 1); } return [...m].sort((a, b) => b[1] - a[1]); };
     const zones = new Map();
     for (const l of lots.values()) if (l.zone) { const z = zones.get(l.zone) || { code: l.code, n: 0 }; z.n++; zones.set(l.zone, z); }
-    return { lotIds: [...lots.keys()], lots: lots.size, homes: [...lots.values()].reduce((a, l) => a + l.units, 0), uses: count(l => l.use),
+    return { byLot: [...lots], lotIds: [...lots.keys()], lots: lots.size, homes: [...lots.values()].reduce((a, l) => a + l.units, 0), uses: count(l => l.use),
       zones: [...zones].sort((a, b) => b[1].n - a[1].n).map(([name, z]) => ({ name, code: z.code, n: z.n })) };
   }
   return {
@@ -4368,11 +4589,14 @@ const Parcels = (() => {
     // the summary, or null while it's being read (fetch() starts it)
     peek: s => cache.get(s.cnn) || null,
     fetch(s) {
-      if (!window.pmtiles || isInt(s)) return Promise.resolve(null);
+      if (!window.pmtiles) return Promise.resolve(null);
       if (cache.has(s.cnn)) return Promise.resolve(cache.get(s.cnn));
       if (!pending.has(s.cnn)) {
         pm ||= new pmtiles.PMTiles(SFBlocks.url(OVERLAYS.landuse.pmtiles));
-        pending.set(s.cnn, compute(s).then(r => { cache.set(s.cnn, r); pending.delete(s.cnn); return r; })
+        // an intersection: its halves' lots, each counted once
+        const work = isInt(s) ? Promise.all(IntLegs.of(s).map(h => Parcels.fetch(h))).then(rs => summarize(new Map(rs.filter(Boolean).flatMap(r => r.byLot))))
+          : compute(s);
+        pending.set(s.cnn, work.then(r => { cache.set(s.cnn, r); pending.delete(s.cnn); return r; })
           .catch(err => { console.warn('[block-party] parcels', err); pending.delete(s.cnn); return null; }));
       }
       return pending.get(s.cnn);
@@ -4380,7 +4604,7 @@ const Parcels = (() => {
   };
 })();
 function parcelFacts(s) {
-  if (!Parcels.available() || isInt(s)) return '';
+  if (!Parcels.available()) return '';
   const r = Parcels.peek(s);
   if (!r) return `<dt>${esc(t('landuseRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
   if (!r.lots) return '';
@@ -4434,6 +4658,10 @@ const AREA_SETS = [
     strip: /\s*(Arts\s*(&|and)\s*)?Cultural District$/i, chip: n => 'Cultural: ' + n, col: 'cultural_district' },
   { k: 'hist', set: 'historic_districts', kind: 'special', label: 'Historic', title: 'Historic Districts', color: '#A8441B',
     strip: /\s*Historic District$/i, chip: n => 'Historic: ' + n, col: 'historic_district' },
+  // neighborhoods: one set at a time, the one picked on cards (hoodSet); Off, Borders or Shade
+  ...[['analysis', 'analysis_neighborhoods'], ['sffind', 'sf_find_neighborhoods'], ['planning', 'planning_neighborhoods'],
+    ['realtor', 'realtor_neighborhoods'], ['wof', 'wof_neighbourhoods']].map(([hs, set]) => ({ k: 'nh_' + hs, hs, set, kind: 'hood',
+    label: 'Neighborhood', title: 'Neighborhoods', color: '#0E7490', width: 1.8, chip: n => n, col: 'nh_' + hs })),
   // administrative: census geography, for population. Off at first; Borders or Density (colored by people
   // per square mile, the set's `choropleth` field in sf-blocks).
   { k: 'cblk', set: 'census_blocks', kind: 'admin', label: 'Blocks', title: 'Census blocks', color: '#5B6478', width: 1, col: 'census_block' },
@@ -4471,10 +4699,10 @@ const ADMIN_LINE = { black: ['#1E1E1E', 0.7], grey: ['#6B7080', 0.75], white: ['
 const adminLineWidth = (w, s) => { const k = (w === 'thick' ? 2.2 : 1) * s;
   return ['interpolate', ['linear'], ['zoom'], 11, 0.25 * k, 14, 0.6 * k, 16, 1.1 * k, 18, 2 * k]; };
 const SIDE_M = 12;   // metres either side of a block's centerline when checking which areas it's in
-const AREA_DEFAULT = { sup: 'borders', special: 'off', specialMode: 'shade', admin: 'cblk', adminMode: 'off',
+const AREA_DEFAULT = { sup: 'borders', special: 'off', specialMode: 'shade', hood: 'off', hoodSet: 'analysis', admin: 'cblk', adminMode: 'off',
   densPal: 'magma', densFlip: 'on', adminLine: 'grey', adminWidth: 'thin', quietBase: 'on' };
 // settings shared by a group of sets (the rest of areaMode is one entry per elected set)
-const AREA_GROUP_KEYS = ['special', 'specialMode', 'admin', 'adminMode', 'densPal', 'densFlip', 'adminLine', 'adminWidth', 'quietBase'];
+const AREA_GROUP_KEYS = ['special', 'specialMode', 'hood', 'hoodSet', 'admin', 'adminMode', 'densPal', 'densFlip', 'adminLine', 'adminWidth', 'quietBase'];
 // the basemap's colored land (parks, schools, hospitals…) and its places (shops, theatres…): hidden under
 // population density when "Hide parks and places" is on. Piers, runways and plazas stay (they're shapes).
 const QUIET_BASE = l => (l['source-layer'] === 'landuse' && !/pier|runway|pedestrian/.test(l.id)) || l['source-layer'] === 'pois';
@@ -4555,8 +4783,12 @@ const Areas = (() => {
     const c = sets.get(k).c;
     if (c.kind === 'elected') return areaMode[k] || 'off';
     if (c.kind === 'admin') return areaMode.admin === k ? areaMode.adminMode : 'off';
+    if (c.kind === 'hood') return c.hs === hoodSet ? areaMode.hood : 'off';
     return areaMode.special === k ? areaMode.specialMode : 'off';
   };
+  // each area's bounding box, for quick point tests
+  const bboxes = st => st.bb ||= st.polys.map(p => { const b = [Infinity, Infinity, -Infinity, -Infinity];
+    for (const part of p.parts) for (const [x, y] of part[0]) { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); } return b; });
   return {
     get keys() { return [...sets.keys()]; },
     get ready() { return ready; },
@@ -4564,6 +4796,16 @@ const Areas = (() => {
     conf: k => sets.get(k).c,
     meta: k => sets.get(k) && sets.get(k).meta,
     modeOf,
+    // load one set (neighborhoods load only when shown or asked for)
+    need: k => sets.has(k) ? load(k) : Promise.resolve(),
+    loaded: k => !!(sets.get(k) && sets.get(k).polys),
+    // names of the set's areas a point (lon, lat) is in
+    areasAt(k, x, y) {
+      const st = sets.get(k); if (!st || !st.polys) return [];
+      const bb = bboxes(st), out = [];
+      st.polys.forEach((p, i) => { const b = bb[i]; if (x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3] && inPoly(x, y, p.parts)) out.push(p.name); });
+      return out;
+    },
     // before the map layers are added: which sets sf-blocks has
     async register() {
       try {
@@ -4661,7 +4903,7 @@ const Areas = (() => {
       const items = state.results.filter(s => state.checked.has(s.cnn));
       for (const [k, st] of sets) {
         if (modeOf(k) !== 'shade' || !st.polys) continue;
-        const names = [...new Set(items.flatMap(it => (Areas.of(k, it) || []).map(a => a.name)))];
+        const names = [...new Set([...items.flatMap(it => (Areas.of(k, it) || []).map(a => a.name)), ...Drops.areaNames(k)])];
         map.setFilter(`bp-area-${k}-fill`, ['in', ['get', '_n'], ['literal', names]]);
       }
     },
@@ -4689,7 +4931,7 @@ const Areas = (() => {
     // every set's polygons, for cards and exports
     ensure() {
       if (!sets.size) { ready = true; return Promise.resolve(); }
-      return allPromise ||= Promise.all([...sets.keys()].map(load)).then(() => { ready = true; }, () => { allPromise = null; });
+      return allPromise ||= Promise.all([...sets.keys()].filter(k => sets.get(k).c.kind !== 'hood').map(load)).then(() => { ready = true; }, () => { allPromise = null; });
     },
     // the set's areas a block (at 25/50/75% along) or a corner (and 15 m around it) is in; null until loaded
     of(k, item) {
@@ -4747,7 +4989,19 @@ const Areas = (() => {
     // and until the census blocks are in.
     census(item) {
       const st = sets.get('cblk');
-      if (isInt(item) || !st || !st.polys) return null;
+      if (!st || !st.polys) return null;
+      if (isInt(item)) {
+        // an intersection: halfway down each street from the corner, the census blocks' shares added up
+        const ck = 'census|' + item.cnn;
+        if (cache.has(ck)) return cache.get(ck);
+        const rs = IntLegs.of(item).map(h => Areas.census(h)).filter(Boolean), by = new Map();
+        for (const r of rs) for (const x of r.parts) { const y = by.get(x.id); if (y) y.share = Math.min(1, y.share + x.share); else by.set(x.id, { ...x }); }
+        const parts = [...by.values()];
+        const r = { people: parts.reduce((a, x) => a + x.pop * x.share, 0), homes: parts.reduce((a, x) => a + x.homes * x.share, 0),
+          segLen: rs.reduce((a, x) => a + x.segLen, 0), parts, blocks: parts.map(x => x.id), int: true, legs: rs.length };
+        cache.set(ck, r);
+        return r;
+      }
       const ck = 'census|' + item.cnn;
       if (cache.has(ck)) return cache.get(ck);
       if (!st.bbox) st.bbox = st.polys.map(p => { const b = [Infinity, Infinity, -Infinity, -Infinity];
@@ -4779,11 +5033,13 @@ const Areas = (() => {
     // full. In a plain grid that's six: the two along the block and two more at each corner.
     corners(item) {
       const st = sets.get('cblk');
-      if (isInt(item) || !st || !st.polys) return null;
+      if (!st || !st.polys) return null;
       const ck = 'corners|' + item.cnn;
       if (cache.has(ck)) return cache.get(ck);
-      if (!st.bbox) Areas.census(item);
-      const R = 20, ends = [item.coords[0], item.coords[item.coords.length - 1]], hits = new Map();
+      if (!st.bbox) st.bbox = st.polys.map(p => { const b = [Infinity, Infinity, -Infinity, -Infinity];
+        for (const [x, y] of p.parts[0][0]) { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); } return b; });
+      // a block: the census blocks touching either end; an intersection: the ones touching the corner (four, usually)
+      const R = 20, ends = isInt(item) ? [[item.x, item.y]] : [item.coords[0], item.coords[item.coords.length - 1]], hits = new Map();
       const dSeg = (x, y, a, b) => {
         const ax = a[0] * KX, ay = a[1] * KY, vx = b[0] * KX - ax, vy = b[1] * KY - ay, L2 = vx * vx + vy * vy || 1;
         const u = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / L2));
@@ -4797,7 +5053,7 @@ const Areas = (() => {
         if (d <= R) hits.set(j, p);
       });
       const parts = [...hits.values()].map(p => ({ id: p.name, pop: +p.props.pop20 || 0, homes: +p.props.housing20 || 0 }));
-      const r = { people: parts.reduce((a, x) => a + x.pop, 0), homes: parts.reduce((a, x) => a + x.homes, 0), parts };
+      const r = { people: parts.reduce((a, x) => a + x.pop, 0), homes: parts.reduce((a, x) => a + x.homes, 0), parts, int: isInt(item) };
       cache.set(ck, r);
       return r;
     },
@@ -4806,7 +5062,7 @@ const Areas = (() => {
       const est = Areas.census(item);
       // a street is the line between census blocks: list the blocks (and their tracts) on both sides
       const sides = est ? est.blocks : [];
-      return { ...Object.fromEntries([...sets.values()].map(st => [st.c.col, st.c.k === 'cblk' && est ? sides.join('; ')
+      return { ...Object.fromEntries([...sets.values()].filter(st => st.c.kind !== 'hood').map(st => [st.c.col, st.c.k === 'cblk' && est ? sides.join('; ')
           : st.c.k === 'ctract' && est ? [...new Set(sides.map(g => g.slice(0, 11)))].join('; ')
           : (Areas.of(st.c.k, item) || []).map(a => a.col).join('; ')])),
         ...(sets.has('cblk') ? { census_people_est: est ? Math.round(est.people) : '', census_homes_est: est ? Math.round(est.homes) : '',
@@ -4820,13 +5076,13 @@ const Areas = (() => {
 const roundEst = n => n < 10 ? Math.round(n) : n < 100 ? Math.round(n / 5) * 5 : Math.round(n / 10) * 10;
 const censusText = e => t('censusEst', { people: roundEst(e.people).toLocaleString(), homes: roundEst(e.homes).toLocaleString() });
 function censusFacts(s) {
-  if (!Areas.has('cblk') || isInt(s)) return '';
+  if (!Areas.has('cblk')) return '';
   const e = Areas.census(s);
   if (!e) return Areas.ready ? '' : `<dt>${esc(t('censusRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
   const c = Areas.corners(s);
-  return `<dt>${esc(t('censusRow'))}</dt><dd>${foldDD(esc(censusText(e)), `<small class="muted">${esc(t('censusNote'))}</small>${censusCalc(e)}`, 'census')}</dd>`
+  return `<dt>${esc(t('censusRow'))}</dt><dd>${foldDD(esc(censusText(e)), `<small class="muted">${esc(t(e.int ? 'censusNoteInt' : 'censusNote'))}</small>${censusCalc(e)}`, 'census')}</dd>`
     + (c && c.parts.length ? `<dt>${esc(t('cornersRow'))}</dt><dd>${foldDD(esc(t('cornersEst', { people: roundEst(c.people).toLocaleString(), homes: roundEst(c.homes).toLocaleString() })),
-      `<small class="muted">${esc(t('cornersNote', { n: c.parts.length }))}</small>${cornersTable(c)}`, 'corners')}</dd>` : '');
+      `<small class="muted">${esc(t(c.int ? 'cornersNoteInt' : 'cornersNote', { n: c.parts.length }))}</small>${cornersTable(c)}`, 'corners')}</dd>` : '');
 }
 // the (i) under Census estimates: each census block used, its full counts and the share given to this street
 const FT = 3.28084;   // the card gives lengths in feet
@@ -4837,14 +5093,14 @@ function censusCalc(e) {
   const rows = e.parts.sort((a, b) => b.share - a.share).map(p => `<tr><td title="GEOID ${esc(p.id)}">${esc(blockLabel(p.id))}</td>
     <td>${esc(t('calcEdgeM', { a: n(p.share * p.perim * FT), b: n(p.perim * FT) }))} <span class="muted">(${Math.round(p.share * 100)}%)</span></td>
     <td>${esc(t('calcOf', { a: n(p.pop * p.share), b: n(p.pop) }))}</td><td>${esc(t('calcOf', { a: n(p.homes * p.share), b: n(p.homes) }))}</td></tr>`).join('');
-  return `<div class="calc"><p>${esc(t('calcHow', { len: n(e.segLen * FT) }))}</p>
+  return `<div class="calc"><p>${esc(t(e.int ? 'calcHowInt' : 'calcHow', { len: n(e.segLen * FT), n: e.legs }))}</p>
     <div class="calc-wrap"><table class="calc-table"><thead><tr><th>${esc(t('calcBlock'))}</th><th>${esc(t('calcEdge'))}</th><th>${esc(t('calcPeople'))}</th><th>${esc(t('calcHomes'))}</th></tr></thead>
     <tbody>${rows}</tbody><tfoot><tr><th>${esc(t('calcTotal'))}</th><td></td><td>${esc(t('calcOf', { a: n(e.people), b: n(sum('pop')) }))}</td><td>${esc(t('calcOf', { a: n(e.homes), b: n(sum('homes')) }))}</td></tr></tfoot></table></div>
     <p class="muted">${esc(t('calcSafe'))} <a href="https://www.census.gov/about/policies/privacy/statistical_safeguards.html" target="_blank" rel="noopener">${esc(t('calcSafeLink'))}</a></p></div>`;
 }
 function cornersTable(c) {
   const n = v => Math.round(v).toLocaleString();
-  return `<div class="calc"><p><b>${esc(t('calcCorners'))}</b></p><div class="calc-wrap"><table class="calc-table"><thead><tr><th>${esc(t('calcBlock'))}</th><th>${esc(t('calcFull'))}</th><th>${esc(t('calcHomes'))}</th></tr></thead>
+  return `<div class="calc"><p><b>${esc(t(c.int ? 'calcCornersInt' : 'calcCorners'))}</b></p><div class="calc-wrap"><table class="calc-table"><thead><tr><th>${esc(t('calcBlock'))}</th><th>${esc(t('calcFull'))}</th><th>${esc(t('calcHomes'))}</th></tr></thead>
       <tbody>${[...c.parts].sort((a, b) => b.pop - a.pop).map(x => `<tr><td title="GEOID ${esc(x.id)}">${esc(blockLabel(x.id))}</td><td>${n(x.pop)}</td><td>${n(x.homes)}</td></tr>`).join('')}</tbody>
       <tfoot><tr><th>${esc(t('calcTotal'))}</th><td>${n(c.people)}</td><td>${n(c.homes)}</td></tr></tfoot></table></div></div>`;
 }
@@ -4861,11 +5117,16 @@ function setupAreasMenu() {
   const elected = AREA_SETS.filter(c => c.kind === 'elected' && has.includes(c.k));
   const special = AREA_SETS.filter(c => c.kind === 'special' && has.includes(c.k));
   const admin = AREA_SETS.filter(c => c.kind === 'admin' && has.includes(c.k));
+  const hoodSets = AREA_SETS.filter(c => c.kind === 'hood' && has.includes(c.k));
   rowsEl.innerHTML = (elected.length ? `<p class="areas-cap">${esc(t('areasElected'))}</p>` : '')
     + elected.map(c => `<div class="lyr-row">${sw(c)}<b>${esc(t('area_' + c.k))}</b>${seg(c.k, three, Areas.modeOf(c.k))}</div>`).join('')
     + (special.length ? `<p class="areas-cap">${esc(t('areasSpecial'))} <span>${esc(t('areasSpecialNote'))}</span></p>
       <div class="lyr-row">${sw(special[0])}<b>${esc(t('areasShow'))}</b>${seg('special', [['off', 'aOff'], ...special.map(c => [c.k, 'area_' + c.k])], areaMode.special)}</div>
       <div class="lyr-row lyr-sub"><span></span><b></b>${seg('specialMode', three.slice(1), areaMode.specialMode)}</div>` : '')
+    + (hoodSets.length ? `<p class="areas-cap">${esc(t('areasHoods'))}</p>
+      <div class="lyr-row">${sw(hoodSets[0])}<b>${esc(t('nhood'))}<small>${esc(t('areasHoodsHint'))}</small></b>${seg('hood', three, areaMode.hood)}</div>
+      <div class="lyr-row lyr-sub"><span></span><b></b><select class="hood-sel" data-hood-sel aria-label="${esc(t('areasHoods'))}">${hoodSets.map(c =>
+        `<option value="${c.hs}">${esc(t(HOOD_SETS.find(([k]) => k === c.hs)[1]))}</option>`).join('')}</select></div>` : '')
     + `<p class="areas-cap">${esc(t('areasAdmin'))}</p>`
     + (admin.length ? `<div class="lyr-row"><svg viewBox="0 0 26 16" class="dens-sw">${densSwatch()}</svg><b>${esc(t('areasPop'))}<small>${esc(t('areasPopHint'))}</small></b>${seg('admin', admin.map(c => [c.k, 'area_' + c.k]), areaMode.admin)}</div>
       <div class="lyr-row lyr-sub"><span></span><b></b>${seg('adminMode', [['off', 'aOff'], ['borders', 'aBorders'], ['density', 'aDensity']], areaMode.adminMode)}</div>
@@ -4876,7 +5137,10 @@ function setupAreasMenu() {
     + `<p class="areas-later">${esc(t('areasAdminLater'))}</p>
       <p class="pop-hint">${t('areasShadeHint')}</p>`;
   syncAreasMenu();
-  rowsEl.onchange = e => { const k = e.target.dataset.check; if (k) setArea(k, e.target.checked ? 'on' : 'off'); };
+  rowsEl.onchange = e => {
+    if (e.target.matches('[data-hood-sel]')) { setArea('hoodSet', e.target.value); return; }
+    const k = e.target.dataset.check; if (k) setArea(k, e.target.checked ? 'on' : 'off');
+  };
   rowsEl.onclick = e => {
     const p = e.target.closest('[data-pal]');
     if (p) { p.closest('details').open = false; setArea('densPal', p.dataset.pal); return; }
@@ -4902,6 +5166,8 @@ function syncAreasMenu() {
   const none = rowsEl.querySelector('[data-area="adminWidth"] [data-v="none"]');
   if (none) { none.disabled = areaMode.adminMode !== 'density'; none.title = none.disabled ? t('aNoneHint') : ''; }
   rowsEl.querySelectorAll('[data-check]').forEach(i => i.checked = areaMode[i.dataset.check] === 'on');
+  const hs = rowsEl.querySelector('[data-hood-sel]'); if (hs) { hs.value = hoodSet; hs.closest('.lyr-row').classList.toggle('dim', areaMode.hood === 'off'); }
+  document.querySelectorAll('[data-hood-map]').forEach(i => i.checked = areaMode.hood !== 'off');
   const sw = rowsEl.querySelector('.dens-sw'); if (sw) sw.innerHTML = densSwatch();
   const sum = rowsEl.querySelector('.pal-pick summary');
   if (sum) sum.innerHTML = `<i class="pal-sw" style="background:${palGradient(areaMode.densPal)}"></i>${esc(SEQ_LABELS[areaMode.densPal] || '')} ▾`;
@@ -4910,6 +5176,8 @@ function syncAreasMenu() {
 function setArea(k, v, write = true) {
   if (k === 'special') { if (v !== 'off' && !Areas.has(v)) return; areaMode.special = v; }
   else if (k === 'specialMode') { if (!['borders', 'shade'].includes(v)) return; areaMode.specialMode = v; }
+  else if (k === 'hood') { if (!['off', 'borders', 'shade'].includes(v)) return; areaMode.hood = v; }
+  else if (k === 'hoodSet') { if (!HOOD_SETS.some(([x]) => x === v)) return; areaMode.hoodSet = v; if (hoodSet !== v) { setHoodSet(v, false); render(); } }
   else if (k === 'admin') { if (!Areas.has(v)) return; areaMode.admin = v; }
   else if (k === 'adminMode') { if (!['off', 'borders', 'density'].includes(v)) return; areaMode.adminMode = v; }
   else if (k === 'densPal') { if (!SEQ_PALETTES[v]) return; areaMode.densPal = v; }
@@ -4923,11 +5191,14 @@ function setArea(k, v, write = true) {
     : k === 'special' ? (v !== 'off' && areaMode.specialMode === 'shade' ? 'special' : null)
     : k === 'adminMode' ? (v === 'density' ? 'admin' : null)
     : k === 'admin' ? (areaMode.adminMode === 'density' ? 'admin' : null)
+    : k === 'hood' ? (v === 'shade' ? 'hood' : null)
+    : k === 'hoodSet' ? null
     : (v === 'shade' ? k : null);
   if (shading) {
     for (const x of Areas.keys) if (Areas.conf(x).kind === 'elected' && x !== shading && areaMode[x] === 'shade') areaMode[x] = 'borders';
     if (shading !== 'special' && areaMode.special !== 'off' && areaMode.specialMode === 'shade') areaMode.specialMode = 'borders';
     if (shading !== 'admin' && areaMode.adminMode === 'density') areaMode.adminMode = 'borders';
+    if (shading !== 'hood' && areaMode.hood === 'shade') areaMode.hood = 'borders';
   }
   syncAreasMenu();
   Areas.apply();
@@ -5012,7 +5283,13 @@ function groupsFacts(item) {
 // one neighborhood set shown when closed (Analysis unless the viewer picked another); open for every set
 const HOOD_KEY = 'bp-hoodset';
 let hoodSet = (() => { try { return localStorage.getItem(HOOD_KEY) || 'analysis'; } catch (e) { return 'analysis'; } })();
-function setHoodSet(k) { hoodSet = k; try { localStorage.setItem(HOOD_KEY, k); } catch (e) { } render(); }
+areaMode.hoodSet = HOOD_SETS.some(([x]) => x === hoodSet) ? hoodSet : 'analysis';
+function setHoodSet(k, redraw = true) {
+  hoodSet = k; areaMode.hoodSet = HOOD_SETS.some(([x]) => x === k) ? k : areaMode.hoodSet;
+  try { localStorage.setItem(HOOD_KEY, k); } catch (e) { }
+  if (typeof syncAreasMenu === 'function') { syncAreasMenu(); Areas.apply(); if (redraw) writeHash(); }
+  if (redraw) render();
+}
 function hoodsHTML(x) {
   const rows = HOOD_SETS.filter(([k]) => x.hoods && x.hoods[k]).map(([k, label]) => [k, t(label), x.hoods[k]]);
   if (x.nhood) rows.push(['streets', t('hsStreets'), x.nhood]);
@@ -5020,7 +5297,8 @@ function hoodsHTML(x) {
   if (!rows.length) return esc(x.anhood || '');
   const pick = rows.find(r => r[0] === hoodSet) || rows.find(r => r[0] === 'analysis') || rows[0];
   const tag = pick[0] === 'analysis' ? '' : ` <span class="hoods-set">${esc(pick[1])}</span>`;
-  return `<details class="hoods"><summary>${esc(fmt(pick[2]))}${tag}</summary><table class="hoods-table">${rows.map(([k, l, v]) =>
+  const box = HOOD_SETS.some(([k]) => k === pick[0]) ? `<label class="hood-map" title="${esc(t('hoodMapHint'))}"><input type="checkbox" data-hood-map ${areaMode.hood !== 'off' ? 'checked' : ''}> ${esc(t('hoodMap'))}</label>` : '';
+  return box + `<details class="hoods"><summary>${esc(fmt(pick[2]))}${tag}</summary><table class="hoods-table">${rows.map(([k, l, v]) =>
     `<tr data-hoodset="${k}" class="${k === pick[0] ? 'on' : ''}" title="${esc(t('hoodPick'))}"><td><span class="hoods-dot"></span>${esc(l)}</td><td>${esc(fmt(v))}</td></tr>`).join('')}</table></details>`;
 }
 const nextToText = list => list.map(o => `${o.name} (${o.kind})`).join('; ');
