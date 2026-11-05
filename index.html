@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v52 -->
+<!-- build: v53 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -451,6 +451,14 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
 .lg-table td { padding: 1px 6px 1px 0; }
 .lg-table td.n { text-align: right; color: var(--ink-soft); padding-left: 8px; }
 .bp-rec .rec-addr + .rec-addr { border-top: 1px solid var(--line, #E3E1DC); margin-top: 6px; padding-top: 6px; }
+.drop-zone { position: fixed; inset: 0; z-index: 50; background: rgba(36, 87, 214, .14); border: 3px dashed #2457D6; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.drop-zone[hidden] { display: none; }
+.drop-zone p { background: #fff; padding: 14px 20px; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 18px rgba(0,0,0,.15); }
+.drop-x { border: 0; background: none; font-size: 18px; line-height: 1; cursor: pointer; color: var(--ink-soft); padding: 0 2px; }
+.lyr-row[data-drop] { grid-template-columns: 26px 1fr auto auto; }
+.drop-add { display: flex; gap: 10px; align-items: center; }
+.drop-add .btn { white-space: nowrap; flex: none; cursor: pointer; }
+.drop-add small { color: var(--ink-soft); }
 .lg-table td small { display: block; white-space: normal; max-width: 190px; line-height: 1.3; color: var(--ink-soft); }
 .lg-table i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; opacity: .75; vertical-align: -1px; }
 .legend-hint { margin: 6px 0 0; font-size: 12px; color: var(--ink-soft); }
@@ -587,6 +595,7 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
       <div class="zoom-read" id="zoom-read" data-i18n-title="zoomRead" title="Zoom level"></div>
       <div class="map-pop" id="layers-panel" hidden>
         <p class="pop-hint" data-i18n="layersHint">“Close up” shows a layer once you zoom in to a few blocks.</p>
+        <div id="drop-rows"></div>
         <div id="layers-rows"></div>
       </div>
       <div class="map-pop" id="areas-panel" hidden>
@@ -656,6 +665,7 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
   </section>
 </div>
 <div class="toast" id="toast" role="status"></div>
+<div class="drop-zone" id="drop-zone" hidden><p data-i18n="dropZone">Drop a CSV or GeoJSON to add it as a layer</p></div>
 
 <script>
 // sf-blocks: San Francisco's map data (streets, boundaries, aliases, layers) from burritojustice/sf-blocks.
@@ -737,7 +747,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v52';
+const _BUILD_VERSION = 'v53';
 
 /* =====================================================================
    CONFIG
@@ -908,7 +918,12 @@ const I18N = {
     recPlanted: 'Planted', recSite: 'Site', recCare: 'Cared for by', recAddress: 'Address', recCnn: 'Block (CNN)', recOwner: 'Owner', recMail: 'Mail to', recLicense: 'License',
     recIndustry: 'Industry', recSince: 'Here since', recHidden: 'Hidden unless Show all: {kind}', recBizN: '{n} businesses here', recSource: 'Source: {src}', chipsShown: '{n} of {of} kinds shown', chipsShownN: '{n} of {of} kinds · {total}', treesTotal: '{n} trees',
     bizTotal: '{n} at {a} addresses', nextToN: '{n} places', lgBizSize: 'Bigger dot: more businesses there. Color: the most storefront-like one.', lgAsOf: 'Data from {d}', bizAddrsHere: '{n} addresses here', bizMoreAddrs: '+{n} more addresses',
-    bmTerrain: 'Terrain in 3D', bmTerrainAlways: 'Always', bmTerrainTilted: 'Only when tilted', bmTerrainHint: 'Off when looking straight down, rising as you tilt',
+    grpFiles: 'Your files', dropPick: 'Add a CSV or GeoJSON…', dropHint: 'or drop one on the page. It stays in this tab; nothing is uploaded.',
+    dropZone: 'Drop a CSV or GeoJSON to add it as a layer', dropCount: '{n} on the map', dropSkipped: '{n} without a location', dropRemove: 'Remove this file',
+    dropAdded: 'Added {name}: {n} on the map', dropAddedSkip: 'Added {name}: {n} on the map, {k} rows without a location', dropBad: "Couldn't read {name}",
+    dropNone: 'No locations in {name}: it needs lat/lon columns, WKT, a CNN column, or GeoJSON', dropYours: 'your file', dropUnnamed: '(no name)',
+    dropNear: '{n} within {m} m', dropNoneNear: 'None within {m} m', dropOn: 'on the block', dropM: '{m} m',
+    bm3d: '3D', bm3dOn: 'On', bm3dOff: 'Off', bm3dHint: 'Tilt, hills and 3D buildings. Off: a flat map for older devices, and the 3D button shows contours.', bmAddresses: 'Addresses (the basemap\'s house numbers)', btnContoursTitle: 'Show contour lines (10 ft)', btn3dTitle: 'Tilt the map to see the hills',
     lgTreeSize: 'Bigger dot: thicker trunk; dark ring: Significant Tree', grpAround: 'Getting around', grpStreet: 'On the street', grpLand: 'Land and buildings', grpTerrain: 'Terrain', grpMore: 'More', aQuietBase: 'Hide parks and places on the map',
     lgMuniNums: 'numbers', lgMuniNumsOut: 'Route numbers show from zoom {z}', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick',
     lgNoOne: 'no one lives there (parks, water): clear', lgParcelLines: 'Parcels (lot lines)',
@@ -2003,6 +2018,7 @@ function cardText(s) {
     const list = bizShown(tr.businesses).filter(x => x.shown.length);
     lines.push(`${t('bizRow')}: ${list.map(x => `${x.address} (${x.shown.map(i => i.dba || i.owner).join('; ')})`).join('; ')}`);
   }
+  lines.push(...Drops.text(s));
   lines.push(linkFor([s]));
   return lines.join('\n');
 }
@@ -2043,7 +2059,7 @@ function cardHTML(s) {
       <dt>${esc(t('slope'))}</dt><dd data-slope="${s.cnn}">${slopeHTML(s)}</dd>
       ${transitFacts(s)}
       ${parcelFacts(s)}
-      ${tileFacts(s)}
+      ${tileFacts(s)}${Drops.facts(s)}
       ${groupsFacts(s)}
     </dl>
     <div class="profile" data-profile="${s.cnn}" aria-label="${esc(t('profileTitle'))}">${profileHTML(s)}</div>
@@ -2494,7 +2510,7 @@ function addMapLayers() {
       'hillshade-illumination-direction': 335,
     } }, 'bp-sat');
   // Terrain: on at every tilt, or (Layers > Basemap) off looking straight down and rising with the tilt
-  terrainK = -1; applyTerrain();
+  applyTerrain();
 
   map.addSource('all', { type: 'geojson', data: fc(Logic.db.segs.map(s => segFeature(s, { active: s.active, ow: s.owAlong }))) });
   map.addSource('quiet', { type: 'geojson', data: EMPTY });
@@ -2636,7 +2652,7 @@ function addMapLayers() {
     hoverCardFromMap(null);
   });
   map.on('click', 'bp-all-hit', e => {
-    if (onCorner(e) || hoverHit(e, ['bp-lyr-trees', 'bp-lyr-businesses'])) return;
+    if (onCorner(e) || hoverHit(e, ['bp-lyr-trees', 'bp-lyr-businesses', ...Drops.pointIds()])) return;
     const f = e.features[0]; if (!f) return;
     toggleFromMap(Logic.db.byCnn.get(f.properties.cnn));
   });
@@ -2644,16 +2660,18 @@ function addMapLayers() {
   $('bm-map').addEventListener('click', () => setBasemap(false));
   $('bm-sat').addEventListener('click', () => setBasemap(true));
   $('btn-3d').addEventListener('click', () => {
+    if (flatMap) { setOverlay('contours', overlayMode.contours === 'on' ? 'off' : 'on'); return; }
     const tilted = map.getPitch() > 5;
     map.easeTo({ pitch: tilted ? 0 : 60, bearing: tilted ? 0 : map.getBearing(), duration: reducedMotion() ? 0 : 800 });
   });
-  map.on('pitchend', () => $('btn-3d').setAttribute('aria-pressed', map.getPitch() > 5));
-  map.on('pitch', () => { setLabelMode(map.getPitch() > LABEL_3D_PITCH); applyTerrain(); });
+  map.on('pitchend', sync3dButton); sync3dButton();
+  map.on('pitch', () => setLabelMode(map.getPitch() > LABEL_3D_PITCH));
   map.on('zoomend', () => { updateContourLegend(); updateOverlays(); });
   const zr = () => { $('zoom-read').textContent = 'z' + map.getZoom().toFixed(1); };
   map.on('zoom', zr); zr();
   map.on('pitchend', () => setLabelMode(map.getPitch() > LABEL_3D_PITCH));
   addOverlayLayers(popup);
+  Drops.onMap(popup);
   collectLineLabelLayers();
   basemapLabelIds = map.getStyle().layers.filter(l => l.type === 'symbol' && !l.id.startsWith('bp-')).map(l => l.id);
   mapReady = true;
@@ -2762,11 +2780,11 @@ let basemapLabelIds = [], satOn = false;
 //   3D           buildings, when tilted
 //   labels       all of them, the basemap's (street and place names) included, so nothing above covers a name
 const LAYER_ORDER = [
-  ['shading', id => /^bp-area-.*-fill$/.test(id) || /^bp-water-over-/.test(id) || ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill', 'bp-lyr-buildings-fill'].includes(id)],
+  ['shading', id => /^bp-drop-\d+-fill$/.test(id) || /^bp-area-.*-fill$/.test(id) || /^bp-water-over-/.test(id) || ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill', 'bp-lyr-buildings-fill'].includes(id)],
   ['edges', id => id === CONTOUR_LINE || ['bp-lyr-curbs', 'bp-lyr-landuse-line', 'bp-adj-lots-casing', 'bp-adj-lots', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-buildings-line'].includes(id)
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
-  ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', ...POI_LAYERS].includes(id)],
+  ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', ...POI_LAYERS].includes(id) || /^bp-drop-\d+-(line|pt)$/.test(id)],
   ['selection', id => ['bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends'].includes(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
   ['labels', (id, l) => l.type === 'symbol'],
@@ -2957,24 +2975,28 @@ const LAYER_SECTIONS = [
   ['grpTerrain', ['contours']],
   ['grpBasemap', ['basemap']],
 ];
-// 3D terrain: 'always', or 'tilted' (off straight down, which is lighter; its height eases in over the
-// first TERRAIN_RAMP degrees of tilt, so nothing jumps). Saved as bp-terrain.
-const TERRAIN_KEY = 'bp-terrain', TERRAIN_RAMP = 20;
-let terrainMode = (() => { try { return localStorage.getItem(TERRAIN_KEY) === 'tilted' ? 'tilted' : 'always'; } catch (e) { return 'always'; } })();
-let terrainK = -1;
+// 3D on (the default: tilt, terrain, 3D buildings) or off (Layers > Basemap): a flat map for older devices.
+// Off, the map can't tilt, terrain isn't loaded, and the 3D button turns contours on and off instead.
+// Saved as bp-flat.
+const FLAT_KEY = 'bp-flat';
+let flatMap = (() => { try { return localStorage.getItem(FLAT_KEY) === '1'; } catch (e) { return false; } })();
 function applyTerrain() {
   if (!map || !map.getSource('dem-terrain')) return;
-  const p = map.getPitch(), x = Math.min(1, p / TERRAIN_RAMP);
-  // smoothstep, in 20 steps (setTerrain on every frame of a tilt is heavy)
-  const k = terrainMode === 'always' ? 1 : Math.round(x * x * (3 - 2 * x) * 20) / 20;
-  if (k === terrainK) return;
-  terrainK = k;
-  map.setTerrain(k > 0 ? { source: 'dem-terrain', exaggeration: CONFIG.TERRAIN_EXAGGERATION * k } : null);
+  if (flatMap) { if (map.getPitch() > 0) map.jumpTo({ pitch: 0 }); map.setMaxPitch(0); } else map.setMaxPitch(60);
+  if (!!map.getTerrain() === !flatMap) return;
+  map.setTerrain(flatMap ? null : { source: 'dem-terrain', exaggeration: CONFIG.TERRAIN_EXAGGERATION });
 }
-function setTerrainMode(m) {
-  terrainMode = m;
-  try { localStorage.setItem(TERRAIN_KEY, m); } catch (e) { }
-  applyTerrain();
+function setFlat(on) {
+  flatMap = on;
+  try { localStorage.setItem(FLAT_KEY, on ? '1' : '0'); } catch (e) { }
+  applyTerrain(); sync3dButton(); Tiles.tilt();
+}
+// the toolbar button: 3D (tilt) normally; Contours on a flat map
+function sync3dButton() {
+  const b = $('btn-3d'); if (!b) return;
+  b.textContent = t(flatMap ? 'btnContours' : 'btn3d');
+  b.title = t(flatMap ? 'btnContoursTitle' : 'btn3dTitle');
+  b.setAttribute('aria-pressed', flatMap ? overlayMode.contours === 'on' : !!map && map.getPitch() > 5);
 }
 const BASEMAP_KEY = 'bp-basemap-hide';
 let basemapHide = (() => { try { return JSON.parse(localStorage.getItem(BASEMAP_KEY)) || {}; } catch (e) { return {}; } })();
@@ -2986,7 +3008,9 @@ function applyBasemap() {
   for (const l of map.getStyle().layers) {
     if (l.id.startsWith('bp-')) continue;
     const sl = l['source-layer'];
-    const hide = (quiet && QUIET_BASE(l)) || (basemapHide.pois && sl === 'pois') || (basemapHide.buildings && sl === 'buildings' && l.type !== 'symbol');
+    // the basemap's house numbers are symbols in its buildings layer
+    const addr = sl === 'buildings' && l.type === 'symbol';
+    const hide = (quiet && QUIET_BASE(l)) || (basemapHide.pois && sl === 'pois') || (basemapHide.buildings && sl === 'buildings' && !addr) || (basemapHide.addresses && addr);
     if (QUIET_BASE(l) || sl === 'pois' || sl === 'buildings') map.setLayoutProperty(l.id, 'visibility', hide ? 'none' : 'visible');
   }
 }
@@ -2997,7 +3021,7 @@ const BIKE_SOLID = ['separated', 'lane', 'path'];
 // businesses), then buildings, then parcels and city-owned land, then street blocks. Each hover handler
 // gives way to anything above it, so shapes never hide the points on them.
 const HOVER = {
-  points: () => [...POI_LAYERS, 'bp-lyr-trees', 'bp-lyr-businesses'],
+  points: () => [...POI_LAYERS, 'bp-lyr-trees', 'bp-lyr-businesses', ...Drops.pointIds()],
   buildings: () => ['bp-lyr-buildings-fill', 'bp-lyr-buildings-3d'],
   areas: () => ['bp-lyr-lands-fill', 'bp-lyr-landuse-fill'],
 };
@@ -3996,6 +4020,291 @@ function setBizAll(on) {
   document.querySelectorAll('[data-biz-all]').forEach(i => i.checked = on);
   Tiles.filter(); render();
 }
+/* =====================================================================
+   YOUR FILES: a CSV or GeoJSON dropped on the page (or picked in Layers) becomes a layer, kept in this
+   tab only (nothing is uploaded). Locations come from GeoJSON geometry, or in a CSV from lat/lon columns,
+   a WKT or "(lat, lon)" column, or a CNN column (one or more CNNs, drawn as those blocks). Cards list
+   what's within DROP_NEAR_M of each block.
+   ===================================================================== */
+const DROP_COLORS = ['#E8590C', '#1971C2', '#2F9E44', '#C2255C', '#7048E8', '#0C8599'];
+const DROP_NEAR_M = 50;
+const Drops = (() => {
+  const files = [];
+  let seq = 0, rec = null, ready = false;   // ready: the map's layers are in (Drops.onMap)
+  const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
+  const NAME = /^(name|title|label|dba|dba_name|organization|org|business|site|site_name|location_name|facility|address)$/i;
+  const LAT = /^(lat|latitude|y|lat_dd|point_y|ycoord)$/i, LON = /^(lon|lng|long|longitude|x|lon_dd|point_x|xcoord)$/i;
+  const GEO = /^(the_geom|geom|geometry|wkt|shape|location|point|coordinates)$/i, CNN = /^(cnn|cnns|block_cnn|street_cnn)$/i;
+
+  // RFC 4180 CSV (quotes, doubled quotes, newlines in quotes); tab-separated if the header has more tabs
+  function parseCSV(text) {
+    text = text.replace(/^﻿/, '');
+    const head = text.slice(0, text.indexOf('\n') + 1 || text.length);
+    const d = (head.match(/\t/g) || []).length > (head.match(/,/g) || []).length ? '\t' : ',';
+    const rows = []; let row = [], f = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true;
+      else if (c === d) { row.push(f); f = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+      else f += c;
+    }
+    if (f || row.length) { row.push(f); rows.push(row); }
+    return rows.filter(r => r.some(v => v.trim() !== ''));
+  }
+  // WKT (POINT, LINESTRING, POLYGON and their MULTI forms) to GeoJSON geometry
+  function wkt(v) {
+    const m = /^\s*(?:SRID=\d+;)?\s*(MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|POINT|LINESTRING|POLYGON)\s*(?:Z|M|ZM)?\s*(\(.*\))\s*$/i.exec(v || '');
+    if (!m) return null;
+    const json = m[2].replace(/(-?[\d.eE+-]+)\s+(-?[\d.eE+-]+)(?:\s+-?[\d.eE+-]+)*/g, '[$1,$2]').replace(/\(/g, '[').replace(/\)/g, ']');
+    let c; try { c = JSON.parse(json); } catch (e) { return null; }
+    const type = { POINT: 'Point', LINESTRING: 'LineString', POLYGON: 'Polygon', MULTIPOINT: 'MultiPoint', MULTILINESTRING: 'MultiLineString', MULTIPOLYGON: 'MultiPolygon' }[m[1].toUpperCase()];
+    if (type === 'Point') c = c[0];
+    if (type === 'MultiPoint') c = c.map(x => Array.isArray(x[0]) ? x[0] : x);
+    return { type, coordinates: c };
+  }
+  const okLL = (x, y) => isFinite(x) && isFinite(y) && Math.abs(x) <= 180 && Math.abs(y) <= 90 && !(x === 0 && y === 0);
+  // a row's location: lat/lon, a geometry column, or CNNs
+  function rowGeom(r, cols) {
+    if (cols.lat != null && cols.lon != null) {
+      const y = parseFloat(r[cols.lat]), x = parseFloat(r[cols.lon]);
+      if (okLL(x, y)) return { type: 'Point', coordinates: [x, y] };
+    }
+    if (cols.geo != null) {
+      const v = (r[cols.geo] || '').trim();
+      const g = wkt(v); if (g) return g;
+      const ll = /^\(?\s*(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)\s*\)?$/.exec(v);   // Socrata's "(37.76, -122.42)"
+      if (ll && okLL(+ll[2], +ll[1])) return { type: 'Point', coordinates: [+ll[2], +ll[1]] };
+      if (v.startsWith('{')) try { const o = JSON.parse(v); if (o.type && o.coordinates) return o; } catch (e) { }
+    }
+    if (cols.cnn != null) {
+      const segs = String(r[cols.cnn] || '').split(/[;,\s]+/).map(Number).map(c => Logic.db.byCnn.get(c)).filter(Boolean);
+      if (segs.length) return segs.length === 1 ? { type: 'LineString', coordinates: segs[0].coords } : { type: 'MultiLineString', coordinates: segs.map(s => s.coords) };
+    }
+    return null;
+  }
+  function fromCSV(text) {
+    const rows = parseCSV(text), head = rows.shift() || [];
+    const find = re => { const i = head.findIndex(h => re.test(h.trim())); return i < 0 ? null : i; };
+    const cols = { lat: find(LAT), lon: find(LON), geo: find(GEO), cnn: find(CNN) };
+    const feats = []; let skipped = 0;
+    for (const r of rows) {
+      const g = rowGeom(r, cols);
+      if (!g) { skipped++; continue; }
+      feats.push({ type: 'Feature', geometry: g, properties: Object.fromEntries(head.map((h, i) => [h.trim() || 'column ' + (i + 1), r[i] ?? ''])) });
+    }
+    return { feats, skipped, fields: head.map((h, i) => h.trim() || 'column ' + (i + 1)), how: cols.cnn != null && cols.lat == null && cols.geo == null ? 'cnn' : 'xy' };
+  }
+  function fromGeoJSON(o) {
+    const list = o.type === 'FeatureCollection' ? o.features : o.type === 'Feature' ? [o] : o.type ? [{ type: 'Feature', geometry: o, properties: {} }] : [];
+    const feats = list.filter(f => f && f.geometry && f.geometry.coordinates).map(f => ({ type: 'Feature', geometry: f.geometry,
+      properties: Object.fromEntries(Object.entries(f.properties || {}).map(([k, v]) => [k, v != null && typeof v === 'object' ? JSON.stringify(v) : v])) }));
+    const fields = [...new Set(feats.flatMap(f => Object.keys(f.properties)))];
+    return { feats, skipped: list.length - feats.length, fields };
+  }
+  // in meters around SF, for the card's distances; each feature keeps its points, segments and rings
+  const toM = c => [c[0] * KX, c[1] * KY];
+  function shape(g) {
+    const pts = [], lines = [], polys = [];
+    const walk = (t, c) => {
+      if (t === 'Point') pts.push(toM(c));
+      else if (t === 'MultiPoint') c.forEach(x => pts.push(toM(x)));
+      else if (t === 'LineString') lines.push(c.map(toM));
+      else if (t === 'MultiLineString') c.forEach(l => lines.push(l.map(toM)));
+      else if (t === 'Polygon') polys.push(c.map(r => r.map(toM)));
+      else if (t === 'MultiPolygon') c.forEach(p => polys.push(p.map(r => r.map(toM))));
+    };
+    if (g.type === 'GeometryCollection') (g.geometries || []).forEach(x => walk(x.type, x.coordinates)); else walk(g.type, g.coordinates);
+    const all = [...pts, ...lines.flat(), ...polys.flat(2)];
+    const bb = all.reduce((b, [x, y]) => [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
+    return { pts, lines, polys, bb };
+  }
+  const segDist = (x, y, a, b) => {
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy;
+    const k = L ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / L)) : 0;
+    return Math.hypot(x - a[0] - k * dx, y - a[1] - k * dy);
+  };
+  const inRing = (x, y, r) => { let in_ = false; for (let i = 0, j = r.length - 1; i < r.length; j = i++) if ((r[i][1] > y) !== (r[j][1] > y) && x < (r[j][0] - r[i][0]) * (y - r[i][1]) / (r[j][1] - r[i][1]) + r[i][0]) in_ = !in_; return in_; };
+  const lineToLine = (a, b) => { let d = Infinity; for (const p of a) for (let i = 1; i < b.length; i++) d = Math.min(d, segDist(p[0], p[1], b[i - 1], b[i])); return d; };
+  // meters from a block (a line in meters) to a feature; 0 inside a polygon
+  function dist(blk, sh) {
+    let d = Infinity;
+    for (const p of sh.pts) for (let i = 1; i < blk.length; i++) d = Math.min(d, segDist(p[0], p[1], blk[i - 1], blk[i]));
+    for (const l of [...sh.lines, ...sh.polys.flat()]) d = Math.min(d, lineToLine(l, blk), lineToLine(blk, l));
+    for (const poly of sh.polys) if (blk.some(([x, y]) => inRing(x, y, poly[0]) && !poly.slice(1).some(h => inRing(x, y, h)))) d = 0;
+    return d;
+  }
+
+  const nameOf = (f, p) => { const v = f.nameField ? p[f.nameField] : null; return v != null && v !== '' ? String(v) : null; };
+  const ids = f => [`bp-drop-${f.id}-fill`, `bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`, `bp-drop-${f.id}-label`];
+  const pointIds = () => files.filter(f => f.on).flatMap(f => [`bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`]);
+  const fillIds = () => files.filter(f => f.on).map(f => `bp-drop-${f.id}-fill`);
+
+  function addLayers(f) {
+    if (!ready) return;
+    const src = 'drop-' + f.id, isA = types => ['in', ['geometry-type'], ['literal', types]];
+    map.addSource(src, { type: 'geojson', data: { type: 'FeatureCollection', features: f.feats.map((x, i) => ({ ...x, id: i, properties: { ...x.properties, _i: i, _name: nameOf(f, x.properties) } })) } });
+    const vis = { visibility: f.on ? 'visible' : 'none' };
+    map.addLayer({ id: `bp-drop-${f.id}-fill`, type: 'fill', source: src, filter: isA(['Polygon', 'MultiPolygon']), layout: vis,
+      paint: { 'fill-color': f.color, 'fill-opacity': 0.15 } });
+    map.addLayer({ id: `bp-drop-${f.id}-line`, type: 'line', source: src, filter: isA(['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']), layout: { ...vis, 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': f.color, 'line-opacity': 0.85,
+        'line-width': ['interpolate', ['linear'], ['zoom'], 12, ['case', isA(['LineString', 'MultiLineString']), 3, 1], 17, ['case', isA(['LineString', 'MultiLineString']), 7, 2]] } });
+    map.addLayer({ id: `bp-drop-${f.id}-pt`, type: 'circle', source: src, filter: isA(['Point', 'MultiPoint']), layout: vis,
+      paint: { 'circle-color': f.color, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 3, 17, 7], 'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 1.2 } });
+    map.addLayer({ id: `bp-drop-${f.id}-label`, type: 'symbol', source: src, minzoom: 16, filter: ['all', isA(['Point', 'MultiPoint']), ['has', '_name']], layout: { ...vis,
+      'text-field': ['get', '_name'], 'text-font': LABEL_FONT, 'text-size': 11.5, 'text-offset': [0, 0.9], 'text-anchor': 'top', 'text-max-width': 9, 'text-optional': true },
+      paint: { 'text-color': f.color, 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.6 } });
+    arrangeLayers();
+  }
+  function record(f, p) {
+    const rows = f.fields.filter(k => p[k] != null && p[k] !== '').map(k => [k, String(p[k])]);
+    return `<div class="rec"><b>${esc(nameOf(f, p) || f.name)}</b><br><span class="pop-lyr">${esc(f.name)}</span>${recRows(rows)}</div>`;
+  }
+  function hoverHTML(f, p) {
+    const other = f.fields.filter(k => k !== f.nameField && p[k] != null && p[k] !== '' && String(p[k]).length < 80).slice(0, 3);
+    return `<b>${esc(nameOf(f, p) || f.name)}</b>${other.map(k => `<br><span class="pop-lyr">${esc(k)}: ${esc(p[k])}</span>`).join('')}<br><span class="pop-lyr">${esc(f.name)}</span>`;
+  }
+  const fileOf = layerId => files.find(f => layerId.startsWith(`bp-drop-${f.id}-`));
+  let wired = false;
+  function wire(popup) {
+    if (wired) return; wired = true;
+    rec = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '360px', className: 'bp-rec', offset: 10 });
+    // points and lines hover like the other points; polygons only when nothing else is under the pointer
+    map.on('mousemove', e => {
+      const live = [...pointIds(), ...fillIds()].filter(id => map.getLayer(id));
+      const hit = live.length ? map.queryRenderedFeatures(e.point, { layers: live })[0] : null;
+      const fill = hit && hit.layer.id.endsWith('-fill');
+      const yield_ = !hit || (fill ? (onPoi(e) || onBuilding(e) || onArea(e) || hoverHit(e, ['bp-all-hit', 'bp-corners-hit']))
+        : hoverHit(e, ['bp-corners-hit', 'bp-ints']));
+      if (yield_) { if (popOwner === 'drop') { popup.remove(); popOwner = null; } return; }
+      const f = fileOf(hit.layer.id), p = f.feats[hit.properties._i].properties;
+      popup.setLngLat(hit.geometry.type === 'Point' ? hit.geometry.coordinates : e.lngLat).setHTML(hoverHTML(f, p)).addTo(map); popOwner = 'drop';
+    });
+    map.on('click', e => {
+      const live = pointIds().filter(id => map.getLayer(id));
+      const hit = live.length ? map.queryRenderedFeatures(e.point, { layers: live })[0] : null;
+      if (!hit || hoverHit(e, ['bp-corners-hit', 'bp-ints'])) return;
+      const f = fileOf(hit.layer.id);
+      popup.remove(); popOwner = null;
+      rec.setLngLat(hit.geometry.type === 'Point' ? hit.geometry.coordinates : e.lngLat).setHTML(record(f, f.feats[hit.properties._i].properties)).addTo(map);
+    });
+  }
+  function fit(f) {
+    if (!ready) return;
+    const b = f.feats.reduce((b, x) => { const s = x._sh.bb; return [Math.min(b[0], s[0] / KX), Math.min(b[1], s[1] / KY), Math.max(b[2], s[2] / KX), Math.max(b[3], s[3] / KY)]; }, [Infinity, Infinity, -Infinity, -Infinity]);
+    if (!isFinite(b[0])) return;
+    fitToken++;
+    map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 60, maxZoom: 17, duration: reducedMotion() ? 0 : 700 });
+  }
+  async function add(file) {
+    const text = await file.text(), name = file.name.replace(/\.(csv|tsv|txt|geojson|json)$/i, '');
+    let r;
+    try {
+      if (/\.(geo)?json$/i.test(file.name) || /^\s*[{[]/.test(text)) r = fromGeoJSON(JSON.parse(text));
+      else r = fromCSV(text);
+    } catch (e) { toast(t('dropBad', { name: file.name })); return; }
+    if (!r.feats.length) { toast(t('dropNone', { name: file.name })); return; }
+    const f = { id: ++seq, name, color: DROP_COLORS[(seq - 1) % DROP_COLORS.length], on: true, feats: r.feats, fields: r.fields, skipped: r.skipped, how: r.how,
+      nameField: r.fields.find(k => NAME.test(k)) || r.fields.find(k => r.feats.some(x => typeof x.properties[k] === 'string' && x.properties[k] && isNaN(+x.properties[k]))) || null };
+    for (const x of f.feats) x._sh = shape(x.geometry);
+    files.push(f);
+    addLayers(f); fit(f);
+    toast(t(f.skipped ? 'dropAddedSkip' : 'dropAdded', { name, n: f.feats.length.toLocaleString(), k: f.skipped.toLocaleString() }));
+    renderMenu(); render();
+  }
+  function remove(id) {
+    const i = files.findIndex(f => f.id === id); if (i < 0) return;
+    const f = files[i]; files.splice(i, 1);
+    if (ready) { for (const l of ids(f)) if (map.getLayer(l)) map.removeLayer(l); if (map.getSource('drop-' + f.id)) map.removeSource('drop-' + f.id); }
+    renderMenu(); render();
+  }
+  function show(id, on) {
+    const f = files.find(f => f.id === id); if (!f) return;
+    f.on = on;
+    if (ready) for (const l of ids(f)) if (map.getLayer(l)) map.setLayoutProperty(l, 'visibility', on ? 'visible' : 'none');
+    renderMenu(); render();
+  }
+  const swatch = f => `<svg viewBox="0 0 26 16"><line x1="2" y1="12" x2="14" y2="4" stroke="${f.color}" stroke-width="3" stroke-linecap="round"/><circle cx="19" cy="9" r="4.5" fill="${f.color}" stroke="#fff"/></svg>`;
+  // Layers menu ("Your files") and the map key
+  function renderMenu() {
+    const el = $('drop-rows');
+    if (el) el.innerHTML = `<p class="areas-cap">${esc(t('grpFiles'))}</p>` + files.map(f => `<div class="lyr-row" data-drop="${f.id}">${swatch(f)}<b>${esc(f.name)}<small>${esc(t('dropCount', { n: f.feats.length.toLocaleString() }))}${f.skipped ? ' · ' + esc(t('dropSkipped', { n: f.skipped.toLocaleString() })) : ''}</small></b>
+        <div class="lseg" role="group" aria-label="${esc(f.name)}"><button type="button" data-drop-on="0" aria-pressed="${!f.on}">${esc(t('lyrOff'))}</button><button type="button" data-drop-on="1" aria-pressed="${f.on}">${esc(t('lyrOn'))}</button></div>
+        <button type="button" class="drop-x" data-drop-x title="${esc(t('dropRemove'))}" aria-label="${esc(t('dropRemove'))}">×</button></div>`).join('')
+      + `<div class="lyr-row drop-add"><label class="btn small"><input type="file" accept=".csv,.tsv,.txt,.geojson,.json" multiple hidden data-drop-pick>${esc(t('dropPick'))}</label><small>${esc(t('dropHint'))}</small></div>`;
+    const ul = $('legend') && $('legend').querySelector('ul');
+    if (ul) {
+      ul.querySelectorAll('.lg-drop').forEach(li => li.remove());
+      const before = $('lg-contours');
+      for (const f of files.filter(f => f.on)) {
+        const li = document.createElement('li'); li.className = 'lg-drop';
+        li.innerHTML = `<span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="${f.color}" stroke-width="3.5" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="5" fill="${f.color}" stroke="#fff" stroke-width="1.5"/></svg></span><span>${esc(f.name)} <small class="muted">${esc(t('dropYours'))}</small></span>`;
+        ul.insertBefore(li, before);
+      }
+    }
+  }
+  function setupUI() {
+    const el = $('drop-rows');
+    el.addEventListener('click', e => {
+      const row = e.target.closest('[data-drop]'); if (!row) return;
+      const id = +row.dataset.drop;
+      // after this click is done: rebuilding the rows mid-click makes the menu's outside-click handler close it
+      if (e.target.closest('[data-drop-x]')) setTimeout(() => remove(id));
+      else { const b = e.target.closest('[data-drop-on]'); if (b) setTimeout(() => show(id, b.dataset.dropOn === '1')); }
+    });
+    el.addEventListener('change', e => { if (e.target.matches('[data-drop-pick]')) { [...e.target.files].forEach(add); e.target.value = ''; } });
+    // drop anywhere on the page
+    const zone = $('drop-zone'); let depth = 0;
+    const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+    document.addEventListener('dragenter', e => { if (!hasFiles(e)) return; depth++; zone.hidden = false; });
+    document.addEventListener('dragleave', e => { if (!hasFiles(e)) return; if (--depth <= 0) { depth = 0; zone.hidden = true; } });
+    document.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+    document.addEventListener('drop', e => {
+      if (!hasFiles(e)) return;
+      e.preventDefault(); depth = 0; zone.hidden = true;
+      [...e.dataTransfer.files].forEach(add);
+    });
+    renderMenu();
+  }
+  // card rows: each shown file's features within DROP_NEAR_M of the block, nearest first
+  const cache = new Map();
+  function near(s) {
+    const blk = s.coords.map(toM);
+    const bb = blk.reduce((b, [x, y]) => [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
+    return files.filter(f => f.on).map(f => {
+      const k = f.id + '|' + s.cnn;
+      if (!cache.has(k)) {
+        const R = DROP_NEAR_M, hits = [];
+        for (const x of f.feats) {
+          const b = x._sh.bb;
+          if (b[0] > bb[2] + R || b[2] < bb[0] - R || b[1] > bb[3] + R || b[3] < bb[1] - R) continue;
+          const d = dist(blk, x._sh);
+          if (d <= R) hits.push({ d, p: x.properties, ll: x._sh.pts[0] ? [x._sh.pts[0][0] / KX, x._sh.pts[0][1] / KY] : null });
+        }
+        hits.sort((a, b) => a.d - b.d);
+        cache.set(k, hits);
+      }
+      return { f, hits: cache.get(k) };
+    });
+  }
+  function facts(s) {
+    if (isInt(s) || !files.length) return '';
+    return near(s).map(({ f, hits }) => {
+      const label = p => nameOf(f, p) || t('dropUnnamed');
+      const body = hits.length ? `<ul class="ng-list">${hits.slice(0, 50).map(h => `<li>${esc(label(h.p))} <span class="muted">· ${h.d < 1 ? esc(t('dropOn')) : esc(t('dropM', { m: Math.round(h.d) }))}</span></li>`).join('')}${hits.length > 50 ? '<li>…</li>' : ''}</ul>` : '';
+      return `<dt>${esc(f.name)}</dt><dd>${hits.length ? foldDD(esc(t('dropNear', { n: hits.length, m: DROP_NEAR_M })), body, 'drop' + f.id) : esc(t('dropNoneNear', { m: DROP_NEAR_M }))}</dd>`;
+    }).join('');
+  }
+  function text(s) {
+    if (isInt(s) || !files.length) return [];
+    return near(s).filter(x => x.hits.length).map(({ f, hits }) => `${f.name}: ${hits.map(h => nameOf(f, h.p) || t('dropUnnamed')).join('; ')}`);
+  }
+  // after the map is ready: layers for files dropped before it was
+  function mapReady_(popup) { ready = true; wire(popup); for (const f of files) if (!map.getSource('drop-' + f.id)) addLayers(f); }
+  return { add, setupUI, facts, text, pointIds, onMap: mapReady_, files: () => files };
+})();
 const Parcels = (() => {
   const Z = 15, NEAR_M = 14, ADDR_M = 25, PAD_M = 30;
   const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
@@ -4744,7 +5053,7 @@ function setOverlay(k, v, write = true) {
   overlayMode[k] = v;
   document.querySelectorAll(`[data-lyr="${k}"] .lseg button`).forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
   if (mapReady) {
-    if (k === 'contours') { setContours(v === 'on'); updateContourLegend(); }
+    if (k === 'contours') { setContours(v === 'on'); updateContourLegend(); sync3dButton(); }
     else applyOverlay(k);
   }
   if (write) writeHash();
@@ -4782,11 +5091,12 @@ function setupMapMenus() {
     curbs: '<svg viewBox="0 0 26 16"><path d="M1 12 H16 Q22 12 22 6 V1" fill="none" stroke="#9CA2AD" stroke-width="1.4"/><path d="M5 6 H12" stroke="#B4B9C3" stroke-width="1.2"/></svg>',
     buildings: '<svg viewBox="0 0 26 16"><rect x="3" y="3" width="9" height="11" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/><rect x="14" y="6" width="9" height="8" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/></svg>' };
   Object.assign(SW, SWT);
-  const basemapRow = () => `<div class="lyr-row lyr-checks">${['pois', 'buildings'].map(k =>
-    `<label class="opt-check"><input type="checkbox" data-bmhide="${k}" ${basemapHide[k] ? '' : 'checked'}> ${esc(t(k === 'pois' ? 'bmPois' : 'bmBuildings'))}</label>`).join('')}</div>`
-    + `<div class="lyr-row" data-terrain-row><span class="sw"></span><b>${esc(t('bmTerrain'))}<small>${esc(t('bmTerrainHint'))}</small></b>
-    <div class="lseg" role="group" aria-label="${esc(t('bmTerrain'))}">${[['always', 'bmTerrainAlways'], ['tilted', 'bmTerrainTilted']].map(([v, l]) =>
-      `<button type="button" data-terrain="${v}" aria-pressed="${terrainMode === v}">${esc(t(l))}</button>`).join('')}</div></div>`;
+  const BM_LABEL = { pois: 'bmPois', buildings: 'bmBuildings', addresses: 'bmAddresses' };
+  const basemapRow = () => `<div class="lyr-row lyr-checks">${['pois', 'buildings', 'addresses'].map(k =>
+    `<label class="opt-check"><input type="checkbox" data-bmhide="${k}" ${basemapHide[k] ? '' : 'checked'}> ${esc(t(BM_LABEL[k]))}</label>`).join('')}</div>`
+    + `<div class="lyr-row" data-flat-row><span class="sw"></span><b>${esc(t('bm3d'))}<small>${esc(t('bm3dHint'))}</small></b>
+    <div class="lseg" role="group" aria-label="${esc(t('bm3d'))}">${[['on', 'bm3dOn'], ['off', 'bm3dOff']].map(([v, l]) =>
+      `<button type="button" data-flat="${v}" aria-pressed="${(v === 'off') === flatMap}">${esc(t(l))}</button>`).join('')}</div></div>`;
   const rowFor = k => k === 'basemap' ? basemapRow() : k === 'contours' ? row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]) : OVERLAYS[k].modes ? row(k, OVERLAYS[k].modes)
     : row(k, three) + (k === 'lands' ? chipsFold(k, landChips) : k === 'trees' ? chipsFold(k, treeChips()) : k === 'businesses' ? chipsFold(k, bizChips()) : '');
   // in sections; a layer sf-blocks adds later that isn't in one goes at the end
@@ -4803,13 +5113,17 @@ function setupMapMenus() {
     if (e.target.matches('[data-biz-all]')) setBizAll(e.target.checked);
     if (e.target.dataset.bmhide) {
       basemapHide[e.target.dataset.bmhide] = !e.target.checked;
+      if (e.target.dataset.bmhide === 'buildings') {
+        basemapHide.addresses = !e.target.checked;
+        const a = rowsEl.querySelector('[data-bmhide="addresses"]'); if (a) a.checked = e.target.checked;
+      }
       try { localStorage.setItem(BASEMAP_KEY, JSON.stringify(basemapHide)); } catch (err) { }
       applyBasemap();
     }
   });
   rowsEl.addEventListener('click', e => {
-    const tb = e.target.closest('[data-terrain]');
-    if (tb) { setTerrainMode(tb.dataset.terrain); rowsEl.querySelectorAll('[data-terrain]').forEach(x => x.setAttribute('aria-pressed', x === tb)); return; }
+    const fb = e.target.closest('[data-flat]');
+    if (fb) { setFlat(fb.dataset.flat === 'off'); rowsEl.querySelectorAll('[data-flat]').forEach(x => x.setAttribute('aria-pressed', x === fb)); return; }
     const b = e.target.closest('.lseg button'); if (!b) return;
     setOverlay(b.closest('[data-lyr]').dataset.lyr, b.dataset.v);
   });
@@ -5052,6 +5366,7 @@ function drawBunting() {
   $('map-loading').remove();
   setupQuiet();
   setupMapMenus();
+  Drops.setupUI();
   applyHash();
   applyQuiet();
   render();

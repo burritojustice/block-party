@@ -2,6 +2,12 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v53
+
+- **Your files:** drop a CSV or GeoJSON anywhere on the page, or use "Add a CSV or GeoJSON…" at the top of Layers, and it shows as a layer in its own color. A CSV can locate rows by latitude/longitude columns, a WKT or "(lat, lon)" column, or a CNN column (one or more CNNs per row, drawn as those blocks). Hover for a row's name and a few fields; click a point or line for the whole row. Each file has Off/On and × in Layers and a line in the map key. Cards get a row per file listing what's within 50 m of the block, nearest first ("on the block" for its CNN or a polygon around it), and Copy includes them. Files stay in the tab: nothing is uploaded, and they're gone on reload.
+- **3D on or off (Layers › Basemap):** On is the default (tilt, terrain, 3D buildings). Off makes a flat map for older devices: no tilting, no terrain loaded, and the 3D button becomes Contours. Saved in the browser. This replaces v52's "Only when tilted", which jumped when tilting.
+- **Basemap addresses:** the basemap's house numbers have their own checkbox. Unchecking Buildings unchecks them too; check Addresses again to keep them for cross-referencing.
+
 ## v52
 
 - **Businesses at the same spot:** the city puts many addresses on one point: 1601 Church (Sun Valley Market) and 1603 Church, every suite in an office building, mailbox stores like 548 Market. About half of all business addresses shared a point with another, so one dot hid the others and a click picked one at random. sf-blocks #17 stacks them into one dot (its size and color cover all of them, labelled with the first storefront); hovering and clicking list every address there ("1601 Church St & 1603 Church St · 7 businesses"), storefronts first, and cards still list each business under its own address. Before #17 is merged, hover and click already gather the dots drawn at the same spot.
