@@ -2,6 +2,19 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v61
+
+- **Selection panel** (under Download): grow, trim and save a set of streets as an area, such as a merchant corridor.
+  - **Grow:** "＋ Cross streets" (as in v60), and "＋ Around the blocks", which adds every street around the city (assessor) blocks your streets face. That gets the backs and corners of the blocks.
+  - **Trim:** click a street on the map, or uncheck its card.
+  - **Save:** name it and save. You get a GeoJSON with the name, its streets' CNNs, and an outline: the lots along the streets joined with the streets themselves.
+  - **Edit:** open a file of saved areas (such as a future sf-blocks merchant_corridors.geojson), pick one, and its streets come back as the selection. Grow or trim, then Save area: it's replaced in the same file, the others kept.
+  - The CNN list is the area, so changing a border is just changing streets.
+- **Downloads:** "Blocks" is now "Streets" (assessor and census blocks are coming), and "All of these" puts streets, businesses, parcels and census blocks in one file with a `kind` column.
+- **Fixes:**
+  - Hovering a category in the map key hid everything; now the hovered category stays and the rest fade.
+  - The key's checkboxes now follow the Layers and Areas menus. A layer or area turned on anywhere is checked, and a row turned off from the key leaves once it's back on.
+
 ## v60
 
 - **Map key checkboxes:** every layer, area set and file in the key has a checkbox to hide or show it. A row turned off from the key stays there, unchecked, so it's one click back (layers return to their last setting).
