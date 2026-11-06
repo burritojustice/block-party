@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v54 -->
+<!-- build: v55 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -462,6 +462,23 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
 .drop-url { display: flex; gap: 6px; margin: 4px 0 6px; }
 .drop-url input { flex: 1; min-width: 0; font: inherit; font-size: 13px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
 .near-row { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 6px; }
+.lyr-row[data-drop] b { min-width: 0; overflow-wrap: anywhere; }
+.drop-fmt { margin: -2px 0 6px 34px; }
+.fmt-grid { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; font-size: 13px; padding: 6px 0; }
+.fmt-grid > span { color: var(--ink-soft); }
+.fmt-grid select { font: inherit; font-size: 13px; padding: 3px 6px; border-radius: 8px; border: 1.5px solid var(--line); background: #fff; max-width: 100%; }
+.fmt-colors { display: flex; gap: 5px; flex-wrap: wrap; }
+.fmt-colors button { width: 20px; height: 20px; border-radius: 50%; background: var(--c); border: 2px solid #fff; box-shadow: 0 0 0 1.5px var(--line); cursor: pointer; padding: 0; }
+.fmt-colors button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
+.fmt-labels { max-height: 120px; overflow: auto; }
+.fmt-zoom { display: inline-flex; gap: 6px; align-items: center; color: var(--ink-soft); }
+.lyr-reset { display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 10px; }
+.lyr-reset small { color: var(--ink-soft); }
+.seg.feat { border-left: 5px solid var(--fc); }
+.feat-list:not(:empty) { margin-bottom: 12px; }
+.linkish { border: 0; background: none; padding: 0; font: inherit; color: var(--grape); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.feat-block { text-align: left; }
+.lg-drop .lg-table { margin-top: 3px; }
 .hood-map { float: right; font-size: 13px; font-weight: 500; color: var(--ink-soft); display: inline-flex; gap: 4px; align-items: center; cursor: pointer; margin-left: 8px; }
 .hood-sel { font: inherit; font-size: 13px; padding: 3px 6px; border-radius: 8px; border: 1.5px solid var(--line); background: #fff; }
 .lyr-row.dim { opacity: .5; }
@@ -604,6 +621,7 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
         <p class="pop-hint" data-i18n="layersHint">“Close up” shows a layer once you zoom in to a few blocks.</p>
         <div id="drop-rows"></div>
         <div id="layers-rows"></div>
+        <div class="lyr-reset"><button type="button" class="btn small" id="layers-reset" data-i18n="resetView">Reset view</button><small data-i18n="resetViewHint">Layers, areas, basemap and 3D back to how they start. Your files and cards stay.</small></div>
       </div>
       <div class="map-pop" id="areas-panel" hidden>
         <div id="areas-rows"></div>
@@ -666,6 +684,7 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
         <button type="button" class="btn small" id="copy-link" data-i18n="copyLinkShort" title="Copy link">Link</button>
       </div>
     </div>
+    <ul class="seg-list feat-list" id="feat-list"></ul>
     <ul class="seg-list" id="seg-list"></ul>
     <button type="button" class="btn small list-clear" id="clear-sel-bottom" data-i18n="clearSel">Clear selections</button>
     <p class="foot-note" id="foot-note"></p>
@@ -754,7 +773,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v54';
+const _BUILD_VERSION = 'v55';
 
 /* =====================================================================
    CONFIG
@@ -939,6 +958,12 @@ const I18N = {
     urlSheet: 'Couldn’t read that sheet. In Google Sheets, set Share › General access to “Anyone with the link” (Viewer), then try again.',
     urlBlocked: 'Couldn’t load that link ({err}). The site may not let other pages read it; download the file and drop it here instead.',
     urlAirtable: 'Airtable shared links can’t be read from another site. Use the view’s Download CSV and drop the file here.',
+    fmtTitle: 'Format', fmtColor: 'Color', fmtColorBy: 'Color by', fmtOneColor: 'One color', fmtSize: 'Size', fmtSizeBy: 'Size by', fmtSame: 'Same size',
+    fmtTiny: 'Tiny', fmtSmall: 'Small', fmtMedium: 'Medium', fmtBig: 'Big', fmtStyle: 'Style', fmtFill: 'Fill', fmtRing: 'Ring', fmtGhost: 'Ghost',
+    fmtLabels: 'Labels', fmtLabelZoom: 'Labels from zoom', fmtOther: 'Other', fmtByKey: 'by {col}',
+    featKind: 'From {file}', featOn: 'On', featOnN: 'On blocks', featNoBlock: 'No block within 40 m', featAddBlock: 'Add this block', featRow: 'Its row', featFields: '{n} fields',
+    cornersNoteFeat: 'Everyone in the {n} census blocks at this spot (full counts): neighbors who could see it and walk over',
+    resetView: 'Reset view', resetViewHint: 'Layers, areas, basemap and 3D back to how they start. Your files and cards stay.', resetDone: 'Back to the starting layers',
     bm3d: '3D', bm3dOn: 'On', bm3dOff: 'Off', bm3dHint: 'Tilt, hills and 3D buildings. Off: a flat map for older devices, and the 3D button shows contours.', bmAddresses: 'Addresses (the basemap\'s house numbers)', btnContoursTitle: 'Show contour lines (10 ft)', btn3dTitle: 'Tilt the map to see the hills',
     lgTreeSize: 'Bigger dot: thicker trunk; dark ring: Significant Tree', grpAround: 'Getting around', grpStreet: 'On the street', grpLand: 'Land and buildings', grpTerrain: 'Terrain', grpMore: 'More', aQuietBase: 'Hide parks and places on the map',
     lgMuniNums: 'numbers', lgMuniNumsOut: 'Route numbers show from zoom {z}', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick',
@@ -1931,7 +1956,7 @@ function render() {
   Areas.updateShade();
   const box = $('results');
   const segs = state.results;
-  box.hidden = !segs.length && !state.title;
+  box.hidden = !segs.length && !state.title && !$('feat-list').children.length;
   $('results-title').textContent = state.title;
   const n = state.checked.size;
   $('results-sub').textContent = state.kind === 'pick' ? t('subPick', { n, total: segs.length }) : t('subAll', { n, total: segs.length });
@@ -2642,6 +2667,7 @@ function addMapLayers() {
   const onCorner = e => map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit', 'bp-ints'] }).length > 0;
   map.on('mousemove', 'bp-corners-hit', e => {
     const f = e.features[0]; if (!f) return;
+    if (hoverHit(e, Drops.pointIds())) { if (popOwner === 'corner') { popup.remove(); popOwner = null; } map.getSource('preview-int').setData(EMPTY); return; }
     const i = state.results.find(r => r.cnn === f.properties.cnn) || Logic.intItem(f.properties.cnn);
     if (!i) return;
     map.getCanvas().style.cursor = 'pointer';
@@ -2655,7 +2681,7 @@ function addMapLayers() {
     hoverCardFromMap(null);
   });
   const clickInt = e => {
-    const f = e.features[0]; if (!f) return;
+    const f = e.features[0]; if (!f || hoverHit(e, Drops.pointIds())) return;
     const i = state.results.find(r => r.cnn === f.properties.cnn) || Logic.intItem(f.properties.cnn);
     toggleFromMap(i);
   };
@@ -2811,8 +2837,10 @@ const LAYER_ORDER = [
   ['edges', id => id === CONTOUR_LINE || ['bp-lyr-curbs', 'bp-lyr-landuse-line', 'bp-adj-lots-casing', 'bp-adj-lots', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-buildings-line'].includes(id)
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
-  ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', ...POI_LAYERS].includes(id) || /^bp-drop-\d+-(line|pt)$/.test(id)],
+  ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', ...POI_LAYERS].includes(id)],
   ['selection', id => ['bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends'].includes(id)],
+  // your files: above the selection and corners, so they stay clickable close in
+  ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
   ['labels', (id, l) => l.type === 'symbol'],
 ];
@@ -4100,6 +4128,12 @@ function setBizAll(on) {
    along the streets (this block, or N blocks out), in the same area, or within a radius.
    ===================================================================== */
 const DROP_COLORS = ['#E8590C', '#1971C2', '#2F9E44', '#C2255C', '#7048E8', '#0C8599'];
+// Format (borrowed from Joiner's "Format features"): color by a column (most common values, or five
+// quantile classes for numbers), size, size by a number, style, and label lines from columns
+const DROP_CATS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6'], DROP_OTHER = '#9AA0A6';
+const DROP_RAMP = ['#FDE68A', '#F9A65A', '#E4572E', '#A3214F', '#4A1757'];
+const DROP_SIZES = { tiny: 0.6, small: 0.85, medium: 1.15, big: 1.6 };
+const DROP_LOOK = { by: '', size: 'medium', sizeBy: '', style: 'fill', labels: null, labelZoom: 15 };
 const DROP_NEAR_M = 50;      // radius, the default for "Radius"
 const DROP_ON_M = 30;        // a point this close to a block's centerline is on it (lots are deep)
 const NEAR_KEY = 'bp-near';
@@ -4235,30 +4269,98 @@ const Drops = (() => {
   const pointIds = () => files.filter(f => f.on).flatMap(f => [`bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`]);
   const fillIds = () => files.filter(f => f.on).map(f => `bp-drop-${f.id}-fill`);
 
+  const isA = types => ['in', ['geometry-type'], ['literal', types]];
+  const LINES = isA(['LineString', 'MultiLineString']);
+  const shown = f => f.name.replace(/[_-]+/g, ' ').trim();
+  // a column's values as numbers, if nearly all of them are
+  const numsOf = (f, col) => {
+    const v = f.feats.map(x => { const s = String(x.properties[col] ?? '').replace(/[$,%\s]/g, ''); return s === '' ? null : +s; });
+    const have = v.filter(x => x !== null);
+    return have.length && have.filter(isFinite).length >= have.length * 0.9 ? v.map(x => x !== null && isFinite(x) ? x : null) : null;
+  };
+  // color classes for "Color by"
+  function classes(f) {
+    const col = f.look.by; if (!col) return null;
+    const nums = numsOf(f, col);
+    if (nums && new Set(nums.filter(x => x !== null)).size > 7) {
+      const sorted = nums.filter(x => x !== null).sort((a, b) => a - b), k = DROP_RAMP.length;
+      const cuts = [...new Set(Array.from({ length: k - 1 }, (_, i) => sorted[Math.floor(sorted.length * (i + 1) / k)]))];
+      const ramp = DROP_RAMP.slice(DROP_RAMP.length - cuts.length - 1);
+      const fmt = n => Math.abs(n) >= 1000 ? Math.round(n).toLocaleString() : String(+n.toPrecision(3));
+      const items = ramp.map((c, i) => ({ color: c, label: i === 0 ? `< ${fmt(cuts[0])}` : i === cuts.length ? `${fmt(cuts[i - 1])}+` : `${fmt(cuts[i - 1])}–${fmt(cuts[i])}` }));
+      return { items, colorOf: i => { const v = nums[i]; if (v === null) return DROP_OTHER; let j = 0; while (j < cuts.length && v >= cuts[j]) j++; return ramp[j]; } };
+    }
+    const val = i => String(f.feats[i].properties[col] ?? '').trim();
+    const counts = new Map(); f.feats.forEach((_, i) => { const v = val(i); if (v) counts.set(v, (counts.get(v) || 0) + 1); });
+    const order = [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    const top = order.length > DROP_CATS.length ? order.slice(0, DROP_CATS.length - 1) : order, idx = new Map(top.map(([v], i) => [v, i]));
+    const items = top.map(([v, n], i) => ({ color: DROP_CATS[i], label: v, n }));
+    if (order.length > top.length) items.push({ color: DROP_OTHER, label: t('fmtOther'), n: order.slice(top.length).reduce((a, [, n]) => a + n, 0) });
+    return { items, colorOf: i => idx.has(val(i)) ? DROP_CATS[idx.get(val(i))] : DROP_OTHER };
+  }
+  // per-feature properties the layers read: _c color, _s size (0–1), _lab label
+  function data(f) {
+    const cl = f.cls = classes(f), nums = f.look.sizeBy ? numsOf(f, f.look.sizeBy) : null;
+    const lo = nums ? Math.min(0, ...nums.filter(x => x !== null)) : 0, hi = nums ? Math.max(...nums.filter(x => x !== null)) : 1;
+    const labs = labelCols(f);
+    return f.feats.map((x, i) => ({ type: 'Feature', id: i, geometry: x.geometry, properties: { ...x.properties, _i: i, _name: nameOf(f, x.properties),
+      _c: cl ? cl.colorOf(i) : f.color, _s: nums ? (nums[i] === null ? -1 : hi === lo ? 1 : Math.sqrt((nums[i] - lo) / (hi - lo))) : 0.5,
+      _lab: labs.map(k => String(x.properties[k] ?? '').trim()).filter(Boolean).join('\n') } }));
+  }
+  // label points: a point, a line's middle vertex, a polygon's box middle
+  function labelData(f, feats) {
+    return feats.filter(x => x.properties._lab).map(x => {
+      const sh = f.feats[x.id]._sh;
+      const c = sh.pts.length ? sh.pts[0] : sh.lines.length ? sh.lines[0][Math.floor(sh.lines[0].length / 2)] : [(sh.bb[0] + sh.bb[2]) / 2, (sh.bb[1] + sh.bb[3]) / 2];
+      return { type: 'Feature', geometry: { type: 'Point', coordinates: [c[0] / KX, c[1] / KY] }, properties: { _lab: x.properties._lab, _c: x.properties._c } };
+    });
+  }
+  const labelCols = f => f.look.labels == null ? (f.nameField ? [f.nameField] : []) : f.look.labels;
+  function paintFor(f) {
+    const m = DROP_SIZES[f.look.size] || 1, st = f.look.style, sized = !!f.look.sizeBy;
+    const r = base => sized ? ['*', base * m, ['+', 0.45, ['*', 1.55, ['max', 0, ['get', '_s']]]]] : base * m;
+    const col = ['get', '_c'];
+    return {
+      pt: { 'circle-color': col, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, r(3.5), 14, r(5), 17, r(8), 19, r(10)],
+        'circle-opacity': st === 'ring' ? 0 : st === 'ghost' ? 0.3 : 0.95,
+        'circle-stroke-color': st === 'fill' ? '#FFFFFF' : col, 'circle-stroke-width': st === 'fill' ? 1.4 : st === 'ring' ? 2.4 : 1.2,
+        'circle-stroke-opacity': st === 'ghost' ? 0.75 : 1 },
+      line: { 'line-color': col, 'line-opacity': st === 'ghost' ? 0.4 : 0.9,
+        'line-width': ['interpolate', ['linear'], ['zoom'], 12, ['case', LINES, 3 * m, 1.2], 17, ['case', LINES, 8 * m, 2.4], 19, ['case', LINES, 12 * m, 3]] },
+      fill: { 'fill-color': col, 'fill-opacity': st === 'ring' ? 0 : st === 'ghost' ? 0.1 : 0.2 },
+    };
+  }
   function addLayers(f) {
     if (!ready) return;
-    const src = 'drop-' + f.id, isA = types => ['in', ['geometry-type'], ['literal', types]];
-    map.addSource(src, { type: 'geojson', data: { type: 'FeatureCollection', features: f.feats.map((x, i) => ({ ...x, id: i, properties: { ...x.properties, _i: i, _name: nameOf(f, x.properties) } })) } });
-    const vis = { visibility: f.on ? 'visible' : 'none' };
-    map.addLayer({ id: `bp-drop-${f.id}-fill`, type: 'fill', source: src, filter: isA(['Polygon', 'MultiPolygon']), layout: vis,
-      paint: { 'fill-color': f.color, 'fill-opacity': 0.15 } });
-    map.addLayer({ id: `bp-drop-${f.id}-line`, type: 'line', source: src, filter: isA(['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']), layout: { ...vis, 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': f.color, 'line-opacity': 0.85,
-        'line-width': ['interpolate', ['linear'], ['zoom'], 12, ['case', isA(['LineString', 'MultiLineString']), 3, 1], 17, ['case', isA(['LineString', 'MultiLineString']), 7, 2]] } });
-    map.addLayer({ id: `bp-drop-${f.id}-pt`, type: 'circle', source: src, filter: isA(['Point', 'MultiPoint']), layout: vis,
-      paint: { 'circle-color': f.color, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 3, 17, 7], 'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 1.2 } });
-    map.addLayer({ id: `bp-drop-${f.id}-label`, type: 'symbol', source: src, minzoom: 16, filter: ['all', isA(['Point', 'MultiPoint']), ['has', '_name']], layout: { ...vis,
-      'text-field': ['get', '_name'], 'text-font': LABEL_FONT, 'text-size': 11.5, 'text-offset': [0, 0.9], 'text-anchor': 'top', 'text-max-width': 9, 'text-optional': true },
-      paint: { 'text-color': f.color, 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.6 } });
+    const src = 'drop-' + f.id, feats = data(f);
+    map.addSource(src, { type: 'geojson', data: { type: 'FeatureCollection', features: feats } });
+    map.addSource(src + '-lab', { type: 'geojson', data: { type: 'FeatureCollection', features: labelData(f, feats) } });
+    const vis = { visibility: f.on ? 'visible' : 'none' }, pt = paintFor(f);
+    map.addLayer({ id: `bp-drop-${f.id}-fill`, type: 'fill', source: src, filter: isA(['Polygon', 'MultiPolygon']), layout: vis, paint: pt.fill });
+    map.addLayer({ id: `bp-drop-${f.id}-line`, type: 'line', source: src, filter: isA(['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']), layout: { ...vis, 'line-cap': 'round', 'line-join': 'round' }, paint: pt.line });
+    map.addLayer({ id: `bp-drop-${f.id}-pt`, type: 'circle', source: src, filter: isA(['Point', 'MultiPoint']), layout: vis, paint: pt.pt });
+    map.addLayer({ id: `bp-drop-${f.id}-label`, type: 'symbol', source: src + '-lab', minzoom: f.look.labelZoom, layout: { ...vis,
+      'text-field': ['get', '_lab'], 'text-font': LABEL_FONT, 'text-size': 12, 'text-offset': [0, 1], 'text-anchor': 'top', 'text-max-width': 10, 'text-optional': true },
+      paint: { 'text-color': '#1E2340', 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.8 } });
     arrangeLayers();
+  }
+  // after a format change: new data and paint, same layers
+  function restyle(f) {
+    if (!ready || !map.getSource('drop-' + f.id)) return;
+    const feats = data(f), pt = paintFor(f);
+    map.getSource('drop-' + f.id).setData({ type: 'FeatureCollection', features: feats });
+    map.getSource('drop-' + f.id + '-lab').setData({ type: 'FeatureCollection', features: labelData(f, feats) });
+    for (const [k, p] of [['pt', pt.pt], ['line', pt.line], ['fill', pt.fill]]) for (const [n, v] of Object.entries(p)) map.setPaintProperty(`bp-drop-${f.id}-${k}`, n, v);
+    map.setLayerZoomRange(`bp-drop-${f.id}-label`, f.look.labelZoom, 24);
+    legend(); FeatCards.highlight();
   }
   function record(f, p) {
     const rows = f.fields.filter(k => p[k] != null && p[k] !== '').map(k => [k, String(p[k])]);
     return `<div class="rec"><b>${esc(nameOf(f, p) || f.name)}</b><br><span class="pop-lyr">${esc(f.name)}</span>${recRows(rows)}</div>`;
   }
   function hoverHTML(f, p) {
-    const other = f.fields.filter(k => k !== f.nameField && p[k] != null && p[k] !== '' && String(p[k]).length < 80).slice(0, 3);
-    return `<b>${esc(nameOf(f, p) || f.name)}</b>${other.map(k => `<br><span class="pop-lyr">${esc(k)}: ${esc(p[k])}</span>`).join('')}<br><span class="pop-lyr">${esc(f.name)}</span>`;
+    const other = f.fields.filter(k => k !== f.nameField && !LAT.test(k) && !LON.test(k) && !GEO.test(k) && p[k] != null && p[k] !== '' && String(p[k]).length < 80).slice(0, 3);
+    return `<b>${esc(nameOf(f, p) || f.name)}</b>${other.map(k => `<br><span class="pop-lyr">${esc(k)}: ${esc(p[k])}</span>`).join('')}<br><span class="pop-lyr">${esc(shown(f))}</span>`;
   }
   const fileOf = layerId => files.find(f => layerId.startsWith(`bp-drop-${f.id}-`));
   let wired = false;
@@ -4271,18 +4373,23 @@ const Drops = (() => {
       const hit = live.length ? map.queryRenderedFeatures(e.point, { layers: live })[0] : null;
       const fill = hit && hit.layer.id.endsWith('-fill');
       const yield_ = !hit || (fill ? (onPoi(e) || onBuilding(e) || onArea(e) || hoverHit(e, ['bp-all-hit', 'bp-corners-hit']))
-        : hoverHit(e, ['bp-corners-hit', 'bp-ints']));
+        : false);
       if (yield_) { if (popOwner === 'drop') { popup.remove(); popOwner = null; } return; }
       const f = fileOf(hit.layer.id), p = f.feats[hit.properties._i].properties;
+      map.getCanvas().style.cursor = fill ? '' : 'pointer';
       popup.setLngLat(hit.geometry.type === 'Point' ? hit.geometry.coordinates : e.lngLat).setHTML(hoverHTML(f, p)).addTo(map); popOwner = 'drop';
     });
     map.on('click', e => {
       const live = pointIds().filter(id => map.getLayer(id));
-      const hit = live.length ? map.queryRenderedFeatures(e.point, { layers: live })[0] : null;
-      if (!hit || hoverHit(e, ['bp-corners-hit', 'bp-ints'])) return;
+      let hit = live.length ? map.queryRenderedFeatures(e.point, { layers: live })[0] : null;
+      if (!hit) {
+        const fills = fillIds().filter(id => map.getLayer(id));
+        hit = fills.length ? map.queryRenderedFeatures(e.point, { layers: fills })[0] : null;
+        if (!hit || onPoi(e) || onBuilding(e) || hoverHit(e, ['bp-all-hit', 'bp-corners-hit', 'bp-ints'])) return;
+      }
       const f = fileOf(hit.layer.id);
       popup.remove(); popOwner = null;
-      rec.setLngLat(hit.geometry.type === 'Point' ? hit.geometry.coordinates : e.lngLat).setHTML(record(f, f.feats[hit.properties._i].properties)).addTo(map);
+      FeatCards.toggle(f.id, hit.properties._i);
     });
   }
   function fit(f) {
@@ -4304,7 +4411,7 @@ const Drops = (() => {
       r = !o ? fromCSV(text) : Array.isArray(o) ? fromObjects(o) : fromGeoJSON(o);
     } catch (e) { toast(t('dropBad', { name: fileName })); return; }
     if (!r.feats.length) { toast(t('dropNone', { name: fileName })); return; }
-    const f = { id: ++seq, name, url: url || null, color: DROP_COLORS[(seq - 1) % DROP_COLORS.length], on: true, feats: r.feats, fields: r.fields, skipped: r.skipped, how: r.how,
+    const f = { id: ++seq, name, url: url || null, look: { ...DROP_LOOK }, color: DROP_COLORS[(seq - 1) % DROP_COLORS.length], on: true, feats: r.feats, fields: r.fields, skipped: r.skipped, how: r.how,
       nameField: r.fields.find(k => NAME.test(k)) || r.fields.find(k => r.feats.some(x => typeof x.properties[k] === 'string' && x.properties[k] && isNaN(+x.properties[k]))) || null };
     for (const x of f.feats) x._sh = shape(x.geometry);
     files.push(f);
@@ -4351,7 +4458,8 @@ const Drops = (() => {
   function remove(id) {
     const i = files.findIndex(f => f.id === id); if (i < 0) return;
     const f = files[i]; files.splice(i, 1);
-    if (ready) { for (const l of ids(f)) if (map.getLayer(l)) map.removeLayer(l); if (map.getSource('drop-' + f.id)) map.removeSource('drop-' + f.id); }
+    FeatCards.dropFile(f.id);
+    if (ready) { for (const l of ids(f)) if (map.getLayer(l)) map.removeLayer(l); for (const x of ['drop-' + f.id, 'drop-' + f.id + '-lab']) if (map.getSource(x)) map.removeSource(x); }
     renderMenu(); changed();
   }
   function show(id, on) {
@@ -4364,22 +4472,54 @@ const Drops = (() => {
   // Layers menu ("Your files") and the map key
   function renderMenu() {
     const el = $('drop-rows');
-    if (el) el.innerHTML = `<p class="areas-cap">${esc(t('grpFiles'))}</p>` + files.map(f => `<div class="lyr-row" data-drop="${f.id}">${swatch(f)}<b>${esc(f.name)}<small>${esc(t('dropCount', { n: f.feats.length.toLocaleString() }))}${f.skipped ? ' · ' + esc(t('dropSkipped', { n: f.skipped.toLocaleString() })) : ''}</small></b>
+    if (el) el.innerHTML = `<p class="areas-cap">${esc(t('grpFiles'))}</p>` + files.map(f => `<div class="lyr-row" data-drop="${f.id}">${swatch(f)}<b>${esc(shown(f))}<small>${esc(t('dropCount', { n: f.feats.length.toLocaleString() }))}${f.skipped ? ' · ' + esc(t('dropSkipped', { n: f.skipped.toLocaleString() })) : ''}</small></b>
         <div class="lseg" role="group" aria-label="${esc(f.name)}"><button type="button" data-drop-on="0" aria-pressed="${!f.on}">${esc(t('lyrOff'))}</button><button type="button" data-drop-on="1" aria-pressed="${f.on}">${esc(t('lyrOn'))}</button></div>
-        <button type="button" class="drop-x" data-drop-x title="${esc(t('dropRemove'))}" aria-label="${esc(t('dropRemove'))}">×</button></div>`).join('')
+        <button type="button" class="drop-x" data-drop-x title="${esc(t('dropRemove'))}" aria-label="${esc(t('dropRemove'))}">×</button></div>${fmtHTML(f)}`).join('')
       + `<div class="lyr-row drop-add"><label class="btn small"><input type="file" accept=".csv,.tsv,.txt,.geojson,.json" multiple hidden data-drop-pick>${esc(t('dropPick'))}</label><small>${esc(t('dropHint'))}</small></div>
       <form class="drop-url" data-drop-url><input type="url" name="u" placeholder="${esc(t('urlPh'))}" aria-label="${esc(t('urlPh'))}"><button type="submit" class="btn small">${esc(t('urlAdd'))}</button></form>`
       + (files.length ? nearHTML() : '');
+    legend();
+  }
+  // the map key: a line per shown file, and its color classes under it
+  function legend() {
     const ul = $('legend') && $('legend').querySelector('ul');
-    if (ul) {
-      ul.querySelectorAll('.lg-drop').forEach(li => li.remove());
-      const before = $('lg-contours');
-      for (const f of files.filter(f => f.on)) {
-        const li = document.createElement('li'); li.className = 'lg-drop';
-        li.innerHTML = `<span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="${f.color}" stroke-width="3.5" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="5" fill="${f.color}" stroke="#fff" stroke-width="1.5"/></svg></span><span>${esc(f.name)} <small class="muted">${esc(t('dropYours'))}</small></span>`;
-        ul.insertBefore(li, before);
-      }
+    if (!ul) return;
+    ul.querySelectorAll('.lg-drop').forEach(li => li.remove());
+    const before = $('lg-contours');
+    for (const f of files.filter(f => f.on)) {
+      const li = document.createElement('li'); li.className = 'lg-drop';
+      const cls = f.cls ? `<table class="lg-table"><tbody>${f.cls.items.map(c => `<tr><td><i style="background:${c.color}"></i></td><td colspan="2">${esc(c.label)}${c.n ? ` <small>${c.n.toLocaleString()}</small>` : ''}</td></tr>`).join('')}</tbody></table>` : '';
+      li.innerHTML = `<span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="${f.color}" stroke-width="3.5" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="5" fill="${f.color}" stroke="#fff" stroke-width="1.5"/></svg></span><span>${esc(shown(f))} <small class="muted">${esc(f.look.by ? t('fmtByKey', { col: f.look.by }) : t('dropYours'))}</small>${cls}</span>`;
+      ul.insertBefore(li, before);
     }
+  }
+  // Format, per file, folded under its row
+  const openFmt = new Set();
+  function fmtHTML(f) {
+    const L = f.look, opt = (v, l, cur) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`;
+    const seg = (k, opts) => `<div class="lseg" role="group" data-fmt-k="${k}">${opts.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${L[k] === v}">${esc(l)}</button>`).join('')}</div>`;
+    const numCols = f.fields.filter(c => numsOf(f, c));
+    const labs = labelCols(f);
+    return `<details class="chips-fold drop-fmt" data-fmt="${f.id}" ${openFmt.has(f.id) ? 'open' : ''}><summary>${esc(t('fmtTitle'))}</summary><div class="fmt-grid">
+      <span>${esc(t('fmtColor'))}</span><div class="fmt-colors">${DROP_COLORS.concat(['#1E2340', '#9AA0A6']).map(c => `<button type="button" data-fmt-color="${c}" style="--c:${c}" aria-pressed="${c === f.color}" title="${c}"></button>`).join('')}</div>
+      <span>${esc(t('fmtColorBy'))}</span><select data-fmt-sel="by">${opt('', t('fmtOneColor'), L.by)}${f.fields.map(c => opt(c, c, L.by)).join('')}</select>
+      <span>${esc(t('fmtSize'))}</span>${seg('size', [['tiny', t('fmtTiny')], ['small', t('fmtSmall')], ['medium', t('fmtMedium')], ['big', t('fmtBig')]])}
+      ${numCols.length ? `<span>${esc(t('fmtSizeBy'))}</span><select data-fmt-sel="sizeBy">${opt('', t('fmtSame'), L.sizeBy)}${numCols.map(c => opt(c, c, L.sizeBy)).join('')}</select>` : ''}
+      <span>${esc(t('fmtStyle'))}</span>${seg('style', [['fill', t('fmtFill')], ['ring', t('fmtRing')], ['ghost', t('fmtGhost')]])}
+      <span>${esc(t('fmtLabels'))}</span><div class="land-chips fmt-labels">${f.fields.map(c => `<label class="land-chip"><input type="checkbox" data-fmt-label="${esc(c)}" ${labs.includes(c) ? 'checked' : ''}>${esc(c)}</label>`).join('')}</div>
+      <span></span><label class="fmt-zoom">${esc(t('fmtLabelZoom'))} <select data-fmt-sel="labelZoom">${[13, 15, 17].map(z => opt(String(z), String(z), String(L.labelZoom))).join('')}</select></label>
+    </div></details>`;
+  }
+  function setLook(id, k, v) {
+    const f = files.find(f => f.id === id); if (!f) return;
+    if (k === 'color') f.color = v;
+    else f.look = { ...f.look, [k]: k === 'labelZoom' ? +v : v };
+    restyle(f);
+    // update the controls in place (rebuilding them mid-click closes the menu)
+    const box = document.querySelector(`[data-fmt="${id}"]`); if (!box) return;
+    box.querySelectorAll('[data-fmt-k]').forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', f.look[g.dataset.fmtK] === b.dataset.v)));
+    box.querySelectorAll('[data-fmt-color]').forEach(b => b.setAttribute('aria-pressed', b.dataset.fmtColor === f.color));
+    const sw = document.querySelector(`[data-drop="${id}"] svg`); if (sw) sw.outerHTML = swatch(f);
   }
   // "Nearby on cards": one setting for every file
   const AREA_PICKS = () => [['hood', t('nhood')], ...['sup', 'ctract', 'cblk', 'cbd', 'cult', 'hist'].filter(k => Areas.has(k)).map(k => [k, Areas.conf(k).title || t('area_' + k)])];
@@ -4403,15 +4543,30 @@ const Drops = (() => {
   }
   function setupUI() {
     const el = $('drop-rows');
+    FeatCards.setup();
     el.addEventListener('submit', e => {
       if (!e.target.matches('[data-drop-url]')) return;
       e.preventDefault();
       const i = e.target.elements.u; addURL(i.value); i.value = '';
     });
-    el.addEventListener('change', e => { if (e.target.matches('[data-near-area]')) setNear('area', e.target.value); });
+    el.addEventListener('change', e => {
+      if (e.target.matches('[data-near-area]')) setNear('area', e.target.value);
+      const box = e.target.closest('[data-fmt]'); if (!box) return;
+      const id = +box.dataset.fmt;
+      if (e.target.dataset.fmtSel) setLook(id, e.target.dataset.fmtSel, e.target.value);
+      if (e.target.dataset.fmtLabel != null) setLook(id, 'labels', [...box.querySelectorAll('[data-fmt-label]:checked')].map(i => i.dataset.fmtLabel));
+    });
+    el.addEventListener('toggle', e => { const d = e.target; if (d.matches && d.matches('[data-fmt]')) { if (d.open) openFmt.add(+d.dataset.fmt); else openFmt.delete(+d.dataset.fmt); } }, true);
     el.addEventListener('click', e => {
       const nb = e.target.closest('[data-near] button');
       if (nb) { setNear(nb.closest('[data-near]').dataset.near, nb.dataset.v); return; }
+      const fbox = e.target.closest('[data-fmt]');
+      if (fbox) {
+        const c = e.target.closest('[data-fmt-color]'), g = e.target.closest('[data-fmt-k] button');
+        if (c) setLook(+fbox.dataset.fmt, 'color', c.dataset.fmtColor);
+        else if (g) setLook(+fbox.dataset.fmt, g.closest('[data-fmt-k]').dataset.fmtK, g.dataset.v);
+        return;
+      }
       const row = e.target.closest('[data-drop]'); if (!row) return;
       const id = +row.dataset.drop;
       // after this click is done: rebuilding the rows mid-click makes the menu's outside-click handler close it
@@ -4500,9 +4655,9 @@ const Drops = (() => {
     if (nearMode.by === 'area' && !Areas.loaded(areaKey())) Areas.need(areaKey()).then(() => render());
     return near(s).map(({ f, hits }) => {
       const label = p => nameOf(f, p) || t('dropUnnamed');
-      if (!hits) return `<dt>${esc(f.name)}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
+      if (!hits) return `<dt>${esc(shown(f))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
       const body = hits.length ? `<ul class="ng-list">${hits.slice(0, 50).map(h => `<li>${esc(label(h.p))} <span class="muted">· ${esc(h.where)}</span></li>`).join('')}${hits.length > 50 ? '<li>…</li>' : ''}</ul>` : '';
-      return `<dt>${esc(f.name)}</dt><dd>${hits.length ? foldDD(esc(summary(hits.length, s)), body, 'drop' + f.id) : esc(t('dropNoneNear'))}</dd>`;
+      return `<dt>${esc(shown(f))}</dt><dd>${hits.length ? foldDD(esc(summary(hits.length, s)), body, 'drop' + f.id) : esc(t('dropNoneNear'))}</dd>`;
     }).join('');
   }
   function text(s) {
@@ -4519,9 +4674,102 @@ const Drops = (() => {
     }
     return areaCache.get(k);
   }
+  // Feature cards: click a file's point or line (or pick it on the map) for a card like a block's, with
+  // the block it's on, its districts and neighborhood, the census blocks around it, elevation and its row
+  const FeatCards = (() => {
+    let picked = [], areasAsked = false;   // picked: [fileId, index], newest first
+    const key = (fid, i) => `f${fid}:${i}`;
+    const featOf = ([fid, i]) => { const f = files.find(f => f.id === fid); return f && f.feats[i] ? { f, x: f.feats[i], i } : null; };
+    // a spot to stand for it: the point, a line's middle vertex, a polygon's box middle (lon, lat)
+    const spot = x => { const sh = x._sh, c = sh.pts.length ? sh.pts[0] : sh.lines.length ? sh.lines[0][Math.floor(sh.lines[0].length / 2)] : [(sh.bb[0] + sh.bb[2]) / 2, (sh.bb[1] + sh.bb[3]) / 2]; return [c[0] / KX, c[1] / KY]; };
+    // the blocks it's on: by CNN, or the nearest public block within 40 m
+    function blocksOf(x) {
+      if (x._cnns) return [...x._cnns].map(c => Logic.db.byCnn.get(c)).filter(Boolean);
+      const [lo, la] = spot(x), p = toM([lo, la]); let best = null, bd = 40;
+      for (const b of Logic.db.segs) {
+        if (!Logic.eligible(b)) continue;
+        const c = b.coords; if (Math.abs(c[0][0] - lo) > 0.004 || Math.abs(c[0][1] - la) > 0.004) continue;
+        const m = c.map(toM); for (let k = 1; k < m.length; k++) { const d = segDist(p[0], p[1], m[k - 1], m[k]); if (d < bd) { bd = d; best = b; } }
+      }
+      return best ? [best] : [];
+    }
+    const items = new Map();
+    function itemOf(fid, i) {
+      const k = key(fid, i); if (items.has(k)) return items.get(k);
+      const o = featOf([fid, i]); if (!o) return null;
+      const [x, y] = spot(o.x), blocks = blocksOf(o.x), b = blocks[0] || {};
+      const it = { ...b, kind: 'int', cnn: k, x, y, blocks, file: o.f, feat: o.x, idx: i, streets: [] };
+      items.set(k, it); return it;
+    }
+    function cardHTML([fid, i]) {
+      const it = itemOf(fid, i); if (!it) return '';
+      const f = it.file, p = it.feat.properties, name = nameOf(f, p) || t('dropUnnamed');
+      const elev = Elev.hasPoint(it.cnn) ? (Elev.peekPoint(it.cnn) == null ? '' : t('ft', { n: Math.round(Elev.peekPoint(it.cnn) * M2FT) })) : t('measuring');
+      if (!Elev.hasPoint(it.cnn)) Elev.point(it).then(() => draw());
+      if (!areasAsked) { areasAsked = true; Areas.ensure().then(() => draw()); }
+      const blocks = it.blocks.map(b => `<button type="button" class="linkish feat-block" data-feat-block="${b.cnn}" title="${esc(t('featAddBlock'))}">${esc(P(b.street))}, ${esc(betweenText(b))}</button>`).join('<br>');
+      const c = Areas.corners(it);
+      const rows = f.fields.filter(k => p[k] != null && p[k] !== '').map(k => [k, String(p[k])]);
+      return `<li class="seg feat is-checked" data-feat="${fid}:${i}" style="--fc:${f.color}">
+        <input type="checkbox" checked aria-label="${esc(name)}">
+        <div class="seg-top">
+          <div><div class="kind">${esc(t('featKind', { file: shown(f) }))}</div><div class="seg-name">${esc(name)}</div></div>
+          <div class="seg-btns"><button type="button" class="remove-btn" data-feat-x title="${esc(t('removeCard'))}" aria-label="${esc(t('removeCard'))}: ${esc(name)}">×</button></div>
+        </div>
+        <dl class="facts">
+          <dt>${esc(t(it.blocks.length > 1 ? 'featOnN' : 'featOn'))}</dt><dd>${blocks || esc(t('featNoBlock'))}</dd>
+          ${it.blocks.length ? Areas.facts(it) + `<dt>${esc(t('zip'))}</dt><dd>${esc(it.zip || '')}</dd><dt>${esc(t('nhood'))}</dt><dd>${hoodsHTML(it)}</dd>` : ''}
+          ${c && c.parts.length ? `<dt>${esc(t('cornersRow'))}</dt><dd>${foldDD(esc(t('cornersEst', { people: roundEst(c.people).toLocaleString(), homes: roundEst(c.homes).toLocaleString() })),
+            `<small class="muted">${esc(t('cornersNoteFeat', { n: c.parts.length }))}</small>${cornersTable(c)}`, 'corners')}</dd>` : ''}
+          <dt>${esc(t('elevation'))}</dt><dd>${esc(elev)}</dd>
+          <dt>${esc(t('featRow'))}</dt><dd>${foldDD(esc(t('featFields', { n: rows.length })), recRows(rows), 'featrow')}</dd>
+        </dl></li>`;
+    }
+    function draw() {
+      const ul = $('feat-list'); if (!ul) return;
+      picked = picked.filter(featOf);
+      // keep folds open across redraws
+      const open = new Set([...ul.querySelectorAll('details[open]')].map(d => d.closest('[data-feat]').dataset.feat + '|' + (d.dataset.fold || '')));
+      ul.innerHTML = picked.map(cardHTML).join('');
+      ul.querySelectorAll('details').forEach(d => { if (open.has(d.closest('[data-feat]').dataset.feat + '|' + (d.dataset.fold || ''))) d.open = true; });
+      if (picked.length) $('results').hidden = false; else render();
+      highlight();
+    }
+    function highlight() {
+      if (!ready || !map.getSource('feat-hl')) return;
+      map.getSource('feat-hl').setData({ type: 'FeatureCollection', features: picked.map(featOf).filter(Boolean).filter(o => o.f.on).map(o => ({ type: 'Feature', geometry: o.x.geometry, properties: {} })) });
+    }
+    function toggle(fid, i) {
+      const at = picked.findIndex(([a, b]) => a === fid && b === i);
+      if (at >= 0) picked.splice(at, 1); else picked.unshift([fid, i]);
+      draw();
+      if (at < 0) { const el = $('feat-list').firstElementChild; if (el && el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' }); }
+    }
+    function setup() {
+      $('feat-list').addEventListener('click', e => {
+        const li = e.target.closest('[data-feat]'); if (!li) return;
+        const [fid, i] = li.dataset.feat.split(':').map(Number);
+        const b = e.target.closest('[data-feat-block]');
+        if (b) { const s = Logic.db.byCnn.get(+b.dataset.featBlock); if (s && !state.checked.has(s.cnn)) toggleFromMap(s); return; }
+        if (e.target.closest('[data-feat-x]') || e.target.tagName === 'INPUT') { toggle(fid, i); return; }
+        if (e.target.closest('.facts')) return;
+        // the card's top: go to it
+        const it = itemOf(fid, i); if (it) { fitToken++; map.easeTo({ center: [it.x, it.y], zoom: Math.max(map.getZoom(), 17), duration: reducedMotion() ? 0 : 600 }); }
+      });
+    }
+    return { toggle, draw, highlight, setup, dropFile: id => { picked = picked.filter(([a]) => a !== id); draw(); } };
+  })();
   // after the map is ready: layers for files dropped before it was
-  function mapReady_(popup) { ready = true; wire(popup); for (const f of files) if (!map.getSource('drop-' + f.id)) addLayers(f); }
-  return { add, addURL, urls, setupUI, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
+  function mapReady_(popup) {
+    ready = true;
+    // the picked features, ringed in yellow under the files' own layers
+    map.addSource('feat-hl', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({ id: 'bp-feat-hl-line', type: 'line', source: 'feat-hl', filter: isA(['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']), layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': '#FFD43B', 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 9, 17, 18], 'line-opacity': 0.9 } });
+    map.addLayer({ id: 'bp-feat-hl', type: 'circle', source: 'feat-hl', filter: isA(['Point', 'MultiPoint']),
+      paint: { 'circle-color': '#FFD43B', 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 8, 17, 15, 19, 18], 'circle-stroke-color': '#1E2340', 'circle-stroke-width': 1.5 } });
+    wire(popup); for (const f of files) if (!map.getSource('drop-' + f.id)) addLayers(f); }
+  return { add, addURL, urls, setupUI, cards: FeatCards, reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
 })();
 const Parcels = (() => {
   const Z = 15, NEAR_M = 14, ADDR_M = 25, PAD_M = 30;
@@ -5340,6 +5588,7 @@ function setOverlay(k, v, write = true) {
 const layerHash = () => Object.keys(OVERLAY_DEFAULT).filter(k => overlayMode[k] !== OVERLAY_DEFAULT[k]).map(k => `${k}:${overlayMode[k]}`).join(',');
 
 // the Layers and Quiet streets dropdowns on the map toolbar: one open at a time
+let setupMapMenusRows = () => { };
 function setupMapMenus() {
   const rowsEl = $('layers-rows');
   const SW = {
@@ -5381,8 +5630,8 @@ function setupMapMenus() {
   const listed = new Set(LAYER_SECTIONS.flatMap(([, ks]) => ks));
   const sections = [...LAYER_SECTIONS.map(([cap, ks]) => [cap, ks.filter(k => k === 'contours' || k === 'basemap' || OVERLAYS[k])]),
     ['grpMore', Object.keys(OVERLAYS).filter(k => !listed.has(k))]].filter(([, ks]) => ks.length);
-  rowsEl.innerHTML = sections.map(([cap, ks]) => `<p class="areas-cap">${esc(t(cap))}</p>` + ks.map(rowFor).join('')).join('');
-  syncChipCounts();
+  setupMapMenusRows = () => { rowsEl.innerHTML = sections.map(([cap, ks]) => `<p class="areas-cap">${esc(t(cap))}</p>` + ks.map(rowFor).join('')).join(''); syncChipCounts(); };
+  setupMapMenusRows();
   rowsEl.addEventListener('change', e => {
     setTimeout(syncChipCounts);
     if (e.target.dataset.land) setLandCats([...rowsEl.querySelectorAll('[data-land]:checked')].map(i => i.dataset.land));
@@ -5406,6 +5655,19 @@ function setupMapMenus() {
     setOverlay(b.closest('[data-lyr]').dataset.lyr, b.dataset.v);
   });
   setupAreasMenu();
+  $('layers-reset').addEventListener('click', () => {
+    for (const k of Object.keys(OVERLAY_DEFAULT)) setOverlay(k, OVERLAY_DEFAULT[k], false);
+    landCats = new Set(LAND_DEFAULT); treeGenera = null; bizCats = new Set(BIZ_CATS.map(([k]) => k));
+    if (bizAll) setBizAll(false);
+    basemapHide = {}; try { localStorage.removeItem(BASEMAP_KEY); } catch (err) { } applyBasemap();
+    if (flatMap) setFlat(false);
+    Object.assign(areaMode, AREA_DEFAULT, { hoodSet: areaMode.hoodSet });
+    Drops.reset();
+    // the rows, after this click (rebuilding them mid-click closes the menu)
+    setTimeout(() => { setupMapMenusRows(); setLandCats([...landCats], false); Tiles.filter(); syncAreasMenu(); Areas.apply(); writeHash(); });
+    map.easeTo({ pitch: 0, bearing: 0, duration: reducedMotion() ? 0 : 500 });
+    toast(t('resetDone'));
+  });
   const menus = [['layers-btn', 'layers-panel'], ['areas-btn', 'areas-panel'], ['quiet-btn', 'quiet-panel']];
   const close = except => menus.forEach(([b, p]) => { if (b !== except) { $(p).hidden = true; $(b).setAttribute('aria-expanded', 'false'); } });
   for (const [b, p] of menus) $(b).addEventListener('click', () => {
