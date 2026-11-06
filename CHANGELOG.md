@@ -2,6 +2,10 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v56
+
+- **`scripts/match_blocks.py`** (copied from sf-blocks 2026.11.05.1): about 4 times faster with the same answers, and it writes each row as it's matched, so long files don't have to fit in memory. Nothing on the page changes.
+
 ## v55
 
 - **A card for your files' rows:** click a point or line from your files (or inside one of their polygons, away from streets) for a card like a block's:
