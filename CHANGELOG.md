@@ -2,6 +2,12 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v59
+
+- **Map style (Layers › Basemap):** Light (as before), White, Gray, Dark or Black, from Protomaps' styles. The quieter ones let your files' colors stand out. The switch keeps everything on the map, the creek fix included. Saved in the browser, and Reset view goes back to Light. Satellite is unchanged.
+- **New color swatches for your files:** red, orange, yellow, green, blue, indigo and violet, plus aqua and magenta for contrast, and near-black and white (for the dark styles). New files take them in a contrasting order (blue, orange, magenta, green, aqua…).
+- **The Layers menu no longer scrolls sideways:** long column names in Format's menus are cut to fit, Size and Style keep their natural width, and rows with four choices (Parcels) put them on their own line. The map key lists color-by classes as compact dots that wrap. The basemap's Addresses checkbox reads "Addresses (house numbers)".
+
 ## v58
 
 - **Your files' rows open full cards:**
