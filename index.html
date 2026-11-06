@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v58 -->
+<!-- build: v59 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -455,7 +455,7 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
 .drop-zone[hidden] { display: none; }
 .drop-zone p { background: #fff; padding: 14px 20px; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 18px rgba(0,0,0,.15); }
 .drop-x { border: 0; background: none; font-size: 18px; line-height: 1; cursor: pointer; color: var(--ink-soft); padding: 0 2px; }
-.lyr-row[data-drop] { grid-template-columns: 26px 1fr auto auto; }
+.lyr-row.lyr-row[data-drop] { grid-template-columns: 26px minmax(0, 1fr) auto auto; }
 .drop-add { display: flex; gap: 10px; align-items: center; }
 .drop-add .btn { white-space: nowrap; flex: none; cursor: pointer; }
 .drop-add small { color: var(--ink-soft); }
@@ -464,7 +464,11 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
 .near-row { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 6px; }
 .lyr-row[data-drop] b { min-width: 0; overflow-wrap: anywhere; }
 .drop-fmt { margin: -2px 0 6px 34px; }
-.fmt-grid { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; font-size: 13px; padding: 6px 0; }
+.fmt-grid { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 10px; align-items: center; font-size: 13px; padding: 6px 0; }
+.fmt-grid > * { min-width: 0; }
+.fmt-grid .lseg { justify-self: start; }
+.fmt-grid select { width: 100%; text-overflow: ellipsis; }
+.fmt-labels .land-chip { overflow-wrap: anywhere; }
 .fmt-grid > span { color: var(--ink-soft); }
 .fmt-grid select { font: inherit; font-size: 13px; padding: 3px 6px; border-radius: 8px; border: 1.5px solid var(--line); background: #fff; max-width: 100%; }
 .fmt-colors { display: flex; gap: 5px; flex-wrap: wrap; }
@@ -472,6 +476,9 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
 .fmt-colors button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--ink); }
 .fmt-labels { max-height: 120px; overflow: auto; }
 .fmt-zoom { display: inline-flex; gap: 6px; align-items: center; color: var(--ink-soft); }
+.lyr-row.lyr-flavor { grid-template-columns: 26px 1fr; }
+.lyr-row > .lseg.flavor-seg { grid-column: 1 / -1 !important; justify-self: start; }
+.flavor-seg button { padding: 4px 8px; }
 .lyr-reset { display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 10px; }
 .lyr-reset small { color: var(--ink-soft); }
 .seg.feat { border-left: 5px solid var(--fc); }
@@ -484,7 +491,16 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
 .facts .pick-dd { box-shadow: inset 3px 0 0 #FFD43B; padding-left: 8px; }
 .linkish { border: 0; background: none; padding: 0; font: inherit; color: var(--grape); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .feat-block { text-align: left; }
-.lg-drop .lg-table { margin-top: 3px; }
+.lg-drop > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.lg-drop-cls { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 3px; font-size: 12px; }
+.lg-drop-cls i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; box-shadow: 0 0 0 1px rgba(0,0,0,.15); }
+.lg-drop-cls small { color: var(--ink-soft); }
+/* a row with four or more choices puts them on their own line, so the menu never scrolls sideways */
+.lyr-row:not(.lyr-checks) { grid-template-columns: 26px minmax(0, 1fr) auto; }
+.lyr-row:has(> .lseg button:nth-child(4)) > .lseg { grid-column: 1 / -1; justify-self: end; }
+.map-pop > * { min-width: 0; }
+.lyr-checks .opt-check { white-space: normal; }
+
 .hood-map { float: right; font-size: 13px; font-weight: 500; color: var(--ink-soft); display: inline-flex; gap: 4px; align-items: center; cursor: pointer; margin-left: 8px; }
 .hood-sel { font: inherit; font-size: 13px; padding: 3px 6px; border-radius: 8px; border: 1.5px solid var(--line); background: #fff; }
 .lyr-row.dim { opacity: .5; }
@@ -779,7 +795,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v58';
+const _BUILD_VERSION = 'v59';
 
 /* =====================================================================
    CONFIG
@@ -787,7 +803,7 @@ const _BUILD_VERSION = 'v58';
 const CONFIG = {
   // Protomaps key for burritojustice.github.io (and any localhost); region.json can name another for other origins
   PROTOMAPS_KEY: '071e272e8d5e13b7',
-  styleUrl: key => `https://api.protomaps.com/styles/v5/light/en.json?key=${key}`,
+  styleUrl: (key, flavor = 'light') => `https://api.protomaps.com/styles/v5/${flavor}/en.json?key=${key}`,
   DEM_TILES: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
   TERRAIN_EXAGGERATION: 1.5,
   // Street-following labels. 'map' = printed on the ground, which stays straight on terrain.
@@ -971,7 +987,10 @@ const I18N = {
     featOnCard: '{name}: on the card for {card}', dropAtCorner: 'at this corner', dropAtInt: 'at {name}', dropAtIntAway: 'at {name}, {n} block(s) out',
     cornersNoteFeat: 'Everyone in the {n} census blocks at this spot (full counts): neighbors who could see it and walk over',
     resetView: 'Reset view', resetViewHint: 'Layers, areas, basemap and 3D back to how they start. Your files and cards stay.', resetDone: 'Back to the starting layers',
-    bm3d: '3D', bm3dOn: 'On', bm3dOff: 'Off', bm3dHint: 'Tilt, hills and 3D buildings. Off: a flat map for older devices, and the 3D button shows contours.', bmAddresses: 'Addresses (the basemap\'s house numbers)', btnContoursTitle: 'Show contour lines (10 ft)', btn3dTitle: 'Tilt the map to see the hills',
+    bmStyle: 'Map style', bmStyleHint: 'Quieter styles let your files’ colors stand out. Satellite stays as is.',
+    flavor_light: 'Light', flavor_white: 'White', flavor_grayscale: 'Gray', flavor_dark: 'Dark', flavor_black: 'Black',
+    flavorFail: 'Couldn’t load that map style. Try again in a moment.',
+    bm3d: '3D', bm3dOn: 'On', bm3dOff: 'Off', bm3dHint: 'Tilt, hills and 3D buildings. Off: a flat map for older devices, and the 3D button shows contours.', bmAddresses: 'Addresses (house numbers)', btnContoursTitle: 'Show contour lines (10 ft)', btn3dTitle: 'Tilt the map to see the hills',
     lgTreeSize: 'Bigger dot: thicker trunk; dark ring: Significant Tree', grpAround: 'Getting around', grpStreet: 'On the street', grpLand: 'Land and buildings', grpTerrain: 'Terrain', grpMore: 'More', aQuietBase: 'Hide parks and places on the map',
     lgMuniNums: 'numbers', lgMuniNumsOut: 'Route numbers show from zoom {z}', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick',
     lgNoOne: 'no one lives there (parks, water): clear', lgParcelLines: 'Parcels (lot lines)',
@@ -2515,7 +2534,7 @@ const LABEL_FONT = ['Noto Sans Medium'];
 function initMap() {
   map = new maplibregl.Map({
     container: 'map',
-    style: CONFIG.styleUrl(SFBlocks.basemapKey(CONFIG.PROTOMAPS_KEY)),
+    style: CONFIG.styleUrl(SFBlocks.basemapKey(CONFIG.PROTOMAPS_KEY), basemapFlavor),
     bounds: CONFIG.SF_BOUNDS,
     fitBoundsOptions: { padding: 20 },
     attributionControl: { compact: true },
@@ -3043,6 +3062,37 @@ const LAYER_SECTIONS = [
 // 3D on (the default: tilt, terrain, 3D buildings) or off (Layers > Basemap): a flat map for older devices.
 // Off, the map can't tilt, terrain isn't loaded, and the 3D button turns contours on and off instead.
 // Saved as bp-flat.
+// Basemap style (Layers > Basemap): Protomaps' flavors share layer ids, so switching copies the other
+// flavor's paint and layout onto the map's own layers (and our water copies), keeping our layers and the
+// creek fix. Saved as bp-flavor.
+const FLAVORS = ['light', 'white', 'grayscale', 'dark', 'black'], FLAVOR_KEY = 'bp-flavor';
+let basemapFlavor = (() => { try { const v = localStorage.getItem(FLAVOR_KEY); return FLAVORS.includes(v) ? v : 'light'; } catch (e) { return 'light'; } })();
+const flavorStyles = new Map();
+async function setFlavor(v) {
+  if (!FLAVORS.includes(v)) return;
+  const was = basemapFlavor; basemapFlavor = v;
+  try { v === 'light' ? localStorage.removeItem(FLAVOR_KEY) : localStorage.setItem(FLAVOR_KEY, v); } catch (e) { }
+  document.querySelectorAll('[data-flavor]').forEach(b => b.setAttribute('aria-pressed', b.dataset.flavor === v));
+  if (!mapReady || v === was) return;
+  let st = flavorStyles.get(v);
+  if (!st) {
+    try { st = await (await fetch(CONFIG.styleUrl(SFBlocks.basemapKey(CONFIG.PROTOMAPS_KEY), v))).json(); flavorStyles.set(v, st); }
+    catch (e) { toast(t('flavorFail')); return; }
+  }
+  if (basemapFlavor !== v) return;
+  const now = new Map(map.getStyle().layers.map(l => [l.id, l]));
+  for (const l of st.layers) {
+    for (const id of [l.id, 'bp-water-over-' + l.id]) {
+      if (!now.has(id)) continue;
+      const paint = l.paint || {}, layout = l.layout || {};
+      for (const k of Object.keys(now.get(id).paint || {})) if (!(k in paint)) try { map.setPaintProperty(id, k, undefined); } catch (e) { }
+      for (const [k, val] of Object.entries(paint)) try { map.setPaintProperty(id, k, val); } catch (e) { }
+      for (const [k, val] of Object.entries(layout)) if (k !== 'visibility') try { map.setLayoutProperty(id, k, val); } catch (e) { }
+    }
+  }
+  if (st.sprite && map.setSprite) try { map.setSprite(st.sprite); } catch (e) { }
+  document.documentElement.dataset.flavor = v;
+}
 const FLAT_KEY = 'bp-flat';
 let flatMap = (() => { try { return localStorage.getItem(FLAT_KEY) === '1'; } catch (e) { return false; } })();
 function applyTerrain() {
@@ -4137,7 +4187,11 @@ function setBizAll(on) {
    as url= so the view can be shared. Cards list what's nearby, one way for every file (nearMode):
    along the streets (this block, or N blocks out), in the same area, or within a radius.
    ===================================================================== */
-const DROP_COLORS = ['#E8590C', '#1971C2', '#2F9E44', '#C2255C', '#7048E8', '#0C8599'];
+// the swatches, in rainbow order (ROYGBIV, then aqua and magenta for contrast, then near-black and white)
+const DROP_SWATCHES = [['#E03131', 'Red'], ['#F76707', 'Orange'], ['#F2B705', 'Yellow'], ['#2B9348', 'Green'], ['#1C7ED6', 'Blue'],
+  ['#3F37C9', 'Indigo'], ['#8E44AD', 'Violet'], ['#00B4C5', 'Aqua'], ['#D91BB5', 'Magenta'], ['#1E2340', 'Black'], ['#FFFFFF', 'White']];
+// new files take them in this order, so two files side by side contrast
+const DROP_COLORS = ['#1C7ED6', '#F76707', '#D91BB5', '#2B9348', '#00B4C5', '#E03131', '#8E44AD', '#F2B705', '#3F37C9'];
 // Format (borrowed from Joiner's "Format features"): color by a column (most common values, or five
 // quantile classes for numbers), size, size by a number, style, and label lines from columns
 const DROP_CATS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6'], DROP_OTHER = '#9AA0A6';
@@ -4507,7 +4561,7 @@ const Drops = (() => {
     const before = $('lg-contours');
     for (const f of files.filter(f => f.on)) {
       const li = document.createElement('li'); li.className = 'lg-drop';
-      const cls = f.cls ? `<table class="lg-table"><tbody>${f.cls.items.map(c => `<tr><td><i style="background:${c.color}"></i></td><td colspan="2">${esc(c.label)}${c.n ? ` <small>${c.n.toLocaleString()}</small>` : ''}</td></tr>`).join('')}</tbody></table>` : '';
+      const cls = f.cls ? `<span class="lg-drop-cls">${f.cls.items.map(c => `<span><i style="background:${c.color}"></i>${esc(c.label)}${c.n ? ` <small>${c.n.toLocaleString()}</small>` : ''}</span>`).join('')}</span>` : '';
       li.innerHTML = `<span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="${f.color}" stroke-width="3.5" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="5" fill="${f.color}" stroke="#fff" stroke-width="1.5"/></svg></span><span>${esc(shown(f))} <small class="muted">${esc(f.look.by ? t('fmtByKey', { col: f.look.by }) : t('dropYours'))}</small>${cls}</span>`;
       ul.insertBefore(li, before);
     }
@@ -4520,7 +4574,7 @@ const Drops = (() => {
     const numCols = f.fields.filter(c => numsOf(f, c));
     const labs = labelCols(f);
     return `<details class="chips-fold drop-fmt" data-fmt="${f.id}" ${openFmt.has(f.id) ? 'open' : ''}><summary>${esc(t('fmtTitle'))}</summary><div class="fmt-grid">
-      <span>${esc(t('fmtColor'))}</span><div class="fmt-colors">${DROP_COLORS.concat(['#1E2340', '#9AA0A6']).map(c => `<button type="button" data-fmt-color="${c}" style="--c:${c}" aria-pressed="${c === f.color}" title="${c}"></button>`).join('')}</div>
+      <span>${esc(t('fmtColor'))}</span><div class="fmt-colors">${DROP_SWATCHES.map(([c, n]) => `<button type="button" data-fmt-color="${c}" style="--c:${c}" aria-pressed="${c === f.color}" title="${n}" aria-label="${n}"></button>`).join('')}</div>
       <span>${esc(t('fmtColorBy'))}</span><select data-fmt-sel="by">${opt('', t('fmtOneColor'), L.by)}${f.fields.map(c => opt(c, c, L.by)).join('')}</select>
       <span>${esc(t('fmtSize'))}</span>${seg('size', [['tiny', t('fmtTiny')], ['small', t('fmtSmall')], ['medium', t('fmtMedium')], ['big', t('fmtBig')]])}
       ${numCols.length ? `<span>${esc(t('fmtSizeBy'))}</span><select data-fmt-sel="sizeBy">${opt('', t('fmtSame'), L.sizeBy)}${numCols.map(c => opt(c, c, L.sizeBy)).join('')}</select>` : ''}
@@ -5708,6 +5762,9 @@ function setupMapMenus() {
   const BM_LABEL = { pois: 'bmPois', buildings: 'bmBuildings', addresses: 'bmAddresses' };
   const basemapRow = () => `<div class="lyr-row lyr-checks">${['pois', 'buildings', 'addresses'].map(k =>
     `<label class="opt-check"><input type="checkbox" data-bmhide="${k}" ${basemapHide[k] ? '' : 'checked'}> ${esc(t(BM_LABEL[k]))}</label>`).join('')}</div>`
+    + `<div class="lyr-row lyr-flavor"><span class="sw"></span><b>${esc(t('bmStyle'))}<small>${esc(t('bmStyleHint'))}</small></b></div>
+    <div class="lyr-row lyr-sub"><span></span><div class="lseg flavor-seg" role="group" aria-label="${esc(t('bmStyle'))}">${FLAVORS.map(v =>
+      `<button type="button" data-flavor="${v}" aria-pressed="${basemapFlavor === v}">${esc(t('flavor_' + v))}</button>`).join('')}</div></div>`
     + `<div class="lyr-row" data-flat-row><span class="sw"></span><b>${esc(t('bm3d'))}<small>${esc(t('bm3dHint'))}</small></b>
     <div class="lseg" role="group" aria-label="${esc(t('bm3d'))}">${[['on', 'bm3dOn'], ['off', 'bm3dOff']].map(([v, l]) =>
       `<button type="button" data-flat="${v}" aria-pressed="${(v === 'off') === flatMap}">${esc(t(l))}</button>`).join('')}</div></div>`;
@@ -5736,6 +5793,8 @@ function setupMapMenus() {
     }
   });
   rowsEl.addEventListener('click', e => {
+    const vb = e.target.closest('[data-flavor]');
+    if (vb) { setFlavor(vb.dataset.flavor); return; }
     const fb = e.target.closest('[data-flat]');
     if (fb) { setFlat(fb.dataset.flat === 'off'); rowsEl.querySelectorAll('[data-flat]').forEach(x => x.setAttribute('aria-pressed', x === fb)); return; }
     const b = e.target.closest('.lseg button'); if (!b) return;
@@ -5748,6 +5807,7 @@ function setupMapMenus() {
     if (bizAll) setBizAll(false);
     basemapHide = {}; try { localStorage.removeItem(BASEMAP_KEY); } catch (err) { } applyBasemap();
     if (flatMap) setFlat(false);
+    setFlavor('light');
     Object.assign(areaMode, AREA_DEFAULT, { hoodSet: areaMode.hoodSet });
     Drops.reset();
     // the rows, after this click (rebuilding them mid-click closes the menu)
