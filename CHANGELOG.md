@@ -2,6 +2,27 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v56
+
+- **`scripts/match_blocks.py`** (copied from sf-blocks 2026.11.05.1): about 4 times faster with the same answers, and it writes each row as it's matched, so long files don't have to fit in memory. Nothing on the page changes.
+
+## v55
+
+- **A card for your files' rows:** click a point or line from your files (or inside one of their polygons, away from streets) for a card like a block's:
+  - which block it's on, by its CNN or the nearest block within 40 m, with a link to add that block's card;
+  - its elected and special districts, ZIP and neighborhood;
+  - Within a block: the census blocks around it;
+  - its elevation, and its whole row folded underneath.
+  - The pick is ringed in yellow on the map. Click it again or × to drop the card; click the card's top to go to it.
+- **Your files stay clickable close in:** their points and lines are bigger and drawn above the selected blocks and corners, and win the hover and click over an intersection.
+- **Format, per file** (Layers › Your files › Format), from Joiner's "Format features":
+  - color, or color by a column (the most common values, or five classes for numbers), shown in the map key;
+  - size, and size by a number;
+  - style: Fill, Ring or Ghost;
+  - labels from any columns, one line each, from zoom 13, 15 or 17. The name column is labelled until you choose others.
+- **File names wrap** in Layers and on cards, with _ and - shown as spaces, so they don't squeeze the Off/On buttons.
+- **Reset view** at the bottom of Layers puts layers, chips, areas, the basemap checkboxes, 3D and the nearby setting back to how they start, and turns the map north-up and flat. Your files, their formats and your cards stay.
+
 ## v54
 
 - **Nearby on cards, one setting for all your files** (Layers › Your files › Nearby on cards):
