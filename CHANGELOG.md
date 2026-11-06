@@ -2,6 +2,19 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v60
+
+- **Map key checkboxes:** every layer, area set and file in the key has a checkbox to hide or show it. A row turned off from the key stays there, unchecked, so it's one click back (layers return to their last setting).
+- **Hover a category to find it:** with a key list open (business colors, tree kinds, land use, zoning, city-owned land), hovering a row fades everything else in that layer.
+- **Downloads next to Copy:** pick what, then CSV or GeoJSON.
+  - **Blocks:** the checked blocks and intersections, with the same columns as Copy.
+  - **Businesses, parcels or census blocks along them:** one row each, with a `cnns` column listing the blocks it's along.
+    - Businesses include owner, industry, license and mailing address, from the city's registry.
+    - Parcels include lot, address, land use, zoning, homes and outline.
+    - Census blocks include 2020 people and homes, with outlines.
+- **＋ Cross streets:** adds the first block of every street that crosses the checked blocks, or that meets a checked corner. On a corridor like Fillmore, the businesses around the corners come along.
+- **Census blocks and tracts can Shade:** Off, Borders, Shade or Density. Shade marks the census blocks along your blocks (the ones the census estimate counts), or the tracts they're in, plus any holding your files' rows.
+
 ## v59
 
 - **Map style (Layers › Basemap):** Light (as before), White, Gray, Dark or Black, from Protomaps' styles. The quieter ones let your files' colors stand out. The switch keeps everything on the map, the creek fix included. Saved in the browser, and Reset view goes back to Light. Satellite is unchanged.
