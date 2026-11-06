@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v55 -->
+<!-- build: v58 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -476,6 +476,12 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
 .lyr-reset small { color: var(--ink-soft); }
 .seg.feat { border-left: 5px solid var(--fc); }
 .feat-list:not(:empty) { margin-bottom: 12px; }
+.facts .rec-table { width: 100%; table-layout: fixed; }
+.facts .rec-table th { width: 38%; white-space: normal; overflow-wrap: anywhere; }
+.facts .rec-table td { overflow-wrap: anywhere; }
+.facts dd { min-width: 0; }
+.facts .pick-dt { color: var(--ink); font-weight: 700; }
+.facts .pick-dd { box-shadow: inset 3px 0 0 #FFD43B; padding-left: 8px; }
 .linkish { border: 0; background: none; padding: 0; font: inherit; color: var(--grape); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 .feat-block { text-align: left; }
 .lg-drop .lg-table { margin-top: 3px; }
@@ -773,7 +779,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-const _BUILD_VERSION = 'v57';
+const _BUILD_VERSION = 'v58';
 
 /* =====================================================================
    CONFIG
@@ -961,7 +967,8 @@ const I18N = {
     fmtTitle: 'Format', fmtColor: 'Color', fmtColorBy: 'Color by', fmtOneColor: 'One color', fmtSize: 'Size', fmtSizeBy: 'Size by', fmtSame: 'Same size',
     fmtTiny: 'Tiny', fmtSmall: 'Small', fmtMedium: 'Medium', fmtBig: 'Big', fmtStyle: 'Style', fmtFill: 'Fill', fmtRing: 'Ring', fmtGhost: 'Ghost',
     fmtLabels: 'Labels', fmtLabelZoom: 'Labels from zoom', fmtOther: 'Other', fmtByKey: 'by {col}',
-    featKind: 'From {file}', featOn: 'On', featOnN: 'On blocks', featNoBlock: 'No block within 40 m', featAddBlock: 'Add this block', featRow: 'Its row', featFields: '{n} fields',
+    featKind: 'From {file}', featOn: 'On', featOnN: 'On blocks', featNoBlock: 'No block within 40 m', featAddBlock: 'Add this block', featRow: 'Details', featFields: '{n} fields', featMatchCols: 'Matcher columns ({n})', featLocCols: 'Location columns ({n})',
+    featOnCard: '{name}: on the card for {card}', dropAtCorner: 'at this corner', dropAtInt: 'at {name}', dropAtIntAway: 'at {name}, {n} block(s) out',
     cornersNoteFeat: 'Everyone in the {n} census blocks at this spot (full counts): neighbors who could see it and walk over',
     resetView: 'Reset view', resetViewHint: 'Layers, areas, basemap and 3D back to how they start. Your files and cards stay.', resetDone: 'Back to the starting layers',
     bm3d: '3D', bm3dOn: 'On', bm3dOff: 'Off', bm3dHint: 'Tilt, hills and 3D buildings. Off: a flat map for older devices, and the 3D button shows contours.', bmAddresses: 'Addresses (the basemap\'s house numbers)', btnContoursTitle: 'Show contour lines (10 ft)', btn3dTitle: 'Tilt the map to see the hills',
@@ -1957,6 +1964,7 @@ function render() {
   const box = $('results');
   const segs = state.results;
   box.hidden = !segs.length && !state.title && !$('feat-list').children.length;
+  Drops.cards.prune(new Set(state.results.map(r => r.cnn)));
   $('results-title').textContent = state.title;
   const n = state.checked.size;
   $('results-sub').textContent = state.kind === 'pick' ? t('subPick', { n, total: segs.length }) : t('subAll', { n, total: segs.length });
@@ -2006,6 +2014,7 @@ function intCardHTML(i) {
       </div>
     </div>
     <dl class="facts">
+      ${Drops.picked(i)}
       <dt>${esc(t('streetsHere'))}</dt><dd>${esc(i.streets.map(P).join(', '))}</dd>
       ${Areas.facts(i)}
       <dt>${esc(t('zip'))}</dt><dd>${esc(i.zip)}</dd>
@@ -2099,6 +2108,7 @@ function cardHTML(s) {
     </div>
     ${tags.length ? `<div class="tags">${tags.map(([c, x]) => `<span class="tag ${c}">${esc(x)}</span>`).join('')}</div>` : ''}
     <dl class="facts">
+      ${Drops.picked(s)}
       <dt>${esc(t('addrLabel'))}</dt><dd>${addr}</dd>
       ${Areas.facts(s)}
       <dt>${esc(t('zip'))}</dt><dd>${esc(s.zip)}</dd>
@@ -4197,6 +4207,8 @@ const Drops = (() => {
     if (cols.cnn != null) {
       const segs = String(r[cols.cnn] || '').split(/[;,\s]+/).map(Number).map(c => Logic.db.byCnn.get(c)).filter(Boolean);
       if (segs.length) return segs.length === 1 ? { type: 'LineString', coordinates: segs[0].coords } : { type: 'MultiLineString', coordinates: segs.map(s => s.coords) };
+      const node = String(r[cols.cnn] || '').split(/[;,\s]+/).map(Number).map(c => Logic.db.nodes.get(c)).find(Boolean);
+      if (node) return { type: 'Point', coordinates: [node.x, node.y] };
     }
     return null;
   }
@@ -4412,8 +4424,15 @@ const Drops = (() => {
     } catch (e) { toast(t('dropBad', { name: fileName })); return; }
     if (!r.feats.length) { toast(t('dropNone', { name: fileName })); return; }
     const f = { id: ++seq, name, url: url || null, look: { ...DROP_LOOK }, color: DROP_COLORS[(seq - 1) % DROP_COLORS.length], on: true, feats: r.feats, fields: r.fields, skipped: r.skipped, how: r.how,
-      nameField: r.fields.find(k => NAME.test(k)) || r.fields.find(k => r.feats.some(x => typeof x.properties[k] === 'string' && x.properties[k] && isNaN(+x.properties[k]))) || null };
-    for (const x of f.feats) x._sh = shape(x.geometry);
+      nameField: r.fields.find(k => NAME.test(k)) || r.fields.find(k => k === 'matched_text') || r.fields.find(k => r.feats.some(x => typeof x.properties[k] === 'string' && x.properties[k] && isNaN(+x.properties[k]))) || null };
+    for (const x of f.feats) {
+      x._sh = shape(x.geometry);
+      if (x._cnns) {
+        x._segs = new Set([...x._cnns].filter(c => Logic.db.byCnn.has(c)));
+        x._nodes = new Set([...x._cnns].filter(c => !x._segs.has(c) && Logic.db.nodes.has(c)));
+        if (!x._segs.size && !x._nodes.size) x._cnns = null;
+      }
+    }
     files.push(f);
     addLayers(f); fit(f);
     toast(t(f.skipped ? 'dropAddedSkip' : 'dropAdded', { name, n: f.feats.length.toLocaleString(), k: f.skipped.toLocaleString() }));
@@ -4615,11 +4634,17 @@ const Drops = (() => {
         let best = null;
         for (const { b, k, m, bb } of blocks) {
           if (best && best.k <= k) continue;
-          const on = x._cnns ? x._cnns.has(b.cnn) : bbNear(x._sh.bb, bb, DROP_ON_M) && dist(m, x._sh) <= DROP_ON_M;
+          // by CNN: the block itself, or an intersection at either end of it
+          const on = x._cnns ? x._segs.has(b.cnn) || x._nodes.has(b.fn) || x._nodes.has(b.tn) : bbNear(x._sh.bb, bb, DROP_ON_M) && dist(m, x._sh) <= DROP_ON_M;
           if (on) best = { k, b };
         }
-        if (best) hits.push({ d: best.k, p: x.properties, where: best.b.cnn === s.cnn ? t('dropOn')
-          : best.k === 0 ? t('dropOnStreet', { street: P(best.b.street) }) : t(best.k === 1 ? 'dropAround' : 'dropAway', { street: P(best.b.street), n: best.k }) });
+        if (!best) continue;
+        const node = x._cnns && !x._segs.has(best.b.cnn) ? [...x._nodes].find(n => n === s.cnn || n === best.b.fn || n === best.b.tn) : null;
+        const where = node === s.cnn ? t('dropAtCorner')
+          : node != null ? t(best.k ? 'dropAtIntAway' : 'dropAtInt', { name: intName(Logic.item(node)), n: best.k })
+          : best.b.cnn === s.cnn ? t('dropOn')
+          : best.k === 0 ? t('dropOnStreet', { street: P(best.b.street) }) : t(best.k === 1 ? 'dropAround' : 'dropAway', { street: P(best.b.street), n: best.k });
+        hits.push({ d: best.k, p: x.properties, where });
       }
     } else if (nearMode.by === 'area') {
       const k = areaKey(), mine = Areas.loaded(k) ? (Areas.of(k, s) || []).map(a => a.name) : null;
@@ -4634,7 +4659,7 @@ const Drops = (() => {
       const line = blk.length > 1 ? blk : [blk[0], blk[0]];
       for (const x of f.feats) {
         if (!bbNear(x._sh.bb, bb, R)) continue;
-        const d = x._cnns && x._cnns.has(s.cnn) ? 0 : dist(line, x._sh);
+        const d = x._cnns && (x._segs.has(s.cnn) || x._nodes.has(s.cnn)) ? 0 : dist(line, x._sh);
         if (d <= R) hits.push({ d, p: x.properties, where: d < 1 ? t('dropOn') : t('dropM', { m: Math.round(d) }) });
       }
     }
@@ -4677,14 +4702,32 @@ const Drops = (() => {
   // Feature cards: click a file's point or line (or pick it on the map) for a card like a block's, with
   // the block it's on, its districts and neighborhood, the census blocks around it, elevation and its row
   const FeatCards = (() => {
-    let picked = [], areasAsked = false;   // picked: [fileId, index], newest first
+    let picked = [], areasAsked = false;   // picked: [fileId, index], newest first, for rows with a card of their own
+    const onCards = new Map();              // "fileId:index" → the CNNs of the block / intersection cards showing it
     const key = (fid, i) => `f${fid}:${i}`;
     const featOf = ([fid, i]) => { const f = files.find(f => f.id === fid); return f && f.feats[i] ? { f, x: f.feats[i], i } : null; };
     // a spot to stand for it: the point, a line's middle vertex, a polygon's box middle (lon, lat)
     const spot = x => { const sh = x._sh, c = sh.pts.length ? sh.pts[0] : sh.lines.length ? sh.lines[0][Math.floor(sh.lines[0].length / 2)] : [(sh.bb[0] + sh.bb[2]) / 2, (sh.bb[1] + sh.bb[3]) / 2]; return [c[0] / KX, c[1] / KY]; };
+    // what it's at, for its card: its CNNs (blocks or intersections); else an intersection within 15 m;
+    // else the nearest block within 40 m. Polygons, and points far from streets, get a card of their own.
+    function targets(x) {
+      if (x._tg) return x._tg;
+      let tg = [];
+      if (x._cnns) tg = [...x._segs].map(c => Logic.db.byCnn.get(c)).concat([...x._nodes].map(c => Logic.item(c)));
+      else if (!x._sh.polys.length) {
+        const [lo, la] = spot(x); let bn = null, bd = 15;
+        for (const [c, n] of Logic.db.nodes) {
+          if (Math.abs(n.x - lo) > 0.0004 || Math.abs(n.y - la) > 0.0004) continue;
+          const d = Math.hypot((n.x - lo) * KX, (n.y - la) * KY);
+          if (d < bd && new Set((Logic.db.segsAtNode.get(c) || []).filter(Logic.eligible).map(b => b.street)).size >= 2) { bd = d; bn = c; }
+        }
+        tg = bn != null ? [Logic.item(bn)] : blocksOf(x);
+      }
+      return x._tg = tg.filter(Boolean);
+    }
     // the blocks it's on: by CNN, or the nearest public block within 40 m
     function blocksOf(x) {
-      if (x._cnns) return [...x._cnns].map(c => Logic.db.byCnn.get(c)).filter(Boolean);
+      if (x._cnns) return [...x._segs].map(c => Logic.db.byCnn.get(c)).filter(Boolean);
       const [lo, la] = spot(x), p = toM([lo, la]); let best = null, bd = 40;
       for (const b of Logic.db.segs) {
         if (!Logic.eligible(b)) continue;
@@ -4709,7 +4752,7 @@ const Drops = (() => {
       if (!areasAsked) { areasAsked = true; Areas.ensure().then(() => draw()); }
       const blocks = it.blocks.map(b => `<button type="button" class="linkish feat-block" data-feat-block="${b.cnn}" title="${esc(t('featAddBlock'))}">${esc(P(b.street))}, ${esc(betweenText(b))}</button>`).join('<br>');
       const c = Areas.corners(it);
-      const rows = f.fields.filter(k => p[k] != null && p[k] !== '').map(k => [k, String(p[k])]);
+      const rows = f.fields.filter(k => p[k] != null && p[k] !== '');
       return `<li class="seg feat is-checked" data-feat="${fid}:${i}" style="--fc:${f.color}">
         <input type="checkbox" checked aria-label="${esc(name)}">
         <div class="seg-top">
@@ -4718,11 +4761,11 @@ const Drops = (() => {
         </div>
         <dl class="facts">
           <dt>${esc(t(it.blocks.length > 1 ? 'featOnN' : 'featOn'))}</dt><dd>${blocks || esc(t('featNoBlock'))}</dd>
-          ${it.blocks.length ? Areas.facts(it) + `<dt>${esc(t('zip'))}</dt><dd>${esc(it.zip || '')}</dd><dt>${esc(t('nhood'))}</dt><dd>${hoodsHTML(it)}</dd>` : ''}
+          ${Areas.facts(it)}${it.blocks.length ? `<dt>${esc(t('zip'))}</dt><dd>${esc(it.zip || '')}</dd><dt>${esc(t('nhood'))}</dt><dd>${hoodsHTML(it)}</dd>` : ''}
           ${c && c.parts.length ? `<dt>${esc(t('cornersRow'))}</dt><dd>${foldDD(esc(t('cornersEst', { people: roundEst(c.people).toLocaleString(), homes: roundEst(c.homes).toLocaleString() })),
             `<small class="muted">${esc(t('cornersNoteFeat', { n: c.parts.length }))}</small>${cornersTable(c)}`, 'corners')}</dd>` : ''}
           <dt>${esc(t('elevation'))}</dt><dd>${esc(elev)}</dd>
-          <dt>${esc(t('featRow'))}</dt><dd>${foldDD(esc(t('featFields', { n: rows.length })), recRows(rows), 'featrow')}</dd>
+          <dt>${esc(t('featRow'))}</dt><dd>${detailsFold(f, p, 'featrow')}</dd>
         </dl></li>`;
     }
     function draw() {
@@ -4737,9 +4780,24 @@ const Drops = (() => {
     }
     function highlight() {
       if (!ready || !map.getSource('feat-hl')) return;
-      map.getSource('feat-hl').setData({ type: 'FeatureCollection', features: picked.map(featOf).filter(Boolean).filter(o => o.f.on).map(o => ({ type: 'Feature', geometry: o.x.geometry, properties: {} })) });
+      const all = [...picked, ...[...onCards.keys()].map(k => k.split(':').map(Number))];
+      map.getSource('feat-hl').setData({ type: 'FeatureCollection', features: all.map(featOf).filter(Boolean).filter(o => o.f.on).map(o => ({ type: 'Feature', geometry: o.x.geometry, properties: {} })) });
+    }
+    // add a block or intersection card, checked (never toggles one off)
+    function addCard(s) {
+      if (!state.results.some(r => r.cnn === s.cnn)) { state.results = [...state.results, s]; if (!state.title) state.title = t('linkedBlocks'); }
+      state.checked.add(s.cnn);
     }
     function toggle(fid, i) {
+      const o = featOf([fid, i]); if (!o) return;
+      const tg = targets(o.x), k = `${fid}:${i}`;
+      if (tg.length) {
+        if (onCards.has(k)) onCards.delete(k);
+        else { onCards.set(k, tg.map(s => s.cnn)); tg.forEach(addCard); toast(t('featOnCard', { name: nameOf(o.f, o.x.properties) || t('dropUnnamed'), card: itemName(tg[0]) })); }
+        render(); writeHash(); highlight();
+        if (onCards.has(k)) { const li = document.querySelector(`#seg-list .seg[data-cnn="${tg[0].cnn}"]`); if (li) li.scrollIntoView({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' }); }
+        return;
+      }
       const at = picked.findIndex(([a, b]) => a === fid && b === i);
       if (at >= 0) picked.splice(at, 1); else picked.unshift([fid, i]);
       draw();
@@ -4757,8 +4815,37 @@ const Drops = (() => {
         const it = itemOf(fid, i); if (it) { fitToken++; map.easeTo({ center: [it.x, it.y], zoom: Math.max(map.getZoom(), 17), duration: reducedMotion() ? 0 : 600 }); }
       });
     }
-    return { toggle, draw, highlight, setup, dropFile: id => { picked = picked.filter(([a]) => a !== id); draw(); } };
+    // rows picked onto a block or intersection card, at the top of it
+    function facts(s) {
+      let html = '';
+      for (const [k, cnns] of onCards) {
+        if (!cnns.includes(s.cnn)) continue;
+        const o = featOf(k.split(':').map(Number)); if (!o) continue;
+        html += `<dt class="pick-dt">${esc(shown(o.f))}</dt><dd class="pick-dd"><b>${esc(nameOf(o.f, o.x.properties) || t('dropUnnamed'))}</b> ${detailsFold(o.f, o.x.properties, 'pick' + k)}</dd>`;
+      }
+      return html;
+    }
+    // picks whose cards were removed
+    function prune(cnns) {
+      let n = onCards.size;
+      for (const [k, c] of onCards) if (!c.some(x => cnns.has(x))) onCards.delete(k);
+      if (onCards.size !== n) highlight();
+    }
+    return { toggle, draw, highlight, setup, facts, prune, dropFile: id => { picked = picked.filter(([a]) => a !== id); for (const k of [...onCards.keys()]) if (k.startsWith(id + ':')) onCards.delete(k); draw(); highlight(); } };
   })();
+  // columns sf-blocks' Matcher and match scripts add, and the location columns: folded under Details
+  const MATCH_COLS = new Set(['source_row', 'part', 'parts', 'matched_text', 'type', 'cnn', 'nearby_cnns', 'street', 'from_street', 'to_street', 'address_low',
+    'address_high', 'address_ranges', 'supervisor_district', 'nhood', 'wkt', 'confidence', 'method', 'notes',
+    'polygon_index', 'polygon_name', 'polygon_id', 'shape', 'width_m', 'layer', 'inside_pct', 'near_m', 'status', 'note']);
+  const isMatcher = f => f._matcher ??= (f.fields.includes('matched_text') && f.fields.includes('source_row')) || (f.fields.includes('polygon_index') && f.fields.includes('inside_pct'));
+  function detailsFold(f, p, key) {
+    const has = k => p[k] != null && String(p[k]).trim() !== '';
+    const tech = k => LAT.test(k) || LON.test(k) || GEO.test(k) || CNN.test(k) || (isMatcher(f) && MATCH_COLS.has(k));
+    const main = f.fields.filter(k => has(k) && !tech(k)), more = f.fields.filter(k => has(k) && tech(k));
+    const body = recRows(main.map(k => [k, String(p[k])]))
+      + (more.length ? `<details class="chips-fold"><summary>${esc(t(isMatcher(f) ? 'featMatchCols' : 'featLocCols', { n: more.length }))}</summary>${recRows(more.map(k => [k, String(p[k])]))}</details>` : '');
+    return foldDD(esc(t('featFields', { n: main.length })), body, key);
+  }
   // after the map is ready: layers for files dropped before it was
   function mapReady_(popup) {
     ready = true;
@@ -4769,7 +4856,7 @@ const Drops = (() => {
     map.addLayer({ id: 'bp-feat-hl', type: 'circle', source: 'feat-hl', filter: isA(['Point', 'MultiPoint']),
       paint: { 'circle-color': '#FFD43B', 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 8, 17, 15, 19, 18], 'circle-stroke-color': '#1E2340', 'circle-stroke-width': 1.5 } });
     wire(popup); for (const f of files) if (!map.getSource('drop-' + f.id)) addLayers(f); }
-  return { add, addURL, urls, setupUI, cards: FeatCards, reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
+  return { add, addURL, urls, setupUI, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
 })();
 const Parcels = (() => {
   const Z = 15, NEAR_M = 14, ADDR_M = 25, PAD_M = 30;
