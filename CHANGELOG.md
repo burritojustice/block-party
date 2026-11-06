@@ -2,6 +2,17 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v58
+
+- **Your files' rows open full cards:**
+  - Clicking a point or line from your files adds the card for the block or intersection it's on, checked, with the row at the top and a yellow mark. That card has everything any block or intersection card has.
+  - It finds the place by the row's CNN, which can be a block or an intersection (as in Matcher output); otherwise an intersection within 15 m, else the nearest block within 40 m.
+  - Polygons, and points far from any street, keep a card of their own.
+  - Click the row again, or remove the card, to clear it.
+- **Every file lists on every card,** whatever it came from: an intersection-of-interest file and a block-party file now show each other's rows on the cards (e.g. "at this corner", "at Valencia St and 20th St", "on Valencia St"). Rows with an intersection's CNN now count for that intersection and for the blocks that meet there; before, they matched nothing.
+- **"Details"** replaces "Its row". The file's own columns show first. Matcher columns (source_row, matched_text, cnn, wkt, confidence and the rest) and lat/lon columns fold away under their own line. Matcher files without a name column use matched_text as the name.
+- Long values wrap inside the card instead of running onto the map.
+
 ## v57
 
 - **`scripts/match_blocks.py`** (copied from sf-blocks 2026.11.05.3) gains `--suggest`: it looks through a CSV's columns and says which hold street names, pairs of streets, or locations, and which options to run with. Matching is unchanged. Nothing on the page changes.
