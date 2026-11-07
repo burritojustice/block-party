@@ -4,7 +4,7 @@ All changes are in `index.html` unless noted. `data/streets.json` and `scripts/b
 
 ## v62
 
-- **`scripts/match_blocks.py`** (copied from sf-blocks 2026.11.07.2): "Mt", "Ft" and "Pt" at the start of a street name mean Mount, Fort and Point ("Cayuga and Mt Vernon" was matching Vernon St). "Embarcadero" finds The Embarcadero without a note. A misspelled cross street is looked for among the streets that cross the other one ("Hayes & Octavai"). Nothing on the page changes.
+- **`scripts/match_blocks.py`** (copied from sf-blocks 2026.11.07.3): "Mt", "Ft" and "Pt" at the start of a street name mean Mount, Fort and Point ("Cayuga and Mt Vernon" was matching Vernon St). "Embarcadero" finds The Embarcadero without a note. A misspelled cross street is looked for among the streets that cross the other one ("Hayes & Octavai"). `--suggest` no longer takes a notes column ("busy", "near school") for locations. Nothing on the page changes.
 
 ## v61
 
