@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copied from burritojustice/sf-blocks 2026.11.05.3. Make changes there, then copy the new version here.
+# Copied from burritojustice/sf-blocks 2026.11.07.3. Make changes there, then copy the new version here.
 """
 Match free-text block descriptions ("Sanchez between 27th St and Duncan", "100 block of Winfield",
 "300 Otsego Ave", "Haight and Masonic") to San Francisco street segments (CNNs).
@@ -116,14 +116,18 @@ def split_name(name_words):
     return tuple(name_words), None
 
 
+PREFIXES = {"st": "saint", "mt": "mount", "ft": "fort", "pt": "point"}
+
+
 def base_key(words):
-    """numbers become ordinals so "18" matches "18th"; "st" at the start means Saint"""
+    """numbers become ordinals so "18" matches "18th"; "St", "Mt", "Ft" and "Pt" at the start mean Saint,
+    Mount, Fort and Point"""
     out = []
     for i, w in enumerate(words):
         if re.fullmatch(r"\d+", w):
             w = ordinal(int(w))
-        if i == 0 and w == "st" and len(words) > 1:
-            w = "saint"
+        if i == 0 and len(words) > 1:
+            w = PREFIXES.get(w, w)
         out.append(w)
     return " ".join(out)
 
@@ -144,6 +148,8 @@ class Streets:
             key = base_key(base)
             self.by_base[key].add(name)
             self.by_base[key.replace(" ", "")].add(name)    # "ofarrell", "mission bay"
+            if base[:1] == ("the",) and len(base) > 1:     # "Embarcadero" is The Embarcadero
+                self.by_base[base_key(base[1:])].add(name)
             self.suffix_of[name] = suf
         self.bases = list(self.by_base)
         self._snap_nodes()
@@ -577,6 +583,24 @@ def parse(st, raw):
                     r["nodes"] = sorted(nodes)
                     return [r]
 
+    # 4b. one street found and one not ("Hayes & Octavai"): look for the other among the streets that
+    # actually cross it, which allows a looser spelling than a search of the whole city
+    if len(named) == 1 and len(parts) == 2 and "between" not in low:
+        streets, na, p0 = named[0]
+        other = parts[1] if parts[0] == p0 else parts[0]
+        junk = re.search(r"\b(?:start|end|block|county|line|ramp)\b|:", other)
+        for a in ([] if junk else sorted(streets)):
+            b, nb = st.match_cross(a, other)
+            nodes = st.intersection(a, b) if b else None
+            if nodes:
+                segs = [s for s in st.by_street[a] + st.by_street[b] if s["fn"] in nodes or s["tn"] in nodes]
+                notes = [na, nb]
+                if len(nodes) > 1:
+                    notes.append(f"these streets meet at {len(nodes)} intersections; all listed")
+                r = result("intersection", segs, "medium", a, raw, b, "", notes)
+                r["nodes"] = sorted(nodes)
+                return [r]
+
     # 5. just a street name: "Coventry Court", "Rossi Avenue!", "LARCH", or a street at the start of a longer note
     place = re.search(r"\b(?:park|plaza|playground|center|centre|wharf|warf|commons|rec)\b", low)
     first = re.split(r"[.;,!(]|\bit is\b|\bwhere\b|\bwhich\b", low)[0]
@@ -745,11 +769,16 @@ def column_report(st, rows, columns, sample=80):
         street = sum(is_street(st, v) for v in vals) / len(vals)
         pair = sum(len(ps) == 2 and all(is_street(st, x) for x in ps)
                    for ps in ([x for x in PAIR_SPLIT.split(v) if x.strip()] for v in vals)) / len(vals)
+        # a place is a block, intersection or address found with some confidence; a lone street name
+        # ("near school" finding School Alley) doesn't count. Short values count against it, so a notes
+        # column of "busy", "red zone", "near BART" isn't taken for locations.
         place = 0
-        long_vals = [v for v in vals if re.search(r"[a-z]", v, re.I) and len(v) > 4][:40]
+        texty = [v for v in vals if re.search(r"[a-z]", v, re.I) and len(v) > 4]
+        long_vals = texty[:40]
         if long_vals and street < 0.6:
-            place = sum(any((r["segs"] or r.get("nodes")) and r["confidence"] in ("high", "medium")
-                            for r in match_text(st, v)) for v in long_vals) / len(long_vals)
+            hits = sum(any((r["segs"] or r.get("nodes")) and r["confidence"] in ("high", "medium") and r.get("method") != "street_only"
+                           for r in match_text(st, v)) for v in long_vals)
+            place = hits / len(long_vals) * len(texty) / len(vals)
         report[c] = dict(filled=len(vals), street=round(street, 2), pair=round(pair, 2), place=round(place, 2))
     return report
 

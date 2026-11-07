@@ -2,6 +2,10 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v62
+
+- **`scripts/match_blocks.py`** (copied from sf-blocks 2026.11.07.3): "Mt", "Ft" and "Pt" at the start of a street name mean Mount, Fort and Point ("Cayuga and Mt Vernon" was matching Vernon St). "Embarcadero" finds The Embarcadero without a note. A misspelled cross street is looked for among the streets that cross the other one ("Hayes & Octavai"). `--suggest` no longer takes a notes column ("busy", "near school") for locations. Nothing on the page changes.
+
 ## v61
 
 - **Selection panel** (under Download): grow, trim and save a set of streets as an area, such as a merchant corridor.
