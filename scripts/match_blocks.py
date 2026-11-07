@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # Copied from burritojustice/sf-blocks 2026.11.07.2. Make changes there, then copy the new version here.
-# keep their own copies; change it here, bump VERSION, then copy it into them.
 """
 Match free-text block descriptions ("Sanchez between 27th St and Duncan", "100 block of Winfield",
 "300 Otsego Ave", "Haight and Masonic") to San Francisco street segments (CNNs).
