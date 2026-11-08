@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v64 -->
+<!-- build: v65 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -521,6 +521,12 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .sel-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
 .sel-check { display: flex; gap: 6px; align-items: center; margin: 8px 0 0 50px; font-size: 13px; cursor: pointer; }
 #pick-mode button { padding: 3px 8px; }
+.pick-list { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 0 50px; max-height: 96px; overflow: auto; }
+.pick-chip { display: inline-flex; border: 1.5px solid #B08900; background: #FFF3BF; border-radius: 999px; font-size: 12px; }
+.pick-chip button { border: 0; background: none; padding: 1px 6px; cursor: pointer; font: inherit; }
+.pick-chip button + button { padding-left: 2px; color: #7A5F00; }
+#outline-how { font: inherit; font-size: 13px; padding: 4px 8px; border: 2px solid var(--ink); border-radius: 999px; background: #fff; max-width: 100%; }
+.fmt-shapes button { display: inline-flex; align-items: center; justify-content: center; padding: 3px 8px; }
 .sel-step { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); width: 44px; }
 .sel-hint { font-size: 13px; color: var(--ink-soft); margin: 6px 0 0 50px; }
 .area-name { flex: 1; min-width: 140px; font: inherit; font-size: 14px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
@@ -798,7 +804,15 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
         <div class="sel-row" id="pick-row" hidden><span class="sel-step"></span><span id="pick-count" class="sel-hint0"></span>
           <button type="button" class="btn small" id="pick-streets" data-i18n="pickStreets">＋ Streets around them</button>
           <button type="button" class="btn small" id="pick-clear" data-i18n="pickClear">Clear</button></div>
+        <div class="pick-list" id="pick-list" hidden></div>
+        <p class="sel-hint" id="pick-on" hidden data-i18n="pickOn">Picking: clicks on the map pick areas. Choose Off (or press Esc) to click streets again; your picks stay.</p>
         <p class="sel-hint" data-i18n="selTrim">Trim: click a street on the map to take it out (or uncheck its card).</p>
+        <div class="sel-row" id="outline-row" hidden><span class="sel-step" data-i18n="selOutline">Outline</span>
+          <select id="outline-how" aria-label="Outline">
+            <option value="centerline" data-i18n="outlineCenter">To the middle of the streets around them</option>
+            <option value="filled" data-i18n="outlineFilled">The blocks, streets between them filled</option>
+            <option value="blocks" data-i18n="outlineBlocks">The blocks as they are</option>
+          </select></div>
         <div class="sel-row"><span class="sel-step" data-i18n="selSave">Save</span>
           <input type="text" id="area-name" class="area-name" data-i18n-placeholder="areaNamePh" placeholder="Name, like Fillmore Street">
           <button type="button" class="btn small" id="area-save" data-i18n="areaSave">Save area</button></div>
@@ -1036,7 +1050,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v64';
+const _BUILD_VERSION = 'v65';
 
 /* =====================================================================
    CONFIG
@@ -1242,7 +1256,11 @@ const I18N = {
     tableEmptyFile: 'No rows in this file.',
     selUndo: '↶ Undo', selUndone: 'Back to the streets before that', selShowAblk: 'Show the assessor blocks along these streets', selPick: 'Pick',
     pickOff: 'Off', pickAblk: 'Assessor blocks', pickCblk: 'Census blocks', pickCtract: 'Tracts', pickStreets: '＋ Streets around them', pickClear: 'Clear',
-    pickCount: '{n} picked', pickHint: 'Click areas on the map to pick them; click again to drop one', pickNone: 'No streets around those areas',
+    pickCount: '{n} {set} picked', pickOn: 'Picking: clicks on the map pick areas. Choose Off (or press Esc) to click streets again; your picks stay.',
+    pickGo: 'Go to it', pickDrop: 'Drop {n}', pickCleared: 'Started over: {n} picks from the other set dropped',
+    selOutline: 'Outline', outlineCenter: 'To the middle of the streets around them', outlineFilled: 'The blocks, streets between them filled', outlineBlocks: 'The blocks as they are',
+    tablePicks: 'Picked {set} ({n})',
+    fmtShape: 'Shape', shapeCircle: 'Circle', shapeStar: 'Star', shapeSquare: 'Square', shapeTriangle: 'Triangle', shapeDiamond: 'Diamond', pickHint: 'Click areas on the map to pick them; click again to drop one', pickNone: 'No streets around those areas',
     pickAdded: 'Added {n} streets around {a} areas',
     selTitle: 'Selection: grow, trim, save as an area', selGrow: 'Grow', selSave: 'Save', selEdit: 'Edit',
     selTrim: 'Trim: click a street on the map to take it out (or uncheck its card).',
@@ -2132,6 +2150,10 @@ function setupForm() {
   $('pick-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) SelAreas.pickMode(b.dataset.v); });
   $('pick-streets').addEventListener('click', () => SelAreas.streetsAround());
   $('pick-clear').addEventListener('click', () => SelAreas.clearPicks());
+  $('pick-list').addEventListener('click', e => { const x = e.target.closest('[data-pick-x]'), g = e.target.closest('[data-pick-go]');
+    if (x) SelAreas.dropPick(x.dataset.pickX); else if (g) SelAreas.goPick(g.dataset.pickGo); });
+  $('outline-how').addEventListener('change', () => SelAreas.previewOutline());
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && SelAreas.picking()) SelAreas.pickMode(''); });
   $('area-save').addEventListener('click', () => SelAreas.save());
   $('area-open').addEventListener('change', e => { const f = e.target.files[0]; if (f) SelAreas.open(f); e.target.value = ''; });
   $('area-pick').addEventListener('change', e => SelAreas.pick(e.target.value));
@@ -3041,6 +3063,7 @@ function addMapLayers() {
   map.on('pitchend', () => setLabelMode(map.getPitch() > LABEL_3D_PITCH));
   addOverlayLayers(popup);
   Drops.onMap(popup);
+  map.on('styleimagemissing', e => { if (String(e.id).startsWith('bp-shape-')) addShapeImages(); });
   map.on('click', e => SelAreas.onMapClick(e));
   collectLineLabelLayers();
   basemapLabelIds = map.getStyle().layers.filter(l => l.type === 'symbol' && !l.id.startsWith('bp-')).map(l => l.id);
@@ -3155,9 +3178,9 @@ const LAYER_ORDER = [
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends'].includes(id)],
+  ['selection', id => ['bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
-  ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt)$/.test(id)],
+  ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
   ['labels', (id, l) => l.type === 'symbol'],
 ];
@@ -4501,7 +4524,45 @@ const DROP_COLORS = ['#1C7ED6', '#F76707', '#D91BB5', '#2B9348', '#00B4C5', '#E0
 const DROP_CATS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6'], DROP_OTHER = '#9AA0A6';
 const DROP_RAMP = ['#FDE68A', '#F9A65A', '#E4572E', '#A3214F', '#4A1757'];
 const DROP_SIZES = { tiny: 0.6, small: 0.85, medium: 1.15, big: 1.6 };
-const DROP_LOOK = { by: '', size: 'medium', sizeBy: '', style: 'fill', labels: null, labelZoom: 15 };
+const DROP_LOOK = { by: '', size: 'medium', sizeBy: '', style: 'fill', shape: 'circle', labels: null, labelZoom: 15 };
+// point symbols for your files: circle (a circle layer) or a shape drawn as an SDF icon, so it takes any color
+const DROP_SHAPES = [['circle', '●', 'shapeCircle'], ['star', '★', 'shapeStar'], ['square', '■', 'shapeSquare'], ['triangle', '▲', 'shapeTriangle'], ['diamond', '◆', 'shapeDiamond']];
+const SHAPE_PATHS = {   // in a 0–1 box
+  star: Array.from({ length: 10 }, (_, i) => { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 0.21 : 0.5; return [0.5 + r * Math.cos(a), 0.54 + r * Math.sin(a)]; }),
+  square: [[0.14, 0.14], [0.86, 0.14], [0.86, 0.86], [0.14, 0.86]],
+  triangle: [[0.5, 0.06], [0.97, 0.88], [0.03, 0.88]],
+  diamond: [[0.5, 0.02], [0.98, 0.5], [0.5, 0.98], [0.02, 0.5]],
+};
+const SHAPE_PX = 64, SHAPE_PAD = 10, SHAPE_CSS = (SHAPE_PX - 2 * SHAPE_PAD) / 2;   // drawn at 2× pixel ratio
+function shapeImage(k) {
+  const N = SHAPE_PX, c = document.createElement('canvas'); c.width = c.height = N;
+  const g = c.getContext('2d'), box = N - 2 * SHAPE_PAD;
+  g.fillStyle = '#000'; g.beginPath();
+  SHAPE_PATHS[k].forEach(([x, y], i) => g[i ? 'lineTo' : 'moveTo'](SHAPE_PAD + x * box, SHAPE_PAD + y * box)); g.closePath(); g.fill();
+  const a = g.getImageData(0, 0, N, N).data, inside = new Uint8Array(N * N);
+  for (let i = 0; i < N * N; i++) inside[i] = a[i * 4 + 3] > 127 ? 1 : 0;
+  // signed distance to the edge, within 8 px (the alpha MapLibre reads for SDF icons: 0.75 at the edge)
+  const R = 8, out = new Uint8Array(N * N * 4);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const me = inside[y * N + x]; let d = R;
+    for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
+      const X = x + dx, Y = y + dy; if (X < 0 || Y < 0 || X >= N || Y >= N) { if (me) d = Math.min(d, Math.hypot(dx, dy)); continue; }
+      if (inside[Y * N + X] !== me) d = Math.min(d, Math.hypot(dx, dy) - 0.5);
+    }
+    const sd = me ? -d : d, i = (y * N + x) * 4;
+    out[i] = out[i + 1] = out[i + 2] = 255; out[i + 3] = Math.max(0, Math.min(255, Math.round(255 - 255 * (sd / R + 0.25))));
+  }
+  return { width: N, height: N, data: out };
+}
+function addShapeImages() {
+  if (typeof map === 'undefined' || !map) return;
+  for (const k of Object.keys(SHAPE_PATHS)) if (!map.hasImage('bp-shape-' + k)) map.addImage('bp-shape-' + k, shapeImage(k), { sdf: true, pixelRatio: 2 });
+}
+// a shape as a small SVG, for the map key and the Format buttons
+function shapeSVG(k, color, size = 12) {
+  if (k === 'circle' || !SHAPE_PATHS[k]) return `<svg viewBox="0 0 16 16" width="${size}" height="${size}"><circle cx="8" cy="8" r="5.5" fill="${color}" stroke="#fff" stroke-width="1.5"/></svg>`;
+  return `<svg viewBox="0 0 16 16" width="${size}" height="${size}"><polygon points="${SHAPE_PATHS[k].map(([x, y]) => `${(1 + x * 14).toFixed(2)},${(1 + y * 14).toFixed(2)}`).join(' ')}" fill="${color}" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+}
 const DROP_NEAR_M = 50;      // radius, the default for "Radius"
 const DROP_ON_M = 30;        // a point this close to a block's centerline is on it (lots are deep)
 const NEAR_KEY = 'bp-near';
@@ -4635,8 +4696,8 @@ const Drops = (() => {
   }
 
   const nameOf = (f, p) => { const v = f.nameField ? p[f.nameField] : null; return v != null && v !== '' ? String(v) : null; };
-  const ids = f => [`bp-drop-${f.id}-fill`, `bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`, `bp-drop-${f.id}-label`];
-  const pointIds = () => files.filter(f => f.on).flatMap(f => [`bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`]);
+  const ids = f => [`bp-drop-${f.id}-fill`, `bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`, `bp-drop-${f.id}-sym`, `bp-drop-${f.id}-label`];
+  const pointIds = () => files.filter(f => f.on).flatMap(f => [`bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`, `bp-drop-${f.id}-sym`]);
   const fillIds = () => files.filter(f => f.on).map(f => `bp-drop-${f.id}-fill`);
 
   const isA = types => ['in', ['geometry-type'], ['literal', types]];
@@ -4689,8 +4750,11 @@ const Drops = (() => {
   function paintFor(f) {
     const m = DROP_SIZES[f.look.size] || 1, st = f.look.style, sized = !!f.look.sizeBy;
     const r = base => sized ? ['*', base * m, ['+', 0.45, ['*', 1.55, ['max', 0, ['get', '_s']]]]] : base * m;
-    const col = ['get', '_c'];
+    const col = ['get', '_c'], sizeAt = base => ['*', r(base), 2 / SHAPE_CSS];
     return {
+      sym: { 'icon-color': st === 'ring' ? 'rgba(0,0,0,0)' : col, 'icon-opacity': st === 'ghost' ? 0.45 : 0.95,
+        'icon-halo-color': st === 'fill' ? '#FFFFFF' : col, 'icon-halo-width': st === 'fill' ? 1.2 : st === 'ring' ? 2 : 1 },
+      symSize: ['interpolate', ['linear'], ['zoom'], 11, sizeAt(3.5), 14, sizeAt(5), 17, sizeAt(8), 19, sizeAt(10)],
       pt: { 'circle-color': col, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, r(3.5), 14, r(5), 17, r(8), 19, r(10)],
         'circle-opacity': st === 'ring' ? 0 : st === 'ghost' ? 0.3 : 0.95,
         'circle-stroke-color': st === 'fill' ? '#FFFFFF' : col, 'circle-stroke-width': st === 'fill' ? 1.4 : st === 'ring' ? 2.4 : 1.2,
@@ -4708,7 +4772,12 @@ const Drops = (() => {
     const vis = { visibility: f.on ? 'visible' : 'none' }, pt = paintFor(f);
     map.addLayer({ id: `bp-drop-${f.id}-fill`, type: 'fill', source: src, filter: isA(['Polygon', 'MultiPolygon']), layout: vis, paint: pt.fill });
     map.addLayer({ id: `bp-drop-${f.id}-line`, type: 'line', source: src, filter: isA(['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']), layout: { ...vis, 'line-cap': 'round', 'line-join': 'round' }, paint: pt.line });
-    map.addLayer({ id: `bp-drop-${f.id}-pt`, type: 'circle', source: src, filter: isA(['Point', 'MultiPoint']), layout: vis, paint: pt.pt });
+    addShapeImages();
+    const round = (f.look.shape || 'circle') === 'circle';
+    map.addLayer({ id: `bp-drop-${f.id}-pt`, type: 'circle', source: src, filter: round ? isA(['Point', 'MultiPoint']) : isA([]), layout: vis, paint: pt.pt });
+    map.addLayer({ id: `bp-drop-${f.id}-sym`, type: 'symbol', source: src, filter: round ? isA([]) : isA(['Point', 'MultiPoint']),
+      layout: { ...vis, 'icon-image': 'bp-shape-' + (round ? 'star' : f.look.shape), 'icon-size': pt.symSize, 'icon-allow-overlap': true, 'icon-ignore-placement': true },
+      paint: pt.sym });
     map.addLayer({ id: `bp-drop-${f.id}-label`, type: 'symbol', source: src + '-lab', minzoom: f.look.labelZoom, layout: { ...vis,
       'text-field': ['get', '_lab'], 'text-font': LABEL_FONT, 'text-size': 12, 'text-offset': [0, 1], 'text-anchor': 'top', 'text-max-width': 10, 'text-optional': true },
       paint: { 'text-color': '#1E2340', 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.8 } });
@@ -4720,7 +4789,13 @@ const Drops = (() => {
     const feats = data(f), pt = paintFor(f);
     map.getSource('drop-' + f.id).setData({ type: 'FeatureCollection', features: feats });
     map.getSource('drop-' + f.id + '-lab').setData({ type: 'FeatureCollection', features: labelData(f, feats) });
-    for (const [k, p] of [['pt', pt.pt], ['line', pt.line], ['fill', pt.fill]]) for (const [n, v] of Object.entries(p)) map.setPaintProperty(`bp-drop-${f.id}-${k}`, n, v);
+    for (const [k, p] of [['pt', pt.pt], ['line', pt.line], ['fill', pt.fill], ['sym', pt.sym]]) for (const [n, v] of Object.entries(p)) map.setPaintProperty(`bp-drop-${f.id}-${k}`, n, v);
+    const round = (f.look.shape || 'circle') === 'circle';
+    addShapeImages();
+    map.setFilter(`bp-drop-${f.id}-pt`, round ? isA(['Point', 'MultiPoint']) : isA([]));
+    map.setFilter(`bp-drop-${f.id}-sym`, round ? isA([]) : isA(['Point', 'MultiPoint']));
+    if (!round) map.setLayoutProperty(`bp-drop-${f.id}-sym`, 'icon-image', 'bp-shape-' + f.look.shape);
+    map.setLayoutProperty(`bp-drop-${f.id}-sym`, 'icon-size', pt.symSize);
     map.setLayerZoomRange(`bp-drop-${f.id}-label`, f.look.labelZoom, 24);
     legend(); FeatCards.highlight();
   }
@@ -4893,7 +4968,7 @@ const Drops = (() => {
     for (const f of files.filter(f => f.on || LgKey.dropsOff.has(f.id))) {
       const li = document.createElement('li'); li.className = 'lg-drop'; li.dataset.lgDrop = f.id;
       const cls = f.cls ? `<span class="lg-drop-cls">${f.cls.items.map(c => `<span><i style="background:${c.color}"></i>${esc(c.label)}${c.n ? ` <small>${c.n.toLocaleString()}</small>` : ''}</span>`).join('')}</span>` : '';
-      li.innerHTML = `<span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="${f.color}" stroke-width="3.5" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="5" fill="${f.color}" stroke="#fff" stroke-width="1.5"/></svg></span><span>${esc(shown(f))} <small class="muted">${esc(f.look.by ? t('fmtByKey', { col: f.look.by }) : t('dropYours'))}</small>${cls}</span>`;
+      li.innerHTML = `<span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="${f.color}" stroke-width="3.5" stroke-linecap="round"/></svg>${shapeSVG(f.look.shape || 'circle', f.color, 16).replace('<svg ', '<svg class="dot" ')}</span><span>${esc(shown(f))} <small class="muted">${esc(f.look.by ? t('fmtByKey', { col: f.look.by }) : t('dropYours'))}</small>${cls}</span>`;
       ul.insertBefore(li, before);
     }
     LgKey.decorate();
@@ -4912,6 +4987,7 @@ const Drops = (() => {
       <span>${esc(t('fmtColorBy'))}</span><select data-fmt-sel="by">${opt('', t('fmtOneColor'), L.by)}${f.fields.map(c => opt(c, c, L.by)).join('')}</select>
       <span>${esc(t('fmtSize'))}</span>${seg('size', [['tiny', t('fmtTiny')], ['small', t('fmtSmall')], ['medium', t('fmtMedium')], ['big', t('fmtBig')]])}
       ${numCols.length ? `<span>${esc(t('fmtSizeBy'))}</span><select data-fmt-sel="sizeBy">${opt('', t('fmtSame'), L.sizeBy)}${numCols.map(c => opt(c, c, L.sizeBy)).join('')}</select>` : ''}
+      <span>${esc(t('fmtShape'))}</span><div class="lseg fmt-shapes" role="group" data-fmt-k="shape">${DROP_SHAPES.map(([v, , l]) => `<button type="button" data-v="${v}" aria-pressed="${(L.shape || 'circle') === v}" title="${esc(t(l))}" aria-label="${esc(t(l))}">${shapeSVG(v, 'currentColor', 14)}</button>`).join('')}</div>
       <span>${esc(t('fmtStyle'))}</span>${seg('style', [['fill', t('fmtFill')], ['ring', t('fmtRing')], ['ghost', t('fmtGhost')]])}
       <span>${esc(t('fmtLabels'))}</span><div class="land-chips fmt-labels">${f.fields.map(c => `<label class="land-chip"><input type="checkbox" data-fmt-label="${esc(c)}" ${labs.includes(c) ? 'checked' : ''}>${esc(c)}</label>`).join('')}</div>
       <span></span><label class="fmt-zoom">${esc(t('fmtLabelZoom'))} <select data-fmt-sel="labelZoom">${[13, 15, 17].map(z => opt(String(z), String(z), String(L.labelZoom))).join('')}</select></label>
@@ -5474,6 +5550,12 @@ const Table = (() => {
       const cols = allCols ? keys : STREET_COLS.filter(k => keys.includes(k));
       return { cols, rows: recs.map(({ s, r }) => ({ key: s.cnn, s, cells: r })) };
     }
+    if (src === 'picks') {
+      const { set, names } = SelAreas.picks();
+      const rows = names.map(n => ({ key: n, pick: n, cells: { name: n, ...(Areas.props(set, n) || {}) } }));
+      const cols = [...new Set(rows.flatMap(r => Object.keys(r.cells)))];
+      return { cols, rows };
+    }
     const f = fileOf(src); if (!f) return { cols: [], rows: [] };
     const first = f.nameField ? [f.nameField] : [];
     const cols = [...first, ...f.fields.filter(k => k !== f.nameField && !k.startsWith('_'))];
@@ -5481,8 +5563,10 @@ const Table = (() => {
   }
   function fillSources() {
     const sel = $('tbl-src'), files = Drops.files();
-    if (src !== 'streets' && !fileOf(src)) src = 'streets';
+    const pk = SelAreas.picks();
+    if (src === 'picks' ? !pk.names.length : src !== 'streets' && !fileOf(src)) src = 'streets';
     sel.innerHTML = [`<option value="streets">${esc(t('tableStreets', { n: state.results.length }))}</option>`,
+      ...(pk.names.length ? [`<option value="picks">${esc(t('tablePicks', { set: Areas.conf(pk.set).title || '', n: pk.names.length }))}</option>`] : []),
       ...files.map(f => `<option value="f${f.id}">${esc(t('tableFile', { name: f.name, n: f.feats.length.toLocaleString() }))}</option>`)].join('');
     sel.value = src;
   }
@@ -5507,7 +5591,7 @@ const Table = (() => {
       + cols.map(c => `<th data-sort="${esc(c)}" class="${sort === c ? (dir > 0 ? 'asc' : 'desc') : ''}" title="${esc(t('tableSort'))}">${esc(label(c))}</th>`).join('') + '</tr></thead>';
     const cell = (r, c) => { const v = r.cells[c]; const s = v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
       return `<td class="${numCol.has(c) ? 'tbl-num' : ''}" title="${esc(s.length > 30 ? s : '')}">${esc(s)}</td>`; };
-    const lead = r => isStreets ? `<td><input type="checkbox" data-tbl-check="${r.key}" ${state.checked.has(r.key) ? 'checked' : ''} aria-label="${esc(t('tableCheck'))}"></td>`
+    const lead = r => r.pick != null ? `<td><button type="button" class="tbl-card" data-tbl-unpick="${esc(r.pick)}" title="${esc(t('pickDrop', { n: r.pick }))}">×</button></td>` : isStreets ? `<td><input type="checkbox" data-tbl-check="${r.key}" ${state.checked.has(r.key) ? 'checked' : ''} aria-label="${esc(t('tableCheck'))}"></td>`
       : `<td><button type="button" class="tbl-card" data-tbl-card="${r.i}" aria-pressed="${Drops.cards.has ? !!Drops.cards.has(r.f.id, r.i) : false}">${esc(t('tableCard'))}</button></td>`;
     const body = shown.map((r, n) => `<tr data-tbl-row="${n}" class="${isStreets && state.checked.has(r.key) ? 'is-checked' : ''}">${lead(r)}${cols.map(c => cell(r, c)).join('')}</tr>`).join('')
       + (list.length > MAX ? `<tr class="tbl-more"><td colspan="${cols.length + 1}">${esc(t('tableMore', { n: MAX.toLocaleString() }))}</td></tr>` : '')
@@ -5517,6 +5601,7 @@ const Table = (() => {
     sc.scrollTop = top; sc.scrollLeft = left;
   }
   function go(r) {
+    if (r.pick != null) { SelAreas.goPick(r.pick); return; }
     if (r.s) {
       fitSegs([r.s]);
       const li = document.querySelector(`#seg-list .seg[data-cnn="${r.s.cnn}"]`);
@@ -5541,6 +5626,8 @@ const Table = (() => {
       if (all) { if (all.checked) state.results.forEach(s => state.checked.add(s.cnn)); else state.checked.clear(); render(); writeHash(); return; }
       const ck = e.target.closest('[data-tbl-check]');
       if (ck) { const c = +ck.dataset.tblCheck; ck.checked ? state.checked.add(c) : state.checked.delete(c); render(); writeHash(); return; }
+      const un = e.target.closest('[data-tbl-unpick]');
+      if (un) { SelAreas.dropPick(un.dataset.tblUnpick); return; }
       const card = e.target.closest('[data-tbl-card]');
       const tr = e.target.closest('tr[data-tbl-row]'); if (!tr) return;
       const r = shown[+tr.dataset.tblRow]; if (!r) return;
@@ -5583,11 +5670,18 @@ const SelAreas = (() => {
     render(); writeHash(); toast(t('selUndone'));
   }
   // picking areas on the map: assessor blocks, census blocks or tracts; their outlines can be the area
-  let pickSet = '', picks = new Set();
+  // pickSet: the set the picks are from; clicking: whether map clicks pick (Off stops that, the picks stay)
+  let pickSet = '', picks = new Set(), clicking = false;
   function drawPicks() {
-    $('pick-row').hidden = !pickSet;
-    $('pick-count').textContent = pickSet ? t('pickCount', { n: picks.size }) : '';
+    $('pick-row').hidden = !pickSet || (!clicking && !picks.size);
+    $('pick-on').hidden = !clicking;
+    $('pick-count').textContent = pickSet ? t('pickCount', { n: picks.size, set: Areas.conf(pickSet).title || '' }) : '';
     $('pick-streets').disabled = !picks.size;
+    const pl = $('pick-list'); pl.hidden = !picks.size;
+    pl.innerHTML = [...picks].sort((a, b) => a.localeCompare(b, 'en', { numeric: true })).map(n => `<span class="pick-chip"><button type="button" data-pick-go="${esc(n)}" title="${esc(t('pickGo'))}">${esc(n)}</button><button type="button" data-pick-x="${esc(n)}" aria-label="${esc(t('pickDrop', { n }))}">×</button></span>`).join('');
+    $('outline-row').hidden = !picks.size;
+    try { Table.refresh(); } catch (e) { }
+    previewOutline();
     if (!mapReady) return;
     if (!map.getSource('pick-areas')) {
       map.addSource('pick-areas', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
@@ -5598,8 +5692,8 @@ const SelAreas = (() => {
     map.getSource('pick-areas').setData({ type: 'FeatureCollection', features: pickSet ? [...picks].map(n => ({ type: 'Feature', properties: {}, geometry: Areas.geom(pickSet, n) })).filter(f => f.geometry) : [] });
   }
   async function pickMode(k) {
-    if (k !== pickSet) picks = new Set();
-    pickSet = k;
+    if (k && k !== pickSet) { if (picks.size) toast(t('pickCleared', { n: picks.size })); picks = new Set(); pickSet = k; }
+    clicking = !!k;
     document.querySelectorAll('#pick-mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === k));
     map.getCanvas().style.cursor = k ? 'crosshair' : '';
     if (k) {
@@ -5611,7 +5705,7 @@ const SelAreas = (() => {
     drawPicks();
   }
   function onMapClick(e) {
-    if (!pickSet) return;
+    if (!clicking) return;
     const names = Areas.areasAt(pickSet, e.lngLat.lng, e.lngLat.lat);
     if (!names.length) return;
     const n = names[names.length - 1];
@@ -5619,6 +5713,66 @@ const SelAreas = (() => {
     drawPicks();
   }
   function clearPicks() { picks = new Set(); drawPicks(); }
+  function dropPick(n) { picks.delete(n); drawPicks(); }
+  function goPick(n) {
+    const g = Areas.geom(pickSet, n); if (!g || !mapReady) return;
+    const b = [Infinity, Infinity, -Infinity, -Infinity];
+    for (const p of g.coordinates) for (const [x, y] of p[0]) { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); }
+    map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 120, maxZoom: 18, duration: reducedMotion() ? 0 : 600 });
+  }
+  // ---- outlines of the picked areas: as they are, with the streets between them filled, or out to the
+  // middle of the streets around them (the faces of the street network that hold them)
+  const M = { units: 'meters' };
+  async function pickOutline(how) {
+    const T = await turf(), gs = [...picks].map(n => ({ n, g: Areas.geom(pickSet, n) })).filter(o => o.g);
+    if (!gs.length) return null;
+    const feats = gs.map(o => T.feature(o.g, { n: o.n }));
+    const union = fs => fs.length > 1 ? T.union(T.featureCollection(fs)) : fs[0];
+    const close = (f, m) => { try { return T.buffer(T.buffer(f, m, M), -m, M) || f; } catch (e) { return f; } };
+    let u;
+    if (how === 'blocks') u = union(feats);
+    else if (how === 'filled') u = close(union(feats), 18);
+    else {
+      // the street network around them as faces; each pick takes the face it sits in
+      const bb = T.bbox(T.featureCollection(feats)), pad = 0.003;
+      const lines = Logic.db.segs.filter(sg => Logic.eligible(sg) && sg.coords.some(([x, y]) => x > bb[0] - pad && x < bb[2] + pad && y > bb[1] - pad && y < bb[3] + pad))
+        .map(sg => T.lineString(sg.coords));
+      let faces = [];
+      try { faces = T.polygonize(T.featureCollection(lines)).features; } catch (e) { console.warn('[block-party] polygonize', e); }
+      const keep = new Map(), covered = new Set();
+      for (const o of feats) {
+        const pt = T.pointOnFeature(o);
+        const i = faces.findIndex(fc => T.booleanPointInPolygon(pt, fc));
+        if (i < 0) continue;
+        (keep.get(i) || keep.set(i, []).get(i)).push(o);
+      }
+      const parts = [];
+      for (const [i, os] of keep) {
+        // a face much bigger than the picks in it (a park or the bay with no street on one side): not this way
+        const inside = os.reduce((a, o) => a + T.area(o), 0);
+        if (T.area(faces[i]) > inside * 3 + 20000) continue;
+        parts.push(faces[i]); os.forEach(o => covered.add(o.properties.n));
+      }
+      // picks with no street face around them: the block, grown about half a street
+      for (const o of feats) if (!covered.has(o.properties.n)) { try { parts.push(T.buffer(o, 10, M)); } catch (e) { parts.push(o); } }
+      u = close(union(parts), 2);
+    }
+    if (!u) return null;
+    return T.simplify(u, { tolerance: 0.000004, highQuality: true }).geometry;
+  }
+  let outlineSeq = 0;
+  async function previewOutline() {
+    if (!mapReady) return;
+    if (!map.getSource('pick-outline')) {
+      map.addSource('pick-outline', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      map.addLayer({ id: 'bp-pick-outline', type: 'line', source: 'pick-outline', paint: { 'line-color': '#1E2340', 'line-width': 3, 'line-dasharray': [2, 1.2] } });
+      arrangeLayers();
+    }
+    const seq = ++outlineSeq, how = $('outline-how').value;
+    const g = picks.size && how !== 'blocks' ? await pickOutline(how).catch(e => { console.warn('[block-party] outline', e); return null; }) : null;
+    if (seq !== outlineSeq) return;
+    map.getSource('pick-outline').setData({ type: 'FeatureCollection', features: g ? [{ type: 'Feature', properties: {}, geometry: g }] : [] });
+  }
   // the streets around (and inside) the picked areas: a street goes in when a point beside it (14 m to
   // either side, at 25/50/75% along) is in one of them
   function streetsAround() {
@@ -5710,15 +5864,13 @@ const SelAreas = (() => {
     $('area-status').textContent = t('areaWorking');
     let geom;
     try {
-      if (picks.size) {
-        const T = await turf(), gs = [...picks].map(n => Areas.geom(pickSet, n)).filter(Boolean).map(g => T.feature(g));
-        geom = (gs.length > 1 ? T.union(T.featureCollection(gs)) : gs[0]).geometry;
-      } else geom = await outline(segs);
+      if (picks.size) geom = await pickOutline($('outline-how').value);
+      else geom = await outline(segs);
     } catch (e) { console.warn('[block-party] outline', e); }
     if (!geom) { $('area-status').textContent = ''; toast(t('areaFail')); return; }
     const lots = new Set(segs.flatMap(s => (Parcels.peek(s) || {}).lotIds || []));
     const feat = { type: 'Feature', properties: { ...(current ? current.properties : {}), name, cnns: segs.map(s => s.cnn).join(';'), streets: segs.length,
-      lots: lots.size, ...(picks.size ? { area_set: Areas.conf(pickSet).set, areas: [...picks].join(';') } : {}),
+      lots: lots.size, ...(picks.size ? { area_set: Areas.conf(pickSet).set, areas: [...picks].join(';'), outline: $('outline-how').value } : {}),
       saved: new Date().toISOString().slice(0, 10), source: 'Block Party' }, geometry: geom };
     const out = fc ? { ...fc, features: [...fc.features.filter(f => (f.properties || {}).name !== name && f !== current), feat] } : { type: 'FeatureCollection', features: [feat] };
     out.features.sort((a, b) => String(a.properties.name).localeCompare(String(b.properties.name)));
@@ -5752,13 +5904,17 @@ const SelAreas = (() => {
     current = f;
     // its picked areas come back too
     const set = AREA_SETS.find(c => c.set === (f.properties || {}).area_set);
-    if (set && f.properties.areas) { pickMode(set.k).then(() => { picks = new Set(String(f.properties.areas).split(';')); drawPicks(); }); }
+    if (set && f.properties.areas) {
+      if (f.properties.outline) $('outline-how').value = f.properties.outline;
+      pickMode(set.k).then(() => { picks = new Set(String(f.properties.areas).split(';')); pickMode(''); });
+    }
     $('area-name').value = (f.properties || {}).name || '';
     state.results = items; state.checked = new Set(items.map(s => s.cnn)); state.title = (f.properties || {}).name || t('linkedBlocks');
     render(); writeHash(); fitSegs(items);
     $('area-status').textContent = t('areaEditing', { name: (f.properties || {}).name || '', n: items.length });
   }
-  return { around, save, open, pick, undo, remember, forget, pickMode, onMapClick, clearPicks, streetsAround, picking: () => !!pickSet };
+  return { around, save, open, pick, undo, remember, forget, pickMode, onMapClick, clearPicks, dropPick, goPick, streetsAround, previewOutline, picking: () => clicking,
+    picks: () => ({ set: pickSet, names: [...picks] }) };
 })();
 
 const Parcels = (() => {
@@ -6044,6 +6200,7 @@ const Areas = (() => {
       st.byName ||= new Map(st.polys.map(p => [p.name, p]));
       const p = st.byName.get(name); return p ? { type: 'MultiPolygon', coordinates: p.parts } : null;
     },
+    props(k, name) { const st = sets.get(k); if (!st || !st.polys) return null; st.byName ||= new Map(st.polys.map(p => [p.name, p])); const p = st.byName.get(name); return p ? p.props : null; },
     // load one set (neighborhoods load only when shown or asked for)
     need: k => sets.has(k) ? load(k) : Promise.resolve(),
     loaded: k => !!(sets.get(k) && sets.get(k).polys),

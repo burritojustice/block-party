@@ -2,6 +2,14 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v65
+
+- **Shapes for your files:** Format has a **Shape** row: circle, star, square, triangle or diamond, in the file's color (or its "Color by" colors), with Fill, Ring and Ghost. The map key shows the shape.
+- **Picked areas:**
+  - They're listed under Pick as chips: click one to go to it, × to drop it. The table has them too ("Picked assessor blocks"), with their fields.
+  - **Off** (or Esc) now stops picking but keeps your picks, so you can click streets again. A line under Pick says when clicks are picking. Switching to another kind of area starts over.
+  - **Outline** when saving: **to the middle of the streets around them** (new, the default), **the blocks, streets between them filled**, or **the blocks as they are**. A dashed line on the map previews it. The middle-of-the-street outline uses the street centerlines: each block takes the space inside the streets around it. A block with no street on one side (a park or the bay) is grown about half a street there instead. The saved area records which outline it used.
+
 ## v64
 
 - **Table** (new button on the map): your streets and intersections, or any file you've added, as a table under the map, like Joiner's.
