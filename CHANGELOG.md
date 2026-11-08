@@ -2,6 +2,16 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v66
+
+- **＋ Blocks along these streets** (under Pick): picks the assessor blocks on both sides of the checked streets (or census blocks or tracts, if you're picking those). Divisadero from Sacramento to Haight picks 38 blocks.
+- **Hovering while picking** shows the block's number and fields, outlines it (picked or not), and highlights its chip and its table row. Hovering a chip or a table row outlines the block on the map.
+- **The middle-of-the-street outline** now keeps blocks whole when a street runs through them (Wilmot St, Orben Pl).
+- **Start over and Clear selections** also clear picked blocks and stop picking, so streets can be clicked again. The Selection panel stays open while you're picking or have picks, even with no streets, and you can save an area from picks alone.
+- **Undo** brings back picks too.
+- **↑ Top and Selection** buttons follow you down a long list of cards.
+- **Shapes** in your files draw 1.8× bigger, so stars, triangles and the rest read like circles of the same size.
+
 ## v65
 
 - **Shapes for your files:** Format has a **Shape** row: circle, star, square, triangle or diamond, in the file's color (or its "Color by" colors), with Fill, Ring and Ghost. The map key shows the shape.
