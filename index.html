@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v63 -->
+<!-- build: v64 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -420,6 +420,32 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
 
 /* ---------- map ---------- */
 #map { position: absolute; inset: 0; }
+.map-wrap { --tbl-h: 280px; }
+.map-wrap.tbl-open #map { bottom: var(--tbl-h); }
+.map-wrap.tbl-open .legend { bottom: calc(var(--tbl-h) + 34px); max-height: calc(100% - var(--tbl-h) - 160px); overflow: auto; }
+.tbl-drawer { position: absolute; left: 0; right: 0; bottom: 0; height: var(--tbl-h); z-index: 7; background: var(--card); border-top: 2px solid var(--ink); display: flex; flex-direction: column; }
+.tbl-grip { height: 8px; cursor: ns-resize; flex: none; background: linear-gradient(var(--line), var(--line)) center / 40px 3px no-repeat; touch-action: none; }
+.tbl-head { display: flex; gap: 8px; align-items: center; padding: 2px 12px 6px; flex-wrap: wrap; flex: none; font-size: 13px; }
+.tbl-head select, .tbl-head input[type=search] { font: inherit; padding: 4px 8px; border: 2px solid var(--ink); border-radius: 999px; background: #fff; min-width: 0; }
+.tbl-head select { max-width: 260px; font-weight: 700; }
+.tbl-head input[type=search] { flex: 1 1 140px; max-width: 260px; }
+.tbl-count { color: var(--muted, #667); }
+.tbl-all { display: flex; gap: 4px; align-items: center; cursor: pointer; }
+.tbl-x { margin-left: auto; border: 0; background: none; font-size: 16px; cursor: pointer; padding: 2px 6px; }
+.tbl-scroll { overflow: auto; flex: 1; border-top: 1px solid var(--line); }
+.tbl { border-collapse: separate; border-spacing: 0; font-size: 12.5px; min-width: 100%; }
+.tbl th, .tbl td { padding: 4px 10px; text-align: left; white-space: nowrap; max-width: 280px; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid var(--line); }
+.tbl th { position: sticky; top: 0; z-index: 2; background: #F4F5FA; font-weight: 700; cursor: pointer; user-select: none; }
+.tbl th.asc::after { content: ' ▲'; font-size: 9px; } .tbl th.desc::after { content: ' ▼'; font-size: 9px; }
+.tbl th:first-child, .tbl td:first-child { position: sticky; left: 0; background: inherit; z-index: 1; }
+.tbl th:first-child { z-index: 3; background: #F4F5FA; cursor: default; }
+.tbl tr { background: #fff; } .tbl tbody tr { cursor: pointer; }
+.tbl tbody tr:hover { background: #FFF6D6; }
+.tbl tbody tr.is-checked td:nth-child(2) { font-weight: 700; }
+td.tbl-num { text-align: right; font-variant-numeric: tabular-nums; }
+.tbl .tbl-card { border: 1.5px solid var(--ink); background: #fff; border-radius: 999px; font: inherit; font-size: 11px; padding: 0 7px; cursor: pointer; }
+.tbl .tbl-card[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.tbl-more td { color: var(--muted, #667); font-style: italic; cursor: default; }
 .map-ui { position: absolute; top: 12px; left: 12px; right: 56px; z-index: 6; display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; pointer-events: none; }
 .map-ui > * { pointer-events: auto; }
 .map-toggle { display: flex; background: var(--card); border: 2px solid var(--ink); border-radius: 999px; padding: 3px; box-shadow: 0 3px 0 var(--ink); }
@@ -662,6 +688,9 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
       <div class="map-toggle single sun">
         <button type="button" id="quiet-btn" aria-expanded="false" aria-controls="quiet-panel">✦ <span data-i18n="quietBtn">Quiet streets</span><span class="badge" id="quiet-badge" hidden></span> ▾</button>
       </div>
+      <div class="map-toggle single">
+        <button type="button" id="table-btn" aria-pressed="false" data-i18n="tableBtn" title="Your streets and files as a table under the map">Table</button>
+      </div>
       <div class="zoom-read" id="zoom-read" data-i18n-title="zoomRead" title="Zoom level"></div>
       <div class="map-pop" id="layers-panel" hidden>
         <p class="pop-hint" data-i18n="layersHint">“Close up” shows a layer once you zoom in to a few blocks.</p>
@@ -685,6 +714,17 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
           <button type="button" class="btn small" id="quiet-clear" data-i18n="quietClear">Clear</button></div>
       </div>
     </div>
+    <section class="tbl-drawer" id="tbl-drawer" hidden aria-label="Table">
+      <div class="tbl-grip" id="tbl-grip" data-i18n-title="tableGrip" title="Drag to resize"></div>
+      <div class="tbl-head">
+        <select id="tbl-src" aria-label="Which rows"></select>
+        <span class="tbl-count" id="tbl-count"></span>
+        <input type="search" id="tbl-search" data-i18n-placeholder="tableSearch" placeholder="Search rows" spellcheck="false">
+        <label class="tbl-all"><input type="checkbox" id="tbl-allcols"> <span data-i18n="tableAllCols">All columns</span></label>
+        <button type="button" class="tbl-x" id="tbl-close" data-i18n-title="tableClose" title="Close the table" aria-label="Close the table">✕</button>
+      </div>
+      <div class="tbl-scroll" id="tbl-scroll"><table class="tbl" id="tbl"></table></div>
+    </section>
     <details class="legend" id="legend" open>
       <summary data-i18n="legend">Map key</summary>
       <ul>
@@ -996,7 +1036,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v63';
+const _BUILD_VERSION = 'v64';
 
 /* =====================================================================
    CONFIG
@@ -1195,6 +1235,11 @@ const I18N = {
     dlLabel: 'Download:', dlBlocks: 'Streets', dlAll: 'All of these', dlBusinessesS: 'Businesses', dlParcelsS: 'Parcels', dlCblocksS: 'Census blocks', dlAblocksS: 'Assessor blocks',
     dlPick: 'Check what to download first', dlBusinesses: 'Businesses along them', dlParcels: 'Parcels along them', dlCblocks: 'Census blocks along them',
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
+    tableBtn: 'Table', tableGrip: 'Drag to resize', tableSearch: 'Search rows', tableAllCols: 'All columns', tableClose: 'Close the table',
+    tableStreets: 'Your streets and intersections ({n})', tableFile: '{name} ({n})', tableCount: '{n} rows', tableCountOf: '{n} of {total} rows',
+    tableSort: 'Sort by this column (click again to reverse)', tableCheckAll: 'Check all', tableCheck: 'Check', tableCard: 'Card',
+    tableMore: 'Showing the first {n}. Search to narrow them down.', tableEmpty: 'No streets yet. Look one up, or tap streets on the map.',
+    tableEmptyFile: 'No rows in this file.',
     selUndo: '↶ Undo', selUndone: 'Back to the streets before that', selShowAblk: 'Show the assessor blocks along these streets', selPick: 'Pick',
     pickOff: 'Off', pickAblk: 'Assessor blocks', pickCblk: 'Census blocks', pickCtract: 'Tracts', pickStreets: '＋ Streets around them', pickClear: 'Clear',
     pickCount: '{n} picked', pickHint: 'Click areas on the map to pick them; click again to drop one', pickNone: 'No streets around those areas',
@@ -2082,6 +2127,7 @@ function setupForm() {
   $('add-cross').addEventListener('click', addCrossStreets);
   $('add-around').addEventListener('click', () => SelAreas.around());
   $('sel-undo').addEventListener('click', () => SelAreas.undo());
+  Table.setup();
   $('sel-ablk').addEventListener('change', e => { const on = e.target.checked; setArea('admin', 'ablk'); setArea('adminMode', on ? 'shade' : 'off'); });
   $('pick-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) SelAreas.pickMode(b.dataset.v); });
   $('pick-streets').addEventListener('click', () => SelAreas.streetsAround());
@@ -2252,6 +2298,7 @@ function render() {
   const d = Logic.db && Logic.db.dataAsOf;
   $('foot-note').textContent = d ? t('dataNote', { date: d.slice(0, 10) }) : '';
   drawResults();
+  Table.refresh();
 }
 function intCardHTML(i) {
   const on = state.checked.has(i.cnn);
@@ -4016,6 +4063,24 @@ const BIZ_COLOR = { food: '#C2255C', retail: '#E67700', services: '#0C8599', oth
 const BIZ_CATS = [['food', 'bizFood'], ['retail', 'bizRetail'], ['services', 'bizServices'], ['other', 'bizOther']];
 // an address's category: sf-blocks' `cat` (food, retail, services, other), or its older `food` flag
 const BIZ_CAT = ['coalesce', ['get', 'cat'], ['case', ['to-boolean', ['get', 'food']], 'food', 'other']];
+// size, color and filter for the business dots. Newer tiles carry per-category counts on each address
+// (shown_food … / n_food …, sf-blocks 2026.11.08.1): a dot counts only the categories picked, so two
+// restaurants among 50 offices make a small food dot under Food & drink. Older tiles: the address's total
+// and its one category, as before.
+function bizExprs() {
+  const pre = bizAll ? 'n_' : 'shown_', cats = BIZ_CATS.map(([k]) => k).filter(k => bizCats.has(k));
+  const has = ['any', ...BIZ_CATS.map(([k]) => ['has', 'n_' + k])];
+  const of = k => ['coalesce', ['get', pre + k], 0];
+  const sum = cats.length ? ['+', 0, ...cats.map(of)] : 0;
+  const old = ['coalesce', ['get', bizAll ? 'n' : 'shown'], ['get', 'n'], 1];
+  const oldColor = ['match', BIZ_CAT, ...BIZ_CATS.flatMap(([k]) => [k, BIZ_COLOR[k]]), BIZ_COLOR.other];
+  const oldFilter = ['all', ['in', BIZ_CAT, ['literal', cats]], bizAll ? true : ['any', ['!', ['has', 'shown']], ['>', ['get', 'shown'], 0]]];
+  return {
+    count: ['case', has, sum, old],
+    color: ['case', has, ['case', ...cats.flatMap(k => [['>', of(k), 0], BIZ_COLOR[k]]), BIZ_COLOR.other], oldColor],
+    filter: ['case', has, ['>', sum, 0], oldFilter],
+  };
+}
 const BIZ_ALL_KEY = 'bp-biz-all';
 let bizAll = (() => { try { return localStorage.getItem(BIZ_ALL_KEY) === '1'; } catch (e) { return false; } })();
 let treeGenera = null, bizCats = new Set(['food', 'retail', 'services', 'other']);
@@ -4159,9 +4224,9 @@ const Tiles = (() => {
         OVERLAYS.trees.layers = ['bp-lyr-trees'];
       }
       if (meta.has('businesses')) {
-        const count = ['coalesce', ['get', bizAll ? 'n' : 'shown'], ['get', 'n'], 1];
+        const { count, color } = bizExprs();
         map.addLayer({ id: 'bp-lyr-businesses', type: 'circle', ...src('businesses'), paint: {
-          'circle-color': ['match', BIZ_CAT, ...BIZ_CATS.flatMap(([k]) => [k, BIZ_COLOR[k]]), BIZ_COLOR.other],
+          'circle-color': color,
           'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 1, 15, ['interpolate', ['linear'], count, 1, 3, 10, 6, 100, 11],
             18, ['interpolate', ['linear'], count, 1, 5, 10, 9, 100, 16]],
           'circle-opacity': ['interpolate', ['linear'], ['zoom'], 10, 0.45, 15, 0.85],
@@ -4257,10 +4322,12 @@ const Tiles = (() => {
           treeGenera.has('other') ? ['!', ['in', g, ['literal', TREE_TOP]]] : false]);
       }
       if (map.getLayer('bp-lyr-businesses')) {
-        const f = ['all', ['in', BIZ_CAT, ['literal', [...bizCats]]], bizAll ? true : ['any', ['!', ['has', 'shown']], ['>', ['get', 'shown'], 0]]];
+        const { count, color, filter: f } = bizExprs();
         map.setFilter('bp-lyr-businesses', f);
-        map.setFilter('bp-lyr-businesses-label', ['all', f, ['>', ['coalesce', ['get', bizAll ? 'n' : 'shown'], ['get', 'n'], 1], 1]]);
-        const count = ['coalesce', ['get', bizAll ? 'n' : 'shown'], ['get', 'n'], 1];
+        map.setPaintProperty('bp-lyr-businesses', 'circle-color', color);
+        map.setPaintProperty('bp-lyr-businesses', 'circle-radius', ['interpolate', ['linear'], ['zoom'], 10, 1, 15, ['interpolate', ['linear'], count, 1, 3, 10, 6, 100, 11],
+          18, ['interpolate', ['linear'], count, 1, 5, 10, 9, 100, 16]]);
+        map.setFilter('bp-lyr-businesses-label', ['all', f, ['>', count, 1]]);
         map.setLayoutProperty('bp-lyr-businesses-label', 'text-field', ['to-string', count]);
         if (map.getLayer('bp-lyr-businesses-name-label')) {
           map.setFilter('bp-lyr-businesses-name-label', f);
@@ -4803,6 +4870,7 @@ const Drops = (() => {
   const swatch = f => `<svg viewBox="0 0 26 16"><line x1="2" y1="12" x2="14" y2="4" stroke="${f.color}" stroke-width="3" stroke-linecap="round"/><circle cx="19" cy="9" r="4.5" fill="${f.color}" stroke="#fff"/></svg>`;
   // Layers menu ("Your files") and the map key
   function renderMenu() {
+    try { Table.refresh(); } catch (e) { }   // the table's file list (Table may not exist yet while the page starts)
     const el = $('drop-rows');
     if (el) el.innerHTML = `<p class="areas-cap">${esc(t('grpFiles'))}</p>` + files.map(f => `<div class="lyr-row" data-drop="${f.id}">${swatch(f)}<b>${esc(shown(f))}<small>${esc(t('dropCount', { n: f.feats.length.toLocaleString() }))}${f.skipped ? ' · ' + esc(t('dropSkipped', { n: f.skipped.toLocaleString() })) : ''}</small></b>
         <div class="lseg" role="group" aria-label="${esc(f.name)}"><button type="button" data-drop-on="0" aria-pressed="${!f.on}">${esc(t('lyrOff'))}</button><button type="button" data-drop-on="1" aria-pressed="${f.on}">${esc(t('lyrOn'))}</button></div>
@@ -5159,7 +5227,8 @@ const Drops = (() => {
       for (const [k, c] of onCards) if (!c.some(x => cnns.has(x))) onCards.delete(k);
       if (onCards.size !== n) highlight();
     }
-    return { toggle, draw, highlight, setup, facts, prune, dropFile: id => { picked = picked.filter(([a]) => a !== id); for (const k of [...onCards.keys()]) if (k.startsWith(id + ':')) onCards.delete(k); draw(); highlight(); } };
+    return { toggle, draw, highlight, setup, facts, prune, spot: (fid, i) => { const o = featOf([fid, i]); return o ? spot(o.x) : null; },
+      has: (fid, i) => picked.some(([a, b]) => a === fid && b === i) || onCards.has(`${fid}:${i}`), dropFile: id => { picked = picked.filter(([a]) => a !== id); for (const k of [...onCards.keys()]) if (k.startsWith(id + ':')) onCards.delete(k); draw(); highlight(); } };
   })();
   // columns sf-blocks' Matcher and match scripts add, and the location columns: folded under Details
   const MATCH_COLS = new Set(['source_row', 'part', 'parts', 'matched_text', 'type', 'cnn', 'nearby_cnns', 'street', 'from_street', 'to_street', 'address_low',
@@ -5379,6 +5448,124 @@ function addCrossStreets() {
    tiles) joined with the streets themselves, so both sides of a street make one shape. Saved as GeoJSON with
    name, cnns (";"), streets, lots and saved (date). Open a file of saved areas to edit one: its streets come
    back as the selection, and saving replaces it in the file (others kept), ready to commit to sf-blocks. */
+// the table under the map: your streets and intersections, or one of your files, one row each.
+// Sort by any header, search, click a row to go to it (and its card), hover a street to preview it.
+const Table = (() => {
+  const H_KEY = 'bp-table-h', MAX = 2000;
+  const STREET_COLS = ['streetname', 'from_street', 'to_street', 'cnn', 'type', 'length_ft', 'supervisor_district', 'zip_code', 'analysis_neighborhood',
+    'businesses', 'street_trees', 'muni_routes', 'bike_facility', 'next_to', 'census_people'];
+  const HIDE = new Set(['wkt', 'link']);
+  let open = false, src = 'streets', sort = null, dir = 1, q = '', allCols = false, shown = [];
+  const wrap = () => document.querySelector('.map-wrap');
+  const fileOf = id => Drops.files().find(f => 'f' + f.id === id);
+  const num = v => v !== '' && v != null && !isNaN(+v) && isFinite(+v);
+  const label = c => c.replace(/_/g, ' ');
+  function setOpen(on) {
+    open = on;
+    $('tbl-drawer').hidden = !on; wrap().classList.toggle('tbl-open', on);
+    $('table-btn').setAttribute('aria-pressed', on);
+    if (on) refresh();
+    if (mapReady) map.resize();
+  }
+  function rowsOf() {
+    if (src === 'streets') {
+      const recs = state.results.map(s => ({ s, r: record(s) }));
+      const keys = recs.length ? Object.keys(recs[0].r).filter(k => !HIDE.has(k)) : [];
+      const cols = allCols ? keys : STREET_COLS.filter(k => keys.includes(k));
+      return { cols, rows: recs.map(({ s, r }) => ({ key: s.cnn, s, cells: r })) };
+    }
+    const f = fileOf(src); if (!f) return { cols: [], rows: [] };
+    const first = f.nameField ? [f.nameField] : [];
+    const cols = [...first, ...f.fields.filter(k => k !== f.nameField && !k.startsWith('_'))];
+    return { cols: allCols ? cols : cols.slice(0, 14), rows: f.feats.map((x, i) => ({ key: i, f, i, cells: x.properties })) };
+  }
+  function fillSources() {
+    const sel = $('tbl-src'), files = Drops.files();
+    if (src !== 'streets' && !fileOf(src)) src = 'streets';
+    sel.innerHTML = [`<option value="streets">${esc(t('tableStreets', { n: state.results.length }))}</option>`,
+      ...files.map(f => `<option value="f${f.id}">${esc(t('tableFile', { name: f.name, n: f.feats.length.toLocaleString() }))}</option>`)].join('');
+    sel.value = src;
+  }
+  function refresh() {
+    if (!open) return;
+    fillSources();
+    const { cols, rows } = rowsOf(), ql = q.trim().toLowerCase();
+    let list = ql ? rows.filter(r => cols.some(c => String(r.cells[c] ?? '').toLowerCase().includes(ql))) : rows;
+    if (sort && cols.includes(sort)) {
+      const allNum = list.every(r => r.cells[sort] === '' || r.cells[sort] == null || num(r.cells[sort]));
+      list = [...list].sort((a, b) => {
+        const x = a.cells[sort], y = b.cells[sort], ex = x === '' || x == null, ey = y === '' || y == null;
+        if (ex || ey) return ex === ey ? 0 : ex ? 1 : -1;   // blanks last
+        return dir * (allNum ? x - y : String(x).localeCompare(String(y), 'en', { numeric: true }));
+      });
+    }
+    shown = list.slice(0, MAX);
+    $('tbl-count').textContent = t(ql ? 'tableCountOf' : 'tableCount', { n: list.length.toLocaleString(), total: rows.length.toLocaleString() });
+    const numCol = new Set(cols.filter(c => rows.some(r => num(r.cells[c])) && rows.every(r => r.cells[c] === '' || r.cells[c] == null || num(r.cells[c]))));
+    const isStreets = src === 'streets';
+    const head = `<thead><tr><th>${isStreets ? `<input type="checkbox" data-tbl-all ${state.results.length && state.checked.size === state.results.length ? 'checked' : ''} aria-label="${esc(t('tableCheckAll'))}">` : ''}</th>`
+      + cols.map(c => `<th data-sort="${esc(c)}" class="${sort === c ? (dir > 0 ? 'asc' : 'desc') : ''}" title="${esc(t('tableSort'))}">${esc(label(c))}</th>`).join('') + '</tr></thead>';
+    const cell = (r, c) => { const v = r.cells[c]; const s = v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
+      return `<td class="${numCol.has(c) ? 'tbl-num' : ''}" title="${esc(s.length > 30 ? s : '')}">${esc(s)}</td>`; };
+    const lead = r => isStreets ? `<td><input type="checkbox" data-tbl-check="${r.key}" ${state.checked.has(r.key) ? 'checked' : ''} aria-label="${esc(t('tableCheck'))}"></td>`
+      : `<td><button type="button" class="tbl-card" data-tbl-card="${r.i}" aria-pressed="${Drops.cards.has ? !!Drops.cards.has(r.f.id, r.i) : false}">${esc(t('tableCard'))}</button></td>`;
+    const body = shown.map((r, n) => `<tr data-tbl-row="${n}" class="${isStreets && state.checked.has(r.key) ? 'is-checked' : ''}">${lead(r)}${cols.map(c => cell(r, c)).join('')}</tr>`).join('')
+      + (list.length > MAX ? `<tr class="tbl-more"><td colspan="${cols.length + 1}">${esc(t('tableMore', { n: MAX.toLocaleString() }))}</td></tr>` : '')
+      + (!rows.length ? `<tr class="tbl-more"><td colspan="${cols.length + 1}">${esc(t(isStreets ? 'tableEmpty' : 'tableEmptyFile'))}</td></tr>` : '');
+    const sc = $('tbl-scroll'), top = sc.scrollTop, left = sc.scrollLeft;
+    $('tbl').innerHTML = head + '<tbody>' + body + '</tbody>';
+    sc.scrollTop = top; sc.scrollLeft = left;
+  }
+  function go(r) {
+    if (r.s) {
+      fitSegs([r.s]);
+      const li = document.querySelector(`#seg-list .seg[data-cnn="${r.s.cnn}"]`);
+      if (li) li.scrollIntoView({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' });
+    } else {
+      const c = Drops.cards.spot(r.f.id, r.i); if (!c || !mapReady) return;
+      map.easeTo({ center: c, zoom: Math.max(map.getZoom(), 17), duration: reducedMotion() ? 0 : 600 });
+    }
+  }
+  function setup() {
+    try { const h = +localStorage.getItem(H_KEY); if (h >= 120) wrap().style.setProperty('--tbl-h', h + 'px'); } catch (e) { }
+    $('table-btn').addEventListener('click', () => setOpen(!open));
+    $('tbl-close').addEventListener('click', () => setOpen(false));
+    $('tbl-src').addEventListener('change', e => { src = e.target.value; sort = null; q = ''; $('tbl-search').value = ''; refresh(); });
+    $('tbl-search').addEventListener('input', e => { q = e.target.value; refresh(); });
+    $('tbl-allcols').addEventListener('change', e => { allCols = e.target.checked; refresh(); });
+    const tb = $('tbl');
+    tb.addEventListener('click', e => {
+      const th = e.target.closest('th[data-sort]');
+      if (th) { const c = th.dataset.sort; if (sort === c) dir = -dir; else { sort = c; dir = 1; } refresh(); return; }
+      const all = e.target.closest('[data-tbl-all]');
+      if (all) { if (all.checked) state.results.forEach(s => state.checked.add(s.cnn)); else state.checked.clear(); render(); writeHash(); return; }
+      const ck = e.target.closest('[data-tbl-check]');
+      if (ck) { const c = +ck.dataset.tblCheck; ck.checked ? state.checked.add(c) : state.checked.delete(c); render(); writeHash(); return; }
+      const card = e.target.closest('[data-tbl-card]');
+      const tr = e.target.closest('tr[data-tbl-row]'); if (!tr) return;
+      const r = shown[+tr.dataset.tblRow]; if (!r) return;
+      if (card) { Drops.cards.toggle(r.f.id, r.i); refresh(); return; }
+      go(r);
+    });
+    tb.addEventListener('mouseover', e => {
+      const tr = e.target.closest('tr[data-tbl-row]'); const r = tr && shown[+tr.dataset.tblRow];
+      if (r && r.s && !isInt(r.s)) previewSegs([r.s]);
+    });
+    tb.addEventListener('mouseleave', () => previewSegs([]));
+    // drag the grip to resize; remembered in this browser
+    const grip = $('tbl-grip');
+    grip.addEventListener('pointerdown', e => {
+      e.preventDefault(); grip.setPointerCapture(e.pointerId);
+      const box = wrap().getBoundingClientRect();
+      const move = ev => { const h = Math.round(Math.min(box.height * 0.75, Math.max(120, box.bottom - ev.clientY))); wrap().style.setProperty('--tbl-h', h + 'px'); if (mapReady) map.resize(); };
+      const up = () => { grip.removeEventListener('pointermove', move); grip.removeEventListener('pointerup', up);
+        try { localStorage.setItem(H_KEY, parseInt(getComputedStyle(wrap()).getPropertyValue('--tbl-h'))); } catch (e) { } };
+      grip.addEventListener('pointermove', move); grip.addEventListener('pointerup', up);
+    });
+  }
+  return { setup, refresh, open: () => setOpen(true), get isOpen() { return open; } };
+})();
+
 const SelAreas = (() => {
   let fc = null, fileName = 'areas.geojson', current = null;
   // undo: the selection before each grow step
