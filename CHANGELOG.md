@@ -2,6 +2,13 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v67
+
+- **Google Sheets with many tabs:** every tab is read, and a list asks which to add. Tabs with places are checked, and each one you add becomes its own file. Before, only the first tab was tried, and when it had no places the message was hidden behind another.
+- **Column names don't have to be on the top row:** titles and notes above them are skipped, in Sheets and CSV files alike.
+- **Intersections as text:** rows with no coordinates or CNNs are placed at the corner when a column reads like "Mission St & 16th St" ("and", "/" and "@" work too), or when there's a street column and a cross street column. A column called "Location" that holds text instead of coordinates no longer gets in the way.
+- **Shapes:** a new file starts as stars, and each file after that takes the next shape (square, triangle, diamond, circle). A point you've put on a card is highlighted in its own shape.
+
 ## v66
 
 - **＋ Blocks along these streets** (under Pick): picks the assessor blocks on both sides of the checked streets (or census blocks or tracts, if you're picking those). Divisadero from Sacramento to Haight picks 38 blocks.
