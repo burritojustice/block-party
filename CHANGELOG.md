@@ -2,6 +2,15 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v64
+
+- **Table** (new button on the map): your streets and intersections, or any file you've added, as a table under the map, like Joiner's.
+  - Pick which rows at the left. Click a header to sort (again to reverse), search across the columns, and tick **All columns** for everything the CSV download has.
+  - Streets: the checkbox checks or unchecks the street; clicking a row goes to it on the map and scrolls to its card; hovering previews it.
+  - Files: clicking a row goes to it; **Card** puts it on its block's card (or a card of its own).
+  - Drag the bar at the top to resize; the size is remembered in this browser.
+- **Business dots follow the category filter:** with per-category counts from sf-blocks (2026.11.08.1, once the businesses tiles are rebuilt), a dot's size, number and color count only the categories you've picked. Two restaurants at an address with 50 offices make a small food dot under Food & drink, and that address now shows under Food & drink at all (before, it went by the address's one main category). With the current tiles, dots work as before.
+
 ## v63
 
 - **Selection panel:**
