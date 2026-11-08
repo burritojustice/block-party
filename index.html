@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v67 -->
+<!-- build: v68 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -529,6 +529,10 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .tab-pick h3 { margin: 0 0 4px; font-size: 17px; }
 .tab-pick ul { list-style: none; padding: 0; margin: 10px 0; max-height: 50vh; overflow: auto; display: grid; gap: 6px; font-size: 14px; }
 .tab-pick .tab-pick-btns { display: flex; justify-content: flex-end; gap: 8px; }
+.seg.blk { border-color: #B08900; background: #FFFBEB; }
+.seg.blk.is-checked { border-color: #B08900; box-shadow: 0 0 0 1px #B08900 inset; }
+.seg.blk.is-hl { box-shadow: 0 0 0 3px #5F3DC4 inset; }
+.seg-kind { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #8A6A00; }
 .pick-list { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 0 50px; max-height: 96px; overflow: auto; }
 .pick-chip { display: inline-flex; border: 1.5px solid #B08900; background: #FFF3BF; border-radius: 999px; font-size: 12px; }
 .pick-chip button { border: 0; background: none; padding: 1px 6px; cursor: pointer; font: inherit; }
@@ -815,7 +819,7 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
           <button type="button" class="btn small" id="pick-streets" data-i18n="pickStreets">＋ Streets around them</button>
           <button type="button" class="btn small" id="pick-clear" data-i18n="pickClear">Clear</button></div>
         <div class="pick-list" id="pick-list" hidden></div>
-        <p class="sel-hint" id="pick-on" hidden data-i18n="pickOn">Picking: clicks on the map pick areas. Choose Off (or press Esc) to click streets again; your picks stay.</p>
+        <p class="sel-hint" id="pick-on" hidden data-i18n="pickOn">Click inside a block on the map to add it as a card (click a street to add the street). Off stops adding blocks; they stay.</p>
         <p class="sel-hint" data-i18n="selTrim">Trim: click a street on the map to take it out (or uncheck its card).</p>
         <div class="sel-row" id="outline-row" hidden><span class="sel-step" data-i18n="selOutline">Outline</span>
           <select id="outline-how" aria-label="Outline">
@@ -1064,7 +1068,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v67';
+const _BUILD_VERSION = 'v68';
 
 /* =====================================================================
    CONFIG
@@ -1270,13 +1274,15 @@ const I18N = {
     tableEmptyFile: 'No rows in this file.',
     selUndo: '↶ Undo', selUndone: 'Back to the streets before that', selShowAblk: 'Show the assessor blocks along these streets', selPick: 'Pick',
     pickOff: 'Off', pickAblk: 'Assessor blocks', pickCblk: 'Census blocks', pickCtract: 'Tracts', pickStreets: '＋ Streets around them', pickClear: 'Clear',
-    pickCount: '{n} {set} picked', pickOn: 'Picking: clicks on the map pick areas. Choose Off (or press Esc) to click streets again; your picks stay.',
+    pickCount: '{n} {set} picked', pickOn: 'Click inside a block on the map to add it as a card (click a street to add the street). Off stops adding blocks; they stay.',
+    subBlocks: '· {n} blocks', subBlock1: '· 1 block', blkStreets: 'Streets around', blkStreetsN: '{n} blocks of street', blkAddStreets: '＋ Add {n}', blkNoStreets: 'No streets around it',
+    blkSize: 'Size', blkAcres: '{n} acres', blkIn: 'In', blkChip: 'Block', blkCopy: 'Copy the block number', blkCopied: 'Copied block {n}', homesOnBlock: 'Homes on the block', landuseNoteBlock: 'Land use: SF Planning, 2023. Every lot on the block.',
     pickGo: 'Go to it', pickAlong: '＋ Blocks along these streets', alongNone: 'No blocks found along the checked streets',
     alongAdded: 'Picked {n} {set} along the streets', pickTipName: '{set} {n}', oneAblk: 'Assessor block', oneCblk: 'Census block', oneCtract: 'Census tract', oneArea: 'Area', pickTipAdd: 'Click to pick', pickTipDrop: 'Picked: click to drop',
     jumpTop: '↑ Top', jumpSel: 'Selection', pickDrop: 'Drop {n}', pickCleared: 'Started over: {n} picks from the other set dropped',
     selOutline: 'Outline', outlineCenter: 'To the middle of the streets around them', outlineFilled: 'The blocks, streets between them filled', outlineBlocks: 'The blocks as they are',
     tablePicks: 'Picked {set} ({n})',
-    fmtShape: 'Shape', shapeCircle: 'Circle', shapeStar: 'Star', shapeSquare: 'Square', shapeTriangle: 'Triangle', shapeDiamond: 'Diamond', pickHint: 'Click areas on the map to pick them; click again to drop one', pickNone: 'No streets around those areas',
+    fmtShape: 'Shape', shapeCircle: 'Circle', shapeStar: 'Star', shapeSquare: 'Square', shapeTriangle: 'Triangle', shapeDiamond: 'Diamond', pickHint: 'Click inside blocks on the map to add them; click one again to drop it', pickNone: 'No streets around those areas',
     pickAdded: 'Added {n} streets around {a} areas',
     selTitle: 'Selection: grow, trim, save as an area', selGrow: 'Grow', selSave: 'Save', selEdit: 'Edit',
     selTrim: 'Trim: click a street on the map to take it out (or uncheck its card).',
@@ -2179,7 +2185,7 @@ function setupForm() {
   $('pick-list').addEventListener('click', e => { const x = e.target.closest('[data-pick-x]'), g = e.target.closest('[data-pick-go]');
     if (x) SelAreas.dropPick(x.dataset.pickX); else if (g) SelAreas.goPick(g.dataset.pickGo); });
   $('outline-how').addEventListener('change', () => SelAreas.previewOutline());
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && SelAreas.picking()) SelAreas.pickMode(''); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && SelAreas.armed()) SelAreas.pickMode(''); });
   $('area-save').addEventListener('click', () => SelAreas.save());
   $('area-open').addEventListener('change', e => { const f = e.target.files[0]; if (f) SelAreas.open(f); e.target.value = ''; });
   $('area-pick').addEventListener('change', e => SelAreas.pick(e.target.value));
@@ -2317,7 +2323,9 @@ function render() {
   Drops.cards.prune(new Set(state.results.map(r => r.cnn)));
   $('results-title').textContent = state.title;
   const n = state.checked.size;
-  $('results-sub').textContent = state.kind === 'pick' ? t('subPick', { n, total: segs.length }) : t('subAll', { n, total: segs.length });
+  let nBlk = 0; try { nBlk = SelAreas.count(); } catch (e) { }
+  $('results-sub').textContent = (state.kind === 'pick' ? t('subPick', { n, total: segs.length }) : t('subAll', { n, total: segs.length })) + (nBlk ? ' ' + t(nBlk === 1 ? 'subBlock1' : 'subBlocks', { n: nBlk }) : '');
+  if (!state.title && nBlk) $('results-title').textContent = t('linkedBlocks');
   ['apply', 'copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson', 'add-cross', 'add-around', 'area-save', 'pick-along'].forEach(id => $(id).disabled = !n);
   if (picking && SelAreas.picks().names.length) $('area-save').disabled = false;
   // Intersection results: intersection cards, then checked blocks as full cards, then the unchecked
@@ -2327,9 +2335,11 @@ function render() {
   const isLeg = s => !isInt(s) && !state.checked.has(s.cnn) && (intNodes.has(s.fn) || intNodes.has(s.tn));
   const full = segs.filter(s => !isLeg(s));
   const legs = segs.filter(isLeg);
-  const dkey = d => d.closest('[data-cnn]').dataset.cnn + (d.dataset.fold ? 'f' + d.dataset.fold : d.classList.contains('ng-city') ? 'c' : d.classList.contains('hoods') ? 'h' : d.classList.contains('biz') ? 'b' : '');
+  const dkey = d => { const o = d.closest('[data-cnn],[data-blk]'); if (!o) return '';
+    return (o.dataset.cnn || 'blk' + o.dataset.blk) + (d.dataset.fold ? 'f' + d.dataset.fold : d.classList.contains('ng-city') ? 'c' : d.classList.contains('hoods') ? 'h' : d.classList.contains('biz') ? 'b' : ''); };
   const openNg = new Set([...document.querySelectorAll('#seg-list details.ng[open], #seg-list details.hoods[open], #seg-list details.fold[open]')].map(dkey));
-  $('seg-list').innerHTML = full.map(s => isInt(s) ? intCardHTML(s) : cardHTML(s)).join('') +
+  let blockCards = ''; try { blockCards = SelAreas.cardsHTML(); } catch (e) { }
+  $('seg-list').innerHTML = full.map(s => isInt(s) ? intCardHTML(s) : cardHTML(s)).join('') + blockCards +
     (legs.length ? `<li class="legs-head"><b>${esc(t('legsTitle'))}</b><span>${esc(t('legsHint'))}</span></li>` + legs.map(s => legHTML(s, ints)).join('') : '');
   document.querySelectorAll('#seg-list details.ng, #seg-list details.hoods, #seg-list details.fold').forEach(d => { if (openNg.has(dkey(d))) d.open = true; });
   // rings from a card list that's no longer open (or whose card is gone)
@@ -2590,8 +2600,9 @@ function hydrateElevation() {
 }
 function setupResultsEvents() {
   const list = $('seg-list');
-  list.addEventListener('mouseover', e => { const li = e.target.closest('.seg'); if (li) hoverSegFromCard(+li.dataset.cnn); });
-  list.addEventListener('mouseleave', () => hoverSegFromCard(null));
+  list.addEventListener('mouseover', e => { const li = e.target.closest('.seg'); if (!li) return;
+    if (li.dataset.blk) { SelAreas.hoverArea(li.dataset.blk); hoverSegFromCard(null); } else { SelAreas.hoverArea(null); hoverSegFromCard(+li.dataset.cnn); } });
+  list.addEventListener('mouseleave', () => { hoverSegFromCard(null); SelAreas.hoverArea(null); });
   // opening a card's tree or business list rings them on the map; closing it clears the rings
   $('seg-list').addEventListener('toggle', e => {
     const d = e.target, k = d.matches && (d.matches('details.fold[data-fold="trees"]') ? 'trees' : d.matches('details.biz') ? 'businesses' : null);
@@ -2601,6 +2612,8 @@ function setupResultsEvents() {
     else if (Tiles.hlFor === cnn + '|' + k) Tiles.highlight(null, k);
   }, true);
   $('seg-list').addEventListener('click', e => {
+    const blk = e.target.closest('[data-blk]');
+    if (blk) { SelAreas.cardClick(e, blk); return; }
     const chip = e.target.closest('[data-copy]');
     if (chip) { copyText(chip.dataset.copy, t('copiedCnn', { cnn: chip.dataset.copy })); return; }
     const rm = e.target.closest('[data-remove]');
@@ -2753,6 +2766,7 @@ function writeHash() {
     parts.push('lands=' + ([...landCats].join(',') || 'none'));
   if (LANG !== 'en') parts.push('lang=' + LANG);
   if (typeof Drops !== 'undefined') for (const u of Drops.urls()) parts.push('url=' + encodeURIComponent(u));
+  try { const pk = SelAreas.pickHash(); if (pk) parts.push('pick=' + pk); } catch (e) { }
   const h = parts.length ? '#' + parts.join('&') : '';
   if (h !== location.hash) { writingHash = true; history.replaceState(null, '', baseUrl() + location.search + h); writingHash = false; }
 }
@@ -2761,7 +2775,7 @@ function readHash() {
   const list = k => (p.get(k) || '').split(',').map(s => s.trim()).filter(Boolean);
   return { cnn: list('cnn').map(Number).filter(Boolean), street: list('street'), all: p.get('all') === '1', minor: p.get('minor') !== '0', lang: p.get('lang'), quiet: list('quiet'),
     layers: Object.fromEntries(list('layers').map(x => x.split(':')).filter(x => x.length === 2)), lands: p.get('lands'),
-    areas: Object.fromEntries(list('areas').map(x => x.split(':')).filter(x => x.length === 2)), urls: p.getAll('url') };
+    areas: Object.fromEntries(list('areas').map(x => x.split(':')).filter(x => x.length === 2)), urls: p.getAll('url'), pick: p.get('pick') };
 }
 function applyHash() {
   const h = readHash();
@@ -2774,6 +2788,7 @@ function applyHash() {
   for (const [k, v] of Object.entries(h.areas)) if (!AREA_GROUP_KEYS.includes(k)) setArea(k, v, false);
   if (h.lands) setLandCats(h.lands.split(','), false);
   for (const u of h.urls) Drops.addURL(u, true);
+  if (h.pick) SelAreas.restore(h.pick);
   if (h.minor !== Logic.db.includeMinor) { $('include-minor').checked = h.minor; Logic.setIncludeMinor(h.minor); refreshMapFilter(); }
   if (h.all !== Logic.db.searchAll) { $('search-all').checked = h.all; Logic.setSearchAll(h.all); refreshMapFilter(); }
   if (h.cnn.length) {
@@ -5776,13 +5791,14 @@ const SelAreas = (() => {
     $('pick-on').hidden = !clicking;
     $('pick-count').textContent = pickSet ? t('pickCount', { n: picks.size, set: Areas.conf(pickSet).title || '' }) : '';
     $('pick-streets').disabled = !picks.size;
-    const pl = $('pick-list'); pl.hidden = !picks.size;
+    const pl = $('pick-list'); pl.hidden = true;   // the picks are cards in the list now
     pl.innerHTML = [...picks].sort((a, b) => a.localeCompare(b, 'en', { numeric: true })).map(n => `<span class="pick-chip" data-pick-chip="${esc(n)}"><button type="button" data-pick-go="${esc(n)}" title="${esc(t('pickGo'))}">${esc(n)}</button><button type="button" data-pick-x="${esc(n)}" aria-label="${esc(t('pickDrop', { n }))}">×</button></span>`).join('');
     $('outline-row').hidden = !picks.size;
     $('area-save').disabled = !state.checked.size && !picks.size;
     if (picks.size || clicking) { $('results').hidden = false; $('sel-panel').open = true; }
-    try { Table.refresh(); } catch (e) { }
     previewOutline();
+    if (pickSet === 'ablk') for (const n of picks) if (!Parcels.peek({ cnn: 'ablk:' + n })) Parcels.fetchBlock(n, Areas.geom('ablk', n)).then(() => render());
+    render(); writeHash();
     if (!mapReady) return;
     if (!map.getSource('pick-areas')) {
       map.addSource('pick-areas', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
@@ -5796,7 +5812,7 @@ const SelAreas = (() => {
     if (k && k !== pickSet) { if (picks.size) toast(t('pickCleared', { n: picks.size })); picks = new Set(); pickSet = k; }
     clicking = !!k;
     document.querySelectorAll('#pick-mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === k));
-    map.getCanvas().style.cursor = k ? 'crosshair' : '';
+    map.getCanvas().style.cursor = '';
     if (!k) stopHover();
     if (k) {
       await Areas.need(k);
@@ -5821,9 +5837,9 @@ const SelAreas = (() => {
       const g = n != null && pickSet ? Areas.geom(pickSet, n) : null;
       map.getSource('pick-hover').setData({ type: 'FeatureCollection', features: g ? [{ type: 'Feature', properties: {}, geometry: g }] : [] });
     }
-    document.querySelectorAll('.is-hl[data-pick-chip], tr.is-hl[data-pick-row]').forEach(x => x.classList.remove('is-hl'));
+    document.querySelectorAll('.is-hl[data-pick-chip], tr.is-hl[data-pick-row], li.is-hl[data-blk]').forEach(x => x.classList.remove('is-hl'));
     if (n == null) return;
-    const sel = `[data-pick-chip="${CSS.escape(n)}"], tr[data-pick-row="${CSS.escape(n)}"]`;
+    const sel = `[data-pick-chip="${CSS.escape(n)}"], tr[data-pick-row="${CSS.escape(n)}"], li[data-blk="${CSS.escape(n)}"]`;
     document.querySelectorAll(sel).forEach(x => { x.classList.add('is-hl'); if (x.tagName === 'TR') x.scrollIntoView({ block: 'nearest' }); });
   }
   function areaTip(n) {
@@ -5832,11 +5848,14 @@ const SelAreas = (() => {
       .map(([k, v]) => `<br><span class="pop-lyr">${esc(k.replace(/_/g, ' '))}: ${esc(typeof v === 'number' ? v.toLocaleString() : v)}</span>`).join('');
     return `<b>${esc(t('pickTipName', { set: t({ ablk: 'oneAblk', cblk: 'oneCblk', ctract: 'oneCtract' }[pickSet] || 'oneArea'), n }))}</b>${rows}<br><span class="pop-lyr">${esc(t(picks.has(n) ? 'pickTipDrop' : 'pickTipAdd'))}</span>`;
   }
+  // streets, corners, points and your files win; a block only when the pointer is on none of them
+  const onOther = e => hoverHit(e, ['bp-all-hit', 'bp-corners-hit', 'bp-ints', ...Drops.pointIds()]) || onPoi(e);
   function onMapMove(e) {
     if (!clicking) return;
-    const names = Areas.areasAt(pickSet, e.lngLat.lng, e.lngLat.lat), n = names.length ? names[names.length - 1] : null;
+    const names = onOther(e) ? [] : Areas.areasAt(pickSet, e.lngLat.lng, e.lngLat.lat), n = names.length ? names[names.length - 1] : null;
     hoverPop ||= new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 14 });
-    if (n == null) { hoverPop.remove(); hoverArea(null); return; }
+    if (n == null) { if (hovered != null) { hoverPop.remove(); hoverArea(null); } return; }
+    map.getCanvas().style.cursor = 'pointer';
     hoverPop.setLngLat(e.lngLat).setHTML(areaTip(n)).addTo(map);
     hoverArea(n);
   }
@@ -5880,7 +5899,7 @@ const SelAreas = (() => {
     drawPicks();
   }
   function onMapClick(e) {
-    if (!clicking) return;
+    if (!clicking || onOther(e)) return;
     const names = Areas.areasAt(pickSet, e.lngLat.lng, e.lngLat.lat);
     if (!names.length) return;
     const n = names[names.length - 1];
@@ -5957,6 +5976,95 @@ const SelAreas = (() => {
   }
   // the streets around (and inside) the picked areas: a street goes in when a point beside it (14 m to
   // either side, at 25/50/75% along) is in one of them
+  const aroundCache = new Map();
+  function streetsAroundOf(names) {
+    const k = pickSet + ':' + [...names].sort().join(','); if (aroundCache.has(k)) return aroundCache.get(k);
+    const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540, OFF = 14, set = new Set(names);
+    const geoms = [...names].map(n => Areas.geom(pickSet, n)).filter(Boolean);
+    const bb = [Infinity, Infinity, -Infinity, -Infinity];
+    for (const g of geoms) for (const p of g.coordinates) for (const [x, y] of p[0]) { bb[0] = Math.min(bb[0], x); bb[1] = Math.min(bb[1], y); bb[2] = Math.max(bb[2], x); bb[3] = Math.max(bb[3], y); }
+    const pad = 0.0004, out = [];
+    for (const sg of Logic.db.segs) {
+      if (!Logic.eligible(sg)) continue;
+      const c = sg.coords;
+      if (!c.some(([x, y]) => x > bb[0] - pad && x < bb[2] + pad && y > bb[1] - pad && y < bb[3] + pad)) continue;
+      const hit = [0.25, 0.5, 0.75].some(f => {
+        const i = Math.min(c.length - 2, Math.floor(f * (c.length - 1))), a = c[i], b = c[i + 1];
+        const mx = a[0] + (b[0] - a[0]) * ((f * (c.length - 1)) - i), my = a[1] + (b[1] - a[1]) * ((f * (c.length - 1)) - i);
+        const dx = (b[0] - a[0]) * KX, dy = (b[1] - a[1]) * KY, L = Math.hypot(dx, dy) || 1;
+        return [1, -1].some(sd => Areas.areasAt(pickSet, mx + (-dy / L) * OFF * sd / KX, my + (dx / L) * OFF * sd / KY).some(n => set.has(n)));
+      });
+      if (hit) out.push(sg);
+    }
+    aroundCache.set(k, out);
+    return out;
+  }
+  // a block's card, in the same list as the streets
+  const ONE = { ablk: 'oneAblk', cblk: 'oneCblk', ctract: 'oneCtract' };
+  function middleOf(g) {
+    const r = g.coordinates[0][0]; let x = 0, y = 0; r.forEach(p => { x += p[0]; y += p[1]; }); x /= r.length; y /= r.length;
+    return Areas.areasAt(pickSet, x, y).length ? [x, y] : r[0];
+  }
+  function cardHTML_(n) {
+    const g = Areas.geom(pickSet, n); if (!g) return '';
+    const name = t(ONE[pickSet] || 'oneArea');
+    const around = streetsAroundOf([n]);
+    const names = [...new Set(around.map(sg => P(sg.street)))];
+    const inList = new Set(state.results.map(r => r.cnn)), missing = around.filter(sg => !inList.has(sg.cnn)).length;
+    const [x, y] = middleOf(g);
+    const dists = AREA_SETS.filter(c => (c.kind === 'elected' || (c.kind === 'admin' && !c.onDemand && !['cblk', 'ctract'].includes(c.k))) && Areas.loaded(c.k))
+      .map(c => { const a = Areas.areasAt(c.k, x, y); return a.length ? `${esc(c.title || c.label)} ${esc(a.join(', '))}` : ''; }).filter(Boolean);
+    let acres = ''; try { if (window.turf) acres = (window.turf.area({ type: 'Feature', geometry: g, properties: {} }) / 4046.86).toFixed(2); } catch (e) { }
+    const props = pickSet === 'ablk' ? '' : Object.entries(Areas.props(pickSet, n) || {}).filter(([k, v]) => v != null && v !== '' && typeof v !== 'object' && !/^(name|parts)$/.test(k)).slice(0, 8)
+      .map(([k, v]) => `<dt>${esc(k.replace(/_/g, ' '))}</dt><dd>${esc(typeof v === 'number' ? v.toLocaleString() : v)}</dd>`).join('');
+    return `<li class="seg blk is-checked" data-blk="${esc(n)}">
+    <input type="checkbox" checked aria-label="${esc(name)} ${esc(n)}">
+    <div class="seg-top">
+      <div><div class="seg-kind">${esc(name)}</div><div class="seg-name">${esc(n)}</div>
+      <div class="seg-between">${esc(names.join(', ') || t('blkNoStreets'))}</div></div>
+      <div class="seg-btns">
+        <button type="button" class="cnn-chip" data-blk-copy="${esc(n)}" title="${esc(t('blkCopy'))}"><small>${esc(t('blkChip'))}</small>${esc(n)}</button>
+        <button type="button" class="remove-btn" data-blk-x="${esc(n)}" title="${esc(t('removeCard'))}" aria-label="${esc(t('removeCard'))}: ${esc(name)} ${esc(n)}">×</button>
+      </div>
+    </div>
+    <dl class="facts">
+      <dt>${esc(t('blkStreets'))}</dt><dd>${esc(t('blkStreetsN', { n: around.length }))}${missing ? ` <button type="button" class="btn small" data-blk-streets="${esc(n)}">${esc(t('blkAddStreets', { n: missing }))}</button>` : ''}</dd>
+      ${acres ? `<dt>${esc(t('blkSize'))}</dt><dd>${esc(t('blkAcres', { n: acres }))}</dd>` : ''}
+      ${dists.length ? `<dt>${esc(t('blkIn'))}</dt><dd>${dists.join('<br>')}</dd>` : ''}
+      ${pickSet === 'ablk' ? parcelFacts({ cnn: 'ablk:' + n }, true) : props}
+    </dl></li>`;
+  }
+  function cardsHTML() {
+    if (!pickSet || !picks.size) return '';
+    return [...picks].sort((a, b) => a.localeCompare(b, 'en', { numeric: true })).map(cardHTML_).join('');
+  }
+  function addStreets(names) {
+    const have = new Set(state.results.map(r => r.cnn)), add = streetsAroundOf(names).filter(sg => !have.has(sg.cnn));
+    if (!add.length) { toast(t('pickNone')); return 0; }
+    remember();
+    state.results = [...state.results, ...add]; add.forEach(o => state.checked.add(o.cnn));
+    if (!state.title) state.title = t('linkedBlocks');
+    render(); writeHash();
+    return add.length;
+  }
+  function cardClick(e, li) {
+    const n = li.dataset.blk;
+    const x = e.target.closest('[data-blk-x]'), c = e.target.closest('[data-blk-copy]'), st = e.target.closest('[data-blk-streets]');
+    if (c) { copyText(n, t('blkCopied', { n })); return; }
+    if (st) { const k = addStreets([n]); if (k) toast(t('pickAdded', { n: k, a: 1 })); return; }
+    if (x || (e.target.tagName === 'INPUT' && e.target === li.querySelector(':scope > input') && !e.target.checked)) { remember(); dropPick(n); return; }
+    if (e.target.closest('.facts')) return;
+    goPick(n);
+  }
+  // from a link: #pick=ablk:0587;0588
+  async function restore(v) {
+    const [k, list] = String(v || '').split(':'); if (!k || !list || !AREA_SETS.some(c => c.k === k)) return;
+    await Areas.need(k);
+    pickSet = k; picks = new Set(list.split(';').filter(Boolean));
+    setArea('admin', k); if (areaMode.adminMode === 'off') setArea('adminMode', 'borders');
+    drawPicks();
+  }
+  const pickHash = () => pickSet && picks.size ? `${pickSet}:${[...picks].join(';')}` : '';
   function streetsAround() {
     if (!picks.size) return;
     const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540, OFF = 14;
@@ -6095,8 +6203,8 @@ const SelAreas = (() => {
     render(); writeHash(); fitSegs(items);
     $('area-status').textContent = t('areaEditing', { name: (f.properties || {}).name || '', n: items.length });
   }
-  return { around, save, open, pick, undo, remember, forget, pickMode, onMapClick, onMapMove, hoverArea, alongStreets, reset, clearPicks, dropPick, goPick, streetsAround, previewOutline, picking: () => clicking,
-    active: () => clicking || picks.size > 0,
+  return { around, save, open, pick, undo, remember, forget, pickMode, onMapClick, onMapMove, hoverArea, alongStreets, reset, clearPicks, dropPick, goPick, streetsAround, previewOutline, picking: () => false,
+    active: () => clicking || picks.size > 0, armed: () => clicking, cardsHTML, cardClick, restore, pickHash, count: () => picks.size,
     picks: () => ({ set: pickSet, names: [...picks] }) };
 })();
 
@@ -6162,8 +6270,34 @@ const Parcels = (() => {
     return { byLot: [...lots], lotIds: [...lots.keys()], lots: lots.size, homes: [...lots.values()].reduce((a, l) => a + l.units, 0), uses: count(l => l.use),
       zones: [...zones].sort((a, b) => b[1].n - a[1].n).map(([name, z]) => ({ name, code: z.code, n: z.n })) };
   }
+  // the lots on an assessor block: every lot whose mapblklot is the block number plus 3 digits
+  async function computeBlock(n, geom) {
+    const b = [Infinity, Infinity, -Infinity, -Infinity];
+    for (const p of geom.coordinates) for (const [x, y] of p[0]) { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); }
+    const x0 = Math.floor(tx(b[0])), x1 = Math.floor(tx(b[2])), y0 = Math.floor(ty(b[3])), y1 = Math.floor(ty(b[1]));
+    const feats = (await Promise.all([...Array((x1 - x0 + 1) * (y1 - y0 + 1)).keys()].map(i => tile(x0 + i % (x1 - x0 + 1), y0 + Math.floor(i / (x1 - x0 + 1)))))).flat();
+    const lots = new Map();
+    for (const f of feats) {
+      const lot = String(f.p.mapblklot || ''); if (lot.slice(0, -3) !== n) continue;
+      const prev = lots.get(lot);
+      lots.set(lot, { use: f.p.landuse || '', zone: f.p.parcelsactiveandretired_zoning_district || '', code: f.p.parcelsactiveandretired_zoning_code || '',
+        units: Math.max(+f.p.resunits || 0, prev ? prev.units : 0), addr: parcelAddress(f.p), rings: prev ? prev.rings : [] });
+    }
+    return summarize(lots);
+  }
   return {
     available: () => !!window.pmtiles,
+    fetchBlock(n, geom) {
+      const k = 'ablk:' + n;
+      if (!window.pmtiles || !geom) return Promise.resolve(null);
+      if (cache.has(k)) return Promise.resolve(cache.get(k));
+      if (!pending.has(k)) {
+        pm ||= new pmtiles.PMTiles(SFBlocks.url(OVERLAYS.landuse.pmtiles));
+        pending.set(k, computeBlock(n, geom).then(r => { cache.set(k, r); pending.delete(k); return r; })
+          .catch(err => { console.warn('[block-party] parcels', err); pending.delete(k); return null; }));
+      }
+      return pending.get(k);
+    },
     // the summary, or null while it's being read (fetch() starts it)
     peek: s => cache.get(s.cnn) || null,
     fetch(s) {
@@ -6181,7 +6315,7 @@ const Parcels = (() => {
     },
   };
 })();
-function parcelFacts(s) {
+function parcelFacts(s, onBlock) {
   if (!Parcels.available()) return '';
   const r = Parcels.peek(s);
   if (!r) return `<dt>${esc(t('landuseRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
@@ -6193,8 +6327,8 @@ function parcelFacts(s) {
   const uses = `<table class="lu-table">${r.uses.map(([k, n]) => `<tr><td><i style="background:${color[k] || '#D8D5CE'}"></i>${esc(landuseName(k))}</td><td>${n}</td></tr>`).join('')}</table>`;
   return `<dt>${esc(t('zoningRow'))}</dt><dd>${zones}</dd>
       <dt>${esc(t('parcelsRow'))}</dt><dd>${esc(t('lotsOnly', { lots: r.lots }))}</dd>
-      ${r.homes ? `<dt>${esc(t('homesFacing'))}</dt><dd>${esc(t('homesFacingN', { n: r.homes.toLocaleString() }))}</dd>` : ''}
-      <dt>${esc(t('landuseRow'))}</dt><dd>${uses}<small class="lu-note">${esc(t('landuseNote'))}</small></dd>`;
+      ${r.homes ? `<dt>${esc(t(onBlock ? 'homesOnBlock' : 'homesFacing'))}</dt><dd>${esc(t('homesFacingN', { n: r.homes.toLocaleString() }))}</dd>` : ''}
+      <dt>${esc(t('landuseRow'))}</dt><dd>${uses}<small class="lu-note">${esc(t(onBlock ? 'landuseNoteBlock' : 'landuseNote'))}</small></dd>`;
 }
 function parcelFields(r) {
   return { lots: r ? r.lots : '', homes: r ? r.homes : '', land_use_2023: landuseText(r),

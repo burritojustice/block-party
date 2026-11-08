@@ -2,6 +2,14 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v68
+
+- **Blocks are cards now,** in the same list as your streets (the chips are gone).
+  - An **assessor block card** shows the streets around it, with **＋ Add** for the ones not in your list yet; its size in acres; the district it's in; and, from every lot on the block, zoning, the number of lots, homes and land use. Census block and tract cards show their own fields.
+  - The checkbox or × takes a block off. Clicking the card goes to it on the map, and hovering it outlines the block.
+  - The count at the top says how many blocks, and the link keeps them (`pick=ablk:0588;0587`).
+- **No separate picking mode:** choose Assessor blocks, Census blocks or Tracts under Pick, then click inside a block to add it. A click on a street, corner, point or file still does what it always did. Off (or Esc) stops adding blocks; the ones you have stay.
+
 ## v67
 
 - **Google Sheets with many tabs:** every tab is read, and a list asks which to add. Tabs with places are checked, and each one you add becomes its own file. Before, only the first tab was tried, and when it had no places the message was hidden behind another.
