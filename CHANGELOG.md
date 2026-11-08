@@ -2,6 +2,24 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v63
+
+- **Selection panel:**
+  - **↶ Undo** goes back to the streets you had before "＋ Cross streets", "＋ Around the blocks", "＋ Streets around them" or opening an area.
+  - **Show the assessor blocks along these streets** shades the assessor blocks your checked streets' lots are on.
+  - **Pick** assessor blocks, census blocks or tracts by clicking them on the map (yellow); click again to drop one. **＋ Streets around them** adds every street that borders or runs through them. While picking, clicks on the map pick areas instead of streets.
+  - **Save area** uses the picked areas' outline when there are some (else the lots along the streets, as before) and adds `area_set` and `areas` (their numbers) next to the CNNs. Opening that file brings the picks back.
+- **Assessor blocks in Areas** (Administrative: Assessor), loaded only when shown.
+- **Downloads:** pick what goes in with checkboxes (streets, businesses, parcels, census blocks, assessor blocks); a `kind` column says which is which.
+- **Map key:**
+  - Click a category (business kind, tree, city-owned land) to show only that one; click it again to show all but it; click others to add or remove them. The Layers chips follow.
+  - Long file names wrap instead of widening the key.
+- **Import:** files, links and **Google Drive** (the same picker as Matcher; a Sheet comes in under its own name) are folded into an Import row; "Airtable (coming soon)" holds its place. Format has a **Name** box to rename a file.
+- **Cards:**
+  - The checkboxes inside cards (the neighborhood "Map" box, "Show all registrations") no longer sit on top of the card's own checkbox, which was catching their clicks.
+  - Neighborhood groups copy as tab-separated rows, like businesses, and both lists have a CSV button.
+- **Layers:** Street trees moved below Hospitals / clinics.
+
 ## v62
 
 - **`scripts/match_blocks.py`** (copied from sf-blocks 2026.11.07.3): "Mt", "Ft" and "Pt" at the start of a street name mean Mount, Fort and Point ("Cayuga and Mt Vernon" was matching Vernon St). "Embarcadero" finds The Embarcadero without a note. A misspelled cross street is looked for among the streets that cross the other one ("Hayes & Octavai"). `--suggest` no longer takes a notes column ("busy", "near school") for locations. Nothing on the page changes.
