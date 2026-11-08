@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v65 -->
+<!-- build: v66 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -521,6 +521,10 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .sel-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
 .sel-check { display: flex; gap: 6px; align-items: center; margin: 8px 0 0 50px; font-size: 13px; cursor: pointer; }
 #pick-mode button { padding: 3px 8px; }
+.pick-chip.is-hl { background: #E5DBFF; border-color: #5F3DC4; }
+.tbl tbody tr.is-hl { background: #E5DBFF; }
+.jump-bar { position: sticky; bottom: 12px; display: flex; justify-content: flex-end; gap: 6px; margin: 8px 0 0; pointer-events: none; z-index: 5; }
+.jump-bar .btn { pointer-events: auto; box-shadow: 0 2px 8px rgba(30,35,64,.25); background: #fff; }
 .pick-list { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 0 50px; max-height: 96px; overflow: auto; }
 .pick-chip { display: inline-flex; border: 1.5px solid #B08900; background: #FFF3BF; border-radius: 999px; font-size: 12px; }
 .pick-chip button { border: 0; background: none; padding: 1px 6px; cursor: pointer; font: inherit; }
@@ -801,6 +805,8 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
             <button type="button" data-v="cblk" aria-pressed="false" data-i18n="pickCblk">Census blocks</button>
             <button type="button" data-v="ctract" aria-pressed="false" data-i18n="pickCtract">Tracts</button>
           </div></div>
+        <div class="sel-row"><span class="sel-step"></span>
+          <button type="button" class="btn small" id="pick-along" data-i18n="pickAlong" title="Pick the blocks on both sides of the checked streets">＋ Blocks along these streets</button></div>
         <div class="sel-row" id="pick-row" hidden><span class="sel-step"></span><span id="pick-count" class="sel-hint0"></span>
           <button type="button" class="btn small" id="pick-streets" data-i18n="pickStreets">＋ Streets around them</button>
           <button type="button" class="btn small" id="pick-clear" data-i18n="pickClear">Clear</button></div>
@@ -825,6 +831,10 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
     <ul class="seg-list feat-list" id="feat-list"></ul>
     <ul class="seg-list" id="seg-list"></ul>
     <button type="button" class="btn small list-clear" id="clear-sel-bottom" data-i18n="clearSel">Clear selections</button>
+    <div class="jump-bar" id="jump-bar" hidden>
+      <button type="button" class="btn small" id="jump-top" data-i18n="jumpTop">↑ Top</button>
+      <button type="button" class="btn small" id="jump-sel" data-i18n="jumpSel">Selection</button>
+    </div>
     <p class="foot-note" id="foot-note"></p>
   </section>
 </div>
@@ -1050,7 +1060,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v65';
+const _BUILD_VERSION = 'v66';
 
 /* =====================================================================
    CONFIG
@@ -1257,7 +1267,9 @@ const I18N = {
     selUndo: '↶ Undo', selUndone: 'Back to the streets before that', selShowAblk: 'Show the assessor blocks along these streets', selPick: 'Pick',
     pickOff: 'Off', pickAblk: 'Assessor blocks', pickCblk: 'Census blocks', pickCtract: 'Tracts', pickStreets: '＋ Streets around them', pickClear: 'Clear',
     pickCount: '{n} {set} picked', pickOn: 'Picking: clicks on the map pick areas. Choose Off (or press Esc) to click streets again; your picks stay.',
-    pickGo: 'Go to it', pickDrop: 'Drop {n}', pickCleared: 'Started over: {n} picks from the other set dropped',
+    pickGo: 'Go to it', pickAlong: '＋ Blocks along these streets', alongNone: 'No blocks found along the checked streets',
+    alongAdded: 'Picked {n} {set} along the streets', pickTipName: '{set} {n}', oneAblk: 'Assessor block', oneCblk: 'Census block', oneCtract: 'Census tract', oneArea: 'Area', pickTipAdd: 'Click to pick', pickTipDrop: 'Picked: click to drop',
+    jumpTop: '↑ Top', jumpSel: 'Selection', pickDrop: 'Drop {n}', pickCleared: 'Started over: {n} picks from the other set dropped',
     selOutline: 'Outline', outlineCenter: 'To the middle of the streets around them', outlineFilled: 'The blocks, streets between them filled', outlineBlocks: 'The blocks as they are',
     tablePicks: 'Picked {set} ({n})',
     fmtShape: 'Shape', shapeCircle: 'Circle', shapeStar: 'Star', shapeSquare: 'Square', shapeTriangle: 'Triangle', shapeDiamond: 'Diamond', pickHint: 'Click areas on the map to pick them; click again to drop one', pickNone: 'No streets around those areas',
@@ -2150,6 +2162,13 @@ function setupForm() {
   $('pick-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) SelAreas.pickMode(b.dataset.v); });
   $('pick-streets').addEventListener('click', () => SelAreas.streetsAround());
   $('pick-clear').addEventListener('click', () => SelAreas.clearPicks());
+  $('pick-list').addEventListener('mouseover', e => { const c = e.target.closest('[data-pick-chip]'); SelAreas.hoverArea(c ? c.dataset.pickChip : null); });
+  $('pick-list').addEventListener('mouseleave', () => SelAreas.hoverArea(null));
+  $('pick-along').addEventListener('click', () => SelAreas.alongStreets());
+  $('jump-top').addEventListener('click', () => window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' }));
+  $('jump-sel').addEventListener('click', () => { $('sel-panel').open = true; $('sel-panel').scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' }); });
+  const jumpBar = () => { $('jump-bar').hidden = window.scrollY < 500 || $('results').hidden; };
+  window.addEventListener('scroll', jumpBar, { passive: true });
   $('pick-list').addEventListener('click', e => { const x = e.target.closest('[data-pick-x]'), g = e.target.closest('[data-pick-go]');
     if (x) SelAreas.dropPick(x.dataset.pickX); else if (g) SelAreas.goPick(g.dataset.pickGo); });
   $('outline-how').addEventListener('change', () => SelAreas.previewOutline());
@@ -2175,6 +2194,7 @@ function startOver({ keepView = false } = {}) {
   streetBox.set(null, '');
   fromBox.set(null, ''); toBox.set(null, ''); intBox.set(null, ''); $('num-input').value = '';
   fromBox.enable(false); toBox.enable(false); intBox.enable(false); enableNum(false);
+  try { SelAreas.reset(); } catch (e) { }   // not there yet while the page starts
   render(); writeHash();
   if (!keepView) resetView();
 }
@@ -2183,6 +2203,7 @@ function clearSelections() {
   state.from = state.to = state.cross = null; state.num = ''; state.focusNode = null;
   fromBox.set(null, ''); toBox.set(null, ''); toBox.enable(false); intBox.set(null, '');
   $('num-input').value = '';
+  try { SelAreas.reset(); } catch (e) { }   // not there yet while the page starts
   setResults([], '', '');
 }
 function enableNum(on) { $('num-input').disabled = !on; $('step-num').classList.toggle('is-disabled', !on); }
@@ -2284,12 +2305,14 @@ function render() {
   Areas.updateShade();
   const box = $('results');
   const segs = state.results;
-  box.hidden = !segs.length && !state.title && !$('feat-list').children.length;
+  let picking = false; try { picking = SelAreas.active(); } catch (e) { }
+  box.hidden = !segs.length && !state.title && !$('feat-list').children.length && !picking;
   Drops.cards.prune(new Set(state.results.map(r => r.cnn)));
   $('results-title').textContent = state.title;
   const n = state.checked.size;
   $('results-sub').textContent = state.kind === 'pick' ? t('subPick', { n, total: segs.length }) : t('subAll', { n, total: segs.length });
-  ['apply', 'copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson', 'add-cross', 'add-around', 'area-save'].forEach(id => $(id).disabled = !n);
+  ['apply', 'copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson', 'add-cross', 'add-around', 'area-save', 'pick-along'].forEach(id => $(id).disabled = !n);
+  if (picking && SelAreas.picks().names.length) $('area-save').disabled = false;
   // Intersection results: intersection cards, then checked blocks as full cards, then the unchecked
   // blocks leading into the intersection as compact rows.
   const ints = segs.filter(isInt);
@@ -3065,6 +3088,7 @@ function addMapLayers() {
   Drops.onMap(popup);
   map.on('styleimagemissing', e => { if (String(e.id).startsWith('bp-shape-')) addShapeImages(); });
   map.on('click', e => SelAreas.onMapClick(e));
+  map.on('mousemove', e => SelAreas.onMapMove(e));
   collectLineLabelLayers();
   basemapLabelIds = map.getStyle().layers.filter(l => l.type === 'symbol' && !l.id.startsWith('bp-')).map(l => l.id);
   mapReady = true;
@@ -3173,12 +3197,12 @@ let basemapLabelIds = [], satOn = false;
 //   3D           buildings, when tilted
 //   labels       all of them, the basemap's (street and place names) included, so nothing above covers a name
 const LAYER_ORDER = [
-  ['shading', id => id === 'bp-pick-fill' || /^bp-drop-\d+-fill$/.test(id) || /^bp-area-.*-fill$/.test(id) || /^bp-water-over-/.test(id) || ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill', 'bp-lyr-buildings-fill'].includes(id)],
+  ['shading', id => id === 'bp-pick-fill' || id === 'bp-pick-hover-fill' || /^bp-drop-\d+-fill$/.test(id) || /^bp-area-.*-fill$/.test(id) || /^bp-water-over-/.test(id) || ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill', 'bp-lyr-buildings-fill'].includes(id)],
   ['edges', id => id === CONTOUR_LINE || ['bp-lyr-curbs', 'bp-lyr-landuse-line', 'bp-adj-lots-casing', 'bp-adj-lots', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-buildings-line'].includes(id)
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline'].includes(id)],
+  ['selection', id => ['bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
@@ -4750,7 +4774,7 @@ const Drops = (() => {
   function paintFor(f) {
     const m = DROP_SIZES[f.look.size] || 1, st = f.look.style, sized = !!f.look.sizeBy;
     const r = base => sized ? ['*', base * m, ['+', 0.45, ['*', 1.55, ['max', 0, ['get', '_s']]]]] : base * m;
-    const col = ['get', '_c'], sizeAt = base => ['*', r(base), 2 / SHAPE_CSS];
+    const col = ['get', '_c'], sizeAt = base => ['*', r(base), 1.8 * 2 / SHAPE_CSS];   // shapes read smaller than circles, and the outline eats into them
     return {
       sym: { 'icon-color': st === 'ring' ? 'rgba(0,0,0,0)' : col, 'icon-opacity': st === 'ghost' ? 0.45 : 0.95,
         'icon-halo-color': st === 'fill' ? '#FFFFFF' : col, 'icon-halo-width': st === 'fill' ? 1.2 : st === 'ring' ? 2 : 1 },
@@ -5593,7 +5617,7 @@ const Table = (() => {
       return `<td class="${numCol.has(c) ? 'tbl-num' : ''}" title="${esc(s.length > 30 ? s : '')}">${esc(s)}</td>`; };
     const lead = r => r.pick != null ? `<td><button type="button" class="tbl-card" data-tbl-unpick="${esc(r.pick)}" title="${esc(t('pickDrop', { n: r.pick }))}">×</button></td>` : isStreets ? `<td><input type="checkbox" data-tbl-check="${r.key}" ${state.checked.has(r.key) ? 'checked' : ''} aria-label="${esc(t('tableCheck'))}"></td>`
       : `<td><button type="button" class="tbl-card" data-tbl-card="${r.i}" aria-pressed="${Drops.cards.has ? !!Drops.cards.has(r.f.id, r.i) : false}">${esc(t('tableCard'))}</button></td>`;
-    const body = shown.map((r, n) => `<tr data-tbl-row="${n}" class="${isStreets && state.checked.has(r.key) ? 'is-checked' : ''}">${lead(r)}${cols.map(c => cell(r, c)).join('')}</tr>`).join('')
+    const body = shown.map((r, n) => `<tr data-tbl-row="${n}" ${r.pick != null ? `data-pick-row="${esc(r.pick)}"` : ''} class="${isStreets && state.checked.has(r.key) ? 'is-checked' : ''}">${lead(r)}${cols.map(c => cell(r, c)).join('')}</tr>`).join('')
       + (list.length > MAX ? `<tr class="tbl-more"><td colspan="${cols.length + 1}">${esc(t('tableMore', { n: MAX.toLocaleString() }))}</td></tr>` : '')
       + (!rows.length ? `<tr class="tbl-more"><td colspan="${cols.length + 1}">${esc(t(isStreets ? 'tableEmpty' : 'tableEmptyFile'))}</td></tr>` : '');
     const sc = $('tbl-scroll'), top = sc.scrollTop, left = sc.scrollLeft;
@@ -5637,8 +5661,9 @@ const Table = (() => {
     tb.addEventListener('mouseover', e => {
       const tr = e.target.closest('tr[data-tbl-row]'); const r = tr && shown[+tr.dataset.tblRow];
       if (r && r.s && !isInt(r.s)) previewSegs([r.s]);
+      if (r && r.pick != null) SelAreas.hoverArea(r.pick);
     });
-    tb.addEventListener('mouseleave', () => previewSegs([]));
+    tb.addEventListener('mouseleave', () => { previewSegs([]); SelAreas.hoverArea(null); });
     // drag the grip to resize; remembered in this browser
     const grip = $('tbl-grip');
     grip.addEventListener('pointerdown', e => {
@@ -5658,7 +5683,7 @@ const SelAreas = (() => {
   // undo: the selection before each grow step
   const history = [];
   function remember() {
-    history.push({ results: [...state.results], checked: new Set(state.checked), title: state.title });
+    history.push({ results: [...state.results], checked: new Set(state.checked), title: state.title, pickSet, picks: new Set(picks) });
     if (history.length > 30) history.shift();
     $('sel-undo').disabled = false;
   }
@@ -5666,6 +5691,7 @@ const SelAreas = (() => {
   function undo() {
     const h = history.pop(); if (!h) return;
     state.results = h.results; state.checked = h.checked; state.title = h.title;
+    if (h.pickSet !== undefined) { pickSet = h.pickSet; picks = h.picks; drawPicks(); }
     $('sel-undo').disabled = !history.length;
     render(); writeHash(); toast(t('selUndone'));
   }
@@ -5678,8 +5704,10 @@ const SelAreas = (() => {
     $('pick-count').textContent = pickSet ? t('pickCount', { n: picks.size, set: Areas.conf(pickSet).title || '' }) : '';
     $('pick-streets').disabled = !picks.size;
     const pl = $('pick-list'); pl.hidden = !picks.size;
-    pl.innerHTML = [...picks].sort((a, b) => a.localeCompare(b, 'en', { numeric: true })).map(n => `<span class="pick-chip"><button type="button" data-pick-go="${esc(n)}" title="${esc(t('pickGo'))}">${esc(n)}</button><button type="button" data-pick-x="${esc(n)}" aria-label="${esc(t('pickDrop', { n }))}">×</button></span>`).join('');
+    pl.innerHTML = [...picks].sort((a, b) => a.localeCompare(b, 'en', { numeric: true })).map(n => `<span class="pick-chip" data-pick-chip="${esc(n)}"><button type="button" data-pick-go="${esc(n)}" title="${esc(t('pickGo'))}">${esc(n)}</button><button type="button" data-pick-x="${esc(n)}" aria-label="${esc(t('pickDrop', { n }))}">×</button></span>`).join('');
     $('outline-row').hidden = !picks.size;
+    $('area-save').disabled = !state.checked.size && !picks.size;
+    if (picks.size || clicking) { $('results').hidden = false; $('sel-panel').open = true; }
     try { Table.refresh(); } catch (e) { }
     previewOutline();
     if (!mapReady) return;
@@ -5696,12 +5724,86 @@ const SelAreas = (() => {
     clicking = !!k;
     document.querySelectorAll('#pick-mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === k));
     map.getCanvas().style.cursor = k ? 'crosshair' : '';
+    if (!k) stopHover();
     if (k) {
       await Areas.need(k);
       // show that set's borders, to click on
       setArea('admin', k); if (areaMode.adminMode === 'off') setArea('adminMode', 'borders');
       toast(t('pickHint'));
     }
+    drawPicks();
+  }
+  // hover: the area under the pointer, its number and fields, outlined (picked or not), and its table row
+  let hoverPop = null, hovered = null;
+  function hoverArea(n) {
+    if (n === hovered) return;
+    hovered = n;
+    if (mapReady) {
+      if (!map.getSource('pick-hover')) {
+        map.addSource('pick-hover', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+        map.addLayer({ id: 'bp-pick-hover-fill', type: 'fill', source: 'pick-hover', paint: { 'fill-color': '#5F3DC4', 'fill-opacity': 0.12 } });
+        map.addLayer({ id: 'bp-pick-hover', type: 'line', source: 'pick-hover', paint: { 'line-color': '#5F3DC4', 'line-width': 3.5 } });
+        arrangeLayers();
+      }
+      const g = n != null && pickSet ? Areas.geom(pickSet, n) : null;
+      map.getSource('pick-hover').setData({ type: 'FeatureCollection', features: g ? [{ type: 'Feature', properties: {}, geometry: g }] : [] });
+    }
+    document.querySelectorAll('.is-hl[data-pick-chip], tr.is-hl[data-pick-row]').forEach(x => x.classList.remove('is-hl'));
+    if (n == null) return;
+    const sel = `[data-pick-chip="${CSS.escape(n)}"], tr[data-pick-row="${CSS.escape(n)}"]`;
+    document.querySelectorAll(sel).forEach(x => { x.classList.add('is-hl'); if (x.tagName === 'TR') x.scrollIntoView({ block: 'nearest' }); });
+  }
+  function areaTip(n) {
+    const c = Areas.conf(pickSet), p = Areas.props(pickSet, n) || {};
+    const rows = Object.entries(p).filter(([k, v]) => v != null && v !== '' && typeof v !== 'object' && !/^(name|block_num|parts)$/.test(k)).slice(0, 6)
+      .map(([k, v]) => `<br><span class="pop-lyr">${esc(k.replace(/_/g, ' '))}: ${esc(typeof v === 'number' ? v.toLocaleString() : v)}</span>`).join('');
+    return `<b>${esc(t('pickTipName', { set: t({ ablk: 'oneAblk', cblk: 'oneCblk', ctract: 'oneCtract' }[pickSet] || 'oneArea'), n }))}</b>${rows}<br><span class="pop-lyr">${esc(t(picks.has(n) ? 'pickTipDrop' : 'pickTipAdd'))}</span>`;
+  }
+  function onMapMove(e) {
+    if (!clicking) return;
+    const names = Areas.areasAt(pickSet, e.lngLat.lng, e.lngLat.lat), n = names.length ? names[names.length - 1] : null;
+    hoverPop ||= new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 14 });
+    if (n == null) { hoverPop.remove(); hoverArea(null); return; }
+    hoverPop.setLngLat(e.lngLat).setHTML(areaTip(n)).addTo(map);
+    hoverArea(n);
+  }
+  function stopHover() { if (hoverPop) hoverPop.remove(); hoverArea(null); }
+  // the areas along the checked streets: points beside each street (10–90% along, 10–24 m to each side)
+  async function alongStreets() {
+    const segs = checkedSegs().filter(s => !isInt(s));
+    if (!segs.length) { toast(t('alongNone')); return; }
+    const k = pickSet || 'ablk';
+    await Areas.need(k);
+    if (!pickSet) { pickSet = k; setArea('admin', k); if (areaMode.adminMode === 'off') setArea('adminMode', 'borders'); }
+    const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540, found = new Map();
+    for (const sg of segs) {
+      const c = sg.coords, cum = [0];
+      for (let i = 1; i < c.length; i++) cum.push(cum[i - 1] + Math.hypot((c[i][0] - c[i - 1][0]) * KX, (c[i][1] - c[i - 1][1]) * KY));
+      const L = cum[cum.length - 1], steps = Math.max(3, Math.round(L / 15));
+      for (let j = 0; j <= steps; j++) {
+        const d = L * (0.1 + 0.8 * j / steps);
+        let i = 1; while (i < c.length - 1 && cum[i] < d) i++;
+        const a = c[i - 1], b = c[i], f = (d - cum[i - 1]) / ((cum[i] - cum[i - 1]) || 1);
+        const x = a[0] + (b[0] - a[0]) * f, y = a[1] + (b[1] - a[1]) * f;
+        const dx = (b[0] - a[0]) * KX, dy = (b[1] - a[1]) * KY, len = Math.hypot(dx, dy) || 1;
+        for (const sd of [1, -1]) for (const off of [10, 16, 24]) {
+          const ns = Areas.areasAt(k, x + (-dy / len) * off * sd / KX, y + (dx / len) * off * sd / KY);
+          if (ns.length) { const n = ns[ns.length - 1]; found.set(n, (found.get(n) || 0) + 1); break; }
+        }
+      }
+    }
+    // a block touched by one sample only is usually a corner of the next block over
+    const add = [...found].filter(([n, c]) => c >= 2 && !picks.has(n)).map(([n]) => n);
+    if (!add.length) { toast(t('alongNone')); return; }
+    remember();
+    add.forEach(n => picks.add(n));
+    drawPicks();
+    toast(t('alongAdded', { n: add.length, set: Areas.conf(k).title || '' }));
+  }
+  function reset() {
+    picks = new Set(); pickSet = ''; clicking = false; stopHover();
+    document.querySelectorAll('#pick-mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === ''));
+    if (mapReady) map.getCanvas().style.cursor = '';
     drawPicks();
   }
   function onMapClick(e) {
@@ -5711,6 +5813,7 @@ const SelAreas = (() => {
     const n = names[names.length - 1];
     picks.has(n) ? picks.delete(n) : picks.add(n);
     drawPicks();
+    if (hoverPop && hoverPop.isOpen()) hoverPop.setHTML(areaTip(n));
   }
   function clearPicks() { picks = new Set(); drawPicks(); }
   function dropPick(n) { picks.delete(n); drawPicks(); }
@@ -5739,17 +5842,23 @@ const SelAreas = (() => {
         .map(sg => T.lineString(sg.coords));
       let faces = [];
       try { faces = T.polygonize(T.featureCollection(lines)).features; } catch (e) { console.warn('[block-party] polygonize', e); }
+      // a face goes in when a pick's middle is in it, or its own middle is in a pick (streets through a
+      // block, like Wilmot St, cut it into several faces)
       const keep = new Map(), covered = new Set();
+      const add = (i, o) => (keep.get(i) || keep.set(i, new Set()).get(i)).add(o);
       for (const o of feats) {
         const pt = T.pointOnFeature(o);
         const i = faces.findIndex(fc => T.booleanPointInPolygon(pt, fc));
-        if (i < 0) continue;
-        (keep.get(i) || keep.set(i, []).get(i)).push(o);
+        if (i >= 0) add(i, o);
       }
+      faces.forEach((fc, i) => {
+        const pt = T.pointOnFeature(fc), o = feats.find(o => T.booleanPointInPolygon(pt, o));
+        if (o) add(i, o);
+      });
       const parts = [];
       for (const [i, os] of keep) {
         // a face much bigger than the picks in it (a park or the bay with no street on one side): not this way
-        const inside = os.reduce((a, o) => a + T.area(o), 0);
+        const inside = [...os].reduce((a, o) => a + T.area(o), 0);
         if (T.area(faces[i]) > inside * 3 + 20000) continue;
         parts.push(faces[i]); os.forEach(o => covered.add(o.properties.n));
       }
@@ -5859,7 +5968,7 @@ const SelAreas = (() => {
   }
   async function save() {
     const segs = checkedSegs(), name = $('area-name').value.trim();
-    if (!segs.length) return;
+    if (!segs.length && !picks.size) return;
     if (!name) { $('area-name').focus(); toast(t('areaNeedName')); return; }
     $('area-status').textContent = t('areaWorking');
     let geom;
@@ -5913,7 +6022,8 @@ const SelAreas = (() => {
     render(); writeHash(); fitSegs(items);
     $('area-status').textContent = t('areaEditing', { name: (f.properties || {}).name || '', n: items.length });
   }
-  return { around, save, open, pick, undo, remember, forget, pickMode, onMapClick, clearPicks, dropPick, goPick, streetsAround, previewOutline, picking: () => clicking,
+  return { around, save, open, pick, undo, remember, forget, pickMode, onMapClick, onMapMove, hoverArea, alongStreets, reset, clearPicks, dropPick, goPick, streetsAround, previewOutline, picking: () => clicking,
+    active: () => clicking || picks.size > 0,
     picks: () => ({ set: pickSet, names: [...picks] }) };
 })();
 
