@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v68 -->
+<!-- build: v69 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -519,8 +519,19 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .sel-panel { margin-top: 8px; border: 1.5px solid var(--line); border-radius: 12px; padding: 6px 10px; background: #fff; }
 .sel-panel > summary { cursor: pointer; font-weight: 700; font-size: 14px; }
 .sel-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
-.sel-check { display: flex; gap: 6px; align-items: center; margin: 8px 0 0 50px; font-size: 13px; cursor: pointer; }
+.sel-check { display: flex; gap: 6px; align-items: center; margin: 8px 0 0 62px; font-size: 13px; cursor: pointer; }
 #pick-mode button { padding: 3px 8px; }
+.save-panel { margin-top: 10px; }
+.save-panel .dl-what { flex: 1 1 0; min-width: 0; }
+.bcol button { padding: 3px 7px; display: inline-flex; align-items: center; }
+.bcol i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 1.5px #fff, 0 0 0 2.5px rgba(30,35,64,.35); }
+.sel-sub { margin: 12px 0 0; font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.sel-indent { margin-left: 62px !important; margin-top: 0 !important; }
+.drop-box { border: 2px dashed var(--line); border-radius: 12px; padding: 8px 10px; margin: 6px 0; }
+.drop-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.drop-box small { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 12px; }
+.tab-pick-all { display: flex; gap: 6px; margin: 6px 0 0; }
+.lu-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
 .pick-chip.is-hl { background: #E5DBFF; border-color: #5F3DC4; }
 .tbl tbody tr.is-hl { background: #E5DBFF; }
 .jump-bar { position: sticky; bottom: 12px; display: flex; justify-content: flex-end; gap: 6px; margin: 8px 0 0; pointer-events: none; z-index: 5; }
@@ -539,8 +550,9 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .pick-chip button + button { padding-left: 2px; color: #7A5F00; }
 #outline-how { font: inherit; font-size: 13px; padding: 4px 8px; border: 2px solid var(--ink); border-radius: 999px; background: #fff; max-width: 100%; }
 .fmt-shapes button { display: inline-flex; align-items: center; justify-content: center; padding: 3px 8px; }
-.sel-step { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); width: 44px; }
-.sel-hint { font-size: 13px; color: var(--ink-soft); margin: 6px 0 0 50px; }
+.sel-step { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-soft); width: 56px; flex: none; overflow-wrap: anywhere; }
+#pick-count { font-size: 13px; color: var(--ink-soft); }
+.sel-hint { font-size: 13px; color: var(--ink-soft); margin: 6px 0 0 62px; }
 .area-name { flex: 1; min-width: 140px; font: inherit; font-size: 14px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
 .lyr-reset { display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 10px; }
 .lyr-reset small { color: var(--ink-soft); }
@@ -781,45 +793,49 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
     <p class="results-sub" id="results-sub"></p>
     <div class="actions">
       <button type="button" class="btn primary apply" id="apply" data-i18n="apply">Apply for a Block Party</button>
-      <div class="copy-row">
-        <span data-i18n="copyLabel">Copy:</span>
-        <button type="button" class="btn small" id="copy-csv" data-i18n="copyCsvShort" title="Copy as CSV">CSV</button>
-        <button type="button" class="btn small" id="copy-json" data-i18n="copyJsonShort" title="Copy as JSON">JSON</button>
-        <button type="button" class="btn small" id="copy-link" data-i18n="copyLinkShort" title="Copy link">Link</button>
-      </div>
-      <div class="copy-row">
-        <span data-i18n="dlLabel">Download:</span>
-        <span class="dl-what" id="dl-what" role="group" aria-label="What to download">
-          <label><input type="checkbox" value="blocks" checked> <span data-i18n="dlBlocks">Streets</span></label>
-          <label><input type="checkbox" value="businesses"> <span data-i18n="dlBusinessesS">Businesses</span></label>
-          <label><input type="checkbox" value="parcels"> <span data-i18n="dlParcelsS">Parcels</span></label>
-          <label><input type="checkbox" value="cblocks"> <span data-i18n="dlCblocksS">Census blocks</span></label>
-          <label><input type="checkbox" value="ablocks"> <span data-i18n="dlAblocksS">Assessor blocks</span></label>
-        </span>
-        <button type="button" class="btn small" id="dl-csv">CSV</button>
-        <button type="button" class="btn small" id="dl-geojson">GeoJSON</button>
-      </div>
+      <details class="sel-panel save-panel" id="save-panel">
+        <summary data-i18n="saveTitle">Copy / Save</summary>
+        <div class="sel-row"><span class="sel-step" data-i18n="copyStep">Copy</span>
+          <button type="button" class="btn small" id="copy-csv" data-i18n="copyCsvShort" title="Copy as CSV">CSV</button>
+          <button type="button" class="btn small" id="copy-json" data-i18n="copyJsonShort" title="Copy as JSON">JSON</button>
+          <button type="button" class="btn small" id="copy-link" data-i18n="copyLinkShort" title="Copy link">Link</button></div>
+        <div class="sel-row"><span class="sel-step" data-i18n="dlStep">Save</span>
+          <span class="dl-what" id="dl-what" role="group" aria-label="What to download">
+            <label><input type="checkbox" value="blocks" checked> <span data-i18n="dlBlocks">Streets and intersections</span></label>
+            <label><input type="checkbox" value="picked" checked> <span data-i18n="dlPicked">Blocks</span></label>
+            <label><input type="checkbox" value="parcels"> <span data-i18n="dlParcelsS">Parcels</span></label>
+            <label><input type="checkbox" value="businesses"> <span data-i18n="dlBusinessesS">Businesses</span></label>
+            <label><input type="checkbox" value="cblocks"> <span data-i18n="dlCblocksS">Census blocks</span></label>
+            <label><input type="checkbox" value="ablocks"> <span data-i18n="dlAblocksS">Assessor blocks along the streets</span></label>
+          </span></div>
+        <div class="sel-row"><span class="sel-step"></span>
+          <button type="button" class="btn small" id="dl-csv">CSV</button>
+          <button type="button" class="btn small" id="dl-geojson">GeoJSON</button></div>
+      </details>
       <details class="sel-panel" id="sel-panel">
-        <summary data-i18n="selTitle">Selection: grow, trim, save as an area</summary>
-        <div class="sel-row"><span class="sel-step" data-i18n="selGrow">Grow</span>
-          <button type="button" class="btn small" id="add-cross" data-i18n="crossBtn" title="Add the first block of every street that crosses these">＋ Cross streets</button>
-          <button type="button" class="btn small" id="add-around" data-i18n="aroundBtn" title="Add every street around the city blocks these face">＋ Around the blocks</button>
-          <button type="button" class="btn small" id="sel-undo" data-i18n="selUndo" disabled>↶ Undo</button></div>
-        <label class="sel-check"><input type="checkbox" id="sel-ablk"> <span data-i18n="selShowAblk">Show the assessor blocks along these streets</span></label>
+        <summary data-i18n="selTitle">Select blocks</summary>
         <div class="sel-row"><span class="sel-step" data-i18n="selPick">Pick</span>
-          <div class="lseg" role="group" id="pick-mode" aria-label="Pick areas on the map">
+          <div class="lseg" role="group" id="pick-mode" aria-label="Pick blocks on the map">
             <button type="button" data-v="" aria-pressed="true" data-i18n="pickOff">Off</button>
+            <button type="button" data-v="parcel" aria-pressed="false" data-i18n="pickParcels">Parcels</button>
             <button type="button" data-v="ablk" aria-pressed="false" data-i18n="pickAblk">Assessor blocks</button>
             <button type="button" data-v="cblk" aria-pressed="false" data-i18n="pickCblk">Census blocks</button>
             <button type="button" data-v="ctract" aria-pressed="false" data-i18n="pickCtract">Tracts</button>
           </div></div>
+        <p class="sel-hint" id="pick-on" hidden data-i18n="pickOn">Click inside one on the map to add it as a card. A click on a street still adds the street.</p>
         <div class="sel-row"><span class="sel-step"></span>
-          <button type="button" class="btn small" id="pick-along" data-i18n="pickAlong" title="Pick the blocks on both sides of the checked streets">＋ Blocks along these streets</button></div>
+          <button type="button" class="btn small" id="pick-along" data-i18n="pickAlong" title="Pick the blocks on both sides of the checked streets">＋ Blocks along selected streets</button></div>
+        <p class="sel-hint sel-indent" id="pick-along-what"></p>
         <div class="sel-row" id="pick-row" hidden><span class="sel-step"></span><span id="pick-count" class="sel-hint0"></span>
           <button type="button" class="btn small" id="pick-streets" data-i18n="pickStreets">＋ Streets around them</button>
           <button type="button" class="btn small" id="pick-clear" data-i18n="pickClear">Clear</button></div>
         <div class="pick-list" id="pick-list" hidden></div>
-        <p class="sel-hint" id="pick-on" hidden data-i18n="pickOn">Click inside a block on the map to add it as a card (click a street to add the street). Off stops adding blocks; they stay.</p>
+        <p class="sel-sub" data-i18n="selGrow">Extend street selections</p>
+        <div class="sel-row"><span class="sel-step"></span>
+          <button type="button" class="btn small" id="add-cross" data-i18n="crossBtn" title="Add the first block of every street that crosses these">＋ Cross streets</button>
+          <button type="button" class="btn small" id="add-around" data-i18n="aroundBtn" title="Add every street around the assessor blocks these face">＋ Around the blocks</button>
+          <button type="button" class="btn small" id="sel-undo" data-i18n="selUndo" disabled>↶ Undo</button></div>
+        <label class="sel-check"><input type="checkbox" id="sel-ablk"> <span data-i18n="selShowAblk">Show the assessor blocks along these streets</span></label>
         <p class="sel-hint" data-i18n="selTrim">Trim: click a street on the map to take it out (or uncheck its card).</p>
         <div class="sel-row" id="outline-row" hidden><span class="sel-step" data-i18n="selOutline">Outline</span>
           <select id="outline-how" aria-label="Outline">
@@ -1068,7 +1084,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v68';
+const _BUILD_VERSION = 'v69';
 
 /* =====================================================================
    CONFIG
@@ -1152,7 +1168,7 @@ const I18N = {
     loadFailed: 'Street data couldn’t load from sf-blocks or the copy here. Reload to try again.',
     bmMap: 'Map', bmSat: 'Satellite',
     lgCrossTitle: 'Show cross streets after you choose a block',
-    legend: 'Map key', lgChecked: 'Your blocks / intersections', lgCross: 'Cross streets', lgUnchecked: 'Matches',
+    legend: 'Map key', lgChecked: 'Your streets / intersections', lgCross: 'Cross streets', lgUnchecked: 'Matches',
     lgPreview: 'Preview', lgStreet: 'Your whole street', lgEnds: 'Corners', lgOther: 'Other streets',
     lgHint: 'Tap any street or corner to add it.',
     modeInt: 'Intersection', intLabel: 'Cross street', meetsN: 'meets {n} times', and: 'and',
@@ -1162,15 +1178,16 @@ const I18N = {
     copiedCsv: 'Copied as CSV', copiedJson: 'Copied as JSON', copiedLink: 'Link copied', copiedCnn: 'Copied CNN {cnn}',
     noMatch: 'No streets match “{q}”',
     ftAway: 'about {ft} ft',
-    blocksTouching: 'Blocks on {street} at {cross}',
+    blocksTouching: '{street} and {cross}',
     blocksBetween: '{street} between {a} and {b}',
-    blocksAtAddress: 'Blocks with {num} {street}',
-    closestTo: 'No block lists {num} {street}. These are the closest.',
-    linkedBlocks: 'Linked blocks',
-    aroundIntersection: 'Blocks around {a} and {b}',
+    blocksAtAddress: '{num} {street}',
+    closestTo: 'No street lists {num} {street}. These are the closest.',
+    linkedBlocks: 'Your selection',
+    aroundIntersection: 'Around {a} and {b}',
     noIntersection: '{a} and {b} don’t meet. Showing {a}.',
-    subPick: 'Check each block that’s part of your event. {n} of {total} checked.',
-    subAll: '{n} of {total} checked.',
+    subPick: 'Check each street that’s part of your event. {what}',
+    subAll: '{what}', subStreets: '{n} streets', subStreet1: '1 street', subStreetsOf: '{n} of {total} streets checked', subInts: '{n} intersections', subInt1: '1 intersection', subIntsOf: '{n} of {total} intersections checked',
+    subNone: 'Nothing checked yet',
     between: '{a} to {b}',
     addrLabel: 'Addresses', district: 'Supervisor district', zip: 'ZIP code',
     nhood: 'Neighborhood', anhood: 'Analysis neighborhood',
@@ -1194,7 +1211,7 @@ const I18N = {
     quietNarrow: 'Narrow them down', quiet_dead: 'Dead ends', quiet_ped: 'Pedestrian streets',
     quiet_unmaint: 'Not maintained by the city', quiet_res: 'Residential streets only',
     quiet_resHint: 'Leaves out collectors, arterials, and bigger', quiet_flat: 'Flat to moderate (under 10%)',
-    quietCount: '{n} blocks match', quietNone: 'Pick at least one in the first group', quietHint: 'Matches show in magenta. Tap one to add it to your list.',
+    quietCount: '{n} streets match', quietNone: 'Pick at least one in the first group', quietHint: 'Matches show in magenta. Tap one to add it to your list.',
     quietClear: 'Clear', lgQuiet: 'Quiet street matches', lgOneway: 'One-way',
     north: 'north', south: 'south', east: 'east', west: 'west',
     dataNote: 'Street data from DataSF, Streets – Active and Retired, updated {date}.',
@@ -1239,7 +1256,7 @@ const I18N = {
     recPlanted: 'Planted', recSite: 'Site', recCare: 'Cared for by', recAddress: 'Address', recCnn: 'Block (CNN)', recOwner: 'Owner', recMail: 'Mail to', recLicense: 'License',
     recIndustry: 'Industry', recSince: 'Here since', recHidden: 'Hidden unless Show all: {kind}', recBizN: '{n} businesses here', recSource: 'Source: {src}', chipsShown: '{n} of {of} kinds shown', chipsShownN: '{n} of {of} kinds · {total}', treesTotal: '{n} trees',
     bizTotal: '{n} at {a} addresses', nextToN: '{n} places', lgBizSize: 'Bigger dot: more businesses there. Color: the most storefront-like one.', lgAsOf: 'Data from {d}', bizAddrsHere: '{n} addresses here', bizMoreAddrs: '+{n} more addresses',
-    grpFiles: 'Your files', dropPick: 'Add a CSV or GeoJSON…', dropHint: 'or drop one on the page. Files stay in this tab; nothing is uploaded.',
+    grpFiles: 'Your files', dropPick: 'GeoJSON/CSV', dropHint: 'or drag & drop. Files stay in this tab; nothing is uploaded',
     dropZone: 'Drop a CSV or GeoJSON to add it as a layer', dropCount: '{n} on the map', dropSkipped: '{n} without a location', dropRemove: 'Remove this file',
     dropAdded: 'Added {name}: {n} on the map', dropAddedSkip: 'Added {name}: {n} on the map, {k} rows without a location', dropBad: "Couldn't read {name}",
     dropNone: 'No locations in {name}: it needs lat/lon columns, WKT, a CNN column, or GeoJSON', dropYours: 'your file', dropUnnamed: '(no name)',
@@ -1264,7 +1281,7 @@ const I18N = {
     flavor_light: 'Light', flavor_white: 'White', flavor_grayscale: 'Gray', flavor_dark: 'Dark', flavor_black: 'Black',
     flavorFail: 'Couldn’t load that map style. Try again in a moment.',
     lgToggle: 'Show or hide', lgShadeAdmin: '{set} along your blocks (shaded)',
-    dlLabel: 'Download:', dlBlocks: 'Streets', dlAll: 'All of these', dlBusinessesS: 'Businesses', dlParcelsS: 'Parcels', dlCblocksS: 'Census blocks', dlAblocksS: 'Assessor blocks',
+    dlLabel: 'Download:', dlBlocks: 'Streets and intersections', dlBlocksOld: 'Streets', dlAll: 'All of these', dlBusinessesS: 'Businesses', dlParcelsS: 'Parcels', dlCblocksS: 'Census blocks', dlAblocksS: 'Assessor blocks along the streets',
     dlPick: 'Check what to download first', dlBusinesses: 'Businesses along them', dlParcels: 'Parcels along them', dlCblocks: 'Census blocks along them',
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
     tableBtn: 'Table', tableGrip: 'Drag to resize', tableSearch: 'Search rows', tableAllCols: 'All columns', tableClose: 'Close the table',
@@ -1274,35 +1291,39 @@ const I18N = {
     tableEmptyFile: 'No rows in this file.',
     selUndo: '↶ Undo', selUndone: 'Back to the streets before that', selShowAblk: 'Show the assessor blocks along these streets', selPick: 'Pick',
     pickOff: 'Off', pickAblk: 'Assessor blocks', pickCblk: 'Census blocks', pickCtract: 'Tracts', pickStreets: '＋ Streets around them', pickClear: 'Clear',
-    pickCount: '{n} {set} picked', pickOn: 'Click inside a block on the map to add it as a card (click a street to add the street). Off stops adding blocks; they stay.',
-    subBlocks: '· {n} blocks', subBlock1: '· 1 block', blkStreets: 'Streets around', blkStreetsN: '{n} blocks of street', blkAddStreets: '＋ Add {n}', blkNoStreets: 'No streets around it',
+    pickCount: '{what} picked', pickOn: 'Click inside one on the map to add it as a card. A click on a street still adds the street.',
+    subBlocks: '· {n} blocks', subBlock1: '· 1 block', cntAblk: '{n} assessor blocks', cntAblk1: '1 assessor block', cntCblk: '{n} census blocks', cntCblk1: '1 census block',
+    cntCtract: '{n} tracts', cntCtract1: '1 tract', cntParcel: '{n} parcels', cntParcel1: '1 parcel', cntArea: '{n} areas', cntArea1: '1 area', blkStreets: 'Streets around', blkStreetsN: '{n} streets', blkAddStreets: '＋ Add {n}', blkNoStreets: 'No streets around it',
     blkSize: 'Size', blkAcres: '{n} acres', blkIn: 'In', blkChip: 'Block', blkCopy: 'Copy the block number', blkCopied: 'Copied block {n}', homesOnBlock: 'Homes on the block', landuseNoteBlock: 'Land use: SF Planning, 2023. Every lot on the block.',
-    pickGo: 'Go to it', pickAlong: '＋ Blocks along these streets', alongNone: 'No blocks found along the checked streets',
+    pickGo: 'Go to it', pickParcels: 'Parcels', pickParcel: 'parcels', oneParcel: 'Parcel', lotChip: 'Lot', lotCopy: 'Copy the lot number', homesLot: 'Homes',
+    blkPeople: 'People and homes', blkPeopleN: '{p}, {h} (2020 census)', blkPeopleEst: '{p}, {h} (2020 census, estimated from the census blocks under it)', person: 'person', people: 'people', home1: 'home', homesW: 'homes',
+    bizRowBlk: 'Businesses inside', pickAlong: '＋ Blocks along selected streets', alongWhat: '{list}', alongMore: 'and {n} more', alongScattered: '{street} ({n} streets)', alongNone: 'No blocks found along the checked streets',
     alongAdded: 'Picked {n} {set} along the streets', pickTipName: '{set} {n}', oneAblk: 'Assessor block', oneCblk: 'Census block', oneCtract: 'Census tract', oneArea: 'Area', pickTipAdd: 'Click to pick', pickTipDrop: 'Picked: click to drop',
     jumpTop: '↑ Top', jumpSel: 'Selection', pickDrop: 'Drop {n}', pickCleared: 'Started over: {n} picks from the other set dropped',
     selOutline: 'Outline', outlineCenter: 'To the middle of the streets around them', outlineFilled: 'The blocks, streets between them filled', outlineBlocks: 'The blocks as they are',
     tablePicks: 'Picked {set} ({n})',
     fmtShape: 'Shape', shapeCircle: 'Circle', shapeStar: 'Star', shapeSquare: 'Square', shapeTriangle: 'Triangle', shapeDiamond: 'Diamond', pickHint: 'Click inside blocks on the map to add them; click one again to drop it', pickNone: 'No streets around those areas',
     pickAdded: 'Added {n} streets around {a} areas',
-    selTitle: 'Selection: grow, trim, save as an area', selGrow: 'Grow', selSave: 'Save', selEdit: 'Edit',
+    selTitle: 'Select blocks', selGrow: 'Extend street selections', saveTitle: 'Copy / Save', copyStep: 'Copy', dlStep: 'Save', dlPicked: 'Blocks', selSave: 'Save', selEdit: 'Edit',
     selTrim: 'Trim: click a street on the map to take it out (or uncheck its card).',
     aroundBtn: '＋ Around the blocks', aroundWorking: 'Finding the streets around these blocks…', aroundNone: 'No more streets around these blocks',
-    aroundAdded: 'Added {n} streets around {b} city blocks',
+    aroundAdded: 'Added {n} streets around {b} assessor blocks',
     areaNamePh: 'Name, like Fillmore Street', areaSave: 'Save area', areaOpen: 'Open an areas file…', areaNeedName: 'Give the area a name first',
     areaWorking: 'Drawing the outline from the lots along these streets…', areaFail: 'Couldn’t draw the outline. Try again in a moment.',
     areaSaved: 'Saved {name} ({n} streets) as {file}.', areaSavedIn: 'Saved {name} ({n} streets) into {file}, with the other areas in it.',
     areaOpened: 'Opened {file}: {n} areas. Pick one to edit its streets.', areaPick: 'Pick an area ({n})…',
     areaEditing: 'Editing {name}: {n} streets. Grow or trim, then Save area.', areaNoCnns: 'That area has no CNNs to select',
-    crossBtn: '＋ Cross streets', crossAdded: 'Added {n} cross-street blocks', crossNone: 'No more cross streets to add',
+    crossBtn: '＋ Cross streets', crossAdded: 'Added {n} cross streets', crossNone: 'No more cross streets to add',
     importTitle: 'Import', importHint: 'A file, a link, Google Drive', fmtName: 'Name',
-    driveBtn: 'Open from Google Drive', driveNotSetUp: 'Google Drive isn’t set up for this site yet', driveFail: 'Couldn’t open that from Google Drive: {err}',
+    driveBtn: 'Google', driveTitle: 'Open a sheet or file from Google Drive', driveNotSetUp: 'Google Drive isn’t set up for this site yet', driveFail: 'Couldn’t open that from Google Drive: {err}',
     driveNoPlaces: 'No places found in {name}: it needs lat/lon columns, WKT, a CNN column, or intersections like "Mission St & 16th St"',
-    tabTitle: 'Tabs in {name}', tabHint: 'Tabs with places are checked. Each one you add becomes its own file.', tabRows: '{n} rows', tabNoPlaces: 'no places found',
+    tabTitle: 'Tabs in {name}', tabHint: 'Each tab you add becomes its own file. The biggest one with places is checked.', tabAll: 'Select all', tabNone: 'Select none', tabRows: '{n} rows', tabNoPlaces: 'no places found',
     tabPoints: '{n} with locations', tabCnns: '{n} with CNNs', tabCorners: '{n} intersections found', tabCancel: 'Cancel', tabAdd: 'Add checked tabs',
-    driveFirstTab: 'Opened the “{tab}” tab ({n} tabs have rows)', airtableBtn: 'Airtable (coming soon)', airtableSoon: 'Reading Airtable views is next',
+    driveFirstTab: 'Opened the “{tab}” tab ({n} tabs have rows)', airtableBtn: 'Airtable', airtableSoon: 'Airtable: coming soon',
     bm3d: '3D', bm3dOn: 'On', bm3dOff: 'Off', bm3dHint: 'Tilt, hills and 3D buildings. Off: a flat map for older devices, and the 3D button shows contours.', bmAddresses: 'Addresses (house numbers)', btnContoursTitle: 'Show contour lines (10 ft)', btn3dTitle: 'Tilt the map to see the hills',
     lgTreeSize: 'Bigger dot: thicker trunk; dark ring: Significant Tree', grpAround: 'Getting around', grpStreet: 'On the street', grpLand: 'Land and buildings', grpTerrain: 'Terrain', grpMore: 'More', aQuietBase: 'Hide parks and places on the map',
-    lgMuniNums: 'numbers', lgMuniNumsOut: 'Route numbers show from zoom {z}', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick',
+    lgMuniNums: 'numbers', lgMuniNumsOut: 'Route numbers show from zoom {z}', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick', aMedium: 'Medium', aSolid: 'Solid', aDashed: 'Dashed', aLabelsOn: 'Labels', aLabelsOff: 'No labels',
+    bc_own: 'Its own color', bc_dark: 'Dark', bc_gray: 'Gray', bc_orange: 'Orange',
     lgNoOne: 'no one lives there (parks, water): clear', lgParcelLines: 'Parcels (lot lines)',
     lgDensity: '{set}: {what} ({src})', densityUnit: 'people per sq mi',
     censusNoteInt: '2020 census, counted halfway down each street from the corner',
@@ -1325,7 +1346,7 @@ const I18N = {
     area_cbd: 'CBD', area_cult: 'Cultural', area_hist: 'Historic',
     lgAreaBorders: '{set} districts', lgAreaSet: '{set}', lgAreaShaded: '(yours shaded)',
     cardElected: 'Elected districts', cardSpecial: 'Special districts', cardAdmin: 'Administrative',
-    lyr_contours: 'Contours', lyr_contoursHint: 'Elevation lines', lyrOff: 'Off', lyrClose: 'Close up', lyrAlways: 'Always', lyrOn: 'On',
+    lyr_contours: 'Contours', lyr_contoursHint: 'Elevation lines', lyr_hillshade: 'Hillshade', lyr_hillshadeHint: 'Shading on the hills', lyrOff: 'Off', lyrClose: 'Close up', lyrAlways: 'Always', lyrOn: 'On',
     lgMuni: 'Muni routes', lgBike: 'Bike lanes (dashed: shared routes)', lgSchools: 'Schools', lgStations: 'Fire / police stations', lgHealth: 'Hospitals / clinics',
     bike_separated: 'Separated bikeway', bike_lane: 'Bike lane', bike_path: 'Bike path', bike_route: 'Bike route', bike_neighborway: 'Neighborway',
     barrier: 'barrier: {b}', hoverSlope: 'Slope {avg}% average{max} · {grade}', hoverSteepest: ', steepest {pct}%',
@@ -2163,7 +2184,7 @@ function setupForm() {
   $('clear-sel').addEventListener('click', clearSelections);
   $('clear-sel-bottom').addEventListener('click', clearSelections);
   $('copy-csv').addEventListener('click', async () => copyText(toCSV(await exportSegs()), t('copiedCsv')));
-  $('copy-json').addEventListener('click', async () => copyText(JSON.stringify((await exportSegs()).map(record), null, 2), t('copiedJson')));
+  $('copy-json').addEventListener('click', async () => copyText(JSON.stringify(copyRecords(await exportSegs()), null, 2), t('copiedJson')));
   $('copy-link').addEventListener('click', () => copyText(linkFor(checkedSegs()), t('copiedLink')));
   $('dl-csv').addEventListener('click', () => Downloads.go('csv'));
   $('dl-geojson').addEventListener('click', () => Downloads.go('geojson'));
@@ -2180,6 +2201,8 @@ function setupForm() {
   $('pick-along').addEventListener('click', () => SelAreas.alongStreets());
   $('jump-top').addEventListener('click', () => window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' }));
   $('jump-sel').addEventListener('click', () => { $('sel-panel').open = true; $('sel-panel').scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' }); });
+  const alongWhat = () => { try { $('pick-along-what').textContent = describeStreets(checkedSegs().filter(s => !isInt(s))); } catch (e) { } };
+  document.addEventListener('bp-rendered', alongWhat);
   const jumpBar = () => { $('jump-bar').hidden = window.scrollY < 500 || $('results').hidden; };
   window.addEventListener('scroll', jumpBar, { passive: true });
   $('pick-list').addEventListener('click', e => { const x = e.target.closest('[data-pick-x]'), g = e.target.closest('[data-pick-go]');
@@ -2258,10 +2281,12 @@ function selectIntersection(name) {
   previewInts(null);
   const { ints, legs } = Logic.intersectionOf(state.street, name);
   if (!ints.length) { setResults([], '', ''); return; }
-  setResults([...ints, ...legs], intName(ints[0]), 'int', ints.map(i => i.cnn));
+  // the blocks leading in are left out until that list is redesigned (SHOW_LEGS)
+  setResults(SHOW_LEGS ? [...ints, ...legs] : ints, intName(ints[0]), 'int', ints.map(i => i.cnn));
   fitSegs([...ints, ...legs]);
 }
 const isInt = o => o && o.kind === 'int';
+const SHOW_LEGS = false;
 function intName(i) {
   const names = i.streets.map(P);
   return names.length <= 2 ? names.join(` ${t('and')} `) : `${names.slice(0, -1).join(', ')} ${t('and')} ${names[names.length - 1]}`;
@@ -2324,9 +2349,15 @@ function render() {
   $('results-title').textContent = state.title;
   const n = state.checked.size;
   let nBlk = 0; try { nBlk = SelAreas.count(); } catch (e) { }
-  $('results-sub').textContent = (state.kind === 'pick' ? t('subPick', { n, total: segs.length }) : t('subAll', { n, total: segs.length })) + (nBlk ? ' ' + t(nBlk === 1 ? 'subBlock1' : 'subBlocks', { n: nBlk }) : '');
+  // what's in the list: "3 streets · 1 intersection · 2 assessor blocks", or "3 of 4 streets checked"
+  const kindLine = (all, k1, kN, kOf) => { const c = all.filter(o => state.checked.has(o.cnn)).length;
+    return !all.length ? '' : c === all.length ? t(all.length === 1 ? k1 : kN, { n: all.length }) : t(kOf, { n: c, total: all.length }); };
+  const what = [kindLine(segs.filter(o => !isInt(o)), 'subStreet1', 'subStreets', 'subStreetsOf'), kindLine(segs.filter(isInt), 'subInt1', 'subInts', 'subIntsOf'),
+    nBlk ? SelAreas.countText() : ''].filter(Boolean).join(' · ') || t('subNone');
+  $('results-sub').textContent = state.kind === 'pick' ? t('subPick', { what }) : t('subAll', { what });
   if (!state.title && nBlk) $('results-title').textContent = t('linkedBlocks');
-  ['apply', 'copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson', 'add-cross', 'add-around', 'area-save', 'pick-along'].forEach(id => $(id).disabled = !n);
+  ['apply', 'add-cross', 'add-around', 'area-save', 'pick-along'].forEach(id => $(id).disabled = !n);
+  ['copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson'].forEach(id => $(id).disabled = !n && !nBlk);
   if (picking && SelAreas.picks().names.length) $('area-save').disabled = false;
   // Intersection results: intersection cards, then checked blocks as full cards, then the unchecked
   // blocks leading into the intersection as compact rows.
@@ -2361,6 +2392,21 @@ function render() {
   $('foot-note').textContent = d ? t('dataNote', { date: d.slice(0, 10) }) : '';
   drawResults();
   Table.refresh();
+  document.dispatchEvent(new Event('bp-rendered'));
+}
+// checked streets in words: "Valencia St, 24th St to 14th St · Market St, Guerrero St to Dolores St"
+function describeStreets(segs) {
+  const by = new Map();
+  for (const s of segs) (by.get(s.street) || by.set(s.street, []).get(s.street)).push(s);
+  const parts = [...by].map(([street, ss]) => {
+    const deg = new Map();
+    for (const s of ss) for (const n of [s.fn, s.tn]) deg.set(n, (deg.get(n) || 0) + 1);
+    const ends = [...deg].filter(([, d]) => d === 1).map(([n]) => n);
+    const nameAt = n => { const s = ss.find(o => o.fn === n); return s ? s.f : ss.find(o => o.tn === n).t; };
+    if (ends.length === 2 && deg.size === ss.length + 1) return `${P(street)}, ${P(nameAt(ends[0]))} – ${P(nameAt(ends[1]))}`;
+    return t('alongScattered', { street: P(street), n: ss.length });
+  });
+  return parts.length > 3 ? `${parts.slice(0, 3).join(' · ')} · ${t('alongMore', { n: parts.length - 3 })}` : parts.join(' · ');
 }
 function intCardHTML(i) {
   const on = state.checked.has(i.cnn);
@@ -2607,7 +2653,8 @@ function setupResultsEvents() {
   $('seg-list').addEventListener('toggle', e => {
     const d = e.target, k = d.matches && (d.matches('details.fold[data-fold="trees"]') ? 'trees' : d.matches('details.biz') ? 'businesses' : null);
     if (!k) return;
-    const cnn = +d.closest('[data-cnn]').dataset.cnn;
+    const host = d.closest('[data-cnn]'); if (!host) return;   // block cards: no rings yet
+    const cnn = +host.dataset.cnn;
     if (d.open) Tiles.highlight(cnn, k);
     else if (Tiles.hlFor === cnn + '|' + k) Tiles.highlight(null, k);
   }, true);
@@ -2695,7 +2742,7 @@ function record(s) {
   const sides = Logic.addressSides(s);
   const side = p => { const x = sides.find(y => y.parity === p); return x ? x.side : ''; };
   return {
-    type: 'block', cnn: s.cnn, streetname: s.street, from_street: s.f, to_street: s.t,
+    type: 'street', cnn: s.cnn, streetname: s.street, from_street: s.f, to_street: s.t,
     lf_fadd: s.lf[0], lf_toadd: s.lf[1], rt_fadd: s.rt[0], rt_toadd: s.rt[1],
     odd_side: side('odd'), even_side: side('even'),
     divided_side: s.partners.length ? s.dividedSide : '',
@@ -2720,10 +2767,16 @@ function tileFields(s) {
   return { street_trees: r && r.trees ? r.trees.n : '', street_tree_kinds: r && r.trees ? r.trees.kinds.map(([k, n]) => `${k} (${n})`).join('; ') : '',
     businesses: b ? b.reduce((a, x) => a + x.shown.length, 0) : '', business_addresses: b ? b.length : '' };
 }
+// streets and intersections, then the picked blocks or parcels, one kind column (and every column any row has)
+function copyRecords(segs) {
+  const rows = segs.map(record).map(r => ({ kind: r.type || 'street', ...r }));
+  let picked = []; try { picked = SelAreas.exportRows().map(r => r.props); } catch (e) { }
+  return [...rows, ...picked];
+}
 function toCSV(segs) {
-  const rows = segs.map(record);
+  const rows = copyRecords(segs);
   if (!rows.length) return '';
-  const cols = Object.keys(rows[0]);
+  const cols = [...new Set(rows.flatMap(r => Object.keys(r)))];
   const cell = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   return [cols.join(','), ...rows.map(r => cols.map(c => cell(r[c])).join(','))].join('\n');
 }
@@ -2739,7 +2792,11 @@ function applyUrl(segs) {
   return u.href;
 }
 const baseUrl = () => location.origin + location.pathname;
-function linkFor(segs) { return baseUrl() + '#cnn=' + segs.map(s => s.cnn).join(','); }
+function linkFor(segs) {
+  let pk = ''; try { pk = SelAreas.pickHash(); } catch (e) { }
+  const parts = [segs.length ? 'cnn=' + segs.map(s => s.cnn).join(',') : '', pk ? 'pick=' + pk : ''].filter(Boolean);
+  return baseUrl() + (parts.length ? '#' + parts.join('&') : '');
+}
 
 /* ---------- URL hash ----------
    #cnn=4888101,4888201        blocks by CNN (checked)
@@ -2747,6 +2804,7 @@ function linkFor(segs) { return baseUrl() + '#cnn=' + segs.map(s => s.cnn).join(
    #street=dolores,27th        blocks around an intersection
    &all=1                      include retired / non-public streets
    &lang=es                    interface language (when available)
+   &pick=ablk:0587;0588        picked blocks (or parcel:<lot>;<lot>, cblk:, ctract:)
 */
 let writingHash = false;
 function writeHash() {
@@ -2804,6 +2862,7 @@ function applyHash() {
       const legs = new Map();
       for (const x of ints) for (const s of Logic.db.segsAtNode.get(x.cnn) || []) if (Logic.eligible(s)) legs.set(s.cnn, s);
       const extra = items.filter(o => !isInt(o));
+      if (!SHOW_LEGS) legs.clear();
       extra.forEach(s => legs.set(s.cnn, s));
       setResults([...ints, ...legs.values()], ints.length === 1 ? intName(i) : t('linkedBlocks'), 'int', items.map(o => o.cnn));
       fitSegs([...ints, ...legs.values()]);
@@ -2936,7 +2995,7 @@ function addMapLayers() {
   map.addSource('dem-terrain', dem);
   map.addSource('dem-hillshade', { ...dem });
   // hillshade sits on the basemap, under the satellite layer and all Block Party layers
-  map.addLayer({ id: 'bp-hillshade', type: 'hillshade', source: 'dem-hillshade',
+  map.addLayer({ id: 'bp-hillshade', type: 'hillshade', source: 'dem-hillshade', layout: { visibility: overlayMode.hillshade === 'off' ? 'none' : 'visible' },
     paint: {
       'hillshade-exaggeration': 0.35,
       'hillshade-shadow-color': '#3B4070',
@@ -3395,7 +3454,7 @@ const OVERLAYS = {
   stations: { url: 'stations.geojson', layers: ['bp-lyr-stations'] },
   health:   { url: 'health.geojson',   layers: ['bp-lyr-health'] },
 };
-const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', slow: 'close', landuse: 'off', lands: 'close', schools: 'close', stations: 'close', health: 'close', contours: 'off' };
+const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', slow: 'close', landuse: 'off', lands: 'close', schools: 'close', stations: 'close', health: 'close', contours: 'off', hillshade: 'on' };
 const overlayMode = { ...OVERLAY_DEFAULT };
 const overlayLoaded = new Set();
 const POI_LAYERS = ['bp-lyr-schools', 'bp-lyr-stations', 'bp-lyr-health'];
@@ -3413,7 +3472,7 @@ const LAYER_SECTIONS = [
   ['grpAround', ['muni', 'bike', 'slow']],
   ['grpStreet', ['businesses', 'schools', 'stations', 'health', 'trees']],
   ['grpLand', ['landuse', 'lands', 'buildings', 'curbs']],
-  ['grpTerrain', ['contours']],
+  ['grpTerrain', ['contours', 'hillshade']],
   ['grpBasemap', ['basemap']],
 ];
 // 3D on (the default: tilt, terrain, 3D buildings) or off (Layers > Basemap): a flat map for older devices.
@@ -4415,6 +4474,8 @@ const Tiles = (() => {
     get hlFor() { return hlFor; },
     // card rows: trees (by CNN) and businesses (by address on this block), or null while being read
     peek: s => cache.get(s.cnn) || null,
+    merge: rs => mergeTiles(rs),
+    put: (k, r) => cache.set(k, r),
     fetch(s) {
       if (!meta.size || !window.pmtiles) return Promise.resolve(null);
       if (cache.has(s.cnn)) return Promise.resolve(cache.get(s.cnn));
@@ -5007,10 +5068,14 @@ const Drops = (() => {
   function pickTabs(name, tabs, done) {
     let dlg = $('tab-pick');
     if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'tab-pick'; dlg.className = 'tab-pick'; document.body.appendChild(dlg); }
+    // only the tab with the most rows (that has places) starts checked
+    const top = tabs.reduce((b, tb, i) => tb.found && (b < 0 || tb.n > tabs[b].n) ? i : b, -1);
     const how = tb => !tb.found ? t('tabNoPlaces') : t(tb.how === 'corner' ? 'tabCorners' : tb.how === 'cnn' ? 'tabCnns' : 'tabPoints', { n: tb.found.toLocaleString() });
     dlg.innerHTML = `<form method="dialog"><h3>${esc(t('tabTitle', { name }))}</h3><p class="muted">${esc(t('tabHint'))}</p>
-      <ul>${tabs.map((tb, i) => `<li><label><input type="checkbox" value="${i}" ${tb.found ? 'checked' : 'disabled'}> <b>${esc(tb.title)}</b> <span class="muted">${esc(t('tabRows', { n: tb.n.toLocaleString() }))} · ${esc(how(tb))}</span></label></li>`).join('')}</ul>
+      <div class="tab-pick-all"><button type="button" class="btn small" data-tabs="all">${esc(t('tabAll'))}</button><button type="button" class="btn small" data-tabs="none">${esc(t('tabNone'))}</button></div>
+      <ul>${tabs.map((tb, i) => `<li><label><input type="checkbox" value="${i}" ${i === top ? 'checked' : ''} ${tb.found ? '' : 'disabled'}> <b>${esc(tb.title)}</b> <span class="muted">${esc(t('tabRows', { n: tb.n.toLocaleString() }))} · ${esc(how(tb))}</span></label></li>`).join('')}</ul>
       <div class="tab-pick-btns"><button value="cancel" class="btn small">${esc(t('tabCancel'))}</button><button value="ok" class="btn small primary">${esc(t('tabAdd'))}</button></div></form>`;
+    dlg.querySelectorAll('[data-tabs]').forEach(b => b.onclick = () => dlg.querySelectorAll('li input:not(:disabled)').forEach(i => i.checked = b.dataset.tabs === 'all'));
     dlg.onclose = () => { if (dlg.returnValue === 'ok') done([...dlg.querySelectorAll('input:checked')].map(i => tabs[+i.value])); };
     dlg.showModal();
   }
@@ -5056,10 +5121,11 @@ const Drops = (() => {
         <div class="lseg" role="group" aria-label="${esc(f.name)}"><button type="button" data-drop-on="0" aria-pressed="${!f.on}">${esc(t('lyrOff'))}</button><button type="button" data-drop-on="1" aria-pressed="${f.on}">${esc(t('lyrOn'))}</button></div>
         <button type="button" class="drop-x" data-drop-x title="${esc(t('dropRemove'))}" aria-label="${esc(t('dropRemove'))}">×</button></div>${fmtHTML(f)}`).join('')
       + `<details class="import-fold" data-import ${openImport ?? !files.length ? 'open' : ''}><summary>${esc(t('importTitle'))}<small>${esc(t('importHint'))}</small></summary>
-      <div class="lyr-row drop-add"><label class="btn small"><input type="file" accept=".csv,.tsv,.txt,.geojson,.json" multiple hidden data-drop-pick>${esc(t('dropPick'))}</label><small>${esc(t('dropHint'))}</small></div>
-      <form class="drop-url" data-drop-url><input type="url" name="u" placeholder="${esc(t('urlPh'))}" aria-label="${esc(t('urlPh'))}"><button type="submit" class="btn small">${esc(t('urlAdd'))}</button></form>
-      <div class="drop-add drop-apps"><button type="button" class="btn small" data-drive>${esc(t('driveBtn'))}</button>
+      <div class="drop-box"><div class="drop-btns"><label class="btn small"><input type="file" accept=".csv,.tsv,.txt,.geojson,.json" multiple hidden data-drop-pick>${esc(t('dropPick'))}</label>
+        <button type="button" class="btn small" data-drive title="${esc(t('driveTitle'))}">${esc(t('driveBtn'))}</button>
         <button type="button" class="btn small" disabled title="${esc(t('airtableSoon'))}">${esc(t('airtableBtn'))}</button></div>
+        <small>${esc(t('dropHint'))}</small></div>
+      <form class="drop-url" data-drop-url><input type="url" name="u" placeholder="${esc(t('urlPh'))}" aria-label="${esc(t('urlPh'))}"><button type="submit" class="btn small">${esc(t('urlAdd'))}</button></form>
       </details>`
       + (files.length ? nearHTML() : '');
     legend();
@@ -5564,10 +5630,14 @@ const Downloads = (() => {
     // several at once, with a kind column
     if (Array.isArray(what)) {
       if (what.length === 1) return rows(what[0]);
-      const KIND = { blocks: 'street', businesses: 'business', parcels: 'parcel', cblocks: 'census_block', ablocks: 'assessor_block' }, out = [];
-      for (const w of what) for (const r of await rows(w)) out.push({ props: { kind: KIND[w], ...r.props }, geom: r.geom });
-      return out;
+      const KIND = { businesses: 'business', parcels: 'parcel_along', cblocks: 'census_block_along', ablocks: 'assessor_block_along' }, out = [];
+      for (const w of what) for (const r of await rows(w)) out.push({ props: { kind: r.props.kind || KIND[w] || r.props.type, ...r.props }, geom: r.geom });
+      // sorted by kind: streets and intersections, then blocks and parcels, then the rest
+      const ORDER = ['street', 'intersection', 'assessor_block', 'census_block', 'census_tract', 'parcel', 'business', 'parcel_along', 'assessor_block_along', 'census_block_along'];
+      const rank = k => { const i = ORDER.indexOf(k); return i < 0 ? 99 : i; };
+      return out.map((r, i) => [r, i]).sort((a, b) => rank(a[0].props.kind) - rank(b[0].props.kind) || a[1] - b[1]).map(([r]) => r);
     }
+    if (what === 'picked') return SelAreas.exportRows();
     if (what === 'ablocks') await Areas.need('ablk');
     const segs = await exportSegs(), out = new Map();
     const add = (key, props, geom, s) => {
@@ -5576,7 +5646,7 @@ const Downloads = (() => {
       out.set(key, { props: { ...props, cnns: String(s.cnn) }, geom });
     };
     for (const s of segs) {
-      if (what === 'blocks') out.set(s.cnn, { props: record(s), geom: geomOfSeg(s) });
+      if (what === 'blocks') { const r = record(s); out.set(s.cnn, { props: { kind: r.type || 'street', ...r }, geom: geomOfSeg(s) }); }
       else if (what === 'businesses') for (const x of (Tiles.peek(s) || {}).businesses || []) for (const i of x.items || [])
         add([x.address, i.dba, i.owner].join('|'), { address: x.address, business: i.dba || i.owner || '', owner: i.owner || '', category: i.cat || x.cat || '',
           industry: i.sector || '', naics: i.naics || '', since: i.since || '', license: i.lic || '', mailing_address: [i.mail, i.mail_place].filter(Boolean).join(', '),
@@ -5768,6 +5838,22 @@ const Table = (() => {
 
 const SelAreas = (() => {
   let fc = null, fileName = 'areas.geojson', current = null;
+  // what can be picked: a boundary set (ablk, cblk, ctract) or parcels (lots from the parcel tiles, kept in lotStore)
+  const lotStore = new Map();   // lot → { geom, l: { use, zone, code, units, addr } }
+  const geomOf = n => pickSet === 'parcel' ? (lotStore.get(n) || {}).geom || null : Areas.geom(pickSet, n);
+  const namesAt = (x, y, k = pickSet) => {
+    if (k !== 'parcel') return Areas.areasAt(k, x, y);
+    const r = Parcels.lotAt(x, y); return r ? [r.lot] : [];
+  };
+  const setTitle = k => k === 'parcel' ? t('pickParcel') : (Areas.conf(k) || {}).title || '';
+  const setId = k => k === 'parcel' ? 'parcels' : Areas.conf(k).set;
+  const propsOf = n => pickSet === 'parcel' ? (() => { const o = lotStore.get(n); return o ? { address: o.l.addr, land_use: landuseName(o.l.use), zoning: o.l.code, homes: o.l.units } : {}; })() : Areas.props(pickSet, n);
+  const needSet = k => k === 'parcel' ? Parcels.ready() : Areas.need(k);
+  // show the set on the map to click on: its borders, or (parcels) the Parcels layer
+  const showSet = k => {
+    if (k === 'parcel') { if (overlayMode.landuse === 'off') setOverlay('landuse', ((OVERLAYS.landuse.modes || []).find(([m]) => m !== 'off') || ['landuse'])[0]); return; }
+    setArea('admin', k); if (areaMode.adminMode === 'off') setArea('adminMode', 'borders');
+  };
   // undo: the selection before each grow step
   const history = [];
   function remember() {
@@ -5789,7 +5875,7 @@ const SelAreas = (() => {
   function drawPicks() {
     $('pick-row').hidden = !pickSet || (!clicking && !picks.size);
     $('pick-on').hidden = !clicking;
-    $('pick-count').textContent = pickSet ? t('pickCount', { n: picks.size, set: Areas.conf(pickSet).title || '' }) : '';
+    $('pick-count').textContent = pickSet && picks.size ? t('pickCount', { what: SelAreas.countText() }) : '';
     $('pick-streets').disabled = !picks.size;
     const pl = $('pick-list'); pl.hidden = true;   // the picks are cards in the list now
     pl.innerHTML = [...picks].sort((a, b) => a.localeCompare(b, 'en', { numeric: true })).map(n => `<span class="pick-chip" data-pick-chip="${esc(n)}"><button type="button" data-pick-go="${esc(n)}" title="${esc(t('pickGo'))}">${esc(n)}</button><button type="button" data-pick-x="${esc(n)}" aria-label="${esc(t('pickDrop', { n }))}">×</button></span>`).join('');
@@ -5806,7 +5892,7 @@ const SelAreas = (() => {
       map.addLayer({ id: 'bp-pick-line', type: 'line', source: 'pick-areas', paint: { 'line-color': '#B08900', 'line-width': 2 } });
       arrangeLayers();
     }
-    map.getSource('pick-areas').setData({ type: 'FeatureCollection', features: pickSet ? [...picks].map(n => ({ type: 'Feature', properties: {}, geometry: Areas.geom(pickSet, n) })).filter(f => f.geometry) : [] });
+    map.getSource('pick-areas').setData({ type: 'FeatureCollection', features: pickSet ? [...picks].map(n => ({ type: 'Feature', properties: {}, geometry: geomOf(n) })).filter(f => f.geometry) : [] });
   }
   async function pickMode(k) {
     if (k && k !== pickSet) { if (picks.size) toast(t('pickCleared', { n: picks.size })); picks = new Set(); pickSet = k; }
@@ -5815,9 +5901,9 @@ const SelAreas = (() => {
     map.getCanvas().style.cursor = '';
     if (!k) stopHover();
     if (k) {
-      await Areas.need(k);
+      await needSet(k);
       // show that set's borders, to click on
-      setArea('admin', k); if (areaMode.adminMode === 'off') setArea('adminMode', 'borders');
+      showSet(k);
       toast(t('pickHint'));
     }
     drawPicks();
@@ -5834,7 +5920,7 @@ const SelAreas = (() => {
         map.addLayer({ id: 'bp-pick-hover', type: 'line', source: 'pick-hover', paint: { 'line-color': '#5F3DC4', 'line-width': 3.5 } });
         arrangeLayers();
       }
-      const g = n != null && pickSet ? Areas.geom(pickSet, n) : null;
+      const g = n != null && pickSet ? geomOf(n) : null;
       map.getSource('pick-hover').setData({ type: 'FeatureCollection', features: g ? [{ type: 'Feature', properties: {}, geometry: g }] : [] });
     }
     document.querySelectorAll('.is-hl[data-pick-chip], tr.is-hl[data-pick-row], li.is-hl[data-blk]').forEach(x => x.classList.remove('is-hl'));
@@ -5843,20 +5929,24 @@ const SelAreas = (() => {
     document.querySelectorAll(sel).forEach(x => { x.classList.add('is-hl'); if (x.tagName === 'TR') x.scrollIntoView({ block: 'nearest' }); });
   }
   function areaTip(n) {
-    const c = Areas.conf(pickSet), p = Areas.props(pickSet, n) || {};
+    const c = Areas.conf(pickSet) || {}, p = propsOf(n) || {};
     const rows = Object.entries(p).filter(([k, v]) => v != null && v !== '' && typeof v !== 'object' && !/^(name|block_num|parts)$/.test(k)).slice(0, 6)
       .map(([k, v]) => `<br><span class="pop-lyr">${esc(k.replace(/_/g, ' '))}: ${esc(typeof v === 'number' ? v.toLocaleString() : v)}</span>`).join('');
+    if (pickSet === 'parcel') { const r = Parcels.lotAt(...(hoverAt || [0, 0])); const l = r ? r.l : {};
+      return `<b>${esc(l.addr || t('oneParcel') + ' ' + n)}</b><br><span class="pop-lyr">${esc(t('oneParcel'))} ${esc(n)} · ${esc(landuseName(l.use || ''))}${l.code ? ' · ' + esc(l.code) : ''}</span><br><span class="pop-lyr">${esc(t(picks.has(n) ? 'pickTipDrop' : 'pickTipAdd'))}</span>`; }
     return `<b>${esc(t('pickTipName', { set: t({ ablk: 'oneAblk', cblk: 'oneCblk', ctract: 'oneCtract' }[pickSet] || 'oneArea'), n }))}</b>${rows}<br><span class="pop-lyr">${esc(t(picks.has(n) ? 'pickTipDrop' : 'pickTipAdd'))}</span>`;
   }
   // streets, corners, points and your files win; a block only when the pointer is on none of them
   const onOther = e => hoverHit(e, ['bp-all-hit', 'bp-corners-hit', 'bp-ints', ...Drops.pointIds()]) || onPoi(e);
+  let hoverAt = null;
   function onMapMove(e) {
     if (!clicking) return;
-    const names = onOther(e) ? [] : Areas.areasAt(pickSet, e.lngLat.lng, e.lngLat.lat), n = names.length ? names[names.length - 1] : null;
+    hoverAt = [e.lngLat.lng, e.lngLat.lat];
+    const names = onOther(e) ? [] : namesAt(e.lngLat.lng, e.lngLat.lat), n = names.length ? names[names.length - 1] : null;
     hoverPop ||= new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 14 });
     if (n == null) { if (hovered != null) { hoverPop.remove(); hoverArea(null); } return; }
     map.getCanvas().style.cursor = 'pointer';
-    hoverPop.setLngLat(e.lngLat).setHTML(areaTip(n)).addTo(map);
+    if (pickSet !== 'parcel') hoverPop.setLngLat(e.lngLat).setHTML(areaTip(n)).addTo(map);
     hoverArea(n);
   }
   function stopHover() { if (hoverPop) hoverPop.remove(); hoverArea(null); }
@@ -5865,8 +5955,17 @@ const SelAreas = (() => {
     const segs = checkedSegs().filter(s => !isInt(s));
     if (!segs.length) { toast(t('alongNone')); return; }
     const k = pickSet || 'ablk';
-    await Areas.need(k);
-    if (!pickSet) { pickSet = k; setArea('admin', k); if (areaMode.adminMode === 'off') setArea('adminMode', 'borders'); }
+    if (k === 'parcel') {
+      const rs = await Promise.all(segs.map(sg => Parcels.fetch(sg))), add = [];
+      for (const r of rs) for (const [lot, l] of (r || {}).byLot || []) if (!picks.has(lot) && !add.includes(lot)) {
+        lotStore.set(lot, { geom: { type: 'MultiPolygon', coordinates: (l.rings || []).map(rg => [rg]) }, l }); add.push(lot); }
+      if (!add.length) { toast(t('alongNone')); return; }
+      remember(); add.forEach(n => picks.add(n)); drawPicks();
+      toast(t('alongAdded', { n: add.length, set: setTitle(k) }));
+      return;
+    }
+    await needSet(k);
+    if (!pickSet) { pickSet = k; showSet(k); }
     const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540, found = new Map();
     for (const sg of segs) {
       const c = sg.coords, cum = [0];
@@ -5879,7 +5978,7 @@ const SelAreas = (() => {
         const x = a[0] + (b[0] - a[0]) * f, y = a[1] + (b[1] - a[1]) * f;
         const dx = (b[0] - a[0]) * KX, dy = (b[1] - a[1]) * KY, len = Math.hypot(dx, dy) || 1;
         for (const sd of [1, -1]) for (const off of [10, 16, 24]) {
-          const ns = Areas.areasAt(k, x + (-dy / len) * off * sd / KX, y + (dx / len) * off * sd / KY);
+          const ns = namesAt(x + (-dy / len) * off * sd / KX, y + (dx / len) * off * sd / KY, k);
           if (ns.length) { const n = ns[ns.length - 1]; found.set(n, (found.get(n) || 0) + 1); break; }
         }
       }
@@ -5890,7 +5989,7 @@ const SelAreas = (() => {
     remember();
     add.forEach(n => picks.add(n));
     drawPicks();
-    toast(t('alongAdded', { n: add.length, set: Areas.conf(k).title || '' }));
+    toast(t('alongAdded', { n: add.length, set: setTitle(k) || '' }));
   }
   function reset() {
     picks = new Set(); pickSet = ''; clicking = false; stopHover();
@@ -5900,7 +5999,8 @@ const SelAreas = (() => {
   }
   function onMapClick(e) {
     if (!clicking || onOther(e)) return;
-    const names = Areas.areasAt(pickSet, e.lngLat.lng, e.lngLat.lat);
+    if (pickSet === 'parcel') { const r = Parcels.lotAt(e.lngLat.lng, e.lngLat.lat); if (r && !lotStore.has(r.lot)) lotStore.set(r.lot, { geom: r.geom, l: r.l }); }
+    const names = namesAt(e.lngLat.lng, e.lngLat.lat);
     if (!names.length) return;
     const n = names[names.length - 1];
     picks.has(n) ? picks.delete(n) : picks.add(n);
@@ -5910,7 +6010,7 @@ const SelAreas = (() => {
   function clearPicks() { picks = new Set(); drawPicks(); }
   function dropPick(n) { picks.delete(n); drawPicks(); }
   function goPick(n) {
-    const g = Areas.geom(pickSet, n); if (!g || !mapReady) return;
+    const g = geomOf(n); if (!g || !mapReady) return;
     const b = [Infinity, Infinity, -Infinity, -Infinity];
     for (const p of g.coordinates) for (const [x, y] of p[0]) { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); }
     map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 120, maxZoom: 18, duration: reducedMotion() ? 0 : 600 });
@@ -5919,13 +6019,13 @@ const SelAreas = (() => {
   // middle of the streets around them (the faces of the street network that hold them)
   const M = { units: 'meters' };
   async function pickOutline(how) {
-    const T = await turf(), gs = [...picks].map(n => ({ n, g: Areas.geom(pickSet, n) })).filter(o => o.g);
+    const T = await turf(), gs = [...picks].map(n => ({ n, g: geomOf(n) })).filter(o => o.g);
     if (!gs.length) return null;
     const feats = gs.map(o => T.feature(o.g, { n: o.n }));
     const union = fs => fs.length > 1 ? T.union(T.featureCollection(fs)) : fs[0];
     const close = (f, m) => { try { return T.buffer(T.buffer(f, m, M), -m, M) || f; } catch (e) { return f; } };
     let u;
-    if (how === 'blocks') u = union(feats);
+    if (how === 'blocks' || (pickSet === 'parcel' && how === 'centerline')) u = union(feats);
     else if (how === 'filled') u = close(union(feats), 18);
     else {
       // the street network around them as faces; each pick takes the face it sits in
@@ -5980,7 +6080,7 @@ const SelAreas = (() => {
   function streetsAroundOf(names) {
     const k = pickSet + ':' + [...names].sort().join(','); if (aroundCache.has(k)) return aroundCache.get(k);
     const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540, OFF = 14, set = new Set(names);
-    const geoms = [...names].map(n => Areas.geom(pickSet, n)).filter(Boolean);
+    const geoms = [...names].map(n => geomOf(n)).filter(Boolean);
     const bb = [Infinity, Infinity, -Infinity, -Infinity];
     for (const g of geoms) for (const p of g.coordinates) for (const [x, y] of p[0]) { bb[0] = Math.min(bb[0], x); bb[1] = Math.min(bb[1], y); bb[2] = Math.max(bb[2], x); bb[3] = Math.max(bb[3], y); }
     const pad = 0.0004, out = [];
@@ -5992,7 +6092,7 @@ const SelAreas = (() => {
         const i = Math.min(c.length - 2, Math.floor(f * (c.length - 1))), a = c[i], b = c[i + 1];
         const mx = a[0] + (b[0] - a[0]) * ((f * (c.length - 1)) - i), my = a[1] + (b[1] - a[1]) * ((f * (c.length - 1)) - i);
         const dx = (b[0] - a[0]) * KX, dy = (b[1] - a[1]) * KY, L = Math.hypot(dx, dy) || 1;
-        return [1, -1].some(sd => Areas.areasAt(pickSet, mx + (-dy / L) * OFF * sd / KX, my + (dx / L) * OFF * sd / KY).some(n => set.has(n)));
+        return [1, -1].some(sd => namesAt(mx + (-dy / L) * OFF * sd / KX, my + (dx / L) * OFF * sd / KY).some(n => set.has(n)));
       });
       if (hit) out.push(sg);
     }
@@ -6000,14 +6100,74 @@ const SelAreas = (() => {
     return out;
   }
   // a block's card, in the same list as the streets
-  const ONE = { ablk: 'oneAblk', cblk: 'oneCblk', ctract: 'oneCtract' };
+  const ONE = { ablk: 'oneAblk', cblk: 'oneCblk', ctract: 'oneCtract', parcel: 'oneParcel' };
+  // people, homes, businesses and trees for a block or parcel: computed once, then the cards redraw
+  const stats = new Map(), statsP = new Map();
+  const inRing = (x, y, r) => { let a = false; for (let i = 0, j = r.length - 1; i < r.length; j = i++) if ((r[i][1] > y) !== (r[j][1] > y) && x < (r[j][0] - r[i][0]) * (y - r[i][1]) / (r[j][1] - r[i][1]) + r[i][0]) a = !a; return a; };
+  const inGeom = (g, [x, y]) => (g.type === 'Polygon' ? [g.coordinates] : g.coordinates).some(p => inRing(x, y, p[0]) && !p.slice(1).some(h => inRing(x, y, h)));
+  const bboxOf = g => { const b = [Infinity, Infinity, -Infinity, -Infinity]; for (const p of (g.type === 'Polygon' ? [g.coordinates] : g.coordinates)) for (const [x, y] of p[0]) { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); } return b; };
+  function statsOf(n) {
+    const key = pickSet + ':' + n;
+    if (stats.has(key)) return stats.get(key);
+    if (!statsP.has(key)) statsP.set(key, (async () => {
+      const g = geomOf(n); if (!g) return;
+      const out = { people: null, homes: null, tiles: null };
+      // businesses inside it and trees along the streets around it
+      if (Tiles.has('trees') || Tiles.has('businesses')) {
+        const r = Tiles.merge(await Promise.all(streetsAroundOf([n]).map(sg => Tiles.fetch(sg))));
+        if (r.businesses) r.businesses = r.businesses.filter(x => x.ll && inGeom(g, x.ll));
+        out.tiles = r; Tiles.put('blk:' + key, r);
+      }
+      // people and homes: a census block or tract's own counts; otherwise the census blocks under it, by the share that overlaps
+      if (pickSet === 'cblk' || pickSet === 'ctract') { const p = Areas.props(pickSet, n) || {}; out.people = +p.pop20 || 0; out.homes = +p.housing20 || 0; }
+      else {
+        await Areas.need('cblk'); const T = await turf(), me = T.feature(g);
+        let people = 0, homes = 0;
+        for (const cb of Areas.inBox('cblk', bboxOf(g))) {
+          const cg = Areas.geom('cblk', cb), p = Areas.props('cblk', cb) || {}; if (!cg || !(+p.pop20 || +p.housing20)) continue;
+          let share = 0; try { const x = T.intersect(T.featureCollection([me, T.feature(cg)])); share = x ? T.area(x) / T.area(T.feature(cg)) : 0; } catch (e) { }
+          people += share * (+p.pop20 || 0); homes += share * (+p.housing20 || 0);
+        }
+        out.people = Math.round(people); out.homes = Math.round(homes);
+      }
+      stats.set(key, out); render();
+    })().catch(e => console.warn('[block-party] block counts', e)));
+    return null;
+  }
+  function countsHTML(n) {
+    const st = statsOf(n);
+    if (!st) return `<dt>${esc(t('blkPeople'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
+    const P_ = st.people || 0, H_ = st.homes || 0;
+    return `<dt>${esc(t('blkPeople'))}</dt><dd>${esc(t(pickSet === 'ablk' || pickSet === 'parcel' ? 'blkPeopleEst' : 'blkPeopleN', { p: P_.toLocaleString() + ' ' + t(P_ === 1 ? 'person' : 'people'), h: H_.toLocaleString() + ' ' + t(H_ === 1 ? 'home1' : 'homesW') }))}</dd>`
+      + (st.tiles ? tileFacts({ cnn: 'blk:' + pickSet + ':' + n }).replace(t('bizRow'), t('bizRowBlk')).replace(/data-(copy|csv)-biz="[^"]*"/g, `data-$1-biz-blk="${esc(n)}"`) : '');
+  }
   function middleOf(g) {
     const r = g.coordinates[0][0]; let x = 0, y = 0; r.forEach(p => { x += p[0]; y += p[1]; }); x /= r.length; y /= r.length;
-    return Areas.areasAt(pickSet, x, y).length ? [x, y] : r[0];
+    return namesAt(x, y).length ? [x, y] : r[0];
   }
   function cardHTML_(n) {
-    const g = Areas.geom(pickSet, n); if (!g) return '';
+    const g = geomOf(n); if (!g) return '';
     const name = t(ONE[pickSet] || 'oneArea');
+    if (pickSet === 'parcel') {
+      const o = lotStore.get(n) || { l: {} }, l = o.l, color = Object.fromEntries(LANDUSE);
+      const around = streetsAroundOf([n]);
+      return `<li class="seg blk is-checked" data-blk="${esc(n)}">
+    <input type="checkbox" checked aria-label="${esc(name)} ${esc(n)}">
+    <div class="seg-top">
+      <div><div class="seg-kind">${esc(name)}</div><div class="seg-name">${esc(l.addr || n)}</div>
+      <div class="seg-between">${esc([...new Set(around.map(sg => P(sg.street)))].join(', '))}</div></div>
+      <div class="seg-btns">
+        <button type="button" class="cnn-chip" data-blk-copy="${esc(n)}" title="${esc(t('lotCopy'))}"><small>${esc(t('lotChip'))}</small>${esc(n)}</button>
+        <button type="button" class="remove-btn" data-blk-x="${esc(n)}" title="${esc(t('removeCard'))}" aria-label="${esc(t('removeCard'))}: ${esc(name)} ${esc(n)}">×</button>
+      </div>
+    </div>
+    <dl class="facts">
+      <dt>${esc(t('landuseRow'))}</dt><dd><i class="lu-dot" style="background:${color[l.use] || '#D8D5CE'}"></i>${esc(landuseName(l.use || ''))}</dd>
+      ${l.code ? `<dt>${esc(t('zoningRow'))}</dt><dd><i class="zsw" style="background:${zoningOf(l.code)[1]}"></i>${esc(l.code)} <span class="svc">${esc(zoneName(l.zone || ''))}</span></dd>` : ''}
+      <dt>${esc(t('homesLot'))}</dt><dd>${esc(String(l.units || 0))}</dd>
+      ${countsHTML(n)}
+    </dl></li>`;
+    }
     const around = streetsAroundOf([n]);
     const names = [...new Set(around.map(sg => P(sg.street)))];
     const inList = new Set(state.results.map(r => r.cnn)), missing = around.filter(sg => !inList.has(sg.cnn)).length;
@@ -6015,7 +6175,7 @@ const SelAreas = (() => {
     const dists = AREA_SETS.filter(c => (c.kind === 'elected' || (c.kind === 'admin' && !c.onDemand && !['cblk', 'ctract'].includes(c.k))) && Areas.loaded(c.k))
       .map(c => { const a = Areas.areasAt(c.k, x, y); return a.length ? `${esc(c.title || c.label)} ${esc(a.join(', '))}` : ''; }).filter(Boolean);
     let acres = ''; try { if (window.turf) acres = (window.turf.area({ type: 'Feature', geometry: g, properties: {} }) / 4046.86).toFixed(2); } catch (e) { }
-    const props = pickSet === 'ablk' ? '' : Object.entries(Areas.props(pickSet, n) || {}).filter(([k, v]) => v != null && v !== '' && typeof v !== 'object' && !/^(name|parts)$/.test(k)).slice(0, 8)
+    const props = pickSet === 'ablk' ? '' : Object.entries(propsOf(n) || {}).filter(([k, v]) => v != null && v !== '' && typeof v !== 'object' && !/^(name|parts)$/.test(k)).slice(0, 8)
       .map(([k, v]) => `<dt>${esc(k.replace(/_/g, ' '))}</dt><dd>${esc(typeof v === 'number' ? v.toLocaleString() : v)}</dd>`).join('');
     return `<li class="seg blk is-checked" data-blk="${esc(n)}">
     <input type="checkbox" checked aria-label="${esc(name)} ${esc(n)}">
@@ -6031,6 +6191,7 @@ const SelAreas = (() => {
       <dt>${esc(t('blkStreets'))}</dt><dd>${esc(t('blkStreetsN', { n: around.length }))}${missing ? ` <button type="button" class="btn small" data-blk-streets="${esc(n)}">${esc(t('blkAddStreets', { n: missing }))}</button>` : ''}</dd>
       ${acres ? `<dt>${esc(t('blkSize'))}</dt><dd>${esc(t('blkAcres', { n: acres }))}</dd>` : ''}
       ${dists.length ? `<dt>${esc(t('blkIn'))}</dt><dd>${dists.join('<br>')}</dd>` : ''}
+      ${countsHTML(n)}
       ${pickSet === 'ablk' ? parcelFacts({ cnn: 'ablk:' + n }, true) : props}
     </dl></li>`;
   }
@@ -6051,6 +6212,9 @@ const SelAreas = (() => {
     const n = li.dataset.blk;
     const x = e.target.closest('[data-blk-x]'), c = e.target.closest('[data-blk-copy]'), st = e.target.closest('[data-blk-streets]');
     if (c) { copyText(n, t('blkCopied', { n })); return; }
+    const bc = e.target.closest('[data-copy-biz-blk]'), bv = e.target.closest('[data-csv-biz-blk]');
+    if (bc || bv) { const r = Tiles.peek({ cnn: 'blk:' + pickSet + ':' + n }); if (r && r.businesses) bc ? copyText(bizText(r), t('bizCopied', { n: bizText(r).split('\n').length - 1 })) : saveText(rowsCSV(bizRows(r)), `businesses-${n}-${fileDate()}.csv`); return; }
+    if (e.target.matches && e.target.matches('[data-biz-all]')) { setBizAll(e.target.checked); return; }
     if (st) { const k = addStreets([n]); if (k) toast(t('pickAdded', { n: k, a: 1 })); return; }
     if (x || (e.target.tagName === 'INPUT' && e.target === li.querySelector(':scope > input') && !e.target.checked)) { remember(); dropPick(n); return; }
     if (e.target.closest('.facts')) return;
@@ -6058,17 +6222,42 @@ const SelAreas = (() => {
   }
   // from a link: #pick=ablk:0587;0588
   async function restore(v) {
-    const [k, list] = String(v || '').split(':'); if (!k || !list || !AREA_SETS.some(c => c.k === k)) return;
-    await Areas.need(k);
+    const [k, list] = String(v || '').split(':'); if (!k || !list || !(k === 'parcel' || AREA_SETS.some(c => c.k === k))) return;
+    if (k === 'parcel') {
+      await Areas.need('ablk'); pickSet = 'parcel'; picks = new Set();
+      for (const lot of list.split(';').filter(Boolean)) {
+        const r = await Parcels.findLot(lot, Areas.geom('ablk', lot.slice(0, -3)));
+        if (r) { lotStore.set(lot, { geom: r.geom, l: r.l }); picks.add(lot); }
+      }
+      showSet('parcel'); drawPicks(); return;
+    }
+    await needSet(k);
     pickSet = k; picks = new Set(list.split(';').filter(Boolean));
-    setArea('admin', k); if (areaMode.adminMode === 'off') setArea('adminMode', 'borders');
+    showSet(k);
     drawPicks();
+  }
+  function exportRows() {
+    if (!pickSet || !picks.size) return [];
+    const KIND = { ablk: 'assessor_block', cblk: 'census_block', ctract: 'census_tract', parcel: 'parcel' };
+    return [...picks].sort((a, b) => a.localeCompare(b, 'en', { numeric: true })).map(n => {
+      const around = streetsAroundOf([n]), st = stats.get(pickSet + ':' + n) || {}, r = st.tiles || {};
+      const pf = pickSet === 'ablk' ? Parcels.peek({ cnn: 'ablk:' + n }) : null, lot = pickSet === 'parcel' ? (lotStore.get(n) || { l: {} }).l : null;
+      let acres = ''; try { if (window.turf) acres = +(window.turf.area({ type: 'Feature', geometry: geomOf(n), properties: {} }) / 4046.86).toFixed(2); } catch (e) { }
+      const biz = r.businesses ? bizShown(r.businesses) : null;
+      return { props: { kind: KIND[pickSet], id: n, name: `${t(ONE[pickSet] || 'oneArea')} ${n}`, address: lot ? lot.addr || '' : '',
+        streets_around: [...new Set(around.map(sg => P(sg.street)))].join('; '), cnns_around: around.map(sg => sg.cnn).join(';'), acres,
+        people_2020: st.people ?? '', homes_2020: st.homes ?? '',
+        lots: pf ? pf.lots : lot ? 1 : '', homes: pf ? pf.homes : lot ? lot.units : '',
+        zoning: pf ? pf.zones.map(z => `${z.code} (${z.n})`).join('; ') : lot ? lot.code : '',
+        land_use_2023: pf ? landuseText(pf) : lot ? landuseName(lot.use) : '',
+        businesses: biz ? biz.reduce((a, x) => a + x.shown.length, 0) : '', street_trees: r.trees ? r.trees.n : '' }, geom: geomOf(n) };
+    });
   }
   const pickHash = () => pickSet && picks.size ? `${pickSet}:${[...picks].join(';')}` : '';
   function streetsAround() {
     if (!picks.size) return;
     const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540, OFF = 14;
-    const geoms = [...picks].map(n => Areas.geom(pickSet, n)).filter(Boolean);
+    const geoms = [...picks].map(n => geomOf(n)).filter(Boolean);
     const bb = [Infinity, Infinity, -Infinity, -Infinity];
     for (const g of geoms) for (const p of g.coordinates) for (const [x, y] of p[0]) { bb[0] = Math.min(bb[0], x); bb[1] = Math.min(bb[1], y); bb[2] = Math.max(bb[2], x); bb[3] = Math.max(bb[3], y); }
     const pad = 0.0004, have = new Set(state.results.map(r => r.cnn)), add = [];
@@ -6081,7 +6270,7 @@ const SelAreas = (() => {
         const mx = a[0] + (b[0] - a[0]) * ((f * (c.length - 1)) - i), my = a[1] + (b[1] - a[1]) * ((f * (c.length - 1)) - i);
         const dx = (b[0] - a[0]) * KX, dy = (b[1] - a[1]) * KY, L = Math.hypot(dx, dy) || 1;
         return [1, -1].some(sd => { const x = mx + (-dy / L) * OFF * sd / KX, y = my + (dx / L) * OFF * sd / KY;
-          return Areas.areasAt(pickSet, x, y).some(n => picks.has(n)); });
+          return namesAt(x, y).some(n => picks.has(n)); });
       });
       if (hit) add.push(sg);
     }
@@ -6160,7 +6349,7 @@ const SelAreas = (() => {
     if (!geom) { $('area-status').textContent = ''; toast(t('areaFail')); return; }
     const lots = new Set(segs.flatMap(s => (Parcels.peek(s) || {}).lotIds || []));
     const feat = { type: 'Feature', properties: { ...(current ? current.properties : {}), name, cnns: segs.map(s => s.cnn).join(';'), streets: segs.length,
-      lots: lots.size, ...(picks.size ? { area_set: Areas.conf(pickSet).set, areas: [...picks].join(';'), outline: $('outline-how').value } : {}),
+      lots: lots.size, ...(picks.size ? { area_set: setId(pickSet), areas: [...picks].join(';'), outline: $('outline-how').value } : {}),
       saved: new Date().toISOString().slice(0, 10), source: 'Block Party' }, geometry: geom };
     const out = fc ? { ...fc, features: [...fc.features.filter(f => (f.properties || {}).name !== name && f !== current), feat] } : { type: 'FeatureCollection', features: [feat] };
     out.features.sort((a, b) => String(a.properties.name).localeCompare(String(b.properties.name)));
@@ -6193,8 +6382,9 @@ const SelAreas = (() => {
     remember();
     current = f;
     // its picked areas come back too
-    const set = AREA_SETS.find(c => c.set === (f.properties || {}).area_set);
-    if (set && f.properties.areas) {
+    const set = (f.properties || {}).area_set === 'parcels' ? { k: 'parcel' } : AREA_SETS.find(c => c.set === (f.properties || {}).area_set);
+    if (set && set.k === 'parcel' && f.properties.areas) { restore('parcel:' + f.properties.areas); }
+    else if (set && f.properties.areas) {
       if (f.properties.outline) $('outline-how').value = f.properties.outline;
       pickMode(set.k).then(() => { picks = new Set(String(f.properties.areas).split(';')); pickMode(''); });
     }
@@ -6204,7 +6394,8 @@ const SelAreas = (() => {
     $('area-status').textContent = t('areaEditing', { name: (f.properties || {}).name || '', n: items.length });
   }
   return { around, save, open, pick, undo, remember, forget, pickMode, onMapClick, onMapMove, hoverArea, alongStreets, reset, clearPicks, dropPick, goPick, streetsAround, previewOutline, picking: () => false,
-    active: () => clicking || picks.size > 0, armed: () => clicking, cardsHTML, cardClick, restore, pickHash, count: () => picks.size,
+    active: () => clicking || picks.size > 0, armed: () => clicking, cardsHTML, exportRows,
+    countText: () => t(({ ablk: 'cntAblk', cblk: 'cntCblk', ctract: 'cntCtract', parcel: 'cntParcel' }[pickSet] || 'cntArea') + (picks.size === 1 ? '1' : ''), { n: picks.size }), cardClick, restore, pickHash, count: () => picks.size,
     picks: () => ({ set: pickSet, names: [...picks] }) };
 })();
 
@@ -6285,8 +6476,38 @@ const Parcels = (() => {
     }
     return summarize(lots);
   }
+  const done = new Map();   // tiles already read, for lookups under the pointer
+  const lotOf = p => ({ use: p.landuse || '', zone: p.parcelsactiveandretired_zoning_district || '', code: p.parcelsactiveandretired_zoning_code || '', units: +p.resunits || 0, addr: parcelAddress(p) });
+  const inRingM = (x, y, r) => { let a = false; for (let i = 0, j = r.length - 1; i < r.length; j = i++) if ((r[i][1] > y) !== (r[j][1] > y) && x < (r[j][0] - r[i][0]) * (y - r[i][1]) / (r[j][1] - r[i][1]) + r[i][0]) a = !a; return a; };
+  const geomOfLot = fs => ({ type: 'MultiPolygon', coordinates: fs.flatMap(f => f.rings.map(r => [r.map(([x, y]) => [+(x / KX).toFixed(7), +(y / KY).toFixed(7)])])) });
+  const ensurePm = () => { pm ||= new pmtiles.PMTiles(SFBlocks.url(OVERLAYS.landuse.pmtiles)); };
+  function read(x, y) { const k = x + '/' + y; if (!done.has(k)) tile(x, y).then(fs => done.set(k, fs)); return done.get(k); }
   return {
     available: () => !!window.pmtiles,
+    ready: () => { if (window.pmtiles) ensurePm(); return Promise.resolve(); },
+    // the lot under a point, from tiles already read (starts reading the ones around it)
+    lotAt(lng, lat) {
+      if (!window.pmtiles) return null;
+      ensurePm();
+      const X = Math.floor(tx(lng)), Y = Math.floor(ty(lat)), mx = lng * KX, my = lat * KY;
+      const near = [];
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) { const fs = read(X + dx, Y + dy); if (fs) near.push(...fs); }
+      const hit = near.find(f => f.p.mapblklot && f.rings.some(r => inRingM(mx, my, r)));
+      if (!hit) return null;
+      const lot = String(hit.p.mapblklot), parts = near.filter(f => String(f.p.mapblklot) === lot);
+      return { lot, geom: geomOfLot(parts), l: lotOf(hit.p) };
+    },
+    // one lot by number, on the tiles under its assessor block
+    async findLot(lot, blockGeom) {
+      if (!window.pmtiles || !blockGeom) return null;
+      ensurePm();
+      const b = [Infinity, Infinity, -Infinity, -Infinity];
+      for (const p of blockGeom.coordinates) for (const [x, y] of p[0]) { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); }
+      const fs = [];
+      for (let x = Math.floor(tx(b[0])); x <= Math.floor(tx(b[2])); x++) for (let y = Math.floor(ty(b[3])); y <= Math.floor(ty(b[1])); y++) fs.push(...await tile(x, y));
+      const parts = fs.filter(f => String(f.p.mapblklot) === lot);
+      return parts.length ? { lot, geom: geomOfLot(parts), l: lotOf(parts[0].p) } : null;
+    },
     fetchBlock(n, geom) {
       const k = 'ablk:' + n;
       if (!window.pmtiles || !geom) return Promise.resolve(null);
@@ -6414,14 +6635,23 @@ const adminLineWidth = (w, s) => { const k = (w === 'thick' ? 2.2 : 1) * s;
   return ['interpolate', ['linear'], ['zoom'], 11, 0.25 * k, 14, 0.6 * k, 16, 1.1 * k, 18, 2 * k]; };
 const SIDE_M = 12;   // metres either side of a block's centerline when checking which areas it's in
 const ADMIN_SHADE = '#2F80ED';   // census blocks and tracts on Shade
+// border styles, one set per section: el (elected), sp (special), hd (neighborhoods); admin keeps adminLine / adminWidth and adds adminDash
+const BORDER_GROUPS = { elected: 'el', special: 'sp', hood: 'hd' };
+const BORDER_COLORS = { own: null, dark: '#1E2340', gray: '#6B7080', orange: '#E8590C' };
+const BORDER_WIDTH = { thin: 0.6, medium: 1, thick: 1.7 };
+const BORDER_STYLE_KEYS = ['el', 'sp', 'hd'].flatMap(g => [g + 'Width', g + 'Color', g + 'Dash', g + 'Labels']).concat(['adminDash']);
 const AREA_DEFAULT = { sup: 'borders', special: 'off', specialMode: 'shade', hood: 'off', hoodSet: 'analysis', admin: 'cblk', adminMode: 'off',
-  densPal: 'magma', densFlip: 'on', adminLine: 'grey', adminWidth: 'thin', quietBase: 'on' };
+  densPal: 'magma', densFlip: 'on', adminLine: 'grey', adminWidth: 'thin', quietBase: 'on', adminDash: 'solid',
+  ...Object.fromEntries(['el', 'sp', 'hd'].flatMap(g => [[g + 'Width', 'medium'], [g + 'Color', 'own'], [g + 'Dash', 'solid'], [g + 'Labels', 'on']])) };
 // settings shared by a group of sets (the rest of areaMode is one entry per elected set)
-const AREA_GROUP_KEYS = ['special', 'specialMode', 'hood', 'hoodSet', 'admin', 'adminMode', 'densPal', 'densFlip', 'adminLine', 'adminWidth', 'quietBase'];
+const AREA_GROUP_KEYS = ['special', 'specialMode', 'hood', 'hoodSet', 'admin', 'adminMode', 'densPal', 'densFlip', 'adminLine', 'adminWidth', 'quietBase', ...BORDER_STYLE_KEYS];
 // the basemap's colored land (parks, schools, hospitals…) and its places (shops, theatres…): hidden under
 // population density when "Hide parks and places" is on. Piers, runways and plazas stay (they're shapes).
 const QUIET_BASE = l => (l['source-layer'] === 'landuse' && !/pier|runway|pedestrian/.test(l.id)) || l['source-layer'] === 'pois';
 const areaMode = { ...AREA_DEFAULT };
+// border styles are remembered in this browser
+try { const b = JSON.parse(localStorage.getItem('bp-borders') || '{}'); for (const k of BORDER_STYLE_KEYS) if (b[k]) areaMode[k] = b[k]; } catch (e) { }
+const saveBorders = () => { try { localStorage.setItem('bp-borders', JSON.stringify(Object.fromEntries(BORDER_STYLE_KEYS.map(k => [k, areaMode[k]])))); } catch (e) { } };
 const Areas = (() => {
   const sets = new Map();     // k → { c, meta, polys, fc, pairs, promise }
   const cache = new Map();    // k|cnn → [areas]
@@ -6508,7 +6738,7 @@ const Areas = (() => {
     get keys() { return [...sets.keys()]; },
     get ready() { return ready; },
     has: k => sets.has(k),
-    conf: k => sets.get(k).c,
+    conf: k => (sets.get(k) || {}).c,
     meta: k => sets.get(k) && sets.get(k).meta,
     modeOf,
     // one area's outline, for downloads
@@ -6522,6 +6752,12 @@ const Areas = (() => {
     need: k => sets.has(k) ? load(k) : Promise.resolve(),
     loaded: k => !!(sets.get(k) && sets.get(k).polys),
     // names of the set's areas a point (lon, lat) is in
+    // the areas whose bounding box meets a box
+    inBox(k, b) {
+      const st = sets.get(k); if (!st || !st.polys) return [];
+      const bb = bboxes(st);
+      return st.polys.filter((p, i) => bb[i][0] <= b[2] && bb[i][2] >= b[0] && bb[i][1] <= b[3] && bb[i][3] >= b[1]).map(p => p.name);
+    },
     areasAt(k, x, y) {
       const st = sets.get(k); if (!st || !st.polys) return [];
       const bb = bboxes(st), out = [];
@@ -6593,6 +6829,21 @@ const Areas = (() => {
         const m = modeOf(k), on = m !== 'off', c = sets.get(k).c;
         for (const x of ['case', 'line', 'label']) if (map.getLayer(`bp-area-${k}-${x}`)) map.setLayoutProperty(`bp-area-${k}-${x}`, 'visibility', on ? 'visible' : 'none');
         map.setLayoutProperty(`bp-area-${k}-fill`, 'visibility', m === 'shade' || m === 'density' ? 'visible' : 'none');
+        const g = BORDER_GROUPS[c.kind];
+        if (g && on) {
+          // the section's border style
+          const w = c.width || 2, f = BORDER_WIDTH[areaMode[g + 'Width']] || 1, col = BORDER_COLORS[areaMode[g + 'Color']] || c.color;
+          map.setPaintProperty(`bp-area-${k}-line`, 'line-color', col);
+          map.setPaintProperty(`bp-area-${k}-line`, 'line-width', ['interpolate', ['linear'], ['zoom'], 11, w * 0.6 * f, 16, w * 1.2 * f]);
+          map.setPaintProperty(`bp-area-${k}-line`, 'line-dasharray', areaMode[g + 'Dash'] === 'dashed' ? [2.5, 1.5] : (c.dash || [1, 0]));
+          if (map.getLayer(`bp-area-${k}-case`)) map.setPaintProperty(`bp-area-${k}-case`, 'line-width', ['interpolate', ['linear'], ['zoom'], 11, w * f + 1.5, 16, w * f + 4]);
+          if (map.getLayer(`bp-area-${k}-label`)) {
+            map.setLayoutProperty(`bp-area-${k}-label`, 'visibility', areaMode[g + 'Labels'] === 'off' ? 'none' : 'visible');
+            map.setPaintProperty(`bp-area-${k}-label`, 'text-color', col);
+          }
+          if (m === 'shade') map.setPaintProperty(`bp-area-${k}-fill`, 'fill-color', col);
+        }
+        if (c.kind === 'admin' && on) map.setPaintProperty(`bp-area-${k}-line`, 'line-dasharray', areaMode.adminDash === 'dashed' ? [2.5, 1.5] : [1, 0]);
         if (c.kind === 'admin' && on) {
           // borders as chosen; None only with density (borders alone need a line)
           const [color, opacity] = ADMIN_LINE[areaMode.adminLine] || ADMIN_LINE.grey, none = m === 'density' && areaMode.adminWidth === 'none';
@@ -6609,7 +6860,7 @@ const Areas = (() => {
             1, ramp[0], ...br.flatMap((b, i) => [b, ramp[i + 1]])]);
           map.setPaintProperty(`bp-area-${k}-fill`, 'fill-opacity', 0.6);
         } else if (m === 'shade') {
-          map.setPaintProperty(`bp-area-${k}-fill`, 'fill-color', c.kind === 'admin' ? ADMIN_SHADE : sets.get(k).c.color);
+          map.setPaintProperty(`bp-area-${k}-fill`, 'fill-color', c.kind === 'admin' ? ADMIN_SHADE : (g && BORDER_COLORS[areaMode[g + 'Color']]) || sets.get(k).c.color);
           map.setPaintProperty(`bp-area-${k}-fill`, 'fill-opacity', c.kind === 'admin' ? 0.22 : 0.16);
         }
         if (on) load(k);
@@ -6846,26 +7097,32 @@ function setupAreasMenu() {
   const seg = (name, opts, on) => `<div class="lseg" role="group" data-area="${name}">${opts.map(([v, l]) =>
     `<button type="button" data-v="${v}" aria-pressed="${on === v}">${esc(t(l))}</button>`).join('')}</div>`;
   const three = [['off', 'aOff'], ['borders', 'aBorders'], ['shade', 'aShade']];
+  const colorSeg = (g, own) => `<div class="lseg bcol" role="group" data-area="${g}Color">${Object.entries(BORDER_COLORS).map(([v, hex]) =>
+    `<button type="button" data-v="${v}" aria-pressed="${areaMode[g + 'Color'] === v}" title="${esc(t('bc_' + v))}" aria-label="${esc(t('bc_' + v))}"><i style="background:${hex || own}"></i></button>`).join('')}</div>`;
+  const styleBox = (g, own, labels = true) => `<div class="lyr-row lyr-sub lyr-opt bstyle" data-opt="b-${g}"><span></span><b>${esc(t('aLines'))}</b><div class="opt-stack">
+    ${seg(g + 'Width', [['thin', 'aThin'], ['medium', 'aMedium'], ['thick', 'aThick']], areaMode[g + 'Width'])}${colorSeg(g, own)}
+    ${seg(g + 'Dash', [['solid', 'aSolid'], ['dashed', 'aDashed']], areaMode[g + 'Dash'])}${labels ? seg(g + 'Labels', [['on', 'aLabelsOn'], ['off', 'aLabelsOff']], areaMode[g + 'Labels']) : ''}</div></div>`;
   const elected = AREA_SETS.filter(c => c.kind === 'elected' && has.includes(c.k));
   const special = AREA_SETS.filter(c => c.kind === 'special' && has.includes(c.k));
   const admin = AREA_SETS.filter(c => c.kind === 'admin' && has.includes(c.k));
   const hoodSets = AREA_SETS.filter(c => c.kind === 'hood' && has.includes(c.k));
   rowsEl.innerHTML = (elected.length ? `<p class="areas-cap">${esc(t('areasElected'))}</p>` : '')
     + elected.map(c => `<div class="lyr-row">${sw(c)}<b>${esc(t('area_' + c.k))}</b>${seg(c.k, three, Areas.modeOf(c.k))}</div>`).join('')
+    + (elected.length ? styleBox('el', '#6D4AF5') : '')
     + (special.length ? `<p class="areas-cap">${esc(t('areasSpecial'))} <span>${esc(t('areasSpecialNote'))}</span></p>
       <div class="lyr-row">${sw(special[0])}<b>${esc(t('areasShow'))}</b>${seg('special', [['off', 'aOff'], ...special.map(c => [c.k, 'area_' + c.k])], areaMode.special)}</div>
-      <div class="lyr-row lyr-sub"><span></span><b></b>${seg('specialMode', three.slice(1), areaMode.specialMode)}</div>` : '')
+      <div class="lyr-row lyr-sub"><span></span><b></b>${seg('specialMode', three.slice(1), areaMode.specialMode)}</div>${styleBox('sp', special[0].color)}` : '')
     + (hoodSets.length ? `<p class="areas-cap">${esc(t('areasHoods'))}</p>
       <div class="lyr-row">${sw(hoodSets[0])}<b>${esc(t('nhood'))}<small>${esc(t('areasHoodsHint'))}</small></b>${seg('hood', three, areaMode.hood)}</div>
       <div class="lyr-row lyr-sub"><span></span><b></b><select class="hood-sel" data-hood-sel aria-label="${esc(t('areasHoods'))}">${hoodSets.map(c =>
-        `<option value="${c.hs}">${esc(t(HOOD_SETS.find(([k]) => k === c.hs)[1]))}</option>`).join('')}</select></div>` : '')
+        `<option value="${c.hs}">${esc(t(HOOD_SETS.find(([k]) => k === c.hs)[1]))}</option>`).join('')}</select></div>${styleBox('hd', hoodSets[0].color)}` : '')
     + `<p class="areas-cap">${esc(t('areasAdmin'))}</p>`
     + (admin.length ? `<div class="lyr-row"><svg viewBox="0 0 26 16" class="dens-sw">${densSwatch()}</svg><b>${esc(t('areasPop'))}<small>${esc(t('areasPopHint'))}</small></b>${seg('admin', admin.map(c => [c.k, 'area_' + c.k]), areaMode.admin)}</div>
       <div class="lyr-row lyr-sub"><span></span><b></b>${seg('adminMode', [['off', 'aOff'], ['borders', 'aBorders'], ['shade', 'aShade'], ['density', 'aDensity']], areaMode.adminMode)}</div>
       <div class="lyr-row lyr-sub lyr-opt" data-opt="density"><span></span><b>${esc(t('aColors'))}</b><div class="dens-pal"><details class="pal-pick"><summary></summary>
         <div class="pal-list">${Object.keys(SEQ_PALETTES).map(k => `<button type="button" data-pal="${k}"><i class="pal-sw"></i>${esc(SEQ_LABELS[k])}</button>`).join('')}</div></details>${seg('densFlip', [['on', 'aFlip']], areaMode.densFlip)}</div></div>
       <div class="lyr-row lyr-sub lyr-opt" data-opt="density"><span></span><b></b><label class="opt-check"><input type="checkbox" data-check="quietBase"> ${esc(t('aQuietBase'))}</label></div>
-      <div class="lyr-row lyr-sub lyr-opt" data-opt="lines"><span></span><b>${esc(t('aLines'))}</b><div class="opt-stack">${seg('adminLine', [['black', 'aBlack'], ['grey', 'aGrey'], ['white', 'aWhite']], areaMode.adminLine)}${seg('adminWidth', [['none', 'aNone'], ['thin', 'aThin'], ['thick', 'aThick']], areaMode.adminWidth)}</div></div>` : '')
+      <div class="lyr-row lyr-sub lyr-opt" data-opt="lines"><span></span><b>${esc(t('aLines'))}</b><div class="opt-stack">${seg('adminLine', [['black', 'aBlack'], ['grey', 'aGrey'], ['white', 'aWhite']], areaMode.adminLine)}${seg('adminWidth', [['none', 'aNone'], ['thin', 'aThin'], ['thick', 'aThick']], areaMode.adminWidth)}${seg('adminDash', [['solid', 'aSolid'], ['dashed', 'aDashed']], areaMode.adminDash)}</div></div>` : '')
     + `<p class="areas-later">${esc(t('areasAdminLater'))}</p>
       <p class="pop-hint">${t('areasShadeHint')}</p>`;
   syncAreasMenu();
@@ -6894,7 +7151,8 @@ function syncAreasMenu() {
   }
   rowsEl.querySelector('[data-area="specialMode"]')?.classList.toggle('dim', areaMode.special === 'off');
   // density options while density shows; border options while borders or density do
-  rowsEl.querySelectorAll('.lyr-opt').forEach(r => r.hidden = r.dataset.opt === 'density' ? areaMode.adminMode !== 'density' : areaMode.adminMode === 'off');
+  const showing = { 'b-el': Areas.keys.some(k => Areas.conf(k).kind === 'elected' && Areas.modeOf(k) !== 'off'), 'b-sp': areaMode.special !== 'off', 'b-hd': areaMode.hood !== 'off' };
+  rowsEl.querySelectorAll('.lyr-opt').forEach(r => r.hidden = r.dataset.opt in showing ? !showing[r.dataset.opt] : r.dataset.opt === 'density' ? areaMode.adminMode !== 'density' : areaMode.adminMode === 'off');
   const none = rowsEl.querySelector('[data-area="adminWidth"] [data-v="none"]');
   if (none) { none.disabled = areaMode.adminMode !== 'density'; none.title = none.disabled ? t('aNoneHint') : ''; }
   rowsEl.querySelectorAll('[data-check]').forEach(i => i.checked = areaMode[i.dataset.check] === 'on');
@@ -6918,6 +7176,10 @@ function setArea(k, v, write = true) {
   else if (k === 'adminLine') { if (!ADMIN_LINE[v]) return; areaMode.adminLine = v; }
   else if (k === 'quietBase') { if (!['on', 'off'].includes(v)) return; areaMode.quietBase = v; }
   else if (k === 'adminWidth') { if (!['none', 'thin', 'thick'].includes(v)) return; areaMode.adminWidth = v; }
+  else if (BORDER_STYLE_KEYS.includes(k)) {
+    const ok = /Width$/.test(k) ? Object.keys(BORDER_WIDTH) : /Color$/.test(k) ? Object.keys(BORDER_COLORS) : /Dash$/.test(k) ? ['solid', 'dashed'] : ['on', 'off'];
+    if (!ok.includes(v)) return; areaMode[k] = v; saveBorders();
+  }
   else { if (!Areas.has(k) || !['off', 'borders', 'shade'].includes(v)) return; areaMode[k] = v; }
   // one set shaded at a time (population density counts): the others go back to borders
   const shading = k === 'specialMode' ? (v === 'shade' && areaMode.special !== 'off' ? 'special' : null)
@@ -7073,7 +7335,7 @@ function overlayInfo(e, s) {
 }
 function setOverlay(k, v, write = true) {
   if (!(k in OVERLAY_DEFAULT)) return;
-  const ok = k === 'contours' ? ['off', 'on'] : OVERLAYS[k] && OVERLAYS[k].modes ? OVERLAYS[k].modes.map(m => m[0]) : ['off', 'close', 'always'];
+  const ok = k === 'contours' || k === 'hillshade' ? ['off', 'on'] : OVERLAYS[k] && OVERLAYS[k].modes ? OVERLAYS[k].modes.map(m => m[0]) : ['off', 'close', 'always'];
   if (k === 'landuse' && v === 'on') v = 'landuse';         // links from v32
   if (!ok.includes(v)) return;
   overlayMode[k] = v;
@@ -7083,6 +7345,7 @@ function setOverlay(k, v, write = true) {
   try { if (v !== 'off') LgKey.overlaysOff.delete(k); } catch (e) { }
   if (mapReady) {
     if (k === 'contours') { setContours(v === 'on'); updateContourLegend(); sync3dButton(); }
+    else if (k === 'hillshade') { if (map.getLayer('bp-hillshade')) map.setLayoutProperty('bp-hillshade', 'visibility', v === 'on' ? 'visible' : 'none'); }
     else applyOverlay(k);
   }
   if (write) writeHash();
@@ -7103,6 +7366,7 @@ function setupMapMenus() {
     schools: '<svg viewBox="0 0 26 16"><rect x="6" y="1" width="14" height="14" rx="3.5" fill="#8A5A00"/><path d="M9 8.5 L13 5 L17 8.5 V12.5 H9Z" fill="#fff"/></svg>',
     stations: '<svg viewBox="0 0 26 16"><circle cx="7" cy="8" r="6.5" fill="#C92A2A"/><text x="7" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">F</text><circle cx="19" cy="8" r="6.5" fill="#1E3A8A"/><text x="19" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">P</text></svg>',
     health: '<svg viewBox="0 0 26 16"><rect x="0.5" y="1.5" width="13" height="13" rx="3" fill="#0B7285"/><text x="7" y="11.5" font-size="9" font-weight="700" text-anchor="middle" fill="#fff">H</text><circle cx="20" cy="8" r="5.5" fill="#0B7285"/><path d="M20 5v6M17 8h6" stroke="#fff" stroke-width="1.8"/></svg>',
+    hillshade: '<svg viewBox="0 0 26 16"><defs><linearGradient id="hs-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#8A8FB8"/></linearGradient></defs><rect width="26" height="16" rx="3" fill="#E2DFDA"/><path d="M0 16 L9 4 L14 10 L18 6 L26 16 Z" fill="url(#hs-g)"/></svg>',
     contours: '<svg viewBox="0 0 26 16"><rect width="26" height="16" rx="3" fill="#E2DFDA"/><path d="M1 11 C8 3 16 14 25 5" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M1 15 C9 8 16 16 25 10" fill="none" stroke="#fff" stroke-width="1.5"/></svg>',
   };
   const row = (k, opts) => `<div class="lyr-row" data-lyr="${k}">${SW[k]}<b>${esc(t('lyr_' + k))}${t('lyr_' + k + 'Hint') !== 'lyr_' + k + 'Hint' ? `<small>${esc(t('lyr_' + k + 'Hint'))}</small>` : ''}</b>
@@ -7130,11 +7394,11 @@ function setupMapMenus() {
     + `<div class="lyr-row" data-flat-row><span class="sw"></span><b>${esc(t('bm3d'))}<small>${esc(t('bm3dHint'))}</small></b>
     <div class="lseg" role="group" aria-label="${esc(t('bm3d'))}">${[['on', 'bm3dOn'], ['off', 'bm3dOff']].map(([v, l]) =>
       `<button type="button" data-flat="${v}" aria-pressed="${(v === 'off') === flatMap}">${esc(t(l))}</button>`).join('')}</div></div>`;
-  const rowFor = k => k === 'basemap' ? basemapRow() : k === 'contours' ? row('contours', [['off', 'lyrOff'], ['on', 'lyrOn']]) : OVERLAYS[k].modes ? row(k, OVERLAYS[k].modes)
+  const rowFor = k => k === 'basemap' ? basemapRow() : k === 'contours' || k === 'hillshade' ? row(k, [['off', 'lyrOff'], ['on', 'lyrOn']]) : OVERLAYS[k].modes ? row(k, OVERLAYS[k].modes)
     : row(k, three) + (k === 'lands' ? chipsFold(k, landChips) : k === 'trees' ? chipsFold(k, treeChips()) : k === 'businesses' ? chipsFold(k, bizChips()) : '');
   // in sections; a layer sf-blocks adds later that isn't in one goes at the end
   const listed = new Set(LAYER_SECTIONS.flatMap(([, ks]) => ks));
-  const sections = [...LAYER_SECTIONS.map(([cap, ks]) => [cap, ks.filter(k => k === 'contours' || k === 'basemap' || OVERLAYS[k])]),
+  const sections = [...LAYER_SECTIONS.map(([cap, ks]) => [cap, ks.filter(k => k === 'contours' || k === 'hillshade' || k === 'basemap' || OVERLAYS[k])]),
     ['grpMore', Object.keys(OVERLAYS).filter(k => !listed.has(k))]].filter(([, ks]) => ks.length);
   setupMapMenusRows = () => { rowsEl.innerHTML = sections.map(([cap, ks]) => `<p class="areas-cap">${esc(t(cap))}</p>` + ks.map(rowFor).join('')).join(''); syncChipCounts(); };
   setupMapMenusRows();

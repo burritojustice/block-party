@@ -2,6 +2,23 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v69
+
+- **Words:** a CNN segment is a **street**, an intersection is an **intersection**, and **block** only means an assessor block, census block or tract.
+  - A selection made on the map is **Your selection**, with what's in it underneath ("3 streets · 1 intersection · 2 assessor blocks", or "3 of 4 streets checked").
+  - A street and cross street is just their names ("Valencia St and 14th St"); a range stays "Valencia St between 14th St and Duboce Ave".
+  - Copy and Download call streets `street` (not "block") in the `kind` column.
+- **Copy / Save** is one folded row, closed to start. Copy and Download now include your **picked blocks and parcels**: number, the streets around it, size, people and homes, lots, homes, zoning, land use, businesses and trees, with outlines in GeoJSON. Rows are sorted by kind, streets first. Copy link keeps them too.
+- **Select blocks** (was "Selection: grow, trim, save as an area"):
+  - **Pick** comes first and adds **Parcels**. A parcel card shows its address, land use, zoning and homes. One kind at a time.
+  - **＋ Blocks along selected streets** says which streets ("Fillmore St, Pacific Ave – Clay St"). With Parcels picked, it adds the lots along them.
+  - **Grow** is now **Extend street selections**.
+- **Block and parcel cards** add **people and homes** (a census block or tract's own counts; for assessor blocks and parcels, estimated from the census blocks under them), **street trees** around them and **businesses** inside them, with the same list, Copy and CSV as street cards.
+- **Intersections** no longer list "Blocks leading into it", until that's redesigned.
+- **Areas:** when Borders shows, each section (Elected, Special, Neighborhoods) gets a style row: thin, medium or thick; its own color, dark, gray or orange; solid or dashed; labels on or off. Administrative borders can be dashed too. Remembered in this browser.
+- **Hillshade** has its own On/Off under Contours in Layers (on by default, as before).
+- **Import:** **GeoJSON/CSV**, **Google** and **Airtable** fit on one row, with "or drag & drop. Files stay in this tab; nothing is uploaded" under them. In a Google Sheet's tab list, only the biggest tab with places starts checked, and there's **Select all** / **Select none**.
+
 ## v68
 
 - **Blocks are cards now,** in the same list as your streets (the chips are gone).
