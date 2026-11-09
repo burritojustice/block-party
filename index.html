@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v66 -->
+<!-- build: v67 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -525,6 +525,10 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .tbl tbody tr.is-hl { background: #E5DBFF; }
 .jump-bar { position: sticky; bottom: 12px; display: flex; justify-content: flex-end; gap: 6px; margin: 8px 0 0; pointer-events: none; z-index: 5; }
 .jump-bar .btn { pointer-events: auto; box-shadow: 0 2px 8px rgba(30,35,64,.25); background: #fff; }
+.tab-pick { border: 2px solid var(--ink); border-radius: 14px; padding: 16px 20px; max-width: min(520px, 92vw); }
+.tab-pick h3 { margin: 0 0 4px; font-size: 17px; }
+.tab-pick ul { list-style: none; padding: 0; margin: 10px 0; max-height: 50vh; overflow: auto; display: grid; gap: 6px; font-size: 14px; }
+.tab-pick .tab-pick-btns { display: flex; justify-content: flex-end; gap: 8px; }
 .pick-list { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 0 50px; max-height: 96px; overflow: auto; }
 .pick-chip { display: inline-flex; border: 1.5px solid #B08900; background: #FFF3BF; border-radius: 999px; font-size: 12px; }
 .pick-chip button { border: 0; background: none; padding: 1px 6px; cursor: pointer; font: inherit; }
@@ -1060,7 +1064,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v66';
+const _BUILD_VERSION = 'v67';
 
 /* =====================================================================
    CONFIG
@@ -1286,6 +1290,9 @@ const I18N = {
     crossBtn: '＋ Cross streets', crossAdded: 'Added {n} cross-street blocks', crossNone: 'No more cross streets to add',
     importTitle: 'Import', importHint: 'A file, a link, Google Drive', fmtName: 'Name',
     driveBtn: 'Open from Google Drive', driveNotSetUp: 'Google Drive isn’t set up for this site yet', driveFail: 'Couldn’t open that from Google Drive: {err}',
+    driveNoPlaces: 'No places found in {name}: it needs lat/lon columns, WKT, a CNN column, or intersections like "Mission St & 16th St"',
+    tabTitle: 'Tabs in {name}', tabHint: 'Tabs with places are checked. Each one you add becomes its own file.', tabRows: '{n} rows', tabNoPlaces: 'no places found',
+    tabPoints: '{n} with locations', tabCnns: '{n} with CNNs', tabCorners: '{n} intersections found', tabCancel: 'Cancel', tabAdd: 'Add checked tabs',
     driveFirstTab: 'Opened the “{tab}” tab ({n} tabs have rows)', airtableBtn: 'Airtable (coming soon)', airtableSoon: 'Reading Airtable views is next',
     bm3d: '3D', bm3dOn: 'On', bm3dOff: 'Off', bm3dHint: 'Tilt, hills and 3D buildings. Off: a flat map for older devices, and the 3D button shows contours.', bmAddresses: 'Addresses (house numbers)', btnContoursTitle: 'Show contour lines (10 ft)', btn3dTitle: 'Tilt the map to see the hills',
     lgTreeSize: 'Bigger dot: thicker trunk; dark ring: Significant Tree', grpAround: 'Getting around', grpStreet: 'On the street', grpLand: 'Land and buildings', grpTerrain: 'Terrain', grpMore: 'More', aQuietBase: 'Hide parks and places on the map',
@@ -4548,7 +4555,8 @@ const DROP_COLORS = ['#1C7ED6', '#F76707', '#D91BB5', '#2B9348', '#00B4C5', '#E0
 const DROP_CATS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6'], DROP_OTHER = '#9AA0A6';
 const DROP_RAMP = ['#FDE68A', '#F9A65A', '#E4572E', '#A3214F', '#4A1757'];
 const DROP_SIZES = { tiny: 0.6, small: 0.85, medium: 1.15, big: 1.6 };
-const DROP_LOOK = { by: '', size: 'medium', sizeBy: '', style: 'fill', shape: 'circle', labels: null, labelZoom: 15 };
+const DROP_LOOK = { by: '', size: 'medium', sizeBy: '', style: 'fill', shape: 'star', labels: null, labelZoom: 15 };
+const SHAPE_ORDER = ['star', 'square', 'triangle', 'diamond', 'circle'];   // each new file takes the next
 // point symbols for your files: circle (a circle layer) or a shape drawn as an SDF icon, so it takes any color
 const DROP_SHAPES = [['circle', '●', 'shapeCircle'], ['star', '★', 'shapeStar'], ['square', '■', 'shapeSquare'], ['triangle', '▲', 'shapeTriangle'], ['diamond', '◆', 'shapeDiamond']];
 const SHAPE_PATHS = {   // in a 0–1 box
@@ -4656,8 +4664,46 @@ const Drops = (() => {
     return null;
   }
   function fromCSV(text) {
-    const rows = parseCSV(text), head = rows.shift() || [];
-    return fromRows(head, rows);
+    const rows = parseCSV(text), h = headerRow(rows);
+    return fromRows(rows[h] || [], rows.slice(h + 1));
+  }
+  // which of the first rows holds the column names: wide like the data under it, mostly words, no repeats
+  function headerRow(rows) {
+    const top = rows.slice(0, 30), filled = r => (r || []).filter(v => String(v ?? '').trim() !== '');
+    const wide = Math.max(0, ...top.map(r => filled(r).length));
+    if (wide < 2) return 0;
+    for (let i = 0; i < top.length; i++) {
+      const v = filled(top[i]).map(x => String(x).trim());
+      if (v.length < Math.max(2, wide * 0.6)) continue;
+      const words = v.filter(x => isNaN(+x.replace(/[$,%]/g, '')) && !/^\d{1,4}[-/]\d{1,2}[-/]\d{1,4}$/.test(x)).length;
+      if (words >= v.length * 0.7 && new Set(v.map(x => x.toLowerCase())).size === v.length) return i;
+    }
+    return 0;
+  }
+  // rows with no coordinates or CNNs: intersections written as text ("Mission St & 16th St", or a street
+  // column and a cross street column), placed at the corner
+  const INT_SPLIT = /\s+(?:&|and|at|@|x|\/)\s+|\s*[&@\/]\s*/i;
+  const ST_COL = /^(street|street_?name|on_?street|primary(_street)?|street_?1|corridor)$/i, X_COL = /^(cross_?street|cross|at_?street|secondary(_street)?|street_?2|intersecting)$/i;
+  function cornerAt(a, b) {
+    const clean = x => String(x || '').replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim();
+    a = clean(a); b = clean(b); if (!a || !b) return null;
+    const sa = Logic.resolveStreet(a), sb = Logic.resolveStreet(b);
+    if (!sa || !sb || sa === sb) return null;
+    const r = Logic.intersectionOf(sa, sb);
+    return r.ints[0] || null;
+  }
+  function textCorners(head, rows) {
+    const H = head.map(h => String(h).trim().replace(/\s+/g, '_'));
+    const pair = [H.findIndex(h => ST_COL.test(h)), H.findIndex(h => X_COL.test(h))];
+    const sample = rows.slice(0, 40);
+    const rate = fn => sample.filter(r => fn(r)).length / Math.max(1, sample.filter(r => r.some(v => String(v ?? '').trim())).length);
+    if (pair[0] >= 0 && pair[1] >= 0 && rate(r => cornerAt(r[pair[0]], r[pair[1]])) >= 0.4) return r => cornerAt(r[pair[0]], r[pair[1]]);
+    let best = null, bestRate = 0;
+    H.forEach((h, i) => {
+      const fn = r => { const p = String(r[i] ?? '').split(INT_SPLIT); return p.length === 2 ? cornerAt(p[0], p[1]) : null; };
+      const k = rate(fn); if (k > bestRate) { bestRate = k; best = fn; }
+    });
+    return bestRate >= 0.4 ? best : null;
   }
   // rows as arrays under a header (CSV) or as objects (JSON from Socrata and others)
   function fromObjects(list) {
@@ -4667,15 +4713,20 @@ const Drops = (() => {
   function fromRows(head, rows) {
     const find = re => { const i = head.findIndex(h => re.test(String(h).trim())); return i < 0 ? null : i; };
     const cols = { lat: find(LAT), lon: find(LON), geo: find(GEO), cnn: find(CNN) };
+    rows = rows.filter(r => r.some(v => String(v ?? '').trim() !== ''));
+    // no coordinates that read (a "Location" column of text, say) and no CNNs: try intersections
+    const readable = (cols.lat != null || cols.geo != null) && rows.slice(0, 40).some(r => rowGeom(r, cols));
+    const corner = !readable && cols.cnn == null && Logic.db ? textCorners(head, rows) : null;
     const feats = []; let skipped = 0;
     for (const r of rows) {
-      const g = rowGeom(r, cols);
+      const c = corner ? corner(r) : null;
+      const g = corner ? (c ? { type: 'Point', coordinates: [c.x, c.y] } : null) : rowGeom(r, cols);
       if (!g) { skipped++; continue; }
-      const cnns = cols.cnn != null ? new Set(String(r[cols.cnn] || '').split(/[;,\s]+/).map(Number).filter(Boolean)) : null;
+      const cnns = c ? new Set([c.cnn]) : cols.cnn != null ? new Set(String(r[cols.cnn] || '').split(/[;,\s]+/).map(Number).filter(Boolean)) : null;
       feats.push({ type: 'Feature', geometry: g, _cnns: cnns && cnns.size ? cnns : null, properties: Object.fromEntries(head.map((h, i) => [h.trim() || 'column ' + (i + 1),
         r[i] != null && typeof r[i] === 'object' ? JSON.stringify(r[i]) : r[i] ?? ''])) });
     }
-    return { feats, skipped, fields: head.map((h, i) => String(h).trim() || 'column ' + (i + 1)), how: cols.cnn != null && cols.lat == null && cols.geo == null ? 'cnn' : 'xy' };
+    return { feats, skipped, fields: head.map((h, i) => String(h).trim() || 'column ' + (i + 1)), how: corner ? 'corner' : cols.cnn != null && cols.lat == null && cols.geo == null ? 'cnn' : 'xy' };
   }
   function fromGeoJSON(o) {
     const list = o.type === 'FeatureCollection' ? o.features : o.type === 'Feature' ? [o] : o.type ? [{ type: 'Feature', geometry: o, properties: {} }] : [];
@@ -4881,7 +4932,7 @@ const Drops = (() => {
       r = !o ? fromCSV(text) : Array.isArray(o) ? fromObjects(o) : fromGeoJSON(o);
     } catch (e) { toast(t('dropBad', { name: fileName })); return; }
     if (!r.feats.length) { toast(t('dropNone', { name: fileName })); return; }
-    const f = { id: ++seq, name, url: url || null, look: { ...DROP_LOOK }, color: DROP_COLORS[(seq - 1) % DROP_COLORS.length], on: true, feats: r.feats, fields: r.fields, skipped: r.skipped, how: r.how,
+    const f = { id: ++seq, name, url: url || null, look: { ...DROP_LOOK, shape: SHAPE_ORDER[(seq - 1) % SHAPE_ORDER.length] }, color: DROP_COLORS[(seq - 1) % DROP_COLORS.length], on: true, feats: r.feats, fields: r.fields, skipped: r.skipped, how: r.how,
       nameField: r.fields.find(k => NAME.test(k)) || r.fields.find(k => k === 'matched_text') || r.fields.find(k => r.feats.some(x => typeof x.properties[k] === 'string' && x.properties[k] && isNaN(+x.properties[k]))) || null };
     for (const x of f.feats) {
       x._sh = shape(x.geometry);
@@ -4923,15 +4974,30 @@ const Drops = (() => {
       toast(t('urlLoading'));
       const got = await GoogleDrive.read(doc);
       if (got.kind === 'file') { add(got.file); return; }
-      const tabs = got.tabs.filter(x => x.values.length > 1);
+      // each tab: its column names (wherever they start) and whether its rows have places
+      const tabs = got.tabs.filter(x => x.values.length > 1).map(tab => {
+        const h = headerRow(tab.values), head = tab.values[h].map((x, i) => String(x ?? '').trim() || 'column ' + (i + 1));
+        const objs = tab.values.slice(h + 1).filter(r => r.some(v => String(v ?? '').trim())).map(r => Object.fromEntries(head.map((k, i) => [k, r[i] ?? ''])));
+        const r = objs.length ? fromObjects(objs) : { feats: [] };
+        return { title: tab.title, objs, n: objs.length, found: r.feats.length, how: r.how };
+      });
       if (!tabs.length) { toast(t('dropNone', { name: got.name })); return; }
-      for (const tab of tabs.slice(0, 1)) {
-        const [head, ...rows] = tab.values;
-        const objs = rows.map(r => Object.fromEntries(head.map((h, i) => [String(h).trim() || 'column ' + (i + 1), r[i] ?? ''])));
-        addText('', got.tabs.length > 1 ? `${got.name} (${tab.title})` : got.name, null, objs);
-      }
-      if (tabs.length > 1) toast(t('driveFirstTab', { tab: tabs[0].title, n: tabs.length }));
+      const nameOfTab = tab => got.tabs.length > 1 ? `${got.name} (${tab.title})` : got.name;
+      const addTab = tab => addText('', nameOfTab(tab), null, tab.objs);
+      if (tabs.length === 1) { if (!tabs[0].found) toast(t('driveNoPlaces', { name: got.name })); else addTab(tabs[0]); return; }
+      pickTabs(got.name, tabs, chosen => chosen.forEach(addTab));
     } catch (e) { toast(t('driveFail', { err: e.message || e })); }
+  }
+  // a sheet with several tabs: which to add (the ones with places are checked)
+  function pickTabs(name, tabs, done) {
+    let dlg = $('tab-pick');
+    if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'tab-pick'; dlg.className = 'tab-pick'; document.body.appendChild(dlg); }
+    const how = tb => !tb.found ? t('tabNoPlaces') : t(tb.how === 'corner' ? 'tabCorners' : tb.how === 'cnn' ? 'tabCnns' : 'tabPoints', { n: tb.found.toLocaleString() });
+    dlg.innerHTML = `<form method="dialog"><h3>${esc(t('tabTitle', { name }))}</h3><p class="muted">${esc(t('tabHint'))}</p>
+      <ul>${tabs.map((tb, i) => `<li><label><input type="checkbox" value="${i}" ${tb.found ? 'checked' : 'disabled'}> <b>${esc(tb.title)}</b> <span class="muted">${esc(t('tabRows', { n: tb.n.toLocaleString() }))} · ${esc(how(tb))}</span></label></li>`).join('')}</ul>
+      <div class="tab-pick-btns"><button value="cancel" class="btn small">${esc(t('tabCancel'))}</button><button value="ok" class="btn small primary">${esc(t('tabAdd'))}</button></div></form>`;
+    dlg.onclose = () => { if (dlg.returnValue === 'ok') done([...dlg.querySelectorAll('input:checked')].map(i => tabs[+i.value])); };
+    dlg.showModal();
   }
   async function addURL(input, quiet) {
     input = String(input || '').trim(); if (!input) return;
@@ -5277,7 +5343,7 @@ const Drops = (() => {
     function highlight() {
       if (!ready || !map.getSource('feat-hl')) return;
       const all = [...picked, ...[...onCards.keys()].map(k => k.split(':').map(Number))];
-      map.getSource('feat-hl').setData({ type: 'FeatureCollection', features: all.map(featOf).filter(Boolean).filter(o => o.f.on).map(o => ({ type: 'Feature', geometry: o.x.geometry, properties: {} })) });
+      map.getSource('feat-hl').setData({ type: 'FeatureCollection', features: all.map(featOf).filter(Boolean).filter(o => o.f.on).map(o => ({ type: 'Feature', geometry: o.x.geometry, properties: { shape: o.f.look.shape || 'circle' } })) });
     }
     // add a block or intersection card, checked (never toggles one off)
     function addCard(s) {
@@ -5350,8 +5416,15 @@ const Drops = (() => {
     map.addSource('feat-hl', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addLayer({ id: 'bp-feat-hl-line', type: 'line', source: 'feat-hl', filter: isA(['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']), layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: { 'line-color': '#FFD43B', 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 9, 17, 18], 'line-opacity': 0.9 } });
-    map.addLayer({ id: 'bp-feat-hl', type: 'circle', source: 'feat-hl', filter: isA(['Point', 'MultiPoint']),
+    map.addLayer({ id: 'bp-feat-hl', type: 'circle', source: 'feat-hl', filter: ['all', isA(['Point', 'MultiPoint']), ['==', ['get', 'shape'], 'circle']],
       paint: { 'circle-color': '#FFD43B', 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 8, 17, 15, 19, 18], 'circle-stroke-color': '#1E2340', 'circle-stroke-width': 1.5 } });
+    // shapes ringed in their own shape, bigger than the file's
+    addShapeImages();
+    const hk = 1.8 * 2 / SHAPE_CSS;
+    map.addLayer({ id: 'bp-feat-hl-sym', type: 'symbol', source: 'feat-hl', filter: ['all', isA(['Point', 'MultiPoint']), ['!=', ['get', 'shape'], 'circle']],
+      layout: { 'icon-image': ['concat', 'bp-shape-', ['get', 'shape']], 'icon-size': ['interpolate', ['linear'], ['zoom'], 11, 8 * hk, 17, 15 * hk, 19, 18 * hk],
+        'icon-allow-overlap': true, 'icon-ignore-placement': true },
+      paint: { 'icon-color': '#FFD43B', 'icon-halo-color': '#1E2340', 'icon-halo-width': 1.5 } });
     wire(popup); for (const f of files) if (!map.getSource('drop-' + f.id)) addLayers(f); }
   return { add, addURL, urls, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
 })();
