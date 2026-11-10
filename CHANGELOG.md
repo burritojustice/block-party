@@ -2,6 +2,16 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v76
+
+- **Clearing Nearby:** a **Clear** button in the Nearby panel's results and in the table's top row. It takes the rings off the map, the How near area, and the table's Nearby rows, and stops following Near me.
+- **Removing a file asks first** and says what goes with it: the file comes off the map, key and table; how many of its rows you picked onto cards; Nearby results that use it; Focus on it. Removing it now also clears those Nearby results (before, the rings and neighborhood area stayed on the map).
+- **What the buttons do** (also written out under Options):
+  - **Clear selections:** unpicks the streets, intersections, blocks and file rows you picked, and clears Nearby results. Your search, files and map stay.
+  - **Start over:** does that, and also empties the search, turns off Filter and Focus, and zooms back out. Your files and map layers stay.
+  - **Reset the map** (Options, and the old Reset view button in Layers): layers, areas, border styles, basemap, 3D, Filter and How near back to how they start. Border styles were the part that used to come back after a reload; now they don't. Your files and picks stay.
+- On the Nearby map, a place found from several starting places is drawn once (in one test, 120,548 rings became 28,135).
+
 ## v75
 
 - **Airtable** in Import (the button was a placeholder). It opens a box with:

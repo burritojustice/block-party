@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v75 -->
+<!-- build: v76 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -524,6 +524,11 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .sel-check { display: flex; gap: 6px; align-items: center; margin: 8px 0 0 62px; font-size: 13px; cursor: pointer; }
 #pick-mode button { padding: 3px 8px; }
 .save-panel { margin-top: 10px; }
+.opt-reset { display: grid; gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #E3E6F3; justify-items: start; }
+.opt-reset small, .opt-what { font-size: 12.5px; color: var(--ink-soft); margin: 4px 0 0; line-height: 1.45; }
+.opt-what b { color: var(--ink); }
+.rm-list { margin: 8px 0 12px; padding-left: 18px; font-size: 14px; line-height: 1.5; }
+.btn.nb-clear { border-color: #C92A2A; color: #C92A2A; }
 .skew-row { display: flex; align-items: center; gap: 8px; margin: -2px 0 6px 34px; }
 .skew-row input { flex: 1; accent-color: #B5179E; }
 .skew-row span { font: 700 13px Figtree, sans-serif; min-width: 34px; }
@@ -761,8 +766,8 @@ summary::marker { font-size: 1.15em; }
 
     <div class="lookup-foot">
       <div class="foot-row">
-        <button type="button" class="btn small" id="start-over" data-i18n="startOver">Start over</button>
-        <button type="button" class="btn small" id="clear-sel" data-i18n="clearSel">Clear selections</button>
+        <button type="button" class="btn small" id="start-over" data-i18n="startOver" data-i18n-title="startOverTitle" title="">Start over</button>
+        <button type="button" class="btn small" id="clear-sel" data-i18n="clearSel" data-i18n-title="clearSelTitle" title="">Clear selections</button>
         <button type="button" class="opt-toggle" id="opt-toggle" aria-expanded="false" aria-controls="opt-panel">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="15" cy="6" r="2" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="9" cy="12" r="2" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="17" cy="18" r="2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
           <span data-i18n="options">Options</span>
@@ -772,6 +777,8 @@ summary::marker { font-size: 1.15em; }
       <div class="opt-panel" id="opt-panel" hidden>
         <label class="check"><input type="checkbox" id="include-minor" checked><span data-i18n="includeMinor">Include pedestrian paths and streets the city doesn’t maintain</span></label>
         <label class="check"><input type="checkbox" id="search-all"><span data-i18n="searchAll">Include retired, freeway, and paper streets</span></label>
+        <div class="opt-reset"><button type="button" class="btn small" id="reset-map" data-i18n="resetMap">Reset the map</button><small data-i18n="resetMapHint">Layers, areas, borders, basemap, 3D, Filter and How near back to how they start. Your files and picks stay.</small></div>
+        <p class="opt-what"><b data-i18n="clearSel">Clear selections</b>: <span data-i18n="clearSelTitle"></span><br><b data-i18n="startOver">Start over</b>: <span data-i18n="startOverTitle"></span></p>
       </div>
     </div>
   </section>
@@ -812,7 +819,7 @@ summary::marker { font-size: 1.15em; }
         <p class="pop-hint" data-i18n="layersHint">“Close up” shows a layer once you zoom in to a few blocks.</p>
         <div id="drop-rows"></div>
         <div id="layers-rows"></div>
-        <div class="lyr-reset"><button type="button" class="btn small" id="layers-reset" data-i18n="resetView">Reset view</button><small data-i18n="resetViewHint">Layers, areas, basemap and 3D back to how they start. Your files and cards stay.</small></div>
+        <div class="lyr-reset"><button type="button" class="btn small" id="layers-reset" data-i18n="resetView">Reset view</button><small data-i18n="resetMapHint">Layers, areas, borders, basemap, 3D, Filter and How near back to how they start. Your files and picks stay.</small></div>
       </div>
       <div class="map-pop" id="areas-panel" hidden>
         <div id="areas-rows"></div>
@@ -845,7 +852,7 @@ summary::marker { font-size: 1.15em; }
         <label class="tbl-all"><input type="checkbox" id="tbl-allcols"> <span data-i18n="tableAllCols">All columns</span></label>
         <span class="tbl-nb" id="tbl-nb" hidden><select id="tbl-nb-how" aria-label="How near"></select>
           <button type="button" class="btn small" data-nb-x="copy" data-i18n="nbCopy">Copy</button><button type="button" class="btn small" data-nb-x="csv">CSV</button>
-          <button type="button" class="btn small" data-nb-x="json">JSON</button><button type="button" class="btn small" data-nb-x="geojson" data-i18n="nbGeojson">GeoJSON view</button></span>
+          <button type="button" class="btn small" data-nb-x="json">JSON</button><button type="button" class="btn small" data-nb-x="geojson" data-i18n="nbGeojson">GeoJSON view</button><button type="button" class="btn small nb-clear" data-nb-clear data-i18n="nbClear">Clear</button></span>
         <button type="button" class="tbl-x" id="tbl-close" data-i18n-title="tableClose" title="Close the table" aria-label="Close the table">✕</button>
       </div>
       <div class="tbl-scroll" id="tbl-scroll"><table class="tbl" id="tbl"></table></div>
@@ -1179,7 +1186,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v75';
+const _BUILD_VERSION = 'v76';
 
 /* =====================================================================
    CONFIG
@@ -1387,7 +1394,12 @@ const I18N = {
     featKind: 'From {file}', featOn: 'On', featOnN: 'On blocks', featNoBlock: 'No block within 40 m', featAddBlock: 'Add this block', featRow: 'Details', featFields: '{n} fields', featMatchCols: 'Matcher columns ({n})', featLocCols: 'Location columns ({n})',
     featOnCard: '{name}: on the card for {card}', dropAtCorner: 'at this corner', dropAtInt: 'at {name}', dropAtIntAway: 'at {name}, {n} block(s) out',
     cornersNoteFeat: 'Everyone in the {n} census blocks at this spot (full counts): neighbors who could see it and walk over',
-    resetView: 'Reset view', resetViewHint: 'Layers, areas, basemap and 3D back to how they start. Your files and cards stay.', resetDone: 'Back to the starting layers',
+    resetView: 'Reset the map', resetMap: 'Reset the map', resetMapHint: 'Layers, areas, borders, basemap, 3D, Filter and How near back to how they start. Your files and picks stay.', resetDone: 'The map is back to how it starts',
+    clearSelTitle: 'Unpicks the streets, intersections, blocks and file rows you picked, and clears Nearby results. Your search, files and map stay.',
+    startOverTitle: 'Does that, and also empties the search, turns off Filter and Focus, and zooms back out. Your files and map layers stay.',
+    nbClear: 'Clear', nbCleared: 'Nearby results cleared',
+    rmTitle: 'Remove “{name}”?', rmGone: 'It comes off the map, the map key and the table.', rmPicked: '{n} of its rows you picked onto cards will go.', rmNearby: 'Nearby results that use it will be cleared.',
+    rmFocus: 'Focus on it will end.', rmAgain: 'You can add it again any time.', rmOk: 'Remove', rmCancel: 'Keep it', rmDone: 'Removed {name}',
     bmStyle: 'Map style', bmStyleHint: 'Quieter styles let your files’ colors stand out. Satellite stays as is.',
     flavor_light: 'Light', flavor_white: 'White', flavor_grayscale: 'Gray', flavor_dark: 'Dark', flavor_black: 'Black',
     flavorFail: 'Couldn’t load that map style. Try again in a moment.',
@@ -2404,8 +2416,14 @@ function startOver({ keepView = false } = {}) {
   fromBox.set(null, ''); toBox.set(null, ''); intBox.set(null, ''); $('num-input').value = '';
   fromBox.enable(false); toBox.enable(false); intBox.enable(false); enableNum(false);
   try { SelAreas.reset(); } catch (e) { }   // not there yet while the page starts
+  clearPicked();
+  try { Focus.set(null); clearQuiet(); } catch (e) { }
   render(); writeHash();
   if (!keepView) resetView();
+}
+// what both buttons clear besides the list: file rows picked onto cards, Nearby results, the How near area
+function clearPicked() {
+  try { Drops.cards.clear(); NearbyView.clear(true); Drops.showExtent(null); lastCardCnn = null; } catch (e) { }   // not there yet while the page starts
 }
 // Empties the block list (and the cross street / number fields) but keeps the street and the map view
 function clearSelections() {
@@ -2413,6 +2431,7 @@ function clearSelections() {
   fromBox.set(null, ''); toBox.set(null, ''); toBox.enable(false); intBox.set(null, '');
   $('num-input').value = '';
   try { SelAreas.reset(); } catch (e) { }   // not there yet while the page starts
+  clearPicked();
   setResults([], '', '');
 }
 function enableNum(on) { $('num-input').disabled = !on; $('step-num').classList.toggle('is-disabled', !on); }
@@ -5659,10 +5678,25 @@ const Drops = (() => {
   const urls = () => files.map(f => f.url).filter(Boolean);
   // after files change: cards, the map's shaded areas, the hash
   function changed() { areaCache.clear(); render(); Areas.updateShade(); writeHash(); }
+  function askRemove(id) {
+    const f = files.find(x => x.id === id); if (!f) return;
+    const n = FeatCards.countFor(id), nb = NearbyView.uses(id);
+    let dlg = $('rm-dlg');
+    if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'rm-dlg'; dlg.className = 'tab-pick'; document.body.appendChild(dlg); }
+    const lines = [t('rmGone'), n ? t('rmPicked', { n }) : '', nb ? t('rmNearby') : '', focusId === id ? t('rmFocus') : '', t('rmAgain')].filter(Boolean);
+    dlg.innerHTML = `<form method="dialog"><h3>${esc(t('rmTitle', { name: shown(f) }))}</h3><ul class="rm-list">${lines.map(l => `<li>${esc(l)}</li>`).join('')}</ul>
+      <div class="tab-pick-btns"><button value="cancel" class="btn small">${esc(t('rmCancel'))}</button><button value="ok" class="btn small primary">${esc(t('rmOk'))}</button></div></form>`;
+    dlg.onclose = () => { if (dlg.returnValue === 'ok') { remove(id); toast(t('rmDone', { name: shown(f) })); } };
+    dlg.showModal();
+  }
   function remove(id) {
     const i = files.findIndex(f => f.id === id); if (i < 0) return;
-    const f = files[i]; files.splice(i, 1);
+    const f = files[i];
+    if (focusId === id) Focus.set(null);
+    files.splice(i, 1);
     FeatCards.dropFile(f.id);
+    try { NearbyView.dropFile(f.id); } catch (e) { }
+    if (extentFor && !files.some(x => x.on)) showExtent(null);
     if (ready) { for (const l of ids(f)) if (map.getLayer(l)) map.removeLayer(l); for (const x of ['drop-' + f.id, 'drop-' + f.id + '-lab']) if (map.getSource(x)) map.removeSource(x); }
     renderMenu(); changed();
   }
@@ -5849,7 +5883,7 @@ const Drops = (() => {
       const id = +row.dataset.drop;
       // after this click is done: rebuilding the rows mid-click makes the menu's outside-click handler close it
       if (e.target.closest('[data-drop-focus]')) setTimeout(() => Focus.set(focusId === id ? null : 'f' + id));
-      else if (e.target.closest('[data-drop-x]')) setTimeout(() => { if (focusId === id) Focus.set(null); remove(id); });
+      else if (e.target.closest('[data-drop-x]')) setTimeout(() => askRemove(id));
       else { const b = e.target.closest('[data-drop-on]'); if (b) setTimeout(() => show(id, b.dataset.dropOn === '1')); }
     });
     el.addEventListener('change', e => { if (e.target.matches('[data-drop-pick]')) { [...e.target.files].forEach(add); e.target.value = ''; } });
@@ -6100,7 +6134,10 @@ const Drops = (() => {
     }
     return { toggle, draw, highlight, setup, facts, prune, spot: (fid, i) => { const o = featOf([fid, i]); return o ? spot(o.x) : null; },
       cardOf: (fid, i) => { const o = featOf([fid, i]); const tg = o ? targets(o.x) : []; return tg && tg[0] ? tg[0].cnn : null; },
-      has: (fid, i) => picked.some(([a, b]) => a === fid && b === i) || onCards.has(`${fid}:${i}`), dropFile: id => { picked = picked.filter(([a]) => a !== id); for (const k of [...onCards.keys()]) if (k.startsWith(id + ':')) onCards.delete(k); draw(); highlight(); } };
+      has: (fid, i) => picked.some(([a, b]) => a === fid && b === i) || onCards.has(`${fid}:${i}`),
+      countFor: id => picked.filter(([a]) => a === id).length + [...onCards.keys()].filter(k => k.startsWith(id + ':')).length,
+      clear: () => { picked = []; onCards.clear(); draw(); highlight(); },
+      dropFile: id => { picked = picked.filter(([a]) => a !== id); for (const k of [...onCards.keys()]) if (k.startsWith(id + ':')) onCards.delete(k); draw(); highlight(); } };
   })();
   // columns sf-blocks' Matcher and match scripts add, and the location columns: folded under Details
   const MATCH_COLS = new Set(['source_row', 'part', 'parts', 'matched_text', 'type', 'cnn', 'nearby_cnns', 'street', 'from_street', 'to_street', 'address_low',
@@ -6431,7 +6468,7 @@ const Table = (() => {
     $('tbl-search').addEventListener('input', e => { q = e.target.value; refresh(); });
     $('tbl-allcols').addEventListener('change', e => { allCols = e.target.checked; refresh(); });
     $('tbl-nb-how').addEventListener('change', e => { Drops.setNearFrom(e.target.value); if ($('nb-how')) $('nb-how').value = e.target.value; NearbyView.run(); });
-    $('tbl-nb').addEventListener('click', e => { const b = e.target.closest('[data-nb-x]'); if (b) NearbyView.exportAs(b.dataset.nbX); });
+    $('tbl-nb').addEventListener('click', e => { if (e.target.closest('[data-nb-clear]')) { NearbyView.clear(); return; } const b = e.target.closest('[data-nb-x]'); if (b) NearbyView.exportAs(b.dataset.nbX); });
     const tb = $('tbl');
     tb.addEventListener('click', e => {
       const th = e.target.closest('th[data-sort]');
@@ -6691,11 +6728,11 @@ const NearbyView = (() => {
   function drawMap() {
     if (!mapReady) return;
     ensureLayers();
-    const feats = [];
+    const feats = [], drawn = new Set();   // a place found from several starting places is drawn once
     for (const r of res ? res.rows : []) {
       if (r.pl.ll && r.pl.id !== 'me') feats.push({ type: 'Feature', properties: { role: 'start', sid: r.pl.id, on: r.pl.id === onRow }, geometry: { type: 'Point', coordinates: r.pl.ll } });
       if (onRow != null && r.pl.id !== onRow && res.rows.length > 1) continue;
-      for (const l of res.lists) for (const x of r.m[l.key]) if (x.pl.ll) feats.push({ type: 'Feature', geometry: { type: 'Point', coordinates: x.pl.ll },
+      for (const l of res.lists) for (const x of r.m[l.key]) if (x.pl.ll && !drawn.has(l.key + '|' + x.pl.id) && drawn.add(l.key + '|' + x.pl.id)) feats.push({ type: 'Feature', geometry: { type: 'Point', coordinates: x.pl.ll },
         properties: { role: 'match', color: l.color, name: x.pl.name, list: l.label, where: x.where, d: x.d ?? '', contact: x.contact || '' } });
     }
     map.getSource('nb-hl').setData({ type: 'FeatureCollection', features: feats });
@@ -6739,7 +6776,8 @@ const NearbyView = (() => {
     const out = $('nb-out'); if (!out || !res) return;
     const total = res.rows.reduce((a, r) => a + res.lists.reduce((b, l) => b + r.m[l.key].length, 0), 0);
     const btns = `<div class="nb-exp"><button type="button" class="btn small" data-nb-x="copy">${esc(t('nbCopy'))}</button><button type="button" class="btn small" data-nb-x="csv">CSV</button>
-      <button type="button" class="btn small" data-nb-x="json">JSON</button><button type="button" class="btn small" data-nb-x="geojson">${esc(t('nbGeojson'))}</button></div>`;
+      <button type="button" class="btn small" data-nb-x="json">JSON</button><button type="button" class="btn small" data-nb-x="geojson">${esc(t('nbGeojson'))}</button>
+      <button type="button" class="btn small nb-clear" data-nb-clear>${esc(t('nbClear'))}</button></div>`;
     // one starting place (where you are, or a single row): its matches right here, nearest first
     if (res.rows.length === 1) {
       const r = res.rows[0], all = res.lists.flatMap(l => r.m[l.key].map(x => ({ ...x, l }))).sort((a, b) => (a.d ?? 1e9) - (b.d ?? 1e9));
@@ -6797,6 +6835,7 @@ const NearbyView = (() => {
     p.addEventListener('click', e => {
       if (e.target.closest('[data-nb-close]')) return close();
       if (e.target.closest('[data-nb-go]')) return run();
+      if (e.target.closest('[data-nb-clear]')) return clear();
       const x = e.target.closest('[data-nb-x]'); if (x) return exportAs(x.dataset.nbX);
     });
     p.addEventListener('change', e => {
@@ -6827,8 +6866,27 @@ const NearbyView = (() => {
     }).join('');
   }
   const toggleGroup = gk => openGroups.has(gk) ? openGroups.delete(gk) : openGroups.add(gk);
+  // clear the results: rings, the How near area, the table's Nearby rows (quiet: no toast)
+  function clear(quiet) {
+    const had = !!res;
+    res = null; onRow = null; openGroups.clear();
+    if (watch != null) { navigator.geolocation.clearWatch(watch); watch = null; }
+    if (mapReady) for (const k of ['nb-hl', 'nb-me']) if (map.getSource(k)) map.getSource(k).setData({ type: 'FeatureCollection', features: [] });
+    showArea(null);
+    const out = $('nb-out'); if (out) out.innerHTML = '';
+    try { Table.refresh(); } catch (e) { }
+    if (had && !quiet) toast(t('nbCleared'));
+  }
+  const uses = fid => !!res && (res.start === 'f' + fid || res.lists.some(l => l.key === 'f' + fid));
+  function dropFile(fid) {
+    const k = 'f' + fid;
+    if (uses(fid)) clear(true);
+    chosen.delete(k); seenFiles.delete(k);
+    if (start === k) start = null;
+    const p = $('nb-panel'); if (p && !p.hidden) p.innerHTML = panelHTML();
+  }
   const showAreaOf = id => { const r = id && res && res.rows.find(x => x.pl.id === id); showArea(r ? r.pl : null); };
-  return { setup, open, close, run, tableRows, subRowsHTML, focusRow, toggleGroup, showAreaOf, has: () => !!res, label: () => res ? t('nbTableSrc', { name: res.startLabel, n: res.rows.length }) : '', exportAs };
+  return { setup, open, close, run, clear, uses, dropFile, tableRows, subRowsHTML, focusRow, toggleGroup, showAreaOf, has: () => !!res, label: () => res ? t('nbTableSrc', { name: res.startLabel, n: res.rows.length }) : '', exportAs };
 })();
 
 const SelAreas = (() => {
@@ -8445,7 +8503,12 @@ function setupMapMenus() {
   });
   setupAreasMenu();
   LgKey.setup();
-  $('layers-reset').addEventListener('click', () => {
+  $('layers-reset').addEventListener('click', resetMap);
+  $('reset-map').addEventListener('click', resetMap);
+  function resetMap() {
+    clearQuiet(); Focus.set(null);
+    for (const k of BORDER_STYLE_KEYS) areaMode[k] = AREA_DEFAULT[k];
+    try { localStorage.removeItem('bp-borders'); } catch (err) { }
     for (const k of Object.keys(OVERLAY_DEFAULT)) setOverlay(k, OVERLAY_DEFAULT[k], false);
     landCats = new Set(LAND_DEFAULT); treeGenera = null; bizCats = new Set(BIZ_CATS.map(([k]) => k));
     if (bizAll) setBizAll(false);
@@ -8458,7 +8521,7 @@ function setupMapMenus() {
     setTimeout(() => { setupMapMenusRows(); setLandCats([...landCats], false); Tiles.filter(); syncAreasMenu(); Areas.apply(); writeHash(); });
     map.easeTo({ pitch: 0, bearing: 0, duration: reducedMotion() ? 0 : 500 });
     toast(t('resetDone'));
-  });
+  }
   const menus = [['layers-btn', 'layers-panel'], ['areas-btn', 'areas-panel'], ['quiet-btn', 'quiet-panel']];
   const close = except => menus.forEach(([b, p]) => { if (b !== except) { $(p).hidden = true; $(b).setAttribute('aria-expanded', 'false'); } });
   for (const [b, p] of menus) $(b).addEventListener('click', () => {
@@ -8500,6 +8563,10 @@ function setupQuiet() {
   });
   panel.addEventListener('change', e => { if (e.target.dataset.quiet) applyQuiet(); });
   $('quiet-clear').onclick = () => { document.querySelectorAll('[data-quiet]').forEach(i => i.checked = false); applyQuiet(); };
+}
+function clearQuiet() {
+  if (!quietOn().length) return;
+  document.querySelectorAll('[data-quiet]').forEach(i => i.checked = false); applyQuiet();
 }
 function applyQuiet() {
   const on = quietOn();
