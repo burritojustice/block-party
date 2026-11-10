@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v70 -->
+<!-- build: v71 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -422,6 +422,8 @@ details.fold > summary .area-chips { display: inline-flex; vertical-align: middl
 #map { position: absolute; inset: 0; }
 .map-wrap { --tbl-h: 280px; }
 .map-wrap.tbl-open #map { bottom: var(--tbl-h); }
+.map-wrap.tbl-open .map-pop { max-height: calc(100vh - var(--tbl-h) - 130px); }
+.map-wrap.tbl-open .map-ui { z-index: 8; }
 .map-wrap.tbl-open .legend { bottom: calc(var(--tbl-h) + 34px); max-height: calc(100% - var(--tbl-h) - 160px); overflow: auto; }
 .tbl-drawer { position: absolute; left: 0; right: 0; bottom: 0; height: var(--tbl-h); z-index: 7; background: var(--card); border-top: 2px solid var(--ink); display: flex; flex-direction: column; }
 .tbl-grip { height: 8px; cursor: ns-resize; flex: none; background: linear-gradient(var(--line), var(--line)) center / 40px 3px no-repeat; touch-action: none; }
@@ -522,6 +524,10 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .sel-check { display: flex; gap: 6px; align-items: center; margin: 8px 0 0 62px; font-size: 13px; cursor: pointer; }
 #pick-mode button { padding: 3px 8px; }
 .save-panel { margin-top: 10px; }
+.near-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between;
+  margin: 12px 0 2px; padding-top: 10px; border-top: 2px solid var(--line); font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+.near-pick { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.near-pick select { font: inherit; font-weight: 600; padding: 2px 6px; border: 1.5px solid var(--ink); border-radius: 999px; background: #fff; max-width: 190px; }
 .save-panel .dl-what { flex: 1 1 0; min-width: 0; }
 .bcol button { padding: 3px 7px; display: inline-flex; align-items: center; }
 .bcol i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: 0 0 0 1.5px #fff, 0 0 0 2.5px rgba(30,35,64,.35); }
@@ -1084,7 +1090,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v70';
+const _BUILD_VERSION = 'v71';
 
 /* =====================================================================
    CONFIG
@@ -1260,6 +1266,7 @@ const I18N = {
     dropZone: 'Drop a CSV or GeoJSON to add it as a layer', dropCount: '{n} on the map', dropSkipped: '{n} without a location', dropRemove: 'Remove this file',
     dropAdded: 'Added {name}: {n} on the map', dropAddedSkip: 'Added {name}: {n} on the map, {k} rows without a location', dropBad: "Couldn't read {name}",
     dropNone: 'No locations in {name}: it needs lat/lon columns, WKT, a CNN column, or GeoJSON', dropYours: 'your file', dropUnnamed: '(no name)',
+    nearbyHead: 'Nearby', nearYourFiles: 'Your files:', nearSame: 'Same {area}', nearWithin: 'Within {m} m', bizMoreHere: '…and {n} more at {a}',
     dropCopyList: 'Copy list', dropCopied: 'Copied {n} rows from {name}',
     dropNear: '{n} within {m} m', dropNoneNear: 'None', dropOn: 'on this block', dropM: '{m} m', dropOnStreet: 'on {street}',
     dropAround: '{street}, around the corner', dropAway: '{street}, {n} blocks out',
@@ -2432,8 +2439,8 @@ function intCardHTML(i) {
       <dt>${esc(t('elevation'))}</dt><dd data-elev="${i.cnn}">${esc(elev)}</dd>
       ${transitFacts(i)}
       ${parcelFacts(i)}
-      ${tileFacts(i)}${Drops.facts(i)}
-      ${groupsFacts(i)}
+      ${tileFacts(i, 'trees')}
+      ${nearbyHTML(i)}
     </dl>
   </li>`;
 }
@@ -2527,8 +2534,8 @@ function cardHTML(s) {
       <dt>${esc(t('slope'))}</dt><dd data-slope="${s.cnn}">${slopeHTML(s)}</dd>
       ${transitFacts(s)}
       ${parcelFacts(s)}
-      ${tileFacts(s)}${Drops.facts(s)}
-      ${groupsFacts(s)}
+      ${tileFacts(s, 'trees')}
+      ${nearbyHTML(s)}
     </dl>
     <div class="profile" data-profile="${s.cnn}" aria-label="${esc(t('profileTitle'))}">${profileHTML(s)}</div>
   </li>`;
@@ -2659,6 +2666,13 @@ function setupResultsEvents() {
     if (d.open) Tiles.highlight(cnn, k);
     else if (Tiles.hlFor === cnn + '|' + k) Tiles.highlight(null, k);
   }, true);
+  $('seg-list').addEventListener('change', e => {
+    if (!e.target.matches('[data-near-card]')) return;
+    const li = e.target.closest('[data-cnn]'), s = li && state.results.find(r => r.cnn === +li.dataset.cnn);
+    if (s) lastCardCnn = s.cnn;
+    Drops.setNearFrom(e.target.value);
+    if (s) Drops.showExtent(s);
+  });
   $('seg-list').addEventListener('click', e => {
     const blk = e.target.closest('[data-blk]');
     if (blk) { SelAreas.cardClick(e, blk); return; }
@@ -2691,15 +2705,16 @@ function setupResultsEvents() {
     const cg = e.target.closest('[data-copy-groups]');
     if (cg) { const s = state.results.find(r => r.cnn === +cg.dataset.copyGroups); const r = s && Groups.of(s); if (r) copyText(groupsText(r), t('ngCopied', { n: r.groups.length + r.citywide.length })); return; }
     const li = e.target.closest('.seg'); if (!li) return;
-    // selecting text, or clicking in the details or chart, shouldn't check or uncheck the card
+    // selecting text, or clicking in the details or chart, doesn't move the map
     if (e.target.tagName !== 'INPUT') {
       if (String(window.getSelection && window.getSelection()).trim()) return;
-      if (e.target.closest('.facts, .profile, .tags')) return;
+      if (e.target.closest('.facts, .profile, .tags, select, button, a, summary')) return;
     }
     const cnn = +li.dataset.cnn;
     const own = li.querySelector(':scope > input');
     if (e.target.tagName === 'INPUT' && e.target !== own) return;
-    if (e.target !== own) own.checked = !own.checked;
+    // the checkbox checks; anywhere else on the card goes to it on the map
+    if (e.target !== own) { goToCard(state.results.find(r => r.cnn === cnn)); return; }
     toggleChecked(cnn, own.checked);
   });
 }
@@ -3289,12 +3304,12 @@ let basemapLabelIds = [], satOn = false;
 //   3D           buildings, when tilted
 //   labels       all of them, the basemap's (street and place names) included, so nothing above covers a name
 const LAYER_ORDER = [
-  ['shading', id => id === 'bp-pick-fill' || id === 'bp-pick-hover-fill' || /^bp-drop-\d+-fill$/.test(id) || /^bp-area-.*-fill$/.test(id) || /^bp-water-over-/.test(id) || ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill', 'bp-lyr-buildings-fill'].includes(id)],
+  ['shading', id => id === 'bp-pick-fill' || id === 'bp-near-fill' || id === 'bp-pick-hover-fill' || /^bp-drop-\d+-fill$/.test(id) || /^bp-area-.*-fill$/.test(id) || /^bp-water-over-/.test(id) || ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill', 'bp-lyr-buildings-fill'].includes(id)],
   ['edges', id => id === CONTOUR_LINE || ['bp-lyr-curbs', 'bp-lyr-landuse-line', 'bp-adj-lots-casing', 'bp-adj-lots', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-buildings-line'].includes(id)
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
+  ['selection', id => ['bp-near-line', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
@@ -4383,13 +4398,28 @@ const Tiles = (() => {
       }
       Tiles.filter();
       // the ring around points from an open card list (yellow: what you picked), with a dot when the layer is off
+      const rec = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '340px', className: 'bp-rec', offset: 10 });
       map.addSource('card-hl', { type: 'geojson', data: EMPTY });
       map.addLayer({ id: 'bp-card-hl-dot', type: 'circle', source: 'card-hl', paint: { 'circle-radius': 3.5,
         'circle-color': ['match', ['get', 'k'], 'trees', GENUS_OTHER, BIZ_COLOR.other] } }, pointBelow);
       map.addLayer({ id: 'bp-card-hl', type: 'circle', source: 'card-hl', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 14, 6, 18, 11],
         'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': '#FFC53D', 'circle-stroke-width': 3, 'circle-stroke-opacity': 0.95 } }, pointBelow);
-      // a click on a tree or a business: its full record, in a popup that stays until closed
-      const rec = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '340px', className: 'bp-rec', offset: 10 });
+      map.addLayer({ id: 'bp-card-hl-label', type: 'symbol', source: 'card-hl', filter: ['has', 'label'], minzoom: 15,
+        layout: { 'text-field': ['get', 'label'], 'text-font': LABEL_FONT, 'text-size': 12, 'text-anchor': 'left', 'text-offset': [1, 0], 'text-optional': true },
+        paint: { 'text-color': '#1E2340', 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.6 } });
+      // the highlighted businesses: hover names them, a click opens their records
+      map.on('mousemove', 'bp-card-hl', e => {
+        const f = e.features.find(x => x.properties.k === 'businesses'), x = f && Tiles.hlBiz(+f.properties.i); if (!x) return;
+        popup.setLngLat(x.ll).setHTML(`<b>${esc(x.address)}</b>${x.shown.slice(0, 5).map(i => `<br><span class="pop-lyr">${esc(i.dba || i.owner || '')}</span>`).join('')}${x.shown.length > 5 ? `<br><span class="pop-lyr">…</span>` : ''}`).addTo(map);
+        popOwner = 'bp-card-hl'; map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'bp-card-hl', () => { if (popOwner === 'bp-card-hl') { popup.remove(); popOwner = null; } map.getCanvas().style.cursor = ''; });
+      map.on('click', 'bp-card-hl', e => {
+        const f = e.features.find(x => x.properties.k === 'businesses'), x = f && Tiles.hlBiz(+f.properties.i); if (!x) return;
+        popup.remove(); popOwner = null;
+        rec.setLngLat(x.ll).setHTML(bizRecord({ address: x.address, items: x.shown })).addTo(map);
+      });
+      // a click on a tree or a business: its full record, in a popup that stays until closed (rec, above)
       const onCorner = e => map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit', 'bp-ints'].filter(i => map.getLayer(i)) }).length > 0;
       for (const id of ['bp-lyr-trees', 'bp-lyr-businesses']) map.on('click', id, e => {
         const f = e.features[0]; if (!f || onCorner(e)) return;
@@ -4478,11 +4508,20 @@ const Tiles = (() => {
     highlight(cnn, k) {
       if (!mapReady || !map.getSource('card-hl')) return;
       const r = cnn != null && cache.get(cnn);
-      const pts = !r ? [] : k === 'trees' ? (r.trees ? r.trees.pts : []) : (r.businesses || []).filter(x => x.items.some(i => bizAll || !i.kind)).map(x => x.ll);
-      map.getSource('card-hl').setData({ type: 'FeatureCollection', features: pts.map(c => ({ type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: { k } })) });
+      if (k === 'trees' || !r) {
+        const pts = !r ? [] : r.trees ? r.trees.pts : [];
+        hlBiz = [];
+        map.getSource('card-hl').setData({ type: 'FeatureCollection', features: pts.map(c => ({ type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: { k } })) });
+      } else {
+        // businesses: each address with its first name (and how many more), for labels, hover and click
+        hlBiz = (r.businesses || []).map(x => ({ ...x, shown: x.items.filter(i => bizAll || !i.kind) })).filter(x => x.shown.length);
+        map.getSource('card-hl').setData({ type: 'FeatureCollection', features: hlBiz.map((x, i) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: x.ll },
+          properties: { k, i, label: (x.shown[0].dba || x.shown[0].owner || '') + (x.shown.length > 1 ? ` +${x.shown.length - 1}` : '') } })) });
+      }
       hlFor = r ? cnn + '|' + k : null;
     },
     get hlFor() { return hlFor; },
+    hlBiz: i => hlBiz[i] || null,
     // card rows: trees (by CNN) and businesses (by address on this block), or null while being read
     peek: s => cache.get(s.cnn) || null,
     merge: rs => mergeTiles(rs),
@@ -4498,6 +4537,7 @@ const Tiles = (() => {
 })();
 let TREE_TOP = [];
 let hlFor = null;   // which card list is ringed on the map ("cnn|trees")
+let hlBiz = [];     // the businesses ringed, by index, for hover and click
 const BLDG_FULL_PITCH = 45;   // degrees of tilt where buildings reach full height
 const BLDG_STEPS = 6;         // heights in steps: each step rebuilds every building's 3D shape
 let bldgK = -1;
@@ -4590,22 +4630,31 @@ function monthYear(d) {
 }
 const asOfRow = k => { const d = Tiles.asOf(k); return d ? `<tr><td></td><td colspan="2"><small>${esc(t('lgAsOf', { d: monthYear(d) }))}</small></td></tr>` : ''; };
 const bizShown = list => list.map(a => ({ ...a, shown: a.items.filter(i => bizAll || !i.kind) }));
-function tileFacts(s) {
+// the bottom of a card: what's nearby (businesses, your files, neighborhood groups), with what "nearby" means
+function nearbyHTML(s) {
+  const body = tileFacts(s, 'biz') + Drops.facts(s) + groupsFacts(s);
+  if (!body.trim()) return '';
+  return `<div class="near-head"><span>${esc(t('nearbyHead'))}</span>${Drops.nearPicker()}</div>${body}`;
+}
+function tileFacts(s, only) {
   if (!Tiles.has('trees') && !Tiles.has('businesses')) return '';
+  if (only === 'trees' && !Tiles.has('trees')) return '';
+  if (only === 'biz' && !Tiles.has('businesses')) return '';
   const r = Tiles.peek(s);
-  if (!r) return `<dt>${esc(t(Tiles.has('trees') ? 'treesRow' : 'bizRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
+  if (!r) return `<dt>${esc(t(only === 'biz' ? 'bizRow' : only === 'trees' || Tiles.has('trees') ? 'treesRow' : 'bizRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
   let html = '';
-  if (r.trees) {
+  if (r.trees && only !== 'biz') {
     const top = r.trees.kinds.slice(0, 3).map(([k, n]) => `${n} ${k}`).join(', ') + (r.trees.kinds.length > 3 ? ', ' + t('treesMore', { n: r.trees.kinds.length - 3 }) : '');
     const kinds = `<table class="lu-table">${r.trees.kinds.map(([k, n]) => `<tr><td>${esc(k)}</td><td>${n}</td></tr>`).join('')}</table><small class="lu-note">${esc(t('treesSource', { date: Tiles.asOf('trees') || '' }))}</small>`;
     html += `<dt>${esc(t('treesRow'))}</dt><dd>${r.trees.n ? foldDD(esc(t('treesCount', { n: r.trees.n, k: r.trees.kinds.length })), kinds, 'trees') : esc(t('treesNone'))}</dd>`;
   }
-  if (r.businesses && r.businesses.length) {
+  if (r.businesses && r.businesses.length && only !== 'trees') {
     const list = bizShown(r.businesses), n = list.reduce((a, x) => a + x.shown.length, 0), addrs = list.filter(x => x.shown.length).length;
     const hidden = r.businesses.flatMap(x => x.items.filter(i => i.kind && !bizAll));
     const kinds = [...new Set(hidden.map(i => t('kind_' + i.kind)))].join(', ');
-    const li = x => `<li><b>${esc(x.address)}</b>${x.shown.length > 1 ? ` <span class="muted">· ${x.shown.length}</span>` : ''}${x.shown.slice(0, 40).map(i =>
-      `<br><span>${esc(i.dba || i.owner || '')}${i.owner && i.dba && i.owner !== i.dba ? ` <small class="muted">· ${esc(t('bizOwner'))}: ${esc(i.owner)}</small>` : ''}</span>`).join('')}${x.shown.length > 40 ? '<br>…' : ''}</li>`;
+    // one line per business, its name first, then where it is
+    const li = x => x.shown.slice(0, 40).map(i => `<li><b>${esc(i.dba || i.owner || '')}</b>${i.owner && i.dba && i.owner !== i.dba ? ` <small class="muted">· ${esc(t('bizOwner'))}: ${esc(i.owner)}</small>` : ''}<br><span class="muted">${esc(x.address)}</span></li>`).join('')
+      + (x.shown.length > 40 ? `<li class="muted">${esc(t('bizMoreHere', { n: x.shown.length - 40, a: x.address }))}</li>` : '');
     const m = Tiles.meta('businesses');
     html += `<dt>${esc(t(isInt(s) ? 'bizRowInt' : 'bizRow'))}</dt><dd><details class="ng biz"><summary>${esc(addrs === 1 ? t('bizN1', { n }) : t('bizN', { n, a: addrs }))}${hidden.length ? ` <small class="muted">${esc(t('bizHidden', { n: hidden.length, kinds }))}</small>` : ''}</summary>
       <ul class="ng-list">${list.filter(x => x.shown.length).map(li).join('')}</ul>
@@ -5197,14 +5246,56 @@ const Drops = (() => {
         `<option value="${v}" ${nearMode.area === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
       <div class="lyr-row lyr-sub" data-near-opt="radius" ${nearMode.by === 'radius' ? '' : 'hidden'}><span></span><b></b>${seg('radius', [[50, '50 m'], [100, '100 m'], [200, '200 m']])}</div>`;
   }
+  // on a card's Nearby line: one menu for what "nearby" means (for your files)
+  function nearPicker() {
+    if (!files.some(f => f.on)) return '';
+    const cur = nearMode.by === 'blocks' ? 'blocks:' + nearMode.steps : nearMode.by === 'area' ? 'area:' + nearMode.area : 'radius:' + nearMode.radius;
+    const opts = [['blocks:0', t('nearStep0')], ['blocks:1', t('nearStep1')], ['blocks:2', t('nearStep2')],
+      ...AREA_PICKS().map(([v, l]) => ['area:' + v, t('nearSame', { area: l })]), ...[50, 100, 200].map(m => ['radius:' + m, t('nearWithin', { m })])];
+    return `<label class="near-pick"><span>${esc(t('nearYourFiles'))}</span><select data-near-card aria-label="${esc(t('nearTitle'))}">${opts.map(([v, l]) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`;
+  }
+  function setNearFrom(v) {
+    const [by, x] = String(v).split(':');
+    nearMode = { ...nearMode, by, ...(by === 'blocks' ? { steps: +x } : by === 'area' ? { area: x } : { radius: +x }) };
+    setNear('by', by);
+  }
+  // what "nearby" covers around a card, drawn on the map: the blocks counted, the area, or the radius
+  let extentFor = null;
+  function extentOf(s) {
+    if (nearMode.by === 'blocks') return blocksOut(s, nearMode.steps).map(({ b }) => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: b.coords } }));
+    if (nearMode.by === 'area') {
+      const k = areaKey(); if (!Areas.loaded(k)) return [];
+      return (Areas.of(k, s) || []).map(a => Areas.geom(k, a.name)).filter(Boolean).map(g => ({ type: 'Feature', properties: {}, geometry: g }));
+    }
+    // a band of the radius around the block (or a circle around the corner): the hull of circles at its vertices
+    const R = nearMode.radius, pts = [];
+    for (const [x, y] of (isInt(s) ? [[s.x, s.y]] : s.coords).map(toM)) for (let a = 0; a < 32; a++) pts.push([x + R * Math.cos(a * Math.PI / 16), y + R * Math.sin(a * Math.PI / 16)]);
+    pts.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+    const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], hi = [];
+    for (const p of pts) { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+    for (const p of [...pts].reverse()) { while (hi.length >= 2 && cross(hi[hi.length - 2], hi[hi.length - 1], p) <= 0) hi.pop(); hi.push(p); }
+    const ring = [...lo.slice(0, -1), ...hi.slice(0, -1)].map(([x, y]) => [x / KX, y / KY]); ring.push(ring[0]);
+    return [{ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } }];
+  }
+  function showExtent(s) {
+    if (!mapReady) return;
+    if (!map.getSource('near-extent')) {
+      map.addSource('near-extent', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      map.addLayer({ id: 'bp-near-fill', type: 'fill', source: 'near-extent', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': '#1C7ED6', 'fill-opacity': 0.08 } });
+      map.addLayer({ id: 'bp-near-line', type: 'line', source: 'near-extent', paint: { 'line-color': '#1C7ED6', 'line-width': ['case', ['==', ['geometry-type'], 'LineString'], 9, 2], 'line-opacity': ['case', ['==', ['geometry-type'], 'LineString'], 0.25, 0.8], 'line-dasharray': [2, 1.5] } });
+      arrangeLayers();
+    }
+    extentFor = s && files.some(f => f.on) ? s : null;
+    map.getSource('near-extent').setData({ type: 'FeatureCollection', features: extentFor ? extentOf(extentFor) : [] });
+  }
   function setNear(k, v) {
     nearMode = { ...nearMode, [k]: k === 'steps' || k === 'radius' ? +v : v };
     try { localStorage.setItem(NEAR_KEY, JSON.stringify(nearMode)); } catch (e) { }
     const el = $('drop-rows');
     el.querySelectorAll('[data-near]').forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(nearMode[g.dataset.near]) === b.dataset.v)));
     el.querySelectorAll('[data-near-opt]').forEach(r => r.hidden = r.dataset.nearOpt !== nearMode.by);
-    if (nearMode.by === 'area') Areas.need(areaKey()).then(() => render());
-    render();
+    if (nearMode.by === 'area') Areas.need(areaKey()).then(() => { render(); showExtent(extentFor); });
+    render(); showExtent(extentFor);
   }
   function setupUI() {
     const el = $('drop-rows');
@@ -5493,6 +5584,7 @@ const Drops = (() => {
       if (onCards.size !== n) highlight();
     }
     return { toggle, draw, highlight, setup, facts, prune, spot: (fid, i) => { const o = featOf([fid, i]); return o ? spot(o.x) : null; },
+      cardOf: (fid, i) => { const o = featOf([fid, i]); const tg = o ? targets(o.x) : []; return tg && tg[0] ? tg[0].cnn : null; },
       has: (fid, i) => picked.some(([a, b]) => a === fid && b === i) || onCards.has(`${fid}:${i}`), dropFile: id => { picked = picked.filter(([a]) => a !== id); for (const k of [...onCards.keys()]) if (k.startsWith(id + ':')) onCards.delete(k); draw(); highlight(); } };
   })();
   // columns sf-blocks' Matcher and match scripts add, and the location columns: folded under Details
@@ -5525,7 +5617,7 @@ const Drops = (() => {
         'icon-allow-overlap': true, 'icon-ignore-placement': true },
       paint: { 'icon-color': '#FFD43B', 'icon-halo-color': '#1E2340', 'icon-halo-width': 1.5 } });
     wire(popup); for (const f of files) if (!map.getSource('drop-' + f.id)) addLayers(f); }
-  return { add, addURL, urls, listRows, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
+  return { add, addURL, urls, listRows, nearPicker, setNearFrom, showExtent, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
 })();
 /* ---------- the map key's checkboxes and category highlights ----------
    A checkbox on every row that can be turned off: layers (back to their last setting), area sets, your
@@ -5801,15 +5893,14 @@ const Table = (() => {
     sc.scrollTop = top; sc.scrollLeft = left;
   }
   function go(r) {
-    if (r.pick != null) { SelAreas.goPick(r.pick); return; }
-    if (r.s) {
-      fitSegs([r.s]);
-      const li = document.querySelector(`#seg-list .seg[data-cnn="${r.s.cnn}"]`);
-      if (li) li.scrollIntoView({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' });
-    } else {
-      const c = Drops.cards.spot(r.f.id, r.i); if (!c || !mapReady) return;
-      map.easeTo({ center: c, zoom: Math.max(map.getZoom(), 17), duration: reducedMotion() ? 0 : 600 });
-    }
+    const flash = li => { if (!li) return; li.scrollIntoView({ behavior: reducedMotion() ? 'auto' : 'smooth', block: 'center' }); li.classList.remove('flash'); void li.offsetWidth; li.classList.add('flash'); };
+    if (r.pick != null) { SelAreas.goPick(r.pick); flash(document.querySelector(`#seg-list li[data-blk="${CSS.escape(r.pick)}"]`)); return; }
+    if (r.s) { goToCard(r.s); jumpToCard(r.s.cnn); return; }
+    // a file's row: put it on its card (the block or intersection it's at) and go there
+    if (!Drops.cards.has(r.f.id, r.i)) Drops.cards.toggle(r.f.id, r.i);
+    const c = Drops.cards.spot(r.f.id, r.i);
+    if (c && mapReady) map.easeTo({ center: c, zoom: Math.max(map.getZoom(), 17), duration: reducedMotion() ? 0 : 600 });
+    setTimeout(() => { const cnn = Drops.cards.cardOf(r.f.id, r.i); flash(cnn != null ? document.querySelector(`#seg-list .seg[data-cnn="${cnn}"]`) : document.querySelector('#feat-list .seg')); }, 300);
   }
   function setup() {
     try { const h = +localStorage.getItem(H_KEY); if (h >= 120) wrap().style.setProperty('--tbl-h', h + 'px'); } catch (e) { }
@@ -7541,10 +7632,16 @@ function hoverSegFromCard(cnn) {
   const s = cnn != null && (state.results.find(r => r.cnn === cnn) || Logic.item(cnn));
   map.getSource('hover').setData(s && !isInt(s) ? fc([segFeature(s)]) : EMPTY);
   map.getSource('preview-int').setData(s && isInt(s) ? fc([pointFeature(s)]) : EMPTY);
+  // the card's nearby area on the map (your files' extent), while hovering it; else the last card clicked
+  Drops.showExtent(s || (lastCardCnn != null && state.results.find(r => r.cnn === lastCardCnn)) || null);
+}
+let lastCardCnn = null;
+// a click on a card: go to it on the map
+function goToCard(s) {
   if (!s) return;
-  const b = map.getBounds();
-  if (!b.contains(s.coords[0]) || !b.contains(s.coords[s.coords.length - 1]))
-    map.easeTo({ center: isInt(s) ? s.coords[0] : midpoint(s), duration: reducedMotion() ? 0 : 500 });
+  lastCardCnn = s.cnn;
+  fitSegs([s]);
+  Drops.showExtent(s);
 }
 function jumpToCard(cnn) {
   const li = document.querySelector(`.seg[data-cnn="${cnn}"]`);
