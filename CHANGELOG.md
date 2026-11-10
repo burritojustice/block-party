@@ -2,6 +2,14 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v74
+
+- **Filter → Intersections** (new):
+  - **T intersections:** where only three streets meet, like Clarion Alley at Mission or Valencia (about 3,400 in the city; "Residential streets only" narrows them).
+  - **Streets meeting at an angle:** intersections where two streets cross at least so many degrees off square, with a slider from 10° to 70° (40° to start). San Jose & Guerrero (79°), Tiffany & Duncan (68°), Mission & Valencia (60°) and Market & Church (62°) all show up; ordinary grid corners don't.
+  - Matches are magenta rings. Hover one for how many streets meet and how far off square it is; click to add the intersection to your list.
+- **Focus is always there:** the Focus button opens a menu of what clicks and hover go to: Everything, Streets, Intersections, Businesses, Street trees, Schools/clinics/stations (when shown), Lots, or one of your files. While focused the button turns black with a ✕; Esc also ends it. Focusing on lots turns Parcels on, and off again after.
+
 ## v73
 
 - **Select blocks:** picking parcels turns on the Parcels layer; picking another kind of block, or turning picking off, now turns it back off (if picking turned it on).

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v73 -->
+<!-- build: v74 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -524,6 +524,9 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .sel-check { display: flex; gap: 6px; align-items: center; margin: 8px 0 0 62px; font-size: 13px; cursor: pointer; }
 #pick-mode button { padding: 3px 8px; }
 .save-panel { margin-top: 10px; }
+.skew-row { display: flex; align-items: center; gap: 8px; margin: -2px 0 6px 34px; }
+.skew-row input { flex: 1; accent-color: #B5179E; }
+.skew-row span { font: 700 13px Figtree, sans-serif; min-width: 34px; }
 /* the fold triangles: a little bigger */
 details.fold > summary::after, .hoods summary::after, .chips-fold > summary::after { font-size: 15px !important; }
 summary::marker { font-size: 1.15em; }
@@ -539,6 +542,9 @@ summary::marker { font-size: 1.15em; }
 .lyr-row[data-drop] .drop-focus { padding: 2px 8px; font-size: 12px; }
 /* import buttons: one row */
 .drop-btns .btn { padding: 3px 9px; font-size: 12.5px; }
+#focus-wrap { display: inline-flex; gap: 0; }
+#focus-wrap .focus-x { padding: 0 10px; border-left: 1px solid rgba(255,255,255,.35); background: var(--ink); color: #fff; }
+#focus-name { font-weight: 700; }
 .focus-on { background: var(--ink) !important; color: #fff !important; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .focus-on b { font-weight: 700; }
 .flavor-pop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 12; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 6px; display: grid; gap: 3px; min-width: 130px; box-shadow: 0 6px 18px rgba(30,35,64,.2); }
@@ -779,8 +785,10 @@ summary::marker { font-size: 1.15em; }
       <div class="map-toggle single sun">
         <button type="button" id="quiet-btn" aria-expanded="false" aria-controls="quiet-panel">✦ <span data-i18n="quietBtn">Quiet streets</span><span class="badge" id="quiet-badge" hidden></span> ▾</button>
       </div>
-      <div class="map-toggle single" id="focus-wrap" hidden>
-        <button type="button" id="focus-off" class="focus-on" aria-pressed="true" title="Clicks go only to this file. Click to go back to streets (or press Esc)"><span data-i18n="focusOnLbl">Focus:</span> <b id="focus-name"></b> ✕</button>
+      <div class="map-toggle single" id="focus-wrap">
+        <button type="button" id="focus-btn" aria-expanded="false" aria-haspopup="true" data-i18n-title="focusBtnTitle" title="Choose what clicks on the map go to"><span data-i18n="focusBtn">Focus</span><b id="focus-name"></b> ▾</button>
+        <button type="button" id="focus-off" class="focus-x" hidden data-i18n-title="focusOffTitle" title="Stop focusing (Esc)" aria-label="Stop focusing">✕</button>
+        <div class="flavor-pop focus-pop" id="focus-pop" hidden></div>
       </div>
       <div class="map-toggle single">
         <button type="button" id="nearby-btn" aria-pressed="false" data-i18n="nearbyBtn" title="Match one list against others: what's near each place">◎ Nearby</button>
@@ -804,6 +812,10 @@ summary::marker { font-size: 1.15em; }
         <label class="qchip"><input type="checkbox" data-quiet="dead"><b data-i18n="quiet_dead">Dead ends</b><span class="n" data-quiet-n="dead"></span></label>
         <label class="qchip"><input type="checkbox" data-quiet="ped"><b data-i18n="quiet_ped">Pedestrian streets</b><span class="n" data-quiet-n="ped"></span></label>
         <label class="qchip"><input type="checkbox" data-quiet="unmaint"><b data-i18n="quiet_unmaint">Not maintained by the city</b><span class="n" data-quiet-n="unmaint"></span></label>
+        <p class="quiet-group" data-i18n="quietCorners">Intersections</p>
+        <label class="qchip"><input type="checkbox" data-quiet="tee"><span><b data-i18n="quiet_tee">T intersections</b><small data-i18n="quiet_teeHint">Only three streets meet, like an alley off a street</small></span><span class="n" data-quiet-n="tee"></span></label>
+        <label class="qchip"><input type="checkbox" data-quiet="skew"><span><b data-i18n="quiet_skew">Streets meeting at an angle</b><small id="skew-text"></small></span><span class="n" data-quiet-n="skew"></span></label>
+        <div class="skew-row"><input type="range" id="skew-angle" min="10" max="70" step="5" value="40" aria-label="Degrees off square"><span id="skew-val"></span></div>
         <p class="quiet-group" data-i18n="quietNarrow">Narrow them down</p>
         <label class="qchip"><input type="checkbox" data-quiet="res"><span><b data-i18n="quiet_res">Residential streets only</b><small data-i18n="quiet_resHint">Leaves out collectors, arterials, and bigger</small></span></label>
         <label class="qchip" id="qchip-flat"><input type="checkbox" data-quiet="flat"><b data-i18n="quiet_flat">Flat to moderate (under 10%)</b></label>
@@ -1156,7 +1168,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v73';
+const _BUILD_VERSION = 'v74';
 
 /* =====================================================================
    CONFIG
@@ -1283,7 +1295,9 @@ const I18N = {
     quietNarrow: 'Narrow them down', quiet_dead: 'Dead ends', quiet_ped: 'Pedestrian streets',
     quiet_unmaint: 'Not maintained by the city', quiet_res: 'Residential streets only',
     quiet_resHint: 'Leaves out collectors, arterials, and bigger', quiet_flat: 'Flat to moderate (under 10%)',
-    quietCount: '{n} streets match', quietNone: 'Pick at least one in the first group', quietHint: 'Matches show in magenta. Tap one to add it to your list.',
+    quietCount: '{n} streets match', quietIntCount: '{n} intersections', quietCorners: 'Intersections',
+    quiet_tee: 'T intersections', quiet_teeHint: 'Only three streets meet, like an alley off a street', quiet_skew: 'Streets meeting at an angle',
+    quiet_skewHint: 'At least {n}° off square (corners sharper than {a}°)', quietIntTip: '{legs} streets meet · {off}° off square', quietNone: 'Pick at least one in the first group', quietHint: 'Matches show in magenta. Tap one to add it to your list.',
     quietClear: 'Clear', lgQuiet: 'Quiet street matches', lgOneway: 'One-way',
     north: 'north', south: 'south', east: 'east', west: 'west',
     dataNote: 'Street data from DataSF, Streets – Active and Retired, updated {date}.',
@@ -1338,7 +1352,9 @@ const I18N = {
     nbSum: '{n} places · {m} matches · {how}', nbInTable: 'Open a row in the table to see its matches; the map rings them.', nbNearYou: 'Near you · {how}', nbNearOne: 'Near {name} · {how}',
     nbNone: 'Nothing found', nbNoneFound: '(nothing found)', nbMore: '…and {n} more (all in the CSV)', nbM: '{m} m', nbWithin: 'within {m} m', nbAround: 'around the corner', nbBlocksAway: '{n} blocks away',
     nearAdjHood: 'Same or touching neighborhood', nbInside: 'inside', nbThisOne: 'Just this one:', bizMoreN: '…and {n} more',
-    focusOnLbl: 'Focus:', focusToast: 'Clicks now go to {name}; streets are paused. Click "Focus" at the top (or press Esc) to go back.', flavorTitle: 'Basemap',
+    focusToast: 'Focus: clicks and hover now go only to {name}. Press Esc or ✕ to go back.', focusToastInts: 'Focus: clicks and hover now go only to intersections (zoom in to see the corners). Press Esc or ✕ to go back.',
+    focusBtnTitle: 'Choose what clicks on the map go to', focusOffTitle: 'Stop focusing (Esc)', focusPopTitle: 'Clicks go to', focusFiles: 'Your files',
+    focus_all: 'Everything', focus_streets: 'Streets', focus_ints: 'Intersections', focus_biz: 'Businesses', focus_trees: 'Street trees', focus_places: 'Schools, clinics, stations', focus_lots: 'Lots (parcels)', flavorTitle: 'Basemap',
     nbCopy: 'Copy', nbGeojson: 'GeoJSON view', nbCopied: 'Copied {n} rows', nbTableSrc: 'Nearby: {name} ({n})', nbLocating: 'Finding where you are…', nbNoGeo: "Couldn't get your location",
     focusBtn: 'Focus', focusOn: 'Focused', focusTitle: 'Make only this file clickable', focusThis: 'Focus on this file', focusOff: 'Back to streets', focusBar1: 'Clicks go to', focusBar2: '· streets are paused',
     nextTitle: '{name}: {n} places on the map', nextText: 'Click one to see what’s around it, or use Nearby to match it against your other lists.', dismiss: 'Dismiss',
@@ -1732,6 +1748,53 @@ const Logic = (() => {
     if (!show.length) return false;
     return show.some(k => QUIET_SHOW[k](s)) && narrow.every(k => QUIET_NARROW[k](s));
   }
+  /* ---- intersection shapes: how many streets meet, and how far off square they cross ---- */
+  // the legs that count: built, drivable, public streets (not freeways or ramps)
+  const legOk = s => s.active && s.isPublic && !NOT_DRIVABLE.has(s.layer) && s.layer !== 'FREEWAYS' && s.classcode !== 1 && s.classcode !== 6;
+  const LEG_M = 25;   // a leg's direction: from the corner to the point this far along it (or its end)
+  function legBearing(s, n) {
+    const a = s.coords[0], b = s.coords[s.coords.length - 1];
+    const cs = Math.hypot(a[0] - n.x, a[1] - n.y) <= Math.hypot(b[0] - n.x, b[1] - n.y) ? s.coords : [...s.coords].reverse();
+    let d = 0, p = cs[0], q = cs[cs.length - 1];
+    for (let i = 1; i < cs.length; i++) {
+      const step = Math.hypot((cs[i][0] - cs[i - 1][0]) * COS_LAT * 111320, (cs[i][1] - cs[i - 1][1]) * 110540);
+      if (d + step >= LEG_M) { const u = (LEG_M - d) / step; q = [cs[i - 1][0] + u * (cs[i][0] - cs[i - 1][0]), cs[i - 1][1] + u * (cs[i][1] - cs[i - 1][1])]; break; }
+      d += step;
+    }
+    return (Math.atan2((q[0] - p[0]) * COS_LAT, q[1] - p[1]) * 180 / Math.PI + 360) % 360;
+  }
+  let shapes = null;
+  function nodeShapes() {
+    if (shapes) return shapes;
+    shapes = new Map();
+    for (const [cnn, list] of DB.segsAtNode) {
+      const n = cnn && DB.nodes.get(cnn); if (!n) continue;
+      const legs = list.filter(legOk).map(s => ({ s, b: legBearing(s, n) }));
+      if (legs.length < 3) continue;
+      const names = new Set(legs.map(l => l.s.street));
+      if (names.size < 2) continue;
+      // off square: the most any two different streets' lines miss 90°
+      let off = 0;
+      for (let i = 0; i < legs.length; i++) for (let j = i + 1; j < legs.length; j++) {
+        if (legs[i].s.street === legs[j].s.street) continue;
+        const d = Math.abs(legs[i].b - legs[j].b) % 180, line = Math.min(d, 180 - d);
+        off = Math.max(off, 90 - line);
+      }
+      shapes.set(cnn, { legs: legs.length, streets: names.size, off: Math.round(off), res: legs.every(l => l.s.classcode === 5 || l.s.classcode === 0) });
+    }
+    return shapes;
+  }
+  // intersections that match the corner filters that are on (tee: three streets meet; skew: at least `angle`° off square)
+  function cornerMatches(on, angle) {
+    const tee = on.includes('tee'), skew = on.includes('skew'), res = on.includes('res');
+    if (!tee && !skew) return [];
+    const out = [];
+    for (const [cnn, sh] of nodeShapes()) {
+      if (res && !sh.res) continue;
+      if ((tee && sh.legs === 3) || (skew && sh.off >= angle)) out.push(cnn);
+    }
+    return out;
+  }
   function setSearchAll(v) { DB.searchAll = v; rebuildIndex(); }
   function setIncludeMinor(v) { DB.includeMinor = v; rebuildIndex(); }
   function rebuildIndex() {
@@ -1933,7 +1996,7 @@ const Logic = (() => {
   }
 
   return {
-    quietMatch, QUIET_SHOW, QUIET_NARROW,
+    quietMatch, QUIET_SHOW, QUIET_NARROW, nodeShapes, cornerMatches,
     load, prettyName, normTokens, searchStreets, resolveStreet, setSearchAll, setIncludeMinor, streetSegs,
     crossStreetsInOrder, crossStreetsFrom, segsTouching, segsBetween, segsAtAddress, addressSides,
     intersectionNodes, segsAroundNodes, contextSegs, eligible: s => eligible(s),
@@ -2277,8 +2340,7 @@ function setupForm() {
   $('sel-undo').addEventListener('click', () => SelAreas.undo());
   Table.setup();
   NearbyView.setup();
-  $('focus-off').addEventListener('click', () => Drops.focus(null));
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && Drops.focusedId() != null && !document.querySelector('dialog[open]')) Drops.focus(null); });
+  Focus.setup();
   $('sel-ablk').addEventListener('change', e => { const on = e.target.checked; setArea('admin', 'ablk'); setArea('adminMode', on ? 'shade' : 'off'); });
   $('pick-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) SelAreas.pickMode(b.dataset.v); });
   $('pick-streets').addEventListener('click', () => SelAreas.streetsAround());
@@ -3058,6 +3120,7 @@ function initMap() {
     attributionControl: { compact: true },
     maxTileCacheSize: 150,   // per source; keeps long sessions from piling up tiles
   });
+  Focus.gate(map);
   map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), 'top-right');
   return new Promise(res => map.on('load', res));
 }
@@ -3113,6 +3176,7 @@ function addMapLayers() {
 
   map.addSource('all', { type: 'geojson', data: fc(Logic.db.segs.map(s => segFeature(s, { active: s.active, ow: s.owAlong }))) });
   map.addSource('quiet', { type: 'geojson', data: EMPTY });
+  map.addSource('quiet-int', { type: 'geojson', data: EMPTY });
   map.addSource('all-mid', { type: 'geojson', data: fc(Logic.db.segs.map(s => midFeature(s))) });
   map.addSource('context-mid', { type: 'geojson', data: EMPTY });
   map.addSource('results-mid', { type: 'geojson', data: EMPTY });
@@ -3133,6 +3197,10 @@ function addMapLayers() {
   // quiet street matches (magenta), under every selection layer
   map.addLayer({ id: 'bp-quiet', type: 'line', source: 'quiet', layout: { 'line-cap': 'round' },
     paint: { 'line-color': '#B5179E', 'line-opacity': 0.85, 'line-width': ['interpolate', ['linear'], ['zoom'], 11, 2, 14, 4, 18, 9] } });
+  // intersections the Filter found (T intersections, streets meeting at an angle)
+  map.addLayer({ id: 'bp-quiet-int', type: 'circle', source: 'quiet-int',
+    paint: { 'circle-color': '#fff', 'circle-stroke-color': '#B5179E', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 11, 2, 16, 4],
+      'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 3, 14, 5, 18, 11] } });
   // one-way arrows along the street, pointing the way traffic goes
   map.addLayer({ id: 'bp-oneway', type: 'symbol', source: 'all', minzoom: 16, filter: ['!=', ['get', 'ow'], 0],
     layout: { 'symbol-placement': 'line', 'symbol-spacing': 90, 'icon-image': 'ow-arrow', 'icon-size': ['interpolate', ['linear'], ['zoom'], 15, 0.6, 18, 1],
@@ -3233,6 +3301,16 @@ function addMapLayers() {
     toggleFromMap(i);
   };
   map.on('click', 'bp-corners-hit', clickInt);
+  // a Filter intersection: same as clicking the corner (when the corner isn't drawn at this zoom)
+  map.on('click', 'bp-quiet-int', e => { if (!map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit'] }).length) clickInt(e); });
+  map.on('mousemove', 'bp-quiet-int', e => {
+    const f = e.features[0]; if (!f || onPoi(e)) return;
+    map.getCanvas().style.cursor = 'pointer';
+    const i = Logic.intItem(f.properties.cnn); if (!i) return;
+    popOwner = 'qint';
+    popup.setLngLat([i.x, i.y]).setHTML(`<b>${esc(i.streets.join(' & '))}</b><br><span class="pop-lyr">${esc(t('quietIntTip', { legs: f.properties.legs, off: f.properties.off }))}</span>`).addTo(map);
+  });
+  map.on('mouseleave', 'bp-quiet-int', () => { map.getCanvas().style.cursor = ''; if (popOwner === 'qint') { popup.remove(); popOwner = null; } });
   map.on('click', 'bp-ints', e => { if (!map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit'] }).length) clickInt(e); });
   map.on('mousemove', 'bp-all-hit', e => {
     if (onCorner(e) || onPoi(e) || onBuilding(e) || onArea(e)) {
@@ -3399,7 +3477,7 @@ const LAYER_ORDER = [
   ['edges', id => id === CONTOUR_LINE || ['bp-lyr-curbs', 'bp-lyr-landuse-line', 'bp-adj-lots-casing', 'bp-adj-lots', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-buildings-line'].includes(id)
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
-  ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', ...POI_LAYERS].includes(id)],
+  ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', ...POI_LAYERS].includes(id)],
   ['selection', id => ['bp-near-line', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
@@ -3668,13 +3746,77 @@ const BIKE_SOLID = ['separated', 'lane', 'path'];
 // What the pointer is over, in hover order: corners, then points (schools, stations, health, trees,
 // businesses), then buildings, then parcels and city-owned land, then street blocks. Each hover handler
 // gives way to anything above it, so shapes never hide the points on them.
+/* ---------- Focus: which things on the map take clicks and hover ---------- */
+const Focus = (() => {
+  let kind = null, autoLots = false;
+  const KINDS = ['streets', 'ints', 'biz', 'trees', 'places', 'lots'];
+  const HIT = { streets: ['bp-all-hit'], ints: ['bp-corners-hit', 'bp-ints', 'bp-quiet-int'], biz: ['bp-lyr-businesses', 'bp-card-hl', 'bp-card-hl-dot', 'bp-card-hl-label'],
+    trees: ['bp-lyr-trees'], places: () => POI_LAYERS, lots: ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill'] };
+  const hitOf = k => { const v = HIT[k]; return typeof v === 'function' ? v() : v || []; };
+  // layers with hover or click handlers: these pause while something else is focused
+  const interactive = id => /^bp-drop-\d+-/.test(id) || /^bp-feat-hl/.test(id) || KINDS.some(k => hitOf(k).includes(id));
+  function allows(id) {
+    if (!kind || !interactive(id)) return true;
+    if (kind[0] === 'f') return id.startsWith('bp-drop-' + kind.slice(1) + '-') || /^bp-feat-hl/.test(id);
+    return hitOf(kind).includes(id);
+  }
+  const label = k => !k ? '' : k[0] === 'f' ? Drops.fileName(+k.slice(1)) : t('focus_' + k);
+  function set(k) {
+    if (k === kind) k = null;
+    const was = kind; kind = k;
+    if (was && was[0] === 'f' && (!k || k !== was)) Drops.focus(null);
+    if (k && k[0] === 'f') Drops.focus(+k.slice(1));
+    else if (mapReady) for (const id of ['bp-all-hit', 'bp-corners-hit']) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', allows(id) ? 'visible' : 'none');
+    // lots: the Parcels layer has to be on to have lots to click
+    if (k === 'lots' && overlayMode.landuse === 'off') { autoLots = true; setOverlay('landuse', ((OVERLAYS.landuse.modes || []).find(([m]) => m !== 'off') || ['landuse'])[0]); }
+    else if (k !== 'lots' && autoLots) { autoLots = false; setOverlay('landuse', 'off'); }
+    if (popOwner) { try { document.querySelectorAll('.maplibregl-popup:not(.bp-rec)').forEach(p => p.remove()); } catch (e) { } popOwner = null; }
+    sync();
+    if (k) toast(t(k === 'ints' ? 'focusToastInts' : 'focusToast', { name: label(k) }));
+  }
+  function sync() {
+    $('focus-name').textContent = kind ? ': ' + label(kind) : '';
+    $('focus-btn').classList.toggle('focus-on', !!kind);
+    $('focus-off').hidden = !kind;
+  }
+  function menu() {
+    const m = $('focus-pop');
+    const files = Drops.files().filter(f => f.on);
+    const b = (k, l) => `<button type="button" data-focus="${k}" aria-pressed="${kind === k}">${esc(l)}</button>`;
+    m.innerHTML = `<p>${esc(t('focusPopTitle'))}</p>${b('', t('focus_all'))}${KINDS.filter(k => k !== 'places' || POI_LAYERS.some(id => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none')).map(k => b(k, t('focus_' + k))).join('')}`
+      + (files.length ? `<p>${esc(t('focusFiles'))}</p>` + files.map(f => b('f' + f.id, Drops.fileName(f.id))).join('') : '');
+  }
+  function setup() {
+    $('focus-btn').addEventListener('click', () => {
+      const m = $('focus-pop'), open = m.hidden;
+      if (open) menu();
+      m.hidden = !open; $('focus-btn').setAttribute('aria-expanded', open);
+    });
+    $('focus-pop').addEventListener('click', e => {
+      const b = e.target.closest('[data-focus]'); if (!b) return;
+      $('focus-pop').hidden = true; $('focus-btn').setAttribute('aria-expanded', 'false');
+      set(b.dataset.focus || null);
+    });
+    $('focus-off').addEventListener('click', () => set(null));
+    document.addEventListener('click', e => { if (!e.target.closest('#focus-wrap')) { $('focus-pop').hidden = true; $('focus-btn').setAttribute('aria-expanded', 'false'); } });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && kind && !document.querySelector('dialog[open]')) set(null); });
+    sync();
+  }
+  // every hover and click handler tied to a layer goes through allows()
+  function gate(m) {
+    const on = m.on.bind(m);
+    const GATED = new Set(['click', 'dblclick', 'mousemove', 'mouseenter', 'mousedown', 'contextmenu', 'touchstart']);
+    m.on = (type, a, b) => typeof a === 'string' && typeof b === 'function' && GATED.has(type) ? on(type, a, e => { if (allows(a)) b(e); }) : on(type, a, b);
+  }
+  return { setup, set, allows, gate, get kind() { return kind; } };
+})();
 const HOVER = {
   points: () => [...POI_LAYERS, 'bp-lyr-trees', 'bp-lyr-businesses', ...Drops.pointIds()],
   buildings: () => ['bp-lyr-buildings-fill', 'bp-lyr-buildings-3d'],
   areas: () => ['bp-lyr-lands-fill', 'bp-lyr-landuse-fill'],
 };
 const hoverHit = (e, ids) => {
-  const live = ids.filter(id => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none');
+  const live = ids.filter(id => Focus.allows(id) && map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none');
   return live.length > 0 && map.queryRenderedFeatures(e.point, { layers: live }).length > 0;
 };
 const onPoi = e => hoverHit(e, HOVER.points());
@@ -3788,6 +3930,7 @@ function addOverlayLayers(popup) {
   // icon is under the cursor (those have their own)
   let areaPopup = false;
   map.on('mousemove', e => {
+    if (Focus.kind && Focus.kind !== 'lots') { if (areaPopup && popOwner === 'area') { popup.remove(); popOwner = null; } areaPopup = false; return; }
     const ids = ['bp-lyr-lands-fill', 'bp-lyr-landuse-fill'].filter(id => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none');
     const busy = map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit'].filter(id => map.getLayer(id)) }).length || onPoi(e) || onBuilding(e);
     overHover = !!busy;
@@ -5009,7 +5152,7 @@ const Drops = (() => {
   const ids = f => [`bp-drop-${f.id}-fill`, `bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`, `bp-drop-${f.id}-sym`, `bp-drop-${f.id}-label`];
   // Focus: one file's points are the only thing clicks and hovers go to; streets and corners fade and pause
   let focusId = null;
-  const live_ = f => f.on && (focusId == null || f.id === focusId);
+  const live_ = f => f.on && (focusId == null ? !Focus.kind : f.id === focusId);
   const pointIds = () => files.filter(live_).flatMap(f => [`bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`, `bp-drop-${f.id}-sym`]);
   const fillIds = () => files.filter(live_).map(f => `bp-drop-${f.id}-fill`);
   const FADE = ['bp-sel', 'bp-sel-casing', 'bp-context', 'bp-corners', 'bp-ints', 'bp-ends', 'bp-street'], faded = new Map();
@@ -5029,9 +5172,6 @@ const Drops = (() => {
         }
       }
     }
-    const w = $('focus-wrap');
-    if (w) { w.hidden = focusId == null; if (f) $('focus-name').textContent = shown(f); }
-    if (f) toast(t('focusToast', { name: shown(f) }));
     renderMenu();
   }
   // after a file loads: what to do next (stays until dismissed)
@@ -5042,7 +5182,7 @@ const Drops = (() => {
       <button type="button" class="btn small next-x" data-next="x">${esc(t('dismiss'))}</button></div>`;
     el.hidden = false;
     el.onclick = e => { const b = e.target.closest('[data-next]'); if (!b) return; el.hidden = true;
-      if (b.dataset.next === 'focus') focus(f.id); else if (b.dataset.next === 'nearby') NearbyView.open('f' + f.id); };
+      if (b.dataset.next === 'focus') Focus.set('f' + f.id); else if (b.dataset.next === 'nearby') NearbyView.open('f' + f.id); };
   }
   // a file's rows as places for Nearby: a name, a spot, its outline in meters, its columns, any CNNs
   function items(fid) {
@@ -5491,8 +5631,8 @@ const Drops = (() => {
       const row = e.target.closest('[data-drop]'); if (!row) return;
       const id = +row.dataset.drop;
       // after this click is done: rebuilding the rows mid-click makes the menu's outside-click handler close it
-      if (e.target.closest('[data-drop-focus]')) setTimeout(() => focus(focusId === id ? null : id));
-      else if (e.target.closest('[data-drop-x]')) setTimeout(() => { if (focusId === id) focus(null); remove(id); });
+      if (e.target.closest('[data-drop-focus]')) setTimeout(() => Focus.set(focusId === id ? null : 'f' + id));
+      else if (e.target.closest('[data-drop-x]')) setTimeout(() => { if (focusId === id) Focus.set(null); remove(id); });
       else { const b = e.target.closest('[data-drop-on]'); if (b) setTimeout(() => show(id, b.dataset.dropOn === '1')); }
     });
     el.addEventListener('change', e => { if (e.target.matches('[data-drop-pick]')) { [...e.target.files].forEach(add); e.target.value = ''; } });
@@ -6580,7 +6720,7 @@ const SelAreas = (() => {
   const onOther = e => hoverHit(e, ['bp-all-hit', 'bp-corners-hit', 'bp-ints', ...Drops.pointIds()]) || onPoi(e);
   let hoverAt = null;
   function onMapMove(e) {
-    if (!clicking) return;
+    if (!clicking || (Focus.kind && !(Focus.kind === 'lots' && pickSet === 'parcel'))) return;
     hoverAt = [e.lngLat.lng, e.lngLat.lat];
     const names = onOther(e) ? [] : namesAt(e.lngLat.lng, e.lngLat.lat), n = names.length ? names[names.length - 1] : null;
     hoverPop ||= new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 14 });
@@ -6638,7 +6778,7 @@ const SelAreas = (() => {
     drawPicks();
   }
   function onMapClick(e) {
-    if (!clicking || onOther(e) || Drops.focusedId() != null) return;
+    if (!clicking || onOther(e) || (Focus.kind && !(Focus.kind === 'lots' && pickSet === 'parcel'))) return;
     if (pickSet === 'parcel') { const r = Parcels.lotAt(e.lngLat.lng, e.lngLat.lat); if (r && !lotStore.has(r.lot)) lotStore.set(r.lot, { geom: r.geom, l: r.l }); }
     const names = namesAt(e.lngLat.lng, e.lngLat.lat);
     if (!names.length) return;
@@ -8114,7 +8254,9 @@ function setupMapMenus() {
 }
 
 /* ---------- quiet streets ---------- */
-let quietCnns = new Set();
+let quietCnns = new Set(), quietInts = [];
+const SKEW_KEY = 'bp-skew';
+let skewAngle = (() => { try { return +localStorage.getItem(SKEW_KEY) || 40; } catch (e) { return 40; } })();
 const quietOn = () => [...document.querySelectorAll('[data-quiet]:checked')].map(i => i.dataset.quiet);
 function setupQuiet() {
   const btn = $('quiet-btn'), panel = $('quiet-panel');
@@ -8124,20 +8266,43 @@ function setupQuiet() {
     const n = segs.filter(s => s.isPublic && Logic.QUIET_SHOW[k](s)).length;
     const el = document.querySelector(`[data-quiet-n="${k}"]`); if (el) el.textContent = n.toLocaleString();
   }
+  const shapes = Logic.nodeShapes();
+  const teeN = [...shapes.values()].filter(v => v.legs === 3).length;
+  document.querySelector('[data-quiet-n="tee"]').textContent = teeN.toLocaleString();
+  const skewText = () => {
+    $('skew-val').textContent = skewAngle + '°';
+    $('skew-text').textContent = t('quiet_skewHint', { n: skewAngle, a: 90 - skewAngle });
+    document.querySelector('[data-quiet-n="skew"]').textContent = [...shapes.values()].filter(v => v.off >= skewAngle).length.toLocaleString();
+  };
+  $('skew-angle').value = skewAngle; skewText();
+  $('skew-angle').addEventListener('input', e => {
+    skewAngle = +e.target.value; skewText();
+    try { localStorage.setItem(SKEW_KEY, skewAngle); } catch (err) { }
+    const box = document.querySelector('[data-quiet="skew"]'); if (!box.checked) box.checked = true;
+    applyQuiet();
+  });
   panel.addEventListener('change', e => { if (e.target.dataset.quiet) applyQuiet(); });
   $('quiet-clear').onclick = () => { document.querySelectorAll('[data-quiet]').forEach(i => i.checked = false); applyQuiet(); };
 }
 function applyQuiet() {
   const on = quietOn();
-  const hasShow = on.some(k => Logic.QUIET_SHOW[k]);
-  const matches = hasShow ? Logic.db.segs.filter(s => Logic.quietMatch(s, on)) : [];
+  const hasStreets = on.some(k => Logic.QUIET_SHOW[k]), hasCorners = on.includes('tee') || on.includes('skew');
+  const matches = hasStreets ? Logic.db.segs.filter(s => Logic.quietMatch(s, on)) : [];
   quietCnns = new Set(matches.map(s => s.cnn));
-  $('quiet-count').textContent = !on.length ? '' : hasShow ? t('quietCount', { n: matches.length.toLocaleString() }) : t('quietNone');
+  quietInts = Logic.cornerMatches(on, skewAngle);
+  const shapes = Logic.nodeShapes(), n = matches.length + quietInts.length;
+  $('quiet-count').textContent = !on.length ? '' : !(hasStreets || hasCorners) ? t('quietNone')
+    : [hasStreets ? t('quietCount', { n: matches.length.toLocaleString() }) : '', hasCorners ? t('quietIntCount', { n: quietInts.length.toLocaleString() }) : ''].filter(Boolean).join(' · ');
   $('quiet-count').hidden = !on.length;
-  $('quiet-badge').hidden = !matches.length;
-  $('quiet-badge').textContent = matches.length.toLocaleString();
-  $('lg-quiet').hidden = !matches.length;
-  if (mapReady) { map.getSource('quiet').setData(fc(matches.map(s => segFeature(s)))); refreshMapFilter(); }
+  $('quiet-badge').hidden = !n;
+  $('quiet-badge').textContent = n.toLocaleString();
+  $('lg-quiet').hidden = !n;
+  if (mapReady) {
+    map.getSource('quiet').setData(fc(matches.map(s => segFeature(s))));
+    map.getSource('quiet-int').setData(fc(quietInts.map(c => { const nd = Logic.db.nodes.get(c), sh = shapes.get(c);
+      return { type: 'Feature', properties: { cnn: c, legs: sh.legs, off: sh.off }, geometry: { type: 'Point', coordinates: [nd.x, nd.y] } }; })));
+    refreshMapFilter();
+  }
   writeHash();
 }
 function toggleFromMap(s) {
