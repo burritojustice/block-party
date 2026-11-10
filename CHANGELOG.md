@@ -2,6 +2,21 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v72
+
+- **◎ Nearby** (new button on the map): match one list against others.
+  1. **Start from** one of your files, your selected streets, a layer (schools, clinics, fire and police, city land), or **Near me** (your location).
+  2. **Look for** any of your other files plus businesses, street trees, schools, clinics, fire and police, city-owned land and neighborhood groups. Your files and neighborhood groups start checked.
+  3. **How near:** this block, around the corner, 2 blocks, the same neighborhood (or district, tract…), or within 50, 100 or 200 m. It's the same setting as on cards, and here it applies to businesses too.
+- **Results** open in the table as "Nearby: …": one row per starting place, with a count from each list. Open a row (▸) for its matches, nearest first, with **contacts on screen** (a file's name, email, phone, organizer or similar columns; a business's owner; a neighborhood group's people and emails). Clicking a row zooms to it. On the map, starting places are ringed dark and matches are dots in each list's color; hover one for its name, how near it is and its contact.
+- **Exports:**
+  - **Copy** (tab-separated) and **CSV**: one row per match, with the starting place repeated, which list the match came from, how near (in words and meters), its contact, and every column of the matched row. Starting places with nothing nearby get a row saying so.
+  - **JSON**: grouped by starting place.
+  - **GeoJSON view**: the starting places and their matches, each with a `role` and `list`, for a map of its own.
+- **Near me:** your location is the starting place, and the list shows right in the panel, nearest first. It follows you as you walk (a new search every 30 m). Your location is never saved or put in a link. On a phone the panel is a bottom sheet.
+- **When a file loads,** a note says what came in and offers **Focus on this file** or **◎ Nearby**.
+- **Focus:** a button on each file's row in Layers. While a file is focused, only its points respond to hover and click; streets and corners fade and pause. The dark bar at the top says so, with **Back to streets**.
+
 ## v71
 
 - **Cards and the map:**
