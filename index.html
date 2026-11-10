@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v69 -->
+<!-- build: v70 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1084,7 +1084,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v69';
+const _BUILD_VERSION = 'v70';
 
 /* =====================================================================
    CONFIG
@@ -1260,6 +1260,7 @@ const I18N = {
     dropZone: 'Drop a CSV or GeoJSON to add it as a layer', dropCount: '{n} on the map', dropSkipped: '{n} without a location', dropRemove: 'Remove this file',
     dropAdded: 'Added {name}: {n} on the map', dropAddedSkip: 'Added {name}: {n} on the map, {k} rows without a location', dropBad: "Couldn't read {name}",
     dropNone: 'No locations in {name}: it needs lat/lon columns, WKT, a CNN column, or GeoJSON', dropYours: 'your file', dropUnnamed: '(no name)',
+    dropCopyList: 'Copy list', dropCopied: 'Copied {n} rows from {name}',
     dropNear: '{n} within {m} m', dropNoneNear: 'None', dropOn: 'on this block', dropM: '{m} m', dropOnStreet: 'on {street}',
     dropAround: '{street}, around the corner', dropAway: '{street}, {n} blocks out',
     dropNearBlock: '{n} on this block', dropNearBlocks: '{n} within {k} block(s)', dropNearInt: '{n} on these streets', dropNearIntN: '{n} within {k} block(s)', dropNearArea: '{n} in {area}',
@@ -2675,6 +2676,16 @@ function setupResultsEvents() {
     if (e.target.matches && e.target.matches('[data-hood-map]')) { setArea('hood', e.target.checked ? (areaMode.hood === 'off' ? 'borders' : areaMode.hood) : 'off'); return; }
     const vb = e.target.closest('[data-csv-biz]');
     if (vb) { const s = state.results.find(r => r.cnn === +vb.dataset.csvBiz); const r = s && Tiles.peek(s); if (r && r.businesses) saveText(rowsCSV(bizRows(r)), `businesses-${s.cnn}-${fileDate()}.csv`); return; }
+    const dl = e.target.closest('[data-copy-drop], [data-csv-drop]');
+    if (dl) {
+      const [cnn, fid] = (dl.dataset.copyDrop || dl.dataset.csvDrop).split(':').map(Number);
+      const s = state.results.find(r => r.cnn === cnn), r = s && Drops.listRows(s, fid); if (!r) return;
+      if (dl.dataset.copyDrop) {
+        const cols = Object.keys(r.rows[0]), cell = v => String(v ?? '').replace(/[\t\n\r]+/g, ' ');
+        copyText([cols.join('\t'), ...r.rows.map(o => cols.map(c => cell(o[c])).join('\t'))].join('\n'), t('dropCopied', { n: r.rows.length, name: r.f.name }));
+      } else { const cols = Object.keys(r.rows[0]); saveText(rowsCSV([cols, ...r.rows.map(o => cols.map(c => o[c]))]), `${String(r.f.name).replace(/\.[a-z]+$/i, '').replace(/[^\w-]+/g, '-')}-${cnn}-${fileDate()}.csv`); }
+      return;
+    }
     const vg = e.target.closest('[data-csv-groups]');
     if (vg) { const s = state.results.find(r => r.cnn === +vg.dataset.csvGroups); const r = s && Groups.of(s); if (r) saveText(rowsCSV(groupsRows(r)), `neighborhood-groups-${s.cnn}-${fileDate()}.csv`); return; }
     const cg = e.target.closest('[data-copy-groups]');
@@ -5324,9 +5335,16 @@ const Drops = (() => {
     return near(s).map(({ f, hits }) => {
       const label = p => nameOf(f, p) || t('dropUnnamed');
       if (!hits) return `<dt>${esc(shown(f))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
-      const body = hits.length ? `<ul class="ng-list">${hits.slice(0, 50).map(h => `<li>${esc(label(h.p))} <span class="muted">· ${esc(h.where)}</span></li>`).join('')}${hits.length > 50 ? '<li>…</li>' : ''}</ul>` : '';
+      const body = hits.length ? `<ul class="ng-list">${hits.slice(0, 50).map(h => `<li>${esc(label(h.p))} <span class="muted">· ${esc(h.where)}</span></li>`).join('')}${hits.length > 50 ? '<li>…</li>' : ''}</ul>
+        <p class="ng-foot"><button type="button" class="btn small" data-copy-drop="${s.cnn}:${f.id}">${esc(t('dropCopyList'))}</button> <button type="button" class="btn small" data-csv-drop="${s.cnn}:${f.id}">CSV</button></p>` : '';
       return `<dt>${esc(shown(f))}</dt><dd>${hits.length ? foldDD(esc(summary(hits.length, s)), body, 'drop' + f.id) : esc(t('dropNoneNear'))}</dd>`;
     }).join('');
+  }
+  // a file's rows on this card, every column (and where each is), for Copy list and CSV
+  function listRows(s, fid) {
+    const x = near(s).find(o => o.f.id === fid); if (!x || !x.hits || !x.hits.length) return null;
+    const cols = x.f.fields.filter(k => !k.startsWith('_'));
+    return { f: x.f, rows: x.hits.map(h => ({ ...Object.fromEntries(cols.map(k => [k, h.p[k] ?? ''])), where: h.where })) };
   }
   function text(s) {
     if (!files.some(f => f.on)) return [];
@@ -5507,7 +5525,7 @@ const Drops = (() => {
         'icon-allow-overlap': true, 'icon-ignore-placement': true },
       paint: { 'icon-color': '#FFD43B', 'icon-halo-color': '#1E2340', 'icon-halo-width': 1.5 } });
     wire(popup); for (const f of files) if (!map.getSource('drop-' + f.id)) addLayers(f); }
-  return { add, addURL, urls, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
+  return { add, addURL, urls, listRows, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
 })();
 /* ---------- the map key's checkboxes and category highlights ----------
    A checkbox on every row that can be turned off: layers (back to their last setting), area sets, your

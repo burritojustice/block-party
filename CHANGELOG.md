@@ -2,6 +2,10 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v70
+
+- **Your files on cards: Copy list and CSV.** Under a file's rows on a street or intersection card, **Copy list** copies them as tab-separated rows (paste straight into a spreadsheet) and **CSV** downloads them, like the neighborhood groups and businesses lists. Every column of the file comes along, plus `where` (on this block, on the next street, or how far away).
+
 ## v69
 
 - **Words:** a CNN segment is a **street**, an intersection is an **intersection**, and **block** only means an assessor block, census block or tract.
