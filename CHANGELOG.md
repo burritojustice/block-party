@@ -2,6 +2,18 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v71
+
+- **Cards and the map:**
+  - Hovering a card no longer moves the map; it just highlights the street.
+  - Clicking a card goes to it on the map. Only the checkbox checks or unchecks it now.
+  - Clicking a table row scrolls to its card and flashes it. A file's row goes on the card of the street or intersection it's at.
+- **A Nearby section at the bottom of each card,** under a divider: businesses, your files and neighborhood groups.
+  - Its header has a menu for what "nearby" means for your files: this block, around the corner, 2 blocks, the same neighborhood (or district, tract…), or within 50, 100 or 200 m. This is the same setting as "Nearby on cards" in Layers.
+  - The area it covers is drawn on the map (dashed blue) for the card you're hovering, or the last one you clicked.
+- **Businesses:** the list puts each business's name first, with its address under it. With the list open, the ringed points on the map are labeled with the first name at each address. Hovering one lists the names, and clicking opens their records.
+- **Menus over the table:** with the table open, Layers and Areas sit above it and stop short of it.
+
 ## v70
 
 - **Your files on cards: Copy list and CSV.** Under a file's rows on a street or intersection card, **Copy list** copies them as tab-separated rows (paste straight into a spreadsheet) and **CSV** downloads them, like the neighborhood groups and businesses lists. Every column of the file comes along, plus `where` (on this block, on the next street, or how far away).
