@@ -2,6 +2,14 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v77
+
+- **Filter draws the angle:** hovering a magenta ring draws each street leaving the corner (the first 25 m, which is what's measured), shades the sharpest corner between two different streets and labels it in degrees, with a dashed 90° to compare. Mission & Valencia reads 30°.
+- **Filter speaks in corners:** the slider is now **A corner sharper than …°** (20° to 80°, 50° to start), and the hover says "sharpest corner 30°" instead of degrees off square. The angle is now the corner you'd see standing there (between two streets' legs), so a Y where streets meet at a wide angle no longer counts as sharp.
+- **Nearby starts with only your files checked.** Neighborhood groups, Community Benefit Districts and Cultural Districts are no longer checked to start.
+- **Nearby table:** the first column says what it is ("Painted Safety Zones (starting places)"); count columns have the list's color and a name that wraps, so they're narrow; hovering a header says what the number means ("How many Businesses each starting place has (Within 200 m)"); a **Total found** column.
+- **Hover to find it on the map:** hovering a starting place or a match in the Nearby table, or a match in the Nearby panel's list, rings it on the map.
+
 ## v76
 
 - **Clearing Nearby:** a **Clear** button in the Nearby panel's results and in the table's top row. It takes the rings off the map, the How near area, and the table's Nearby rows, and stops following Near me.

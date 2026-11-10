@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v76 -->
+<!-- build: v77 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -524,6 +524,11 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .sel-check { display: flex; gap: 6px; align-items: center; margin: 8px 0 0 62px; font-size: 13px; cursor: pointer; }
 #pick-mode button { padding: 3px 8px; }
 .save-panel { margin-top: 10px; }
+.tbl.tbl-nbmode th { white-space: normal; max-width: 110px; vertical-align: bottom; font-size: 12px; line-height: 1.2; }
+.tbl.tbl-nbmode th:nth-child(2) { max-width: 240px; }
+.tbl.tbl-nbmode td.tbl-num { text-align: right; max-width: 110px; }
+.nb-th i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; vertical-align: 0; }
+.tbl tr[data-nb-ll]:hover td, .nb-item[data-nb-ll]:hover { background: #FFF3C4; }
 .opt-reset { display: grid; gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #E3E6F3; justify-items: start; }
 .opt-reset small, .opt-what { font-size: 12.5px; color: var(--ink-soft); margin: 4px 0 0; line-height: 1.45; }
 .opt-what b { color: var(--ink); }
@@ -833,7 +838,7 @@ summary::marker { font-size: 1.15em; }
         <p class="quiet-group" data-i18n="quietCorners">Intersections</p>
         <label class="qchip"><input type="checkbox" data-quiet="tee"><span><b data-i18n="quiet_tee">T intersections</b><small data-i18n="quiet_teeHint">Only three streets meet, like an alley off a street</small></span><span class="n" data-quiet-n="tee"></span></label>
         <label class="qchip"><input type="checkbox" data-quiet="skew"><span><b data-i18n="quiet_skew">Streets meeting at an angle</b><small id="skew-text"></small></span><span class="n" data-quiet-n="skew"></span></label>
-        <div class="skew-row"><input type="range" id="skew-angle" min="10" max="70" step="5" value="40" aria-label="Degrees off square"><span id="skew-val"></span></div>
+        <div class="skew-row"><input type="range" id="skew-angle" min="20" max="80" step="5" value="50" aria-label="Corners sharper than"><span id="skew-val"></span></div>
         <p class="quiet-group" data-i18n="quietNarrow">Narrow them down</p>
         <label class="qchip"><input type="checkbox" data-quiet="res"><span><b data-i18n="quiet_res">Residential streets only</b><small data-i18n="quiet_resHint">Leaves out collectors, arterials, and bigger</small></span></label>
         <label class="qchip" id="qchip-flat"><input type="checkbox" data-quiet="flat"><b data-i18n="quiet_flat">Flat to moderate (under 10%)</b></label>
@@ -1186,7 +1191,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v76';
+const _BUILD_VERSION = 'v77';
 
 /* =====================================================================
    CONFIG
@@ -1315,7 +1320,7 @@ const I18N = {
     quiet_resHint: 'Leaves out collectors, arterials, and bigger', quiet_flat: 'Flat to moderate (under 10%)',
     quietCount: '{n} streets match', quietIntCount: '{n} intersections', quietCorners: 'Intersections',
     quiet_tee: 'T intersections', quiet_teeHint: 'Only three streets meet, like an alley off a street', quiet_skew: 'Streets meeting at an angle',
-    quiet_skewHint: 'At least {n}° off square (corners sharper than {a}°)', quietIntTip: '{legs} streets meet · {off}° off square', quietNone: 'Pick at least one in the first group', quietHint: 'Matches show in magenta. Tap one to add it to your list.',
+    quiet_skewHint: 'A corner sharper than {a}° between two streets', quietIntTip: '{legs} streets meet · sharpest corner {corner}°', quietNone: 'Pick at least one in the first group', quietHint: 'Matches show in magenta. Tap one to add it to your list.',
     quietClear: 'Clear', lgQuiet: 'Quiet street matches', lgOneway: 'One-way',
     north: 'north', south: 'south', east: 'east', west: 'west',
     dataNote: 'Street data from DataSF, Streets – Active and Retired, updated {date}.',
@@ -1397,6 +1402,7 @@ const I18N = {
     resetView: 'Reset the map', resetMap: 'Reset the map', resetMapHint: 'Layers, areas, borders, basemap, 3D, Filter and How near back to how they start. Your files and picks stay.', resetDone: 'The map is back to how it starts',
     clearSelTitle: 'Unpicks the streets, intersections, blocks and file rows you picked, and clears Nearby results. Your search, files and map stay.',
     startOverTitle: 'Does that, and also empties the search, turns off Filter and Focus, and zooms back out. Your files and map layers stay.',
+    nbColStart: '{name} (starting places)', nbColTotal: 'Total found', nbColTip: 'How many {list} each starting place has ({how})',
     nbClear: 'Clear', nbCleared: 'Nearby results cleared',
     rmTitle: 'Remove “{name}”?', rmGone: 'It comes off the map, the map key and the table.', rmPicked: '{n} of its rows you picked onto cards will go.', rmNearby: 'Nearby results that use it will be cleared.',
     rmFocus: 'Focus on it will end.', rmAgain: 'You can add it again any time.', rmOk: 'Remove', rmCancel: 'Keep it', rmDone: 'Removed {name}',
@@ -1809,25 +1815,26 @@ const Logic = (() => {
       if (legs.length < 3) continue;
       const names = new Set(legs.map(l => l.s.street));
       if (names.size < 2) continue;
-      // off square: the most any two different streets' lines miss 90°
-      let off = 0;
+      // the sharpest corner: the smallest angle between legs of two different streets (as you'd see it standing there)
+      let corner = 180, pair = null;
       for (let i = 0; i < legs.length; i++) for (let j = i + 1; j < legs.length; j++) {
         if (legs[i].s.street === legs[j].s.street) continue;
-        const d = Math.abs(legs[i].b - legs[j].b) % 180, line = Math.min(d, 180 - d);
-        off = Math.max(off, 90 - line);
+        const d = Math.abs(legs[i].b - legs[j].b) % 360, a = Math.min(d, 360 - d);
+        if (a < corner) { corner = a; pair = [i, j]; }
       }
-      shapes.set(cnn, { legs: legs.length, streets: names.size, off: Math.round(off), res: legs.every(l => l.s.classcode === 5 || l.s.classcode === 0) });
+      shapes.set(cnn, { legs: legs.length, streets: names.size, corner: Math.round(corner), off: Math.max(0, Math.round(90 - Math.min(corner, 180 - corner))),
+        res: legs.every(l => l.s.classcode === 5 || l.s.classcode === 0), bs: legs.map(l => l.b), names: legs.map(l => l.s.street), pair });
     }
     return shapes;
   }
-  // intersections that match the corner filters that are on (tee: three streets meet; skew: at least `angle`° off square)
+  // intersections that match the corner filters that are on (tee: three streets meet; skew: a corner sharper than `angle`°)
   function cornerMatches(on, angle) {
     const tee = on.includes('tee'), skew = on.includes('skew'), res = on.includes('res');
     if (!tee && !skew) return [];
     const out = [];
     for (const [cnn, sh] of nodeShapes()) {
       if (res && !sh.res) continue;
-      if ((tee && sh.legs === 3) || (skew && sh.off >= angle)) out.push(cnn);
+      if ((tee && sh.legs === 3) || (skew && sh.corner < angle)) out.push(cnn);
     }
     return out;
   }
@@ -3220,6 +3227,7 @@ function addMapLayers() {
   map.addSource('all', { type: 'geojson', data: fc(Logic.db.segs.map(s => segFeature(s, { active: s.active, ow: s.owAlong }))) });
   map.addSource('quiet', { type: 'geojson', data: EMPTY });
   map.addSource('quiet-int', { type: 'geojson', data: EMPTY });
+  map.addSource('quiet-angle', { type: 'geojson', data: EMPTY });
   map.addSource('all-mid', { type: 'geojson', data: fc(Logic.db.segs.map(s => midFeature(s))) });
   map.addSource('context-mid', { type: 'geojson', data: EMPTY });
   map.addSource('results-mid', { type: 'geojson', data: EMPTY });
@@ -3244,6 +3252,14 @@ function addMapLayers() {
   map.addLayer({ id: 'bp-quiet-int', type: 'circle', source: 'quiet-int',
     paint: { 'circle-color': '#fff', 'circle-stroke-color': '#B5179E', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 11, 2, 16, 4],
       'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 3, 14, 5, 18, 11] } });
+  // the angle at a Filter intersection, while hovering it
+  map.addLayer({ id: 'bp-quiet-angle-fill', type: 'fill', source: 'quiet-angle', filter: ['==', ['get', 'part'], 'wedge'], paint: { 'fill-color': '#B5179E', 'fill-opacity': 0.22 } });
+  map.addLayer({ id: 'bp-quiet-angle', type: 'line', source: 'quiet-angle', filter: ['in', ['get', 'part'], ['literal', ['leg', 'arc']]], layout: { 'line-cap': 'round' },
+    paint: { 'line-color': '#B5179E', 'line-width': ['case', ['==', ['get', 'part'], 'arc'], 2.5, 4], 'line-opacity': ['case', ['==', ['get', 'main'], false], 0.4, 1] } });
+  map.addLayer({ id: 'bp-quiet-angle-90', type: 'line', source: 'quiet-angle', filter: ['==', ['get', 'part'], 'right'], paint: { 'line-color': '#1E2340', 'line-width': 1.5, 'line-dasharray': [2, 2], 'line-opacity': 0.55 } });
+  map.addLayer({ id: 'bp-quiet-angle-label', type: 'symbol', source: 'quiet-angle', filter: ['==', ['get', 'part'], 'label'],
+    layout: { 'text-field': ['get', 'text'], 'text-size': 14, 'text-font': LABEL_FONT, 'text-allow-overlap': true, 'text-ignore-placement': true },
+    paint: { 'text-color': '#fff', 'text-halo-color': '#B5179E', 'text-halo-width': 3 } });
   // one-way arrows along the street, pointing the way traffic goes
   map.addLayer({ id: 'bp-oneway', type: 'symbol', source: 'all', minzoom: 16, filter: ['!=', ['get', 'ow'], 0],
     layout: { 'symbol-placement': 'line', 'symbol-spacing': 90, 'icon-image': 'ow-arrow', 'icon-size': ['interpolate', ['linear'], ['zoom'], 15, 0.6, 18, 1],
@@ -3351,9 +3367,10 @@ function addMapLayers() {
     map.getCanvas().style.cursor = 'pointer';
     const i = Logic.intItem(f.properties.cnn); if (!i) return;
     popOwner = 'qint';
-    popup.setLngLat([i.x, i.y]).setHTML(`<b>${esc(i.streets.join(' & '))}</b><br><span class="pop-lyr">${esc(t('quietIntTip', { legs: f.properties.legs, off: f.properties.off }))}</span>`).addTo(map);
+    popup.setLngLat([i.x, i.y]).setHTML(`<b>${esc(i.streets.join(' & '))}</b><br><span class="pop-lyr">${esc(t('quietIntTip', { legs: f.properties.legs, corner: f.properties.corner }))}</span>`).addTo(map);
+    drawAngle(f.properties.cnn);
   });
-  map.on('mouseleave', 'bp-quiet-int', () => { map.getCanvas().style.cursor = ''; if (popOwner === 'qint') { popup.remove(); popOwner = null; } });
+  map.on('mouseleave', 'bp-quiet-int', () => { map.getCanvas().style.cursor = ''; drawAngle(null); if (popOwner === 'qint') { popup.remove(); popOwner = null; } });
   map.on('click', 'bp-ints', e => { if (!map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit'] }).length) clickInt(e); });
   map.on('mousemove', 'bp-all-hit', e => {
     if (onCorner(e) || onPoi(e) || onBuilding(e) || onArea(e)) {
@@ -3520,8 +3537,8 @@ const LAYER_ORDER = [
   ['edges', id => id === CONTOUR_LINE || ['bp-lyr-curbs', 'bp-lyr-landuse-line', 'bp-adj-lots-casing', 'bp-adj-lots', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-buildings-line'].includes(id)
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
-  ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-near-line', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
+  ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
+  ['selection', id => ['bp-near-line', 'bp-nb-hover', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
@@ -6436,17 +6453,18 @@ const Table = (() => {
     const numCol = new Set(cols.filter(c => rows.some(r => num(r.cells[c])) && rows.every(r => r.cells[c] === '' || r.cells[c] == null || num(r.cells[c]))));
     const isStreets = src === 'streets';
     const head = `<thead><tr><th>${isStreets ? `<input type="checkbox" data-tbl-all ${state.results.length && state.checked.size === state.results.length ? 'checked' : ''} aria-label="${esc(t('tableCheckAll'))}">` : ''}</th>`
-      + cols.map(c => `<th data-sort="${esc(c)}" class="${sort === c ? (dir > 0 ? 'asc' : 'desc') : ''}" title="${esc(t('tableSort'))}">${esc(label(c))}</th>`).join('') + '</tr></thead>';
+      + cols.map(c => `<th data-sort="${esc(c)}" class="${sort === c ? (dir > 0 ? 'asc' : 'desc') : ''}" title="${esc(t('tableSort'))}">${src === 'nearby' ? NearbyView.headHTML(c) : esc(label(c))}</th>`).join('') + '</tr></thead>';
     const cell = (r, c) => { const v = r.cells[c]; const s = v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
       return `<td class="${numCol.has(c) ? 'tbl-num' : ''}" title="${esc(s.length > 30 ? s : '')}">${esc(s)}</td>`; };
     const lead = r => r.nb ? `<td><button type="button" class="tbl-card" data-nb-open="${esc(r.key)}" aria-expanded="${opened.has(r.key)}">${opened.has(r.key) ? '▾' : '▸'}</button></td>` : r.pick != null ? `<td><button type="button" class="tbl-card" data-tbl-unpick="${esc(r.pick)}" title="${esc(t('pickDrop', { n: r.pick }))}">×</button></td>` : isStreets ? `<td><input type="checkbox" data-tbl-check="${r.key}" ${state.checked.has(r.key) ? 'checked' : ''} aria-label="${esc(t('tableCheck'))}"></td>`
       : `<td><button type="button" class="tbl-card" data-tbl-card="${r.i}" aria-pressed="${Drops.cards.has ? !!Drops.cards.has(r.f.id, r.i) : false}">${esc(t('tableCard'))}</button></td>`;
-    const body = shown.map((r, n) => `<tr data-tbl-row="${n}" ${r.pick != null ? `data-pick-row="${esc(r.pick)}"` : ''} ${r.nb ? `data-nb-row="${esc(r.key)}"` : ''} class="${isStreets && state.checked.has(r.key) ? 'is-checked' : ''}">${lead(r)}${cols.map(c => cell(r, c)).join('')}</tr>`
+    const body = shown.map((r, n) => `<tr data-tbl-row="${n}" ${r.pick != null ? `data-pick-row="${esc(r.pick)}"` : ''} ${r.nb ? `data-nb-row="${esc(r.key)}"${r.ll ? ` data-nb-ll="${r.ll.join(',')}"` : ''}` : ''} class="${isStreets && state.checked.has(r.key) ? 'is-checked' : ''}">${lead(r)}${cols.map(c => cell(r, c)).join('')}</tr>`
       + (r.nb && opened.has(r.key) ? NearbyView.subRowsHTML(r.nb, cols.length) : '')).join('')
       + (list.length > MAX ? `<tr class="tbl-more"><td colspan="${cols.length + 1}">${esc(t('tableMore', { n: MAX.toLocaleString() }))}</td></tr>` : '')
       + (!rows.length ? `<tr class="tbl-more"><td colspan="${cols.length + 1}">${esc(t(isStreets ? 'tableEmpty' : 'tableEmptyFile'))}</td></tr>` : '');
     const sc = $('tbl-scroll'), top = sc.scrollTop, left = sc.scrollLeft;
     $('tbl').innerHTML = head + '<tbody>' + body + '</tbody>';
+    $('tbl').classList.toggle('tbl-nbmode', src === 'nearby');
     sc.scrollTop = top; sc.scrollLeft = left;
   }
   function go(r) {
@@ -6467,6 +6485,9 @@ const Table = (() => {
     $('tbl-src').addEventListener('change', e => { src = e.target.value; sort = null; q = ''; $('tbl-search').value = ''; refresh(); });
     $('tbl-search').addEventListener('input', e => { q = e.target.value; refresh(); });
     $('tbl-allcols').addEventListener('change', e => { allCols = e.target.checked; refresh(); });
+    // Nearby: hovering a place or a match rings it on the map
+    $('tbl').addEventListener('mouseover', e => { if (src !== 'nearby') return; const r = e.target.closest('[data-nb-ll]'); NearbyView.hover(r ? r.dataset.nbLl.split(',').map(Number) : null); });
+    $('tbl').addEventListener('mouseleave', () => NearbyView.hover(null));
     $('tbl-nb-how').addEventListener('change', e => { Drops.setNearFrom(e.target.value); if ($('nb-how')) $('nb-how').value = e.target.value; NearbyView.run(); });
     $('tbl-nb').addEventListener('click', e => { if (e.target.closest('[data-nb-clear]')) { NearbyView.clear(); return; } const b = e.target.closest('[data-nb-x]'); if (b) NearbyView.exportAs(b.dataset.nbX); });
     const tb = $('tbl');
@@ -6524,7 +6545,7 @@ const NearbyView = (() => {
   const AREA_LISTS = ['cbd', 'cult'];   // matched like neighborhood groups: the district the place is in
   const CONTACT = /(^|[_\s])(name|contact|organi[sz]er|lead|email|e-mail|phone|tel|website|url|steward|owner|captain|coordinator)s?($|[_\s])/i;
   // checked to start: your files and neighborhood groups (businesses are many; they're a box away)
-  let chosen = new Set(['groups', 'cbd', 'cult']), seenFiles = new Set(), start = null, res = null, running = 0, me = null, watch = null;
+  let chosen = new Set(), seenFiles = new Set(), start = null, res = null, running = 0, me = null, watch = null;
   const toM = ([lo, la]) => [lo * KX, la * KY];
   const segD = (x, y, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy, u = L ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / L)) : 0;
     return Math.hypot(x - a[0] - u * dx, y - a[1] - u * dy); };
@@ -6711,6 +6732,8 @@ const NearbyView = (() => {
     if (map.getSource('nb-hl')) return;
     map.addSource('nb-hl', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addSource('nb-me', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addSource('nb-hover', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({ id: 'bp-nb-hover', type: 'circle', source: 'nb-hover', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 9, 17, 16], 'circle-color': 'rgba(255,197,61,0.35)', 'circle-stroke-color': '#1E2340', 'circle-stroke-width': 3 } });
     map.addLayer({ id: 'bp-nb-match', type: 'circle', source: 'nb-hl', filter: ['==', ['get', 'role'], 'match'],
       paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 3, 17, 7], 'circle-color': ['get', 'color'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } });
     map.addLayer({ id: 'bp-nb-start', type: 'circle', source: 'nb-hl', filter: ['==', ['get', 'role'], 'start'],
@@ -6782,7 +6805,7 @@ const NearbyView = (() => {
     if (res.rows.length === 1) {
       const r = res.rows[0], all = res.lists.flatMap(l => r.m[l.key].map(x => ({ ...x, l }))).sort((a, b) => (a.d ?? 1e9) - (b.d ?? 1e9));
       out.innerHTML = `<p class="nb-sum">${esc(t(res.start === 'me' ? 'nbNearYou' : 'nbNearOne', { how: res.howLabel, name: r.pl.name }))}</p>
-        ${all.length ? all.slice(0, 80).map(x => `<div class="nb-item"><span class="nb-pill" style="background:${x.l.color}">${esc(x.l.label)}</span><b>${esc(x.pl.name)}</b>
+        ${all.length ? all.slice(0, 80).map(x => `<div class="nb-item"${x.pl.ll ? ` data-nb-ll="${x.pl.ll.join(',')}"` : ''}><span class="nb-pill" style="background:${x.l.color}">${esc(x.l.label)}</span><b>${esc(x.pl.name)}</b>
           <span class="muted">${x.d != null ? esc(t('nbM', { m: x.d })) + ' · ' : ''}${esc(x.where)}</span>${x.contact ? `<span class="nb-contact">${esc(x.contact)}</span>` : ''}</div>`).join('') : `<p class="muted">${esc(t('nbNone'))}</p>`}${btns}`;
       return;
     }
@@ -6832,6 +6855,8 @@ const NearbyView = (() => {
   function setup() {
     $('nearby-btn').addEventListener('click', () => $('nb-panel').hidden ? open() : close());
     const p = $('nb-panel');
+    p.addEventListener('mouseover', e => { const r = e.target.closest('[data-nb-ll]'); hover(r ? r.dataset.nbLl.split(',').map(Number) : null); });
+    p.addEventListener('mouseleave', () => hover(null));
     p.addEventListener('click', e => {
       if (e.target.closest('[data-nb-close]')) return close();
       if (e.target.closest('[data-nb-go]')) return run();
@@ -6847,8 +6872,15 @@ const NearbyView = (() => {
   // for the table: one row per starting place
   function tableRows() {
     if (!res) return { cols: [], rows: [] };
-    const cols = [res.startLabel, ...res.lists.map(l => l.label)];
-    return { cols, rows: res.rows.map(r => ({ key: r.pl.id, nb: r, cells: { [res.startLabel]: r.pl.name, ...Object.fromEntries(res.lists.map(l => [l.label, r.m[l.key].length])) } })) };
+    const first = t('nbColStart', { name: res.startLabel }), total = t('nbColTotal');
+    const cols = [first, ...res.lists.map(l => l.label), total];
+    return { cols, nb: true, rows: res.rows.map(r => ({ key: r.pl.id, nb: r, ll: r.pl.ll,
+      cells: { [first]: r.pl.name, ...Object.fromEntries(res.lists.map(l => [l.label, r.m[l.key].length])), [total]: res.lists.reduce((a, l) => a + r.m[l.key].length, 0) } })) };
+  }
+  // the header of a count column: the list's color, its name (wrapping), what the number means on hover
+  function headHTML(c) {
+    const l = res && res.lists.find(x => x.label === c);
+    return l ? `<span class="nb-th" title="${esc(t('nbColTip', { list: l.label, how: res.howLabel }))}"><i style="background:${l.color}"></i>${esc(l.label)}</span>` : esc(c);
   }
   const openGroups = new Set();
   function subRowsHTML(r, span) {
@@ -6860,12 +6892,17 @@ const NearbyView = (() => {
       const top = `<tr class="nb-sub nb-grp-row"><td></td><td colspan="${span}"><button type="button" class="nb-grp-btn" data-nb-grp="${esc(gk)}" aria-expanded="${open}" ${ms.length ? '' : 'disabled'}>
         <span class="nb-tri">${open ? '▾' : '▸'}</span><span class="nb-pill" style="background:${l.color}">${esc(l.label)}</span> <b>${ms.length.toLocaleString()}</b></button></td></tr>`;
       if (!open) return top;
-      return top + ms.slice(0, 200).map(x => `<tr class="nb-sub"><td></td><td colspan="${span}" class="nb-match"><b>${esc(x.pl.name)}</b>
+      return top + ms.slice(0, 200).map(x => `<tr class="nb-sub"${x.pl.ll ? ` data-nb-ll="${x.pl.ll.join(',')}"` : ''}><td></td><td colspan="${span}" class="nb-match"><b>${esc(x.pl.name)}</b>
         <span class="muted">· ${esc(x.where)}${x.d != null ? ' · ' + esc(t('nbM', { m: x.d })) : ''}</span>${x.contact ? ` <span class="nb-contact">${esc(x.contact)}</span>` : ''}</td></tr>`).join('')
         + (ms.length > 200 ? `<tr class="nb-sub"><td></td><td colspan="${span}" class="muted">${esc(t('nbMore', { n: ms.length - 200 }))}</td></tr>` : '');
     }).join('');
   }
   const toggleGroup = gk => openGroups.has(gk) ? openGroups.delete(gk) : openGroups.add(gk);
+  // hovering a row or a match in the table or the panel: a ring on it on the map
+  function hover(ll) {
+    if (!mapReady || !map.getSource('nb-hover')) return;
+    map.getSource('nb-hover').setData({ type: 'FeatureCollection', features: ll ? [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: ll } }] : [] });
+  }
   // clear the results: rings, the How near area, the table's Nearby rows (quiet: no toast)
   function clear(quiet) {
     const had = !!res;
@@ -6886,7 +6923,7 @@ const NearbyView = (() => {
     const p = $('nb-panel'); if (p && !p.hidden) p.innerHTML = panelHTML();
   }
   const showAreaOf = id => { const r = id && res && res.rows.find(x => x.pl.id === id); showArea(r ? r.pl : null); };
-  return { setup, open, close, run, clear, uses, dropFile, tableRows, subRowsHTML, focusRow, toggleGroup, showAreaOf, has: () => !!res, label: () => res ? t('nbTableSrc', { name: res.startLabel, n: res.rows.length }) : '', exportAs };
+  return { setup, open, close, run, clear, uses, dropFile, tableRows, headHTML, hover, subRowsHTML, focusRow, toggleGroup, showAreaOf, has: () => !!res, label: () => res ? t('nbTableSrc', { name: res.startLabel, n: res.rows.length }) : '', exportAs };
 })();
 
 const SelAreas = (() => {
@@ -8535,8 +8572,8 @@ function setupMapMenus() {
 
 /* ---------- quiet streets ---------- */
 let quietCnns = new Set(), quietInts = [];
-const SKEW_KEY = 'bp-skew';
-let skewAngle = (() => { try { return +localStorage.getItem(SKEW_KEY) || 40; } catch (e) { return 40; } })();
+const SKEW_KEY = 'bp-corner';   // corners sharper than this many degrees
+let skewAngle = (() => { try { return +localStorage.getItem(SKEW_KEY) || 50; } catch (e) { return 50; } })();
 const quietOn = () => [...document.querySelectorAll('[data-quiet]:checked')].map(i => i.dataset.quiet);
 function setupQuiet() {
   const btn = $('quiet-btn'), panel = $('quiet-panel');
@@ -8551,8 +8588,8 @@ function setupQuiet() {
   document.querySelector('[data-quiet-n="tee"]').textContent = teeN.toLocaleString();
   const skewText = () => {
     $('skew-val').textContent = skewAngle + '°';
-    $('skew-text').textContent = t('quiet_skewHint', { n: skewAngle, a: 90 - skewAngle });
-    document.querySelector('[data-quiet-n="skew"]').textContent = [...shapes.values()].filter(v => v.off >= skewAngle).length.toLocaleString();
+    $('skew-text').textContent = t('quiet_skewHint', { a: skewAngle });
+    document.querySelector('[data-quiet-n="skew"]').textContent = [...shapes.values()].filter(v => v.corner < skewAngle).length.toLocaleString();
   };
   $('skew-angle').value = skewAngle; skewText();
   $('skew-angle').addEventListener('input', e => {
@@ -8563,6 +8600,24 @@ function setupQuiet() {
   });
   panel.addEventListener('change', e => { if (e.target.dataset.quiet) applyQuiet(); });
   $('quiet-clear').onclick = () => { document.querySelectorAll('[data-quiet]').forEach(i => i.checked = false); applyQuiet(); };
+}
+// what Filter measured at a corner: each leg (25 m), the sharpest corner as a wedge with its angle, and a dashed 90° for comparison
+function drawAngle(cnn) {
+  if (!mapReady || !map.getSource('quiet-angle')) return;
+  const sh = cnn != null && Logic.nodeShapes().get(cnn), n = cnn != null && Logic.db.nodes.get(cnn);
+  if (!sh || !n || !sh.pair) { map.getSource('quiet-angle').setData(EMPTY); return; }
+  const KXm = 111320 * Math.cos(37.76 * Math.PI / 180), KYm = 110540;
+  const at = (b, m) => [n.x + Math.sin(b * Math.PI / 180) * m / KXm, n.y + Math.cos(b * Math.PI / 180) * m / KYm];
+  const [i, j] = sh.pair, b1 = sh.bs[i], b2 = sh.bs[j];
+  let from = b1, span = ((b2 - b1) % 360 + 360) % 360; if (span > 180) { from = b2; span = 360 - span; }
+  const arc = (r, a0, sweep) => Array.from({ length: 25 }, (_, k) => at(a0 + sweep * k / 24, r));
+  const pair = new Set([i, j]), feats = [];
+  sh.bs.forEach((b, k) => feats.push({ type: 'Feature', properties: { part: 'leg', main: pair.has(k) }, geometry: { type: 'LineString', coordinates: [[n.x, n.y], at(b, 25)] } }));
+  feats.push({ type: 'Feature', properties: { part: 'wedge' }, geometry: { type: 'Polygon', coordinates: [[[n.x, n.y], ...arc(12, from, span), [n.x, n.y]]] } });
+  feats.push({ type: 'Feature', properties: { part: 'arc' }, geometry: { type: 'LineString', coordinates: arc(12, from, span) } });
+  if (span < 88) feats.push({ type: 'Feature', properties: { part: 'right' }, geometry: { type: 'LineString', coordinates: arc(9, from, 90) } });
+  feats.push({ type: 'Feature', properties: { part: 'label', text: sh.corner + '°' }, geometry: { type: 'Point', coordinates: at(from + span / 2, 19) } });
+  map.getSource('quiet-angle').setData(fc(feats));
 }
 function clearQuiet() {
   if (!quietOn().length) return;
@@ -8584,7 +8639,7 @@ function applyQuiet() {
   if (mapReady) {
     map.getSource('quiet').setData(fc(matches.map(s => segFeature(s))));
     map.getSource('quiet-int').setData(fc(quietInts.map(c => { const nd = Logic.db.nodes.get(c), sh = shapes.get(c);
-      return { type: 'Feature', properties: { cnn: c, legs: sh.legs, off: sh.off }, geometry: { type: 'Point', coordinates: [nd.x, nd.y] } }; })));
+      return { type: 'Feature', properties: { cnn: c, legs: sh.legs, corner: sh.corner }, geometry: { type: 'Point', coordinates: [nd.x, nd.y] } }; })));
     refreshMapFilter();
   }
   writeHash();
