@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v78 -->
+<!-- build: v79 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -484,7 +484,8 @@ td.tbl-num { text-align: right; font-variant-numeric: tabular-nums; }
 .drop-zone[hidden] { display: none; }
 .drop-zone p { background: #fff; padding: 14px 20px; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 18px rgba(0,0,0,.15); }
 .drop-x { border: 0; background: none; font-size: 18px; line-height: 1; cursor: pointer; color: var(--ink-soft); padding: 0 2px; }
-.lyr-row.lyr-row[data-drop] { grid-template-columns: 26px minmax(0, 1fr) auto auto; }
+.lyr-row.lyr-row[data-drop] { grid-template-columns: 26px minmax(0, 1fr) auto auto auto; gap: 6px; }
+.lyr-row[data-drop] .drop-src { color: var(--ink-soft); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
 .drop-add { display: flex; gap: 10px; align-items: center; }
 .drop-add .btn { white-space: nowrap; flex: none; cursor: pointer; }
 .drop-add small { color: var(--ink-soft); }
@@ -571,6 +572,9 @@ summary::marker { font-size: 1.15em; }
 .flavor-pop button { border: 0; background: none; text-align: left; padding: 5px 8px; border-radius: 8px; font: 600 13px Figtree, sans-serif; cursor: pointer; }
 .flavor-pop button[aria-pressed="true"] { background: var(--ink); color: #fff; }
 .map-toggle { position: relative; }
+.map-toggle .mt-sep { width: 1px; background: var(--line); margin: 4px 2px; }
+.map-toggle button { padding: 6px 11px; }
+.map-toggle { padding: 2px; }
 .nb-panel { position: absolute; top: 108px; left: 12px; z-index: 9; width: min(360px, calc(100% - 24px)); max-height: calc(100% - 130px); overflow: auto; overscroll-behavior: contain;
   background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius-md); padding: 10px 14px 14px; box-shadow: 0 8px 24px rgba(30,35,64,.18); font-size: 14px; }
 .map-wrap.tbl-open .nb-panel { max-height: calc(100% - var(--tbl-h) - 130px); }
@@ -803,9 +807,8 @@ summary::marker { font-size: 1.15em; }
     <div class="map-ui">
       <div class="map-toggle" role="group" aria-label="Map style">
         <button type="button" id="bm-map" aria-pressed="true" data-i18n="bmMap">Map</button>
-        <button type="button" id="bm-sat" aria-pressed="false" data-i18n="bmSat">Satellite</button>
-      </div>
-      <div class="map-toggle single">
+        <button type="button" id="bm-sat" aria-pressed="false" data-i18n="bmSat" title="Satellite">Sat</button>
+        <span class="mt-sep" aria-hidden="true"></span>
         <button type="button" id="btn-3d" aria-pressed="false" data-i18n="btn3d" title="Tilt the map to see the hills">3D</button>
       </div>
       <div class="map-toggle single">
@@ -1201,7 +1204,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v78';
+const _BUILD_VERSION = 'v79';
 
 /* =====================================================================
    CONFIG
@@ -1290,7 +1293,7 @@ const I18N = {
     clearSel: 'Clear selections',
     loading: 'Loading streets…',
     loadFailed: 'Street data couldn’t load from sf-blocks or the copy here. Reload to try again.',
-    bmMap: 'Map', bmSat: 'Satellite',
+    bmMap: 'Map', bmSat: 'Sat',
     lgCrossTitle: 'Show cross streets after you choose a block',
     legend: 'Map key', lgChecked: 'Your streets / intersections', lgCross: 'Cross streets', lgUnchecked: 'Matches',
     lgPreview: 'Preview', lgStreet: 'Your whole street', lgEnds: 'Corners', lgOther: 'Other streets',
@@ -1420,6 +1423,9 @@ const I18N = {
     clearSelTitle: 'Unpicks the streets, intersections, blocks and file rows you picked, and clears Nearby results. Your search, files and map stay.',
     startOverTitle: 'Does that, and also empties the search, turns off Filter and Focus, and zooms back out. Your files and map layers stay.',
     nbColStart: '{name} (starting places)', nbColTotal: 'Total found', nbColTip: 'How many {list} each starting place has ({how})',
+    src_file: 'File', src_drive: 'Google Drive', src_sheet: 'Google Sheets link', src_socrata: 'DataSF', src_url: 'Link', src_airtable: 'Airtable', src_search: 'From search',
+    fmtLoc: 'Location from', fmtLatLon: 'latitude / longitude (points)', dropRelocated: '{name}: {n} on the map', fmtLeftOut: 'Fields left out',
+    fmtLeftOutHint: 'Contact fields aren’t loaded unless you add them back. Check the ones you need and reload.', fmtReload: 'Reload with these',
     nbClear: 'Clear', nbCleared: 'Nearby results cleared',
     rmTitle: 'Remove “{name}”?', rmGone: 'It comes off the map, the map key and the table.', rmPicked: '{n} of its rows you picked onto cards will go.', rmNearby: 'Nearby results that use it will be cleared.',
     rmFocus: 'Focus on it will end.', rmAgain: 'You can add it again any time.', rmOk: 'Remove', rmCancel: 'Keep it', rmDone: 'Removed {name}',
@@ -2614,6 +2620,7 @@ function render() {
   $('foot-note').textContent = d ? t('dataNote', { date: d.slice(0, 10) }) : '';
   drawResults();
   Table.refresh();
+  try { Drops.syncExtent(); } catch (e) { }
   document.dispatchEvent(new Event('bp-rendered'));
 }
 // checked streets in words: "Valencia St, 24th St to 14th St · Market St, Guerrero St to Dolores St"
@@ -5072,7 +5079,9 @@ const BPAirtable = (() => {
   const SKIP_TYPES = { email: 'email', phoneNumber: 'phone', multipleAttachments: 'attachments', singleCollaborator: 'Airtable user',
     multipleCollaborators: 'Airtable users', createdBy: 'Airtable user', lastModifiedBy: 'Airtable user', button: 'button' };
   const SKIP_NAMES = /(e-?mail|phone|street address|mailing address|home address|^address$|contact info)/i;
-  const GEOM_NAME = /^(wkt|geom|geometry|the_geom|shape)$/i, CNN_NAME = /^(cnn|cnns)$/i;
+  // geometry columns: wkt, geometry, outline_wkt, "Street WKT"…; an outline beats the other shapes
+  const GEOM_NAME = /(^|[_\s])(wkt|geom|geometry|the_geom)$/i, CNN_NAME = /^(cnn|cnns)$/i;
+  const geomRank = n => /outline/i.test(n) ? 0 : /^(wkt|geometry|geom|the_geom)$/i.test(n) ? 1 : 2;
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   // a link or a bare path: https://airtable.com/appX/tblY/viwZ, appX/tblY, …
   function parseLink(v) {
@@ -5097,15 +5106,18 @@ const BPAirtable = (() => {
       throw new Error({ 401: t('at401'), 403: t('at403'), 404: t('at404') }[res.status] || t('atErr', { n: res.status, detail }));
     }
   }
-  function planFields(table, links = true) {
+  // the fields to ask for: all but contact fields, unless added back (include, by name)
+  function planFields(table, links = true, include = []) {
     const fetch_ = [], skipped = [];
     for (const f of table.fields) {
       if (f.type === 'multipleRecordLinks') { if (links) fetch_.push(f); continue; }
       const why = SKIP_TYPES[f.type] || (SKIP_NAMES.test(f.name) && f.id !== table.primaryFieldId ? 'contact info' : '');
-      why ? skipped.push(f.name) : fetch_.push(f);
+      why && !include.includes(f.name) ? skipped.push(f.name) : fetch_.push(f);
     }
     return { fetch: fetch_, skipped };
   }
+  // "Link: Field" names in include, for one link
+  const under = (include, prefix) => include.filter(n => n.startsWith(prefix + ': ')).map(n => n.slice(prefix.length + 2));
   function cellValue(f, v) {
     if (v == null) return '';
     if (f.type === 'currency' && typeof v === 'number') return (v < 0 ? '-$' : '$') + Math.abs(v);
@@ -5123,42 +5135,67 @@ const BPAirtable = (() => {
     return out;
   }
   // one table or view → { name, rows, skipped }
-  async function load(link, tok) {
+  // one table or view → { name, rows, skipped, include }. Linked records come in as "Link: Field", and
+  // their own links as "Link: Field" names (two levels: a project's organizations and advocates); contact
+  // fields at either level only when added back. WKT in linked records fills the row's geometry.
+  async function load(link, tok, include = []) {
     const { tables } = await call(`/meta/bases/${link.base}/tables`, tok);
     const table = link.table ? tables.find(x => x.id === link.table) : tables[0];
     if (!table) throw new Error(t('atNoTable'));
     const view = link.view ? (table.views || []).find(v => v.id === link.view) : null;
     if (link.view && !view) throw new Error(t('atNoView'));
     const label = table.name.trim() + (view ? ' · ' + view.name : '');
-    const { fetch: fields, skipped } = planFields(table);
+    const { fetch: fields, skipped } = planFields(table, true, include);
     const recs = await pages(`/${link.base}/${table.id}/listRecords`, tok, { fields: fields.map(f => f.name), ...(view ? { view: view.id } : {}) },
       (n, more) => toast(t('atReading', { name: label, n: n.toLocaleString() }) + (more ? '…' : '')));
     const rows = recs.map(r => { const o = {}; for (const f of fields) if (f.name in r.fields) o[f.name] = f.type === 'multipleRecordLinks' ? r.fields[f.name] : cellValue(f, r.fields[f.name]); return o; });
-    // linked records: their fields as "Link: Field"; WKT and CNNs also fill the row's own geometry / cnns when it has none
+    const tableOf = f => tables.find(x => x.id === (f.options || {}).linkedTableId);
+    const primOf = lt => lt.fields.find(f => f.id === lt.primaryFieldId);
+    const fetchAll = (lt, names) => pages(`/${link.base}/${lt.id}/listRecords`, tok, { fields: names }, n => toast(t('atLinked', { name: lt.name.trim(), n: n.toLocaleString() })))
+      .then(rs => new Map(rs.map(r => [r.id, r.fields])));
     for (const lf of fields.filter(f => f.type === 'multipleRecordLinks')) {
-      const lt = tables.find(x => x.id === (lf.options || {}).linkedTableId);
+      const lt = tableOf(lf);
       const ids = new Set(rows.flatMap(r => Array.isArray(r[lf.name]) ? r[lf.name] : []));
       if (!lt || !ids.size) { rows.forEach(r => { if (Array.isArray(r[lf.name])) r[lf.name] = ''; }); continue; }
-      const ltf = planFields(lt, false).fetch, prim = lt.fields.find(f => f.id === lt.primaryFieldId);
-      const byId = new Map((await pages(`/${link.base}/${lt.id}/listRecords`, tok, { fields: ltf.map(f => f.name) },
-        n => toast(t('atLinked', { name: lt.name.trim(), n: n.toLocaleString() })))).map(r => [r.id, r.fields]));
+      const plan = planFields(lt, true, under(include, lf.name)), prim = primOf(lt);
+      skipped.push(...plan.skipped.map(n => `${lf.name}: ${n}`));
+      const byId = await fetchAll(lt, plan.fetch.map(f => f.name));
+      // their links: the linked table's names (and any of its contact fields added back)
+      const second = new Map();
+      for (const f2 of plan.fetch.filter(f => f.type === 'multipleRecordLinks')) {
+        const lt2 = tableOf(f2); if (!lt2 || lt2.id === table.id) continue;   // a link back to this table only repeats it
+        const pre = `${lf.name}: ${f2.name}`, inc2 = under(include, pre), p2 = primOf(lt2);
+        skipped.push(...planFields(lt2, false).skipped.filter(n => !inc2.includes(n) && SKIP_TYPES[(lt2.fields.find(x => x.name === n) || {}).type]).map(n => `${pre}: ${n}`));
+        const want = [p2, ...lt2.fields.filter(x => inc2.includes(x.name))].filter(Boolean);
+        second.set(f2.name, { pre, p2, want, by: await fetchAll(lt2, want.map(x => x.name)) });
+      }
       for (const r of rows) {
         const got = (Array.isArray(r[lf.name]) ? r[lf.name] : []).map(id => byId.get(id)).filter(Boolean);
         r[lf.name] = got.map(x => cellValue(prim || {}, prim ? x[prim.name] : '')).filter(Boolean).join(', ');
-        for (const f of ltf) {
+        const geoms = [];
+        for (const f of plan.fetch) {
           if (prim && f.id === prim.id) continue;
+          if (f.type === 'multipleRecordLinks') {
+            const sc = second.get(f.name); if (!sc) continue;
+            const recs2 = [...new Set(got.flatMap(x => x[f.name] || []))].map(id => sc.by.get(id)).filter(Boolean);
+            for (const w of sc.want) {
+              const vals = [...new Set(recs2.map(x => x[w.name]).filter(v => v != null && v !== '').map(v => String(cellValue(w, v))))];
+              if (vals.length) r[w === sc.p2 ? sc.pre : `${sc.pre}: ${w.name}`] = vals.join(', ');
+            }
+            continue;
+          }
           const vals = got.map(x => x[f.name]).filter(v => v != null && v !== '');
           if (!vals.length) continue;
-          if (GEOM_NAME.test(f.name) && vals.every(v => typeof v === 'string')) {
-            const g = Drops.combineWKT(vals); if (g && !r.geometry) r.geometry = g; continue;
-          }
+          if (GEOM_NAME.test(f.name) && vals.every(v => typeof v === 'string')) { geoms.push([geomRank(f.name), vals]); continue; }
           const txt = [...new Set(vals.map(v => String(cellValue(f, v))))].join(CNN_NAME.test(f.name) ? ';' : ', ');
           r[`${lf.name}: ${f.name}`] = txt;
           if (CNN_NAME.test(f.name) && !r.cnns && !r.cnn) r.cnns = txt;
         }
+        geoms.sort((a, b) => a[0] - b[0]);
+        for (const [, vals] of geoms) { const g = Drops.combineWKT(vals); if (g) { if (!r.geometry) r.geometry = g; break; } }
       }
     }
-    return { name: label, rows, skipped };
+    return { name: label, rows, skipped, include };
   }
   async function listBases(tok) {
     const out = []; let offset;
@@ -5224,15 +5261,16 @@ const BPAirtable = (() => {
       if (bases.length === 1) { box.querySelector('details').open = true; }
     } catch (e) { status(e.message, true); }
   }
-  async function go(link, quiet) {
+  async function go(link, quiet, include = [], replaces = null) {
     if (!link || busy) return;
     const tok = token.get(); if (!tok) { open(pathOf(link), t('atNeedToken')); return; }
     busy = true; status(t('atLoading'));
     try {
       toast(t('atConnecting'));
-      const r = await load(link, tok);
+      const r = await load(link, tok, include);
       if (dlg && dlg.open) dlg.close();
-      const ok = Drops.addRows(r.name, r.rows, 'airtable:' + pathOf(link));
+      if (replaces != null) Drops.removeNow(replaces);
+      const ok = Drops.addRows(r.name, r.rows, 'airtable:' + pathOf(link) + (include.length ? '|' + include.map(encodeURIComponent).join('|') : ''), 'airtable', { at: { link, skipped: r.skipped, include } });
       if (ok && r.skipped.length) toast(t('atSkipped', { n: r.skipped.length, names: r.skipped.slice(0, 4).join(', ') + (r.skipped.length > 4 ? '…' : '') }));
     } catch (e) {
       if (quiet && !dlg) open(pathOf(link), e.message, true); else { status(e.message, true); toast(t('atFail', { err: e.message })); }
@@ -5240,8 +5278,13 @@ const BPAirtable = (() => {
   }
   function open(linkText, msg, err) { draw(linkText, msg); if (err) status(msg, true); }
   // from the page link (url=airtable:app…/tbl…): load it if the tab has a token, else ask for one
-  function fromHash(path) { const l = parseLink(path); if (!l) return; token.get() ? go(l, true) : open(path, t('atNeedTokenLink')); }
-  return { open, fromHash, parseLink };
+  function fromHash(path) {
+    const [p, ...inc] = String(path).split('|'), l = parseLink(p); if (!l) return;
+    token.get() ? go(l, true, inc.map(decodeURIComponent)) : open(p, t('atNeedTokenLink'));
+  }
+  // reload a table with some left-out fields added back (or taken out again)
+  const reload = (fid, at, include) => go(at.link, false, include, fid);
+  return { open, fromHash, parseLink, reload };
 })();
 
 const Drops = (() => {
@@ -5250,7 +5293,7 @@ const Drops = (() => {
   const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
   const NAME = /^(name|title|label|dba|dba_name|organization|org|business|site|site_name|location_name|facility|address)$/i;
   const LAT = /^(lat|latitude|y|lat_dd|point_y|ycoord)$/i, LON = /^(lon|lng|long|longitude|x|lon_dd|point_x|xcoord)$/i;
-  const GEO = /^(the_geom|geom|geometry|wkt|shape|location|point|coordinates)$/i, CNN = /^(cnn|cnns|block_cnn|street_cnn)$/i;
+  const GEO = /^(the_geom|geom|geometry|wkt|shape|location|point|coordinates)$/i, GEO_ANY = /(^|[_\s])(wkt|geom|geometry|the_geom)$/i, CNN = /^(cnn|cnns|block_cnn|street_cnn)$/i;
 
   // RFC 4180 CSV (quotes, doubled quotes, newlines in quotes); tab-separated if the header has more tabs
   function parseCSV(text) {
@@ -5271,6 +5314,14 @@ const Drops = (() => {
   }
   // WKT (POINT, LINESTRING, POLYGON and their MULTI forms) to GeoJSON geometry
   function wkt(v) {
+    const gc = /^\s*(?:SRID=\d+;)?\s*GEOMETRYCOLLECTION\s*\((.*)\)\s*$/is.exec(v || '');
+    if (gc) {   // split the parts at the top level
+      const parts = []; let depth = 0, start = 0; const body = gc[1];
+      for (let i = 0; i < body.length; i++) { const c = body[i]; if (c === '(') depth++; else if (c === ')') depth--; else if (c === ',' && depth === 0) { parts.push(body.slice(start, i)); start = i + 1; } }
+      parts.push(body.slice(start));
+      const geometries = parts.map(x => wkt(x.trim())).filter(Boolean);
+      return geometries.length ? { type: 'GeometryCollection', geometries } : null;
+    }
     const m = /^\s*(?:SRID=\d+;)?\s*(MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|POINT|LINESTRING|POLYGON)\s*(?:Z|M|ZM)?\s*(\(.*\))\s*$/i.exec(v || '');
     if (!m) return null;
     const json = m[2].replace(/(-?[\d.eE+-]+)\s+(-?[\d.eE+-]+)(?:\s+-?[\d.eE+-]+)*/g, '[$1,$2]').replace(/\(/g, '[').replace(/\)/g, ']');
@@ -5283,6 +5334,7 @@ const Drops = (() => {
   const okLL = (x, y) => isFinite(x) && isFinite(y) && Math.abs(x) <= 180 && Math.abs(y) <= 90 && !(x === 0 && y === 0);
   // a row's location: lat/lon, a geometry column, or CNNs
   function rowGeom(r, cols) {
+    if (cols.geoFirst) { const g = rowGeom(r, { ...cols, geoFirst: false, lat: null, lon: null }); if (g) return g; }
     if (cols.lat != null && cols.lon != null) {
       const y = parseFloat(r[cols.lat]), x = parseFloat(r[cols.lon]);
       if (okLL(x, y)) return { type: 'Point', coordinates: [x, y] };
@@ -5307,9 +5359,9 @@ const Drops = (() => {
     }
     return null;
   }
-  function fromCSV(text) {
+  function fromCSV(text, pref) {
     const rows = parseCSV(text), h = headerRow(rows);
-    return fromRows(rows[h] || [], rows.slice(h + 1));
+    return fromRows(rows[h] || [], rows.slice(h + 1), pref);
   }
   // which of the first rows holds the column names: wide like the data under it, mostly words, no repeats
   function headerRow(rows) {
@@ -5350,14 +5402,24 @@ const Drops = (() => {
     return bestRate >= 0.4 ? best : null;
   }
   // rows as arrays under a header (CSV) or as objects (JSON from Socrata and others)
-  function fromObjects(list) {
+  function fromObjects(list, pref) {
     const head = [...new Set(list.flatMap(o => Object.keys(o)))].filter(k => !k.startsWith(':'));
-    return fromRows(head, list.map(o => head.map(k => o[k])));
+    return fromRows(head, list.map(o => head.map(k => o[k])), pref);
   }
-  function fromRows(head, rows) {
+  function fromRows(head, rows, pref) {
     const find = re => { const i = head.findIndex(h => re.test(String(h).trim())); return i < 0 ? null : i; };
     const cols = { lat: find(LAT), lon: find(LON), geo: find(GEO), cnn: find(CNN) };
     rows = rows.filter(r => r.some(v => String(v ?? '').trim() !== ''));
+    // every column that reads as shapes (outline_wkt, elements_wkt, geometry…), and which kind of shape
+    const kindOf = i => { for (const r of rows.slice(0, 40)) { const v = r[i]; const g = v && typeof v === 'object' ? v : wkt(String(v ?? '').trim()); if (g && g.type) return g.type; } return null; };
+    const shapes = head.map((h, i) => [String(h).trim(), i]).filter(([h, i]) => GEO.test(h) || GEO_ANY.test(h)).map(([h, i]) => ({ h, i, k: kindOf(i) })).filter(x => x.k);
+    const best = [...shapes].sort((a, b) => (/Point$/.test(a.k) - /Point$/.test(b.k)) || (/outline/i.test(b.h) - /outline/i.test(a.h)) || (/Polygon/.test(b.k) - /Polygon/.test(a.k)))[0];
+    const hasLL = cols.lat != null && cols.lon != null;
+    const locs = [...(hasLL ? ['latlon'] : []), ...shapes.map(x => x.h)];
+    let loc = hasLL ? 'latlon' : cols.geo != null ? String(head[cols.geo]).trim() : null;
+    const pick = pref && locs.includes(pref) ? pref : best && (!/Point$/.test(best.k) || !hasLL) ? best.h : loc;
+    if (pick && pick !== 'latlon') { const x = shapes.find(x => x.h === pick); if (x) { cols.geo = x.i; cols.geoFirst = true; loc = pick; } }
+    else if (pick === 'latlon') { cols.geoFirst = false; loc = 'latlon'; }
     // no coordinates that read (a "Location" column of text, say) and no CNNs: try intersections
     const readable = (cols.lat != null || cols.geo != null) && rows.slice(0, 40).some(r => rowGeom(r, cols));
     const corner = !readable && cols.cnn == null && Logic.db ? textCorners(head, rows) : null;
@@ -5370,7 +5432,7 @@ const Drops = (() => {
       feats.push({ type: 'Feature', geometry: g, _cnns: cnns && cnns.size ? cnns : null, properties: Object.fromEntries(head.map((h, i) => [h.trim() || 'column ' + (i + 1),
         r[i] != null && typeof r[i] === 'object' ? JSON.stringify(r[i]) : r[i] ?? ''])) });
     }
-    return { feats, skipped, fields: head.map((h, i) => String(h).trim() || 'column ' + (i + 1)), how: corner ? 'corner' : cols.cnn != null && cols.lat == null && cols.geo == null ? 'cnn' : 'xy' };
+    return { feats, skipped, fields: head.map((h, i) => String(h).trim() || 'column ' + (i + 1)), how: corner ? 'corner' : cols.cnn != null && cols.lat == null && cols.geo == null ? 'cnn' : 'xy', loc, locs };
   }
   function fromGeoJSON(o) {
     const list = o.type === 'FeatureCollection' ? o.features : o.type === 'Feature' ? [o] : o.type ? [{ type: 'Feature', geometry: o, properties: {} }] : [];
@@ -5607,7 +5669,7 @@ const Drops = (() => {
     map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 60, maxZoom: 17, duration: reducedMotion() ? 0 : 700 });
   }
   async function add(file) {
-    addText(await file.text(), file.name);
+    addText(await file.text(), file.name, null, null, 'file');
   }
   // a file's text (or parsed JSON rows) to a layer; url when it came from a link
   // several WKT values (linked records) as one GeoJSON shape
@@ -5617,16 +5679,26 @@ const Drops = (() => {
     const fam = g => g.type.replace(/^Multi/, ''), parts = g => g.type.startsWith('Multi') ? g.coordinates : [g.coordinates];
     return gs.every(g => fam(g) === fam(gs[0])) ? { type: 'Multi' + fam(gs[0]), coordinates: gs.flatMap(parts) } : gs[0];
   }
-  function addText(text, fileName, url, json) {
+  function addText(text, fileName, url, json, src) {
     const name = fileName.replace(/\.(csv|tsv|txt|geojson|json)$/i, '');
-    let r;
+    let r, o;
     try {
-      const o = json || (/\.(geo)?json$/i.test(fileName) || /^\s*[{[]/.test(text) ? JSON.parse(text) : null);
+      o = json || (/\.(geo)?json$/i.test(fileName) || /^\s*[{[]/.test(text) ? JSON.parse(text) : null);
       r = !o ? fromCSV(text) : Array.isArray(o) ? fromObjects(o) : fromGeoJSON(o);
     } catch (e) { toast(t('dropBad', { name: fileName })); return; }
     if (!r.feats.length) { toast(t('dropNone', { name: fileName })); return false; }
-    const f = { id: ++seq, name, url: url || null, look: { ...DROP_LOOK, shape: SHAPE_ORDER[(seq - 1) % SHAPE_ORDER.length] }, color: DROP_COLORS[(seq - 1) % DROP_COLORS.length], on: true, feats: r.feats, fields: r.fields, skipped: r.skipped, how: r.how,
+    const f = { id: ++seq, name, url: url || null, look: { ...DROP_LOOK, shape: SHAPE_ORDER[(seq - 1) % SHAPE_ORDER.length] }, color: DROP_COLORS[(seq - 1) % DROP_COLORS.length], on: true, feats: r.feats, fields: r.fields, skipped: r.skipped, how: r.how, src: src || (url ? 'url' : 'file'), loc: r.loc || null, locs: r.locs || [],
+      _raw: !o ? { text } : Array.isArray(o) ? { list: o } : null,
       nameField: r.fields.find(k => NAME.test(k)) || r.fields.find(k => k === 'matched_text') || r.fields.find(k => r.feats.some(x => typeof x.properties[k] === 'string' && x.properties[k] && isNaN(+x.properties[k]))) || null };
+    prep(f);
+    files.push(f);
+    addLayers(f); fit(f);
+    toast(t(f.skipped ? 'dropAddedSkip' : 'dropAdded', { name, n: f.feats.length.toLocaleString(), k: f.skipped.toLocaleString() }));
+    renderMenu(); changed();
+    nextSteps(f);
+    return f;
+  }
+  function prep(f) {
     for (const x of f.feats) {
       x._sh = shape(x.geometry);
       if (x._cnns) {
@@ -5635,11 +5707,17 @@ const Drops = (() => {
         if (!x._segs.size && !x._nodes.size) x._cnns = null;
       }
     }
-    files.push(f);
-    addLayers(f); fit(f);
-    toast(t(f.skipped ? 'dropAddedSkip' : 'dropAdded', { name, n: f.feats.length.toLocaleString(), k: f.skipped.toLocaleString() }));
+  }
+  // read a file's rows again with another location column (or lat / lon)
+  function relocate(id, loc) {
+    const f = files.find(x => x.id === id); if (!f || !f._raw) return;
+    const r = f._raw.list ? fromObjects(f._raw.list, loc) : fromCSV(f._raw.text, loc);
+    if (!r.feats.length) { toast(t('dropNone', { name: shown(f) })); return; }
+    FeatCards.dropFile(id);
+    Object.assign(f, { feats: r.feats, skipped: r.skipped, how: r.how, loc: r.loc, locs: r.locs || f.locs });
+    prep(f); restyle(f); fit(f);
     renderMenu(); changed();
-    nextSteps(f);
+    toast(t('dropRelocated', { name: shown(f), n: f.feats.length.toLocaleString() }));
   }
   // Links: Google Sheets (shared "Anyone with the link", or published), DataSF/Socrata datasets, or any
   // CSV/JSON/GeoJSON a page may read (CORS). Same rules as Joiner's sources.js.
@@ -5677,7 +5755,7 @@ const Drops = (() => {
       });
       if (!tabs.length) { toast(t('dropNone', { name: got.name })); return; }
       const nameOfTab = tab => got.tabs.length > 1 ? `${got.name} (${tab.title})` : got.name;
-      const addTab = tab => addText('', nameOfTab(tab), null, tab.objs);
+      const addTab = tab => addText('', nameOfTab(tab), null, tab.objs, 'drive');
       if (tabs.length === 1) { if (!tabs[0].found) toast(t('driveNoPlaces', { name: got.name })); else addTab(tabs[0]); return; }
       pickTabs(got.name, tabs, chosen => chosen.forEach(addTab));
     } catch (e) { toast(t('driveFail', { err: e.message || e })); }
@@ -5713,7 +5791,7 @@ const Drops = (() => {
     let name = decodeURIComponent(new URL(link.urls[0]).pathname.split('/').pop() || new URL(input).host);
     if (link.kind === 'sheet') name = t('urlSheetName') + (link.gid !== '0' ? ` (tab ${link.gid})` : '');
     if (link.kind === 'socrata') { name = link.id; try { const m = await (await fetch(link.meta)).json(); if (m && m.name) name = m.name; } catch (e) { } }
-    addText(text, link.kind === 'sheet' ? name + '.csv' : link.kind === 'socrata' ? name + '.json' : name, input);
+    addText(text, link.kind === 'sheet' ? name + '.csv' : link.kind === 'socrata' ? name + '.json' : name, input, null, link.kind);
   }
   const urls = () => files.map(f => f.url).filter(Boolean);
   // after files change: cards, the map's shaded areas, the hash
@@ -5752,7 +5830,7 @@ const Drops = (() => {
   function renderMenu() {
     try { Table.refresh(); } catch (e) { }   // the table's file list (Table may not exist yet while the page starts)
     const el = $('drop-rows');
-    if (el) el.innerHTML = `<p class="areas-cap">${esc(t('grpFiles'))}</p>` + files.map(f => `<div class="lyr-row" data-drop="${f.id}">${swatch(f)}<b>${esc(shown(f))}<small>${esc(t('dropCount', { n: f.feats.length.toLocaleString() }))}${f.skipped ? ' · ' + esc(t('dropSkipped', { n: f.skipped.toLocaleString() })) : ''}</small></b>
+    if (el) el.innerHTML = `<p class="areas-cap">${esc(t('grpFiles'))}</p>` + files.map(f => `<div class="lyr-row" data-drop="${f.id}">${swatch(f)}<b>${esc(shown(f))}<small>${esc(t('dropCount', { n: f.feats.length.toLocaleString() }))}${f.skipped ? ' · ' + esc(t('dropSkipped', { n: f.skipped.toLocaleString() })) : ''}</small><small class="drop-src">${esc(t('src_' + (f.src || 'file')))}</small></b>
         <div class="lseg" role="group" aria-label="${esc(f.name)}"><button type="button" data-drop-on="0" aria-pressed="${!f.on}">${esc(t('lyrOff'))}</button><button type="button" data-drop-on="1" aria-pressed="${f.on}">${esc(t('lyrOn'))}</button></div>
         <button type="button" class="btn small drop-focus" data-drop-focus aria-pressed="${focusId === f.id}" title="${esc(t('focusTitle'))}">${esc(t(focusId === f.id ? 'focusOn' : 'focusBtn'))}</button>
         <button type="button" class="drop-x" data-drop-x title="${esc(t('dropRemove'))}" aria-label="${esc(t('dropRemove'))}">×</button></div>${fmtHTML(f)}`).join('')
@@ -5790,6 +5868,10 @@ const Drops = (() => {
     const labs = labelCols(f);
     return `<details class="chips-fold drop-fmt" data-fmt="${f.id}" ${openFmt.has(f.id) ? 'open' : ''}><summary>${esc(t('fmtTitle'))}</summary><div class="fmt-grid">
       <span>${esc(t('fmtName'))}</span><input type="text" class="fmt-name" data-fmt-name value="${esc(f.name)}" aria-label="${esc(t('fmtName'))}">
+      ${f._raw && f.locs.length > 1 ? `<span>${esc(t('fmtLoc'))}</span><select data-fmt-loc>${f.locs.map(c => opt(c, c === 'latlon' ? t('fmtLatLon') : c, f.loc)).join('')}</select>` : ''}
+      ${f.at && (f.at.skipped.length || f.at.include.length) ? `<span>${esc(t('fmtLeftOut'))}</span><div class="fmt-addback"><small>${esc(t('fmtLeftOutHint'))}</small>
+        <div class="land-chips">${[...f.at.include.map(n => [n, true]), ...f.at.skipped.map(n => [n, false])].map(([n, on]) => `<label class="land-chip"><input type="checkbox" data-fmt-back="${esc(n)}" ${on ? 'checked' : ''}>${esc(n)}</label>`).join('')}</div>
+        <button type="button" class="btn small" data-fmt-reload>${esc(t('fmtReload'))}</button></div>` : ''}
       <span>${esc(t('fmtColor'))}</span><div class="fmt-colors">${DROP_SWATCHES.map(([c, n]) => `<button type="button" data-fmt-color="${c}" style="--c:${c}" aria-pressed="${c === f.color}" title="${n}" aria-label="${n}"></button>`).join('')}</div>
       <span>${esc(t('fmtColorBy'))}</span><select data-fmt-sel="by">${opt('', t('fmtOneColor'), L.by)}${f.fields.map(c => opt(c, c, L.by)).join('')}</select>
       <span>${esc(t('fmtSize'))}</span>${seg('size', [['tiny', t('fmtTiny')], ['small', t('fmtSmall')], ['medium', t('fmtMedium')], ['big', t('fmtBig')]])}
@@ -5863,6 +5945,8 @@ const Drops = (() => {
     return [{ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } }];
   }
   let extentForce = false;   // Nearby shows its area even with no files on
+  // a card's How near outline goes when the card does
+  function syncExtent() { if (extentFor && !extentForce && !state.results.some(r => r.cnn === extentFor.cnn && state.checked.has(r.cnn))) showExtent(null); }
   function showExtent(s, force) {
     if (!mapReady) return;
     extentForce = !!(s && force);
@@ -5901,6 +5985,7 @@ const Drops = (() => {
         if (f && v) { f.name = v; setTimeout(() => { renderMenu(); render(); FeatCards.draw(); }); }
         return;
       }
+      if (e.target.matches('[data-fmt-loc]')) { const v = e.target.value; setTimeout(() => relocate(id, v)); return; }
       if (e.target.dataset.fmtSel) setLook(id, e.target.dataset.fmtSel, e.target.value);
       if (e.target.dataset.fmtLabel != null) setLook(id, 'labels', [...box.querySelectorAll('[data-fmt-label]:checked')].map(i => i.dataset.fmtLabel));
     });
@@ -5915,6 +6000,8 @@ const Drops = (() => {
       const fbox = e.target.closest('[data-fmt]');
       if (fbox) {
         const c = e.target.closest('[data-fmt-color]'), g = e.target.closest('[data-fmt-k] button');
+        if (e.target.closest('[data-fmt-reload]')) { const f = files.find(x => x.id === +fbox.dataset.fmt);
+          if (f && f.at) BPAirtable.reload(f.id, f.at, [...fbox.querySelectorAll('[data-fmt-back]:checked')].map(i => i.dataset.fmtBack)); return; }
         if (c) setLook(+fbox.dataset.fmt, 'color', c.dataset.fmtColor);
         else if (g) setLook(+fbox.dataset.fmt, g.closest('[data-fmt-k]').dataset.fmtK, g.dataset.v);
         return;
@@ -6209,7 +6296,8 @@ const Drops = (() => {
         'icon-allow-overlap': true, 'icon-ignore-placement': true },
       paint: { 'icon-color': '#FFD43B', 'icon-halo-color': '#1E2340', 'icon-halo-width': 1.5 } });
     wire(popup); for (const f of files) if (!map.getSource('drop-' + f.id)) addLayers(f); }
-  return { add, addURL, addRows: (name, rows, url) => addText('', name, url, rows) !== false, combineWKT, urls, listRows, nearPicker, setNearFrom, showExtent, withAdj: (k, n) => withAdj(k, n), parseCSV, focus, focusedId: () => focusId, items, blocksOut: (s, k) => blocksOut(s, k), areaKey: () => areaKey(), get nearMode() { return nearMode; }, nearOptions, fileColor: fid => (files.find(x => x.id === fid) || {}).color, fileName: fid => { const f = files.find(x => x.id === fid); return f ? shown(f) : ''; }, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
+  return { add, addURL, addRows: (name, rows, url, src, extra) => { const f = addText('', name, url, rows, src || 'search'); if (f && extra) { Object.assign(f, extra); renderMenu(); } return !!f; },
+    removeNow: id => remove(id), relocate, syncExtent: () => syncExtent(), combineWKT, urls, listRows, nearPicker, setNearFrom, showExtent, withAdj: (k, n) => withAdj(k, n), parseCSV, focus, focusedId: () => focusId, items, blocksOut: (s, k) => blocksOut(s, k), areaKey: () => areaKey(), get nearMode() { return nearMode; }, nearOptions, fileColor: fid => (files.find(x => x.id === fid) || {}).color, fileName: fid => { const f = files.find(x => x.id === fid); return f ? shown(f) : ''; }, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
 })();
 /* ---------- the map key's checkboxes and category highlights ----------
    A checkbox on every row that can be turned off: layers (back to their last setting), area sets, your

@@ -2,6 +2,15 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v79
+
+- **Your files say where they came from** (File, Google Drive, Google Sheets link, DataSF, Link, Airtable, From search), and a file's Focus and × stay on one line.
+- **Shapes instead of midpoints:** when a table has a geometry column (`outline_wkt`, `elements_wkt`, `geometry`, "Street WKT"…) as well as latitude / longitude, the shapes win (an outline first). **Format → Location from** switches between them, or back to the points. `GEOMETRYCOLLECTION` reads too (blocks, corners and lots together).
+- **Airtable, two links deep:** linked records' own links come in by name, so the Green Infrastructure geo table now has **Project: Organizations** and **Project: Lead Advocates**, and Projects has the organization of each advocate. A link that only points back to the same table is left out.
+- **Contact fields, when you want them:** **Format → Fields left out** lists the contact fields that weren't loaded (Lead Advocates: Email, Organizations: Contact Email…). Check the ones you need and **Reload with these**. The field names (never the values) are kept in the page link so it reloads the same way; the token still never is.
+- **Top row:** Map | Sat | 3D are one control, and the buttons are a little tighter.
+- **The How near outline goes with its card:** unchecking or removing a street now takes its dashed blue outline off the map.
+
 ## v78
 
 - **Address / Places** (the Address button's new name). In this mode the first box finds more than streets:
