@@ -2,6 +2,15 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v75
+
+- **Airtable** in Import (the button was a placeholder). It opens a box with:
+  - **Personal access token**: on its own, Open lists the bases the token can read; open a base and pick a table, or one of its views.
+  - **Table or view (optional)**: paste an Airtable link, or just a path like `app…/tbl…/viw…`, to open that one directly.
+- The table comes in as one of your files. Linked records come along as "Link: Field"; when linked records have WKT or CNNs (like the Block Party geo tables), the row is placed by them.
+- Contact fields (email, phone, addresses, attachments, Airtable users) are never requested; a toast says which were left out.
+- The token stays in this tab only, goes only to Airtable, and never goes in the page link. The page link carries the table (`url=airtable:app…/tbl…/viw…`): in a tab that has the token it reloads the table; in a new tab it asks for the token.
+
 ## v74
 
 - **Filter → Intersections** (new):

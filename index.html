@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v74 -->
+<!-- build: v75 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -606,6 +606,17 @@ summary::marker { font-size: 1.15em; }
 .tab-pick { border: 2px solid var(--ink); border-radius: 14px; padding: 16px 20px; max-width: min(520px, 92vw); }
 .tab-pick h3 { margin: 0 0 4px; font-size: 17px; }
 .tab-pick ul { list-style: none; padding: 0; margin: 10px 0; max-height: 50vh; overflow: auto; display: grid; gap: 6px; font-size: 14px; }
+.at-dlg { width: min(520px, 92vw); }
+.at-field { display: grid; gap: 4px; margin: 10px 0 2px; font-size: 14px; }
+.at-field input { font: inherit; padding: 7px 10px; border: 2px solid var(--ink); border-radius: 10px; }
+.at-small { font-size: 12.5px; margin: 2px 0; }
+.at-browse { max-height: 40vh; overflow: auto; margin: 8px 0; font-size: 14px; }
+.at-browse details { border-top: 1px solid #E3E6F3; padding: 5px 0; }
+.at-browse summary { font-weight: 700; cursor: pointer; }
+.at-browse .at-tables { list-style: none; margin: 4px 0 4px 14px; padding: 0; display: grid; gap: 4px; max-height: none; }
+.at-views { display: block; font-size: 12.5px; margin-left: 10px; }
+.at-status { font-size: 13px; min-height: 1em; margin: 4px 0; }
+.at-status.err, .at-browse .err { color: #C92A2A; }
 .tab-pick .tab-pick-btns { display: flex; justify-content: flex-end; gap: 8px; }
 .seg.blk { border-color: #B08900; background: #FFFBEB; }
 .seg.blk.is-checked { border-color: #B08900; box-shadow: 0 0 0 1px #B08900 inset; }
@@ -1168,7 +1179,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v74';
+const _BUILD_VERSION = 'v75';
 
 /* =====================================================================
    CONFIG
@@ -1369,7 +1380,7 @@ const I18N = {
     urlLoading: 'Loading…', urlSheetName: 'Google Sheet',
     urlSheet: 'Couldn’t read that sheet. In Google Sheets, set Share › General access to “Anyone with the link” (Viewer), then try again.',
     urlBlocked: 'Couldn’t load that link ({err}). The site may not let other pages read it; download the file and drop it here instead.',
-    urlAirtable: 'Airtable shared links can’t be read from another site. Use the view’s Download CSV and drop the file here.',
+
     fmtTitle: 'Format', fmtColor: 'Color', fmtColorBy: 'Color by', fmtOneColor: 'One color', fmtSize: 'Size', fmtSizeBy: 'Size by', fmtSame: 'Same size',
     fmtTiny: 'Tiny', fmtSmall: 'Small', fmtMedium: 'Medium', fmtBig: 'Big', fmtStyle: 'Style', fmtFill: 'Fill', fmtRing: 'Ring', fmtGhost: 'Ghost',
     fmtLabels: 'Labels', fmtLabelZoom: 'Labels from zoom', fmtOther: 'Other', fmtByKey: 'by {col}',
@@ -1419,7 +1430,20 @@ const I18N = {
     driveNoPlaces: 'No places found in {name}: it needs lat/lon columns, WKT, a CNN column, or intersections like "Mission St & 16th St"',
     tabTitle: 'Tabs in {name}', tabHint: 'Each tab you add becomes its own file. The biggest one with places is checked.', tabAll: 'Select all', tabNone: 'Select none', tabRows: '{n} rows', tabNoPlaces: 'no places found',
     tabPoints: '{n} with locations', tabCnns: '{n} with CNNs', tabCorners: '{n} intersections found', tabCancel: 'Cancel', tabAdd: 'Add checked tabs',
-    driveFirstTab: 'Opened the “{tab}” tab ({n} tabs have rows)', airtableBtn: 'Airtable', airtableSoon: 'Airtable: coming soon',
+    driveFirstTab: 'Opened the “{tab}” tab ({n} tabs have rows)', airtableBtn: 'Airtable', airtableTitle: 'Add a table or view from Airtable with a personal access token',
+    atToken: 'Personal access token', atMake: 'Make a token at airtable.com/create/tokens', atScopes: 'with the scopes data.records:read and schema.bases:read, and add the bases under Access.',
+    atSafe: 'Treat a token like a password. Block Party keeps it only in this tab until it closes, sends it only to Airtable, and never puts it in the page link.',
+    atRemembered: 'Token remembered for this tab.', atForget: 'Forget it', atForgot: 'Token forgotten.', atLink: 'Table or view (optional)',
+    atLinkHint: 'Paste a link or path like app…/tbl…/viw…, or leave it empty to pick from the tables your token can open.', atGo: 'Open',
+    atNeedToken: 'Paste your personal access token.', atNeedTokenLink: 'Paste your token to open this Airtable table (the link never carries one).', atBadLink: 'That doesn’t look like an Airtable link or path (it should have app… in it).',
+    atLoadingBases: 'Reading the bases this token can open…', atLoadingTables: 'Reading tables…', atPickHint: 'Open a base, then pick a table (or one of its views).', atNoBases: 'This token can’t open any bases. Add bases to it under Access on the token’s page.',
+    atLoading: 'Loading…', atConnecting: 'Connecting to Airtable…', atReading: 'Reading “{name}”: {n} records', atLinked: 'Reading linked records in “{name}”: {n}',
+    atSkipped: 'Left out {n} contact fields ({names})', atFail: 'Couldn’t load from Airtable: {err}',
+    atNet: 'Couldn’t reach Airtable (network or browser blocked the request).', at401: 'Airtable didn’t accept the token. Check that it was pasted whole and hasn’t been revoked.',
+    at403: 'This token can’t read that base. Add the base and the scopes data.records:read and schema.bases:read in Airtable’s token settings.',
+    at404: 'Airtable couldn’t find that base, table or view. Check the link, and that the token includes the base.', atErr: 'Airtable error {n} {detail}',
+    urlAirtable: 'Airtable shared links (shr…) can’t be read from another site. Use the Airtable button with a token, or the view’s Download CSV.',
+    atNoTable: 'That table isn’t in the base (or the token can’t see it).', atNoView: 'That view isn’t in the table.',
     bm3d: '3D', bm3dOn: 'On', bm3dOff: 'Off', bm3dHint: 'Tilt, hills and 3D buildings. Off: a flat map for older devices, and the 3D button shows contours.', bmAddresses: 'Addresses (house numbers)', btnContoursTitle: 'Show contour lines (10 ft)', btn3dTitle: 'Tilt the map to see the hills',
     lgTreeSize: 'Bigger dot: thicker trunk; dark ring: Significant Tree', grpAround: 'Getting around', grpStreet: 'On the street', grpLand: 'Land and buildings', grpTerrain: 'Terrain', grpMore: 'More', aQuietBase: 'Hide parks and places on the map',
     lgMuniNums: 'numbers', lgMuniNumsOut: 'Route numbers show from zoom {z}', lgMuniNumsTitle: 'Show the route numbers on the map (there are a lot downtown)', aFlip: 'Flip', aLines: 'Borders', aBlack: 'Black', aGrey: 'Grey', aWhite: 'White', aNone: 'None', aThin: 'Thin', aThick: 'Thick', aMedium: 'Medium', aSolid: 'Solid', aDashed: 'Dashed', aLabelsOn: 'Labels', aLabelsOff: 'No labels',
@@ -4978,6 +5002,189 @@ const DROP_ON_M = 30;        // a point this close to a block's centerline is on
 const NEAR_KEY = 'bp-near';
 const NEAR_DEFAULT = { by: 'blocks', steps: 0, area: 'hood', radius: 50 };
 let nearMode = (() => { try { return { ...NEAR_DEFAULT, ...JSON.parse(localStorage.getItem(NEAR_KEY) || '{}') }; } catch (e) { return { ...NEAR_DEFAULT }; } })();
+/* ---------- Airtable: a table or view as one of your files ----------
+   A personal access token alone (pick from the bases and tables it can read), or with a link or
+   path (app…/tbl…/viw…). The token stays in this tab (sessionStorage) and goes only to api.airtable.com,
+   never into the page link. Contact fields (email, phone, addresses, attachments, Airtable users) are
+   not requested. Linked records come in as "Link: Field"; their WKT is combined into one shape.
+   Same rules as Joiner's js/airtable.js. */
+const BPAirtable = (() => {
+  const API = 'https://api.airtable.com/v0', TOKEN_KEY = 'bp-airtable-token', GAP = 220;
+  const SKIP_TYPES = { email: 'email', phoneNumber: 'phone', multipleAttachments: 'attachments', singleCollaborator: 'Airtable user',
+    multipleCollaborators: 'Airtable users', createdBy: 'Airtable user', lastModifiedBy: 'Airtable user', button: 'button' };
+  const SKIP_NAMES = /(e-?mail|phone|street address|mailing address|home address|^address$|contact info)/i;
+  const GEOM_NAME = /^(wkt|geom|geometry|the_geom|shape)$/i, CNN_NAME = /^(cnn|cnns)$/i;
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  // a link or a bare path: https://airtable.com/appX/tblY/viwZ, appX/tblY, …
+  function parseLink(v) {
+    const x = String(v || ''), base = x.match(/\bapp[A-Za-z0-9]{14}\b/);
+    if (!base) return null;
+    return { base: base[0], table: (x.match(/\btbl[A-Za-z0-9]{14}\b/) || [])[0] || null, view: (x.match(/\bviw[A-Za-z0-9]{14}\b/) || [])[0] || null };
+  }
+  const pathOf = l => [l.base, l.table, l.view].filter(Boolean).join('/');
+  const token = {
+    get() { try { return sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return mem; } },
+    set(v) { mem = v || ''; try { v ? sessionStorage.setItem(TOKEN_KEY, v) : sessionStorage.removeItem(TOKEN_KEY); } catch (e) { } },
+  };
+  let mem = '';
+  async function call(path, tok, body) {
+    for (let attempt = 0; ; attempt++) {
+      let res;
+      try { res = await fetch(API + path, { method: body ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + tok, ...(body ? { 'Content-Type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined }); }
+      catch (e) { throw new Error(t('atNet')); }
+      if (res.status === 429 && attempt < 3) { await sleep(1000 * (attempt + 1)); continue; }
+      if (res.ok) return res.json();
+      let detail = ''; try { const j = await res.json(); detail = (j.error && (j.error.message || j.error.type)) || (typeof j.error === 'string' ? j.error : ''); } catch (e) { }
+      throw new Error({ 401: t('at401'), 403: t('at403'), 404: t('at404') }[res.status] || t('atErr', { n: res.status, detail }));
+    }
+  }
+  function planFields(table, links = true) {
+    const fetch_ = [], skipped = [];
+    for (const f of table.fields) {
+      if (f.type === 'multipleRecordLinks') { if (links) fetch_.push(f); continue; }
+      const why = SKIP_TYPES[f.type] || (SKIP_NAMES.test(f.name) && f.id !== table.primaryFieldId ? 'contact info' : '');
+      why ? skipped.push(f.name) : fetch_.push(f);
+    }
+    return { fetch: fetch_, skipped };
+  }
+  function cellValue(f, v) {
+    if (v == null) return '';
+    if (f.type === 'currency' && typeof v === 'number') return (v < 0 ? '-$' : '$') + Math.abs(v);
+    if (Array.isArray(v)) return v.map(x => typeof x === 'object' && x ? (x.name ?? x.url ?? JSON.stringify(x)) : x).join(', ');
+    if (typeof v === 'object') return v.name ?? v.text ?? v.url ?? JSON.stringify(v);
+    return v;
+  }
+  async function pages(path, tok, body, onPage) {
+    const out = []; let offset;
+    do {
+      const pg = await call(path, tok, { pageSize: 100, ...body, ...(offset ? { offset } : {}) });
+      out.push(...(pg.records || [])); offset = pg.offset; onPage && onPage(out.length, !!offset);
+      if (offset) await sleep(GAP);
+    } while (offset);
+    return out;
+  }
+  // one table or view → { name, rows, skipped }
+  async function load(link, tok) {
+    const { tables } = await call(`/meta/bases/${link.base}/tables`, tok);
+    const table = link.table ? tables.find(x => x.id === link.table) : tables[0];
+    if (!table) throw new Error(t('atNoTable'));
+    const view = link.view ? (table.views || []).find(v => v.id === link.view) : null;
+    if (link.view && !view) throw new Error(t('atNoView'));
+    const label = table.name.trim() + (view ? ' · ' + view.name : '');
+    const { fetch: fields, skipped } = planFields(table);
+    const recs = await pages(`/${link.base}/${table.id}/listRecords`, tok, { fields: fields.map(f => f.name), ...(view ? { view: view.id } : {}) },
+      (n, more) => toast(t('atReading', { name: label, n: n.toLocaleString() }) + (more ? '…' : '')));
+    const rows = recs.map(r => { const o = {}; for (const f of fields) if (f.name in r.fields) o[f.name] = f.type === 'multipleRecordLinks' ? r.fields[f.name] : cellValue(f, r.fields[f.name]); return o; });
+    // linked records: their fields as "Link: Field"; WKT and CNNs also fill the row's own geometry / cnns when it has none
+    for (const lf of fields.filter(f => f.type === 'multipleRecordLinks')) {
+      const lt = tables.find(x => x.id === (lf.options || {}).linkedTableId);
+      const ids = new Set(rows.flatMap(r => Array.isArray(r[lf.name]) ? r[lf.name] : []));
+      if (!lt || !ids.size) { rows.forEach(r => { if (Array.isArray(r[lf.name])) r[lf.name] = ''; }); continue; }
+      const ltf = planFields(lt, false).fetch, prim = lt.fields.find(f => f.id === lt.primaryFieldId);
+      const byId = new Map((await pages(`/${link.base}/${lt.id}/listRecords`, tok, { fields: ltf.map(f => f.name) },
+        n => toast(t('atLinked', { name: lt.name.trim(), n: n.toLocaleString() })))).map(r => [r.id, r.fields]));
+      for (const r of rows) {
+        const got = (Array.isArray(r[lf.name]) ? r[lf.name] : []).map(id => byId.get(id)).filter(Boolean);
+        r[lf.name] = got.map(x => cellValue(prim || {}, prim ? x[prim.name] : '')).filter(Boolean).join(', ');
+        for (const f of ltf) {
+          if (prim && f.id === prim.id) continue;
+          const vals = got.map(x => x[f.name]).filter(v => v != null && v !== '');
+          if (!vals.length) continue;
+          if (GEOM_NAME.test(f.name) && vals.every(v => typeof v === 'string')) {
+            const g = Drops.combineWKT(vals); if (g && !r.geometry) r.geometry = g; continue;
+          }
+          const txt = [...new Set(vals.map(v => String(cellValue(f, v))))].join(CNN_NAME.test(f.name) ? ';' : ', ');
+          r[`${lf.name}: ${f.name}`] = txt;
+          if (CNN_NAME.test(f.name) && !r.cnns && !r.cnn) r.cnns = txt;
+        }
+      }
+    }
+    return { name: label, rows, skipped };
+  }
+  async function listBases(tok) {
+    const out = []; let offset;
+    do { const pg = await call('/meta/bases' + (offset ? '?offset=' + encodeURIComponent(offset) : ''), tok); out.push(...(pg.bases || []).map(b => ({ id: b.id, name: b.name.trim() }))); offset = pg.offset; } while (offset);
+    return out;
+  }
+  const tablesCache = new Map();
+  async function listTables(base, tok) {
+    if (!tablesCache.has(base)) tablesCache.set(base, call(`/meta/bases/${base}/tables`, tok).then(j => j.tables.map(x => ({ id: x.id, name: x.name.trim(), views: (x.views || []).map(v => ({ id: v.id, name: v.name })) }))).catch(e => { tablesCache.delete(base); throw e; }));
+    return tablesCache.get(base);
+  }
+  // ---- the dialog
+  let dlg = null, busy = false;
+  const status = (m, err) => { const el = dlg && dlg.querySelector('.at-status'); if (el) { el.textContent = m || ''; el.classList.toggle('err', !!err); } };
+  function draw(linkText, msg) {
+    if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'at-dlg'; dlg.className = 'tab-pick at-dlg'; document.body.appendChild(dlg); }
+    const tok = token.get();
+    dlg.innerHTML = `<form method="dialog" data-at-form><h3>Airtable</h3>
+      ${tok ? `<p class="muted">${esc(t('atRemembered'))} <button type="button" class="linkish" data-at-forget>${esc(t('atForget'))}</button></p>`
+        : `<label class="at-field"><b>${esc(t('atToken'))}</b><input type="password" name="tok" autocomplete="off" spellcheck="false" placeholder="pat…"></label>
+      <p class="muted at-small"><a href="https://airtable.com/create/tokens" target="_blank" rel="noopener">${esc(t('atMake'))} ↗</a> ${esc(t('atScopes'))}</p>
+      <p class="muted at-small">${esc(t('atSafe'))}</p>`}
+      <label class="at-field"><b>${esc(t('atLink'))}</b><input type="text" name="link" spellcheck="false" inputmode="url" placeholder="https://airtable.com/app…/tbl…/viw…" value="${esc(linkText || '')}"></label>
+      <p class="muted at-small">${esc(t('atLinkHint'))}</p>
+      <div class="at-browse" data-at-browse></div>
+      <p class="at-status" role="status"></p>
+      <div class="tab-pick-btns"><button value="cancel" class="btn small" formnovalidate>${esc(t('tabCancel'))}</button><button type="submit" value="go" class="btn small primary" data-at-go>${esc(t('atGo'))}</button></div></form>`;
+    status(msg);
+    dlg.onclick = e => {
+      if (e.target.closest('[data-at-forget]')) { token.set(''); tablesCache.clear(); draw(dlg.querySelector('[name=link]').value, t('atForgot')); return; }
+      const pick = e.target.closest('[data-at-pick]'); if (pick) { e.preventDefault(); go(parseLink(pick.dataset.atPick)); }
+    };
+    dlg.querySelector('[data-at-form]').onsubmit = e => {
+      if (e.submitter && e.submitter.value === 'cancel') return;
+      e.preventDefault();
+      const tf = dlg.querySelector('[name=tok]'); if (tf && tf.value.trim()) token.set(tf.value.trim());
+      if (!token.get()) { status(t('atNeedToken'), true); return; }
+      const lt = dlg.querySelector('[name=link]').value.trim();
+      if (lt) { const l = parseLink(lt); if (!l) { status(t('atBadLink'), true); return; } go(l); }
+      else browse();
+    };
+    dlg.addEventListener('toggle', () => { }, { once: true });
+    if (!dlg.open) dlg.showModal();
+    const first = dlg.querySelector('[name=tok]') || dlg.querySelector('[name=link]'); if (first) first.focus();
+  }
+  // token alone: the bases it can read, then a base's tables and views
+  async function browse() {
+    const box = dlg.querySelector('[data-at-browse]'), tok = token.get();
+    status(t('atLoadingBases'));
+    try {
+      const bases = await listBases(tok);
+      status(bases.length ? t('atPickHint') : t('atNoBases'));
+      box.innerHTML = bases.map(b => `<details data-base="${b.id}"><summary>${esc(b.name)}</summary><ul class="at-tables"><li class="muted">${esc(t('atLoadingTables'))}</li></ul></details>`).join('');
+      box.querySelectorAll('details').forEach(d => d.addEventListener('toggle', async () => {
+        if (!d.open || d.dataset.done) return; d.dataset.done = '1';
+        const ul = d.querySelector('ul');
+        try {
+          const tables = await listTables(d.dataset.base, tok);
+          ul.innerHTML = tables.map(x => `<li><button type="button" class="linkish" data-at-pick="${d.dataset.base}/${x.id}"><b>${esc(x.name)}</b></button>`
+            + (x.views.length > 1 ? `<span class="at-views">${x.views.map(v => `<button type="button" class="linkish" data-at-pick="${d.dataset.base}/${x.id}/${v.id}">${esc(v.name)}</button>`).join(' · ')}</span>` : '') + '</li>').join('');
+        } catch (e) { ul.innerHTML = `<li class="err">${esc(e.message)}</li>`; delete d.dataset.done; }
+      }));
+      if (bases.length === 1) { box.querySelector('details').open = true; }
+    } catch (e) { status(e.message, true); }
+  }
+  async function go(link, quiet) {
+    if (!link || busy) return;
+    const tok = token.get(); if (!tok) { open(pathOf(link), t('atNeedToken')); return; }
+    busy = true; status(t('atLoading'));
+    try {
+      toast(t('atConnecting'));
+      const r = await load(link, tok);
+      if (dlg && dlg.open) dlg.close();
+      const ok = Drops.addRows(r.name, r.rows, 'airtable:' + pathOf(link));
+      if (ok && r.skipped.length) toast(t('atSkipped', { n: r.skipped.length, names: r.skipped.slice(0, 4).join(', ') + (r.skipped.length > 4 ? '…' : '') }));
+    } catch (e) {
+      if (quiet && !dlg) open(pathOf(link), e.message, true); else { status(e.message, true); toast(t('atFail', { err: e.message })); }
+    } finally { busy = false; }
+  }
+  function open(linkText, msg, err) { draw(linkText, msg); if (err) status(msg, true); }
+  // from the page link (url=airtable:app…/tbl…): load it if the tab has a token, else ask for one
+  function fromHash(path) { const l = parseLink(path); if (!l) return; token.get() ? go(l, true) : open(path, t('atNeedTokenLink')); }
+  return { open, fromHash, parseLink };
+})();
+
 const Drops = (() => {
   const files = [];
   let seq = 0, rec = null, ready = false;   // ready: the map's layers are in (Drops.onMap)
@@ -5344,6 +5551,13 @@ const Drops = (() => {
     addText(await file.text(), file.name);
   }
   // a file's text (or parsed JSON rows) to a layer; url when it came from a link
+  // several WKT values (linked records) as one GeoJSON shape
+  function combineWKT(list) {
+    const gs = list.map(wkt).filter(Boolean);
+    if (gs.length < 2) return gs[0] || null;
+    const fam = g => g.type.replace(/^Multi/, ''), parts = g => g.type.startsWith('Multi') ? g.coordinates : [g.coordinates];
+    return gs.every(g => fam(g) === fam(gs[0])) ? { type: 'Multi' + fam(gs[0]), coordinates: gs.flatMap(parts) } : gs[0];
+  }
   function addText(text, fileName, url, json) {
     const name = fileName.replace(/\.(csv|tsv|txt|geojson|json)$/i, '');
     let r;
@@ -5351,7 +5565,7 @@ const Drops = (() => {
       const o = json || (/\.(geo)?json$/i.test(fileName) || /^\s*[{[]/.test(text) ? JSON.parse(text) : null);
       r = !o ? fromCSV(text) : Array.isArray(o) ? fromObjects(o) : fromGeoJSON(o);
     } catch (e) { toast(t('dropBad', { name: fileName })); return; }
-    if (!r.feats.length) { toast(t('dropNone', { name: fileName })); return; }
+    if (!r.feats.length) { toast(t('dropNone', { name: fileName })); return false; }
     const f = { id: ++seq, name, url: url || null, look: { ...DROP_LOOK, shape: SHAPE_ORDER[(seq - 1) % SHAPE_ORDER.length] }, color: DROP_COLORS[(seq - 1) % DROP_COLORS.length], on: true, feats: r.feats, fields: r.fields, skipped: r.skipped, how: r.how,
       nameField: r.fields.find(k => NAME.test(k)) || r.fields.find(k => k === 'matched_text') || r.fields.find(k => r.feats.some(x => typeof x.properties[k] === 'string' && x.properties[k] && isNaN(+x.properties[k]))) || null };
     for (const x of f.feats) {
@@ -5427,6 +5641,8 @@ const Drops = (() => {
   async function addURL(input, quiet) {
     input = String(input || '').trim(); if (!input) return;
     if (files.some(f => f.url === input)) return;
+    if (/^airtable:/.test(input)) { BPAirtable.fromHash(input.slice(9)); return; }
+    if (/^https?:\/\/([\w-]+\.)?airtable\.com\//.test(input) && BPAirtable.parseLink(input)) { BPAirtable.open(input); return; }
     let link; try { link = resolveLink(input); } catch (e) { toast(t('urlBad')); return; }
     if (/(^|\.)airtable\.com$/.test(new URL(input).hostname)) { toast(t('urlAirtable')); return; }
     if (!quiet) toast(t('urlLoading'));
@@ -5469,7 +5685,7 @@ const Drops = (() => {
       + `<details class="import-fold" data-import ${openImport ?? !files.length ? 'open' : ''}><summary>${esc(t('importTitle'))}<small>${esc(t('importHint'))}</small></summary>
       <div class="drop-box"><div class="drop-btns"><label class="btn small"><input type="file" accept=".csv,.tsv,.txt,.geojson,.json" multiple hidden data-drop-pick>${esc(t('dropPick'))}</label>
         <button type="button" class="btn small" data-drive title="${esc(t('driveTitle'))}">${esc(t('driveBtn'))}</button>
-        <button type="button" class="btn small" disabled title="${esc(t('airtableSoon'))}">${esc(t('airtableBtn'))}</button></div>
+        <button type="button" class="btn small" data-airtable title="${esc(t('airtableTitle'))}">${esc(t('airtableBtn'))}</button></div>
         <small>${esc(t('dropHint'))}</small></div>
       <form class="drop-url" data-drop-url><input type="url" name="u" placeholder="${esc(t('urlPh'))}" aria-label="${esc(t('urlPh'))}"><button type="submit" class="btn small">${esc(t('urlAdd'))}</button></form>
       </details>`
@@ -5621,6 +5837,7 @@ const Drops = (() => {
       const nb = e.target.closest('[data-near] button');
       if (nb) { setNear(nb.closest('[data-near]').dataset.near, nb.dataset.v); return; }
       if (e.target.closest('[data-drive]')) { fromDrive(); return; }
+      if (e.target.closest('[data-airtable]')) { BPAirtable.open(''); return; }
       const fbox = e.target.closest('[data-fmt]');
       if (fbox) {
         const c = e.target.closest('[data-fmt-color]'), g = e.target.closest('[data-fmt-k] button');
@@ -5915,7 +6132,7 @@ const Drops = (() => {
         'icon-allow-overlap': true, 'icon-ignore-placement': true },
       paint: { 'icon-color': '#FFD43B', 'icon-halo-color': '#1E2340', 'icon-halo-width': 1.5 } });
     wire(popup); for (const f of files) if (!map.getSource('drop-' + f.id)) addLayers(f); }
-  return { add, addURL, urls, listRows, nearPicker, setNearFrom, showExtent, withAdj: (k, n) => withAdj(k, n), parseCSV, focus, focusedId: () => focusId, items, blocksOut: (s, k) => blocksOut(s, k), areaKey: () => areaKey(), get nearMode() { return nearMode; }, nearOptions, fileColor: fid => (files.find(x => x.id === fid) || {}).color, fileName: fid => { const f = files.find(x => x.id === fid); return f ? shown(f) : ''; }, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
+  return { add, addURL, addRows: (name, rows, url) => addText('', name, url, rows) !== false, combineWKT, urls, listRows, nearPicker, setNearFrom, showExtent, withAdj: (k, n) => withAdj(k, n), parseCSV, focus, focusedId: () => focusId, items, blocksOut: (s, k) => blocksOut(s, k), areaKey: () => areaKey(), get nearMode() { return nearMode; }, nearOptions, fileColor: fid => (files.find(x => x.id === fid) || {}).color, fileName: fid => { const f = files.find(x => x.id === fid); return f ? shown(f) : ''; }, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
 })();
 /* ---------- the map key's checkboxes and category highlights ----------
    A checkbox on every row that can be turned off: layers (back to their last setting), area sets, your
