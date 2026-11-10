@@ -2,6 +2,20 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v73
+
+- **Select blocks:** picking parcels turns on the Parcels layer; picking another kind of block, or turning picking off, now turns it back off (if picking turned it on).
+- **Nearby table:**
+  - Opening a starting place shows one folded line per list, with a count. Open a list's line to see its matches.
+  - Your files come first, then Block Party's layers.
+  - The table's top row has the **How near** menu and **Copy / CSV / JSON / GeoJSON view** for the whole table. Each opened place also has **Just this one: Copy / CSV**.
+- **The "how near" area shows on the map** for the place you opened (or Near me): the blocks, the neighborhood, or the circle.
+- **Same or touching neighborhood:** a new How near choice that also counts the neighborhoods sharing a border with yours.
+- **Community Benefit Districts and Cultural Districts** are lists in Nearby, like neighborhood groups, checked by default: a place matches the district it's in, with any public contacts from sf-blocks' Cultural Districts list. In the How near menu they (and historic districts) are now last.
+- **Map button:** clicking Map when it's already on opens a list of basemap styles.
+- **Focus:** the bar is gone. Starting focus shows a toast, and a black **Focus: file name ✕** button sits at the top of the map while you're focused. Click it, or press Esc, to go back to streets.
+- **Smaller fixes:** bigger fold triangles; business hover shows the business name first, then its owner, then the address; a file's Focus and × buttons stay on one line; smaller import buttons; the first file's stars are orange.
+
 ## v72
 
 - **◎ Nearby** (new button on the map): match one list against others.

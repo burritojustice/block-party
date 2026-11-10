@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v72 -->
+<!-- build: v73 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -524,6 +524,28 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .sel-check { display: flex; gap: 6px; align-items: center; margin: 8px 0 0 62px; font-size: 13px; cursor: pointer; }
 #pick-mode button { padding: 3px 8px; }
 .save-panel { margin-top: 10px; }
+/* the fold triangles: a little bigger */
+details.fold > summary::after, .hoods summary::after, .chips-fold > summary::after { font-size: 15px !important; }
+summary::marker { font-size: 1.15em; }
+.nb-tri { display: inline-block; width: 16px; font-size: 15px; }
+.nb-grp-btn { border: 0; background: none; font: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 0; }
+.nb-grp-btn[disabled] { cursor: default; opacity: .55; }
+.tbl tr.nb-sub td.nb-match { padding-left: 34px; }
+.tbl tr.nb-tools td { background: #F7F8FD; }
+.tbl-nb { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tbl-nb select { font: inherit; font-weight: 600; padding: 3px 8px; border: 2px solid var(--ink); border-radius: 999px; background: #fff; max-width: 220px; }
+/* a file's row in Layers: the Focus and × buttons on the same line */
+.lyr-row[data-drop] { grid-template-columns: 26px minmax(0, 1fr) auto auto auto; }
+.lyr-row[data-drop] .drop-focus { padding: 2px 8px; font-size: 12px; }
+/* import buttons: one row */
+.drop-btns .btn { padding: 3px 9px; font-size: 12.5px; }
+.focus-on { background: var(--ink) !important; color: #fff !important; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.focus-on b { font-weight: 700; }
+.flavor-pop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 12; background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 6px; display: grid; gap: 3px; min-width: 130px; box-shadow: 0 6px 18px rgba(30,35,64,.2); }
+.flavor-pop p { margin: 2px 6px 4px; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+.flavor-pop button { border: 0; background: none; text-align: left; padding: 5px 8px; border-radius: 8px; font: 600 13px Figtree, sans-serif; cursor: pointer; }
+.flavor-pop button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.map-toggle { position: relative; }
 .nb-panel { position: absolute; top: 108px; left: 12px; z-index: 9; width: min(360px, calc(100% - 24px)); max-height: calc(100% - 130px); overflow: auto; overscroll-behavior: contain;
   background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius-md); padding: 10px 14px 14px; box-shadow: 0 8px 24px rgba(30,35,64,.18); font-size: 14px; }
 .map-wrap.tbl-open .nb-panel { max-height: calc(100% - var(--tbl-h) - 130px); }
@@ -757,6 +779,9 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
       <div class="map-toggle single sun">
         <button type="button" id="quiet-btn" aria-expanded="false" aria-controls="quiet-panel">✦ <span data-i18n="quietBtn">Quiet streets</span><span class="badge" id="quiet-badge" hidden></span> ▾</button>
       </div>
+      <div class="map-toggle single" id="focus-wrap" hidden>
+        <button type="button" id="focus-off" class="focus-on" aria-pressed="true" title="Clicks go only to this file. Click to go back to streets (or press Esc)"><span data-i18n="focusOnLbl">Focus:</span> <b id="focus-name"></b> ✕</button>
+      </div>
       <div class="map-toggle single">
         <button type="button" id="nearby-btn" aria-pressed="false" data-i18n="nearbyBtn" title="Match one list against others: what's near each place">◎ Nearby</button>
       </div>
@@ -787,8 +812,6 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
       </div>
     </div>
     <section class="nb-panel" id="nb-panel" hidden aria-label="Nearby"></section>
-    <div class="focus-bar" id="focus-bar" hidden><span data-i18n="focusBar1">Clicks go to</span> <b id="focus-name"></b> <span class="focus-sub" data-i18n="focusBar2">· streets are paused</span>
-      <button type="button" class="btn small" id="focus-off" data-i18n="focusOff">Back to streets</button></div>
     <div class="next-toast" id="next-toast" hidden role="status"></div>
     <section class="tbl-drawer" id="tbl-drawer" hidden aria-label="Table">
       <div class="tbl-grip" id="tbl-grip" data-i18n-title="tableGrip" title="Drag to resize"></div>
@@ -797,6 +820,9 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
         <span class="tbl-count" id="tbl-count"></span>
         <input type="search" id="tbl-search" data-i18n-placeholder="tableSearch" placeholder="Search rows" spellcheck="false">
         <label class="tbl-all"><input type="checkbox" id="tbl-allcols"> <span data-i18n="tableAllCols">All columns</span></label>
+        <span class="tbl-nb" id="tbl-nb" hidden><select id="tbl-nb-how" aria-label="How near"></select>
+          <button type="button" class="btn small" data-nb-x="copy" data-i18n="nbCopy">Copy</button><button type="button" class="btn small" data-nb-x="csv">CSV</button>
+          <button type="button" class="btn small" data-nb-x="json">JSON</button><button type="button" class="btn small" data-nb-x="geojson" data-i18n="nbGeojson">GeoJSON view</button></span>
         <button type="button" class="tbl-x" id="tbl-close" data-i18n-title="tableClose" title="Close the table" aria-label="Close the table">✕</button>
       </div>
       <div class="tbl-scroll" id="tbl-scroll"><table class="tbl" id="tbl"></table></div>
@@ -1130,7 +1156,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v72';
+const _BUILD_VERSION = 'v73';
 
 /* =====================================================================
    CONFIG
@@ -1311,6 +1337,8 @@ const I18N = {
     nbStorefronts: 'storefronts', nbAllRegs: 'all registrations', nbYou: 'You', nbYourStreets: 'Your streets', nbWorking: 'Matching {n} of {total}…',
     nbSum: '{n} places · {m} matches · {how}', nbInTable: 'Open a row in the table to see its matches; the map rings them.', nbNearYou: 'Near you · {how}', nbNearOne: 'Near {name} · {how}',
     nbNone: 'Nothing found', nbNoneFound: '(nothing found)', nbMore: '…and {n} more (all in the CSV)', nbM: '{m} m', nbWithin: 'within {m} m', nbAround: 'around the corner', nbBlocksAway: '{n} blocks away',
+    nearAdjHood: 'Same or touching neighborhood', nbInside: 'inside', nbThisOne: 'Just this one:', bizMoreN: '…and {n} more',
+    focusOnLbl: 'Focus:', focusToast: 'Clicks now go to {name}; streets are paused. Click "Focus" at the top (or press Esc) to go back.', flavorTitle: 'Basemap',
     nbCopy: 'Copy', nbGeojson: 'GeoJSON view', nbCopied: 'Copied {n} rows', nbTableSrc: 'Nearby: {name} ({n})', nbLocating: 'Finding where you are…', nbNoGeo: "Couldn't get your location",
     focusBtn: 'Focus', focusOn: 'Focused', focusTitle: 'Make only this file clickable', focusThis: 'Focus on this file', focusOff: 'Back to streets', focusBar1: 'Clicks go to', focusBar2: '· streets are paused',
     nextTitle: '{name}: {n} places on the map', nextText: 'Click one to see what’s around it, or use Nearby to match it against your other lists.', dismiss: 'Dismiss',
@@ -2250,6 +2278,7 @@ function setupForm() {
   Table.setup();
   NearbyView.setup();
   $('focus-off').addEventListener('click', () => Drops.focus(null));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && Drops.focusedId() != null && !document.querySelector('dialog[open]')) Drops.focus(null); });
   $('sel-ablk').addEventListener('change', e => { const on = e.target.checked; setArea('admin', 'ablk'); setArea('adminMode', on ? 'shade' : 'off'); });
   $('pick-mode').addEventListener('click', e => { const b = e.target.closest('button'); if (b) SelAreas.pickMode(b.dataset.v); });
   $('pick-streets').addEventListener('click', () => SelAreas.streetsAround());
@@ -3228,7 +3257,19 @@ function addMapLayers() {
     toggleFromMap(Logic.db.byCnn.get(f.properties.cnn));
   });
 
-  $('bm-map').addEventListener('click', () => setBasemap(false));
+  // Map again (already on Map): a little menu of basemap styles
+  $('bm-map').addEventListener('click', e => {
+    const already = $('bm-map').getAttribute('aria-pressed') === 'true';
+    setBasemap(false);
+    if (!already) return;
+    let m = $('flavor-pop');
+    if (!m) { m = document.createElement('div'); m.id = 'flavor-pop'; m.className = 'flavor-pop'; $('bm-map').closest('.map-toggle').appendChild(m); }
+    if (!m.hidden && m.childElementCount) { m.hidden = true; return; }
+    m.innerHTML = `<p>${esc(t('flavorTitle'))}</p>` + FLAVORS.map(v => `<button type="button" data-flavor="${v}" aria-pressed="${basemapFlavor === v}">${esc(t('flavor_' + v))}</button>`).join('');
+    m.hidden = false;
+    m.onclick = ev => { const b = ev.target.closest('[data-flavor]'); if (b) { setFlavor(b.dataset.flavor); m.hidden = true; } };
+    setTimeout(() => document.addEventListener('click', function off(ev) { if (!m.contains(ev.target) && ev.target !== $('bm-map')) { m.hidden = true; document.removeEventListener('click', off); } }), 0);
+  });
   $('bm-sat').addEventListener('click', () => setBasemap(true));
   $('btn-3d').addEventListener('click', () => {
     if (flatMap) { setOverlay('contours', overlayMode.contours === 'on' ? 'off' : 'on'); return; }
@@ -4460,7 +4501,7 @@ const Tiles = (() => {
       // the highlighted businesses: hover names them, a click opens their records
       map.on('mousemove', 'bp-card-hl', e => {
         const f = e.features.find(x => x.properties.k === 'businesses'), x = f && Tiles.hlBiz(+f.properties.i); if (!x) return;
-        popup.setLngLat(x.ll).setHTML(`<b>${esc(x.address)}</b>${x.shown.slice(0, 5).map(i => `<br><span class="pop-lyr">${esc(i.dba || i.owner || '')}</span>`).join('')}${x.shown.length > 5 ? `<br><span class="pop-lyr">…</span>` : ''}`).addTo(map);
+        popup.setLngLat(x.ll).setHTML(`${x.shown.slice(0, 5).map((i, j) => `${j ? '<br>' : ''}<b>${esc(i.dba || i.owner || '')}</b>${i.owner && i.dba && i.owner !== i.dba ? ` <span class="pop-lyr">· ${esc(i.owner)}</span>` : ''}`).join('')}${x.shown.length > 5 ? `<br><span class="pop-lyr">${esc(t('bizMoreN', { n: x.shown.length - 5 }))}</span>` : ''}<br><span class="pop-lyr">${esc(x.address)}</span>`).addTo(map);
         popOwner = 'bp-card-hl'; map.getCanvas().style.cursor = 'pointer';
       });
       map.on('mouseleave', 'bp-card-hl', () => { if (popOwner === 'bp-card-hl') { popup.remove(); popOwner = null; } map.getCanvas().style.cursor = ''; });
@@ -4492,9 +4533,10 @@ const Tiles = (() => {
         const ps = bizStack(e, f), n = ps.reduce((a, p) => a + (+p.n || 0), 0);
         const shown = ps.flatMap(p => bizItems(p).filter(i => bizAll || !i.kind));
         const addrs = ps.slice(0, 2).map(p => p.address || '').join(' & ') + (ps.length > 2 ? ` (${t('bizMoreAddrs', { n: ps.length - 2 })})` : '');
-        return `<b>${esc(addrs)}</b>${n > 1 ? ` <span class="pop-lyr">· ${esc(t('bizHere', { n }))}</span>` : ''}`
-          + shown.slice(0, 4).map(i => `<br><span class="pop-lyr">${esc(i.dba || i.owner || '')}</span>`).join('')
-          + (shown.length > 4 ? `<br><span class="pop-lyr">…</span>` : '');
+        // the businesses first (with their owner when it's different), then where they are
+        return shown.slice(0, 4).map((i, j) => `${j ? '<br>' : ''}<b>${esc(i.dba || i.owner || '')}</b>${i.owner && i.dba && i.owner !== i.dba ? ` <span class="pop-lyr">· ${esc(i.owner)}</span>` : ''}`).join('')
+          + (shown.length > 4 ? `<br><span class="pop-lyr">${esc(t('bizMoreN', { n: shown.length - 4 }))}</span>` : '')
+          + `<br><span class="pop-lyr">${esc(addrs)}${n > 1 ? ' · ' + esc(t('bizHere', { n })) : ''}</span>`;
       });
       if (meta.has('buildings')) hoverTip('bp-lyr-buildings-fill', p => p.height_m > 0
         ? `<b>${esc(t('bldgHeight', { m: Math.round(p.height_m), ft: Math.round(p.height_m * M2FT) }))}</b><br><span class="pop-lyr">${esc(t('bldgYear'))}</span>` : esc(t('lyr_buildings')), onPoi);
@@ -4742,7 +4784,7 @@ function setBizAll(on) {
 const DROP_SWATCHES = [['#E03131', 'Red'], ['#F76707', 'Orange'], ['#F2B705', 'Yellow'], ['#2B9348', 'Green'], ['#1C7ED6', 'Blue'],
   ['#3F37C9', 'Indigo'], ['#8E44AD', 'Violet'], ['#00B4C5', 'Aqua'], ['#D91BB5', 'Magenta'], ['#1E2340', 'Black'], ['#FFFFFF', 'White']];
 // new files take them in this order, so two files side by side contrast
-const DROP_COLORS = ['#1C7ED6', '#F76707', '#D91BB5', '#2B9348', '#00B4C5', '#E03131', '#8E44AD', '#F2B705', '#3F37C9'];
+const DROP_COLORS = ['#F76707', '#1C7ED6', '#D91BB5', '#2B9348', '#00B4C5', '#E03131', '#8E44AD', '#F2B705', '#3F37C9'];
 // Format (borrowed from Joiner's "Format features"): color by a column (most common values, or five
 // quantile classes for numbers), size, size by a number, style, and label lines from columns
 const DROP_CATS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6'], DROP_OTHER = '#9AA0A6';
@@ -4987,8 +5029,9 @@ const Drops = (() => {
         }
       }
     }
-    const bar = $('focus-bar');
-    if (bar) { bar.hidden = focusId == null; if (f) $('focus-name').textContent = shown(f); }
+    const w = $('focus-wrap');
+    if (w) { w.hidden = focusId == null; if (f) $('focus-name').textContent = shown(f); }
+    if (f) toast(t('focusToast', { name: shown(f) }));
     renderMenu();
   }
   // after a file loads: what to do next (stays until dismissed)
@@ -5350,10 +5393,14 @@ const Drops = (() => {
       <div class="lyr-row lyr-sub" data-near-opt="radius" ${nearMode.by === 'radius' ? '' : 'hidden'}><span></span><b></b>${seg('radius', [[50, '50 m'], [100, '100 m'], [200, '200 m']])}</div>`;
   }
   // on a card's Nearby line: one menu for what "nearby" means (for your files)
+  // the "how near" choices: blocks, areas (and the neighborhoods touching yours), radius, then the special districts
   function nearOptions() {
-    const cur = nearMode.by === 'blocks' ? 'blocks:' + nearMode.steps : nearMode.by === 'area' ? 'area:' + nearMode.area : 'radius:' + nearMode.radius;
+    const cur = nearMode.by === 'blocks' ? 'blocks:' + nearMode.steps : nearMode.by === 'area' ? (nearMode.adj ? 'adj:' : 'area:') + nearMode.area : 'radius:' + nearMode.radius;
+    const SPECIAL = ['cbd', 'cult', 'hist'], picks = AREA_PICKS();
     return { cur, opts: [['blocks:0', t('nearStep0')], ['blocks:1', t('nearStep1')], ['blocks:2', t('nearStep2')],
-      ...AREA_PICKS().map(([v, l]) => ['area:' + v, t('nearSame', { area: l })]), ...[50, 100, 200].map(m => ['radius:' + m, t('nearWithin', { m })])] };
+      ...picks.filter(([v]) => !SPECIAL.includes(v)).flatMap(([v, l]) => [['area:' + v, t('nearSame', { area: l })], ...(v === 'hood' ? [['adj:hood', t('nearAdjHood')]] : [])]),
+      ...[50, 100, 200].map(m => ['radius:' + m, t('nearWithin', { m })]),
+      ...picks.filter(([v]) => SPECIAL.includes(v)).map(([v, l]) => ['area:' + v, t('nearSame', { area: l })])] };
   }
   function nearPicker() {
     if (!files.some(f => f.on)) return '';
@@ -5361,17 +5408,19 @@ const Drops = (() => {
     return `<label class="near-pick"><span>${esc(t('nearYourFiles'))}</span><select data-near-card aria-label="${esc(t('nearTitle'))}">${opts.map(([v, l]) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`;
   }
   function setNearFrom(v) {
-    const [by, x] = String(v).split(':');
-    nearMode = { ...nearMode, by, ...(by === 'blocks' ? { steps: +x } : by === 'area' ? { area: x } : { radius: +x }) };
+    let [by, x] = String(v).split(':'); const adj = by === 'adj'; if (adj) by = 'area';
+    nearMode = { ...nearMode, by, adj, ...(by === 'blocks' ? { steps: +x } : by === 'area' ? { area: x } : { radius: +x }) };
     setNear('by', by);
   }
+  // the areas a card (or place) is in, plus the ones touching them when "adjacent" is on
+  const withAdj = (k, names) => nearMode.adj ? [...new Set([...names, ...names.flatMap(n => Areas.neighbors(k, n))])] : names;
   // what "nearby" covers around a card, drawn on the map: the blocks counted, the area, or the radius
   let extentFor = null;
   function extentOf(s) {
     if (nearMode.by === 'blocks') return blocksOut(s, nearMode.steps).map(({ b }) => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: b.coords } }));
     if (nearMode.by === 'area') {
       const k = areaKey(); if (!Areas.loaded(k)) return [];
-      return (Areas.of(k, s) || []).map(a => Areas.geom(k, a.name)).filter(Boolean).map(g => ({ type: 'Feature', properties: {}, geometry: g }));
+      return withAdj(k, (Areas.of(k, s) || []).map(a => a.name)).map(n => Areas.geom(k, n)).filter(Boolean).map(g => ({ type: 'Feature', properties: {}, geometry: g }));
     }
     // a band of the radius around the block (or a circle around the corner): the hull of circles at its vertices
     const R = nearMode.radius, pts = [];
@@ -5383,15 +5432,17 @@ const Drops = (() => {
     const ring = [...lo.slice(0, -1), ...hi.slice(0, -1)].map(([x, y]) => [x / KX, y / KY]); ring.push(ring[0]);
     return [{ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [ring] } }];
   }
-  function showExtent(s) {
+  let extentForce = false;   // Nearby shows its area even with no files on
+  function showExtent(s, force) {
     if (!mapReady) return;
+    extentForce = !!(s && force);
     if (!map.getSource('near-extent')) {
       map.addSource('near-extent', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       map.addLayer({ id: 'bp-near-fill', type: 'fill', source: 'near-extent', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': '#1C7ED6', 'fill-opacity': 0.08 } });
       map.addLayer({ id: 'bp-near-line', type: 'line', source: 'near-extent', paint: { 'line-color': '#1C7ED6', 'line-width': ['case', ['==', ['geometry-type'], 'LineString'], 9, 2], 'line-opacity': ['case', ['==', ['geometry-type'], 'LineString'], 0.25, 0.8], 'line-dasharray': [2, 1.5] } });
       arrangeLayers();
     }
-    extentFor = s && files.some(f => f.on) ? s : null;
+    extentFor = s && (extentForce || files.some(f => f.on)) ? s : null;
     map.getSource('near-extent').setData({ type: 'FeatureCollection', features: extentFor ? extentOf(extentFor) : [] });
   }
   function setNear(k, v) {
@@ -5400,8 +5451,8 @@ const Drops = (() => {
     const el = $('drop-rows');
     el.querySelectorAll('[data-near]').forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(nearMode[g.dataset.near]) === b.dataset.v)));
     el.querySelectorAll('[data-near-opt]').forEach(r => r.hidden = r.dataset.nearOpt !== nearMode.by);
-    if (nearMode.by === 'area') Areas.need(areaKey()).then(() => { render(); showExtent(extentFor); });
-    render(); showExtent(extentFor);
+    if (nearMode.by === 'area') Areas.need(areaKey()).then(() => { render(); showExtent(extentFor, extentForce); });
+    render(); showExtent(extentFor, extentForce);
   }
   function setupUI() {
     const el = $('drop-rows');
@@ -5499,7 +5550,7 @@ const Drops = (() => {
         hits.push({ d: best.k, p: x.properties, where });
       }
     } else if (nearMode.by === 'area') {
-      const k = areaKey(), mine = Areas.loaded(k) ? (Areas.of(k, s) || []).map(a => a.name) : null;
+      const k = areaKey(), mine = Areas.loaded(k) ? withAdj(k, (Areas.of(k, s) || []).map(a => a.name)) : null;
       if (!mine) return null;
       for (const x of f.feats) {
         const names = new Set(x._sh.ll.flatMap(([lo, la]) => Areas.areasAt(k, lo, la)));
@@ -5724,7 +5775,7 @@ const Drops = (() => {
         'icon-allow-overlap': true, 'icon-ignore-placement': true },
       paint: { 'icon-color': '#FFD43B', 'icon-halo-color': '#1E2340', 'icon-halo-width': 1.5 } });
     wire(popup); for (const f of files) if (!map.getSource('drop-' + f.id)) addLayers(f); }
-  return { add, addURL, urls, listRows, nearPicker, setNearFrom, showExtent, focus, focusedId: () => focusId, items, blocksOut: (s, k) => blocksOut(s, k), areaKey: () => areaKey(), get nearMode() { return nearMode; }, nearOptions, fileColor: fid => (files.find(x => x.id === fid) || {}).color, fileName: fid => { const f = files.find(x => x.id === fid); return f ? shown(f) : ''; }, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
+  return { add, addURL, urls, listRows, nearPicker, setNearFrom, showExtent, withAdj: (k, n) => withAdj(k, n), parseCSV, focus, focusedId: () => focusId, items, blocksOut: (s, k) => blocksOut(s, k), areaKey: () => areaKey(), get nearMode() { return nearMode; }, nearOptions, fileColor: fid => (files.find(x => x.id === fid) || {}).color, fileName: fid => { const f = files.find(x => x.id === fid); return f ? shown(f) : ''; }, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
 })();
 /* ---------- the map key's checkboxes and category highlights ----------
    A checkbox on every row that can be turned off: layers (back to their last setting), area sets, your
@@ -5975,6 +6026,8 @@ const Table = (() => {
     if (!open) return;
     fillSources();
     const { cols, rows } = rowsOf(), ql = q.trim().toLowerCase();
+    const nbTools = $('tbl-nb'); nbTools.hidden = src !== 'nearby'; $('tbl-allcols').closest('label').hidden = src === 'nearby';
+    if (src === 'nearby') { const { cur, opts } = Drops.nearOptions(); $('tbl-nb-how').innerHTML = opts.map(([v, l]) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`).join(''); }
     let list = ql ? rows.filter(r => cols.some(c => String(r.cells[c] ?? '').toLowerCase().includes(ql))) : rows;
     if (sort && cols.includes(sort)) {
       const allNum = list.every(r => r.cells[sort] === '' || r.cells[sort] == null || num(r.cells[sort]));
@@ -6020,6 +6073,8 @@ const Table = (() => {
     $('tbl-src').addEventListener('change', e => { src = e.target.value; sort = null; q = ''; $('tbl-search').value = ''; refresh(); });
     $('tbl-search').addEventListener('input', e => { q = e.target.value; refresh(); });
     $('tbl-allcols').addEventListener('change', e => { allCols = e.target.checked; refresh(); });
+    $('tbl-nb-how').addEventListener('change', e => { Drops.setNearFrom(e.target.value); if ($('nb-how')) $('nb-how').value = e.target.value; NearbyView.run(); });
+    $('tbl-nb').addEventListener('click', e => { const b = e.target.closest('[data-nb-x]'); if (b) NearbyView.exportAs(b.dataset.nbX); });
     const tb = $('tbl');
     tb.addEventListener('click', e => {
       const th = e.target.closest('th[data-sort]');
@@ -6028,8 +6083,12 @@ const Table = (() => {
       if (all) { if (all.checked) state.results.forEach(s => state.checked.add(s.cnn)); else state.checked.clear(); render(); writeHash(); return; }
       const ck = e.target.closest('[data-tbl-check]');
       if (ck) { const c = +ck.dataset.tblCheck; ck.checked ? state.checked.add(c) : state.checked.delete(c); render(); writeHash(); return; }
+      const ng = e.target.closest('[data-nb-grp]');
+      if (ng) { NearbyView.toggleGroup(ng.dataset.nbGrp); refresh(); return; }
+      const nx = e.target.closest('[data-nb-row-x]');
+      if (nx) { NearbyView.exportAs(nx.dataset.nbRowX, nx.dataset.nbId); return; }
       const nbo = e.target.closest('[data-nb-open]');
-      if (nbo) { const k = nbo.dataset.nbOpen; opened.has(k) ? opened.delete(k) : opened.add(k); refresh(); return; }
+      if (nbo) { const k = nbo.dataset.nbOpen; opened.has(k) ? opened.delete(k) : opened.add(k); NearbyView.showAreaOf(opened.has(k) ? k : null); refresh(); return; }
       if (e.target.closest('.nb-sub')) return;
       const un = e.target.closest('[data-tbl-unpick]');
       if (un) { SelAreas.dropPick(un.dataset.tblUnpick); return; }
@@ -6067,10 +6126,11 @@ const Table = (() => {
 // and export as CSV (one row per match), JSON (grouped) or GeoJSON (starts and matches, for a map of their own).
 const NearbyView = (() => {
   const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540, ON_M = 35;
-  const LAYER_LISTS = { businesses: '#E8590C', trees: '#2F9E44', schools: '#7048E8', health: '#C2255C', stations: '#1971C2', lands: '#868E96', groups: '#1E2340' };
+  const LAYER_LISTS = { businesses: '#E8590C', trees: '#2F9E44', schools: '#7048E8', health: '#C2255C', stations: '#1971C2', lands: '#868E96', groups: '#1E2340', cbd: '#A8441B', cult: '#C2410C' };
+  const AREA_LISTS = ['cbd', 'cult'];   // matched like neighborhood groups: the district the place is in
   const CONTACT = /(^|[_\s])(name|contact|organi[sz]er|lead|email|e-mail|phone|tel|website|url|steward|owner|captain|coordinator)s?($|[_\s])/i;
   // checked to start: your files and neighborhood groups (businesses are many; they're a box away)
-  let chosen = new Set(['groups']), seenFiles = new Set(), start = null, res = null, running = 0, me = null, watch = null;
+  let chosen = new Set(['groups', 'cbd', 'cult']), seenFiles = new Set(), start = null, res = null, running = 0, me = null, watch = null;
   const toM = ([lo, la]) => [lo * KX, la * KY];
   const segD = (x, y, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy, u = L ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / L)) : 0;
     return Math.hypot(x - a[0] - u * dx, y - a[1] - u * dy); };
@@ -6089,8 +6149,8 @@ const NearbyView = (() => {
   // ---- the lists
   function listsAvail() {
     const files = Drops.files().map(f => ({ key: 'f' + f.id, label: Drops.fileName(f.id), color: f.color, file: true, n: f.feats.length }));
-    const layers = Object.keys(LAYER_LISTS).filter(k => k === 'groups' || (k === 'businesses' || k === 'trees' ? Tiles.has(k) : OVERLAYS[k]))
-      .map(k => ({ key: k, label: t(k === 'groups' ? 'ngRow' : 'lyr_' + k), color: LAYER_LISTS[k] }));
+    const layers = Object.keys(LAYER_LISTS).filter(k => k === 'groups' || (AREA_LISTS.includes(k) ? Areas.has(k) : k === 'businesses' || k === 'trees' ? Tiles.has(k) : OVERLAYS[k]))
+      .map(k => ({ key: k, label: AREA_LISTS.includes(k) ? Areas.conf(k).title : t(k === 'groups' ? 'ngRow' : 'lyr_' + k), color: LAYER_LISTS[k], area: AREA_LISTS.includes(k) }));
     return { files, layers };
   }
   const listOf = key => { const { files, layers } = listsAvail(); return [...files, ...layers].find(l => l.key === key) || null; };
@@ -6147,9 +6207,30 @@ const NearbyView = (() => {
     return bs;
   }
   const HOW_WORDS = k => t(k === 0 ? 'dropOn' : k === 1 ? 'nbAround' : 'nbBlocksAway', { n: k });
+  // public contacts for districts (sf-blocks reference/cultural-districts/contacts.csv), by name
+  let districtContacts = null;
+  async function contactsFor() {
+    if (districtContacts) return districtContacts;
+    districtContacts = new Map();
+    try {
+      const reg = await SFBlocks.ready, txt = await (await fetch(SFBlocks.url((reg.reference || 'reference/') + 'cultural-districts/contacts.csv'))).text();
+      const rows = Drops.parseCSV(txt), head = rows.shift() || [];
+      for (const r of rows) { const o = Object.fromEntries(head.map((h, i) => [h, r[i] || ''])); if (o.district_name) districtContacts.set(o.district_name, o); }
+    } catch (e) { console.warn('[block-party] district contacts', e); }
+    return districtContacts;
+  }
   // ---- matching one starting place against one list
   async function matchOne(pl, key, how, area) {
     const out = [];
+    if (AREA_LISTS.includes(key)) {
+      await Areas.need(key); const cs = await contactsFor();
+      for (const n of Areas.areasAt(key, pl.ll[0], pl.ll[1])) {
+        const props = { ...(Areas.props(key, n) || {}) }, c = cs.get(n) || {};
+        const contact = [c.organization, c.public_email, c.public_phone, c.website].filter(Boolean).join(' · ');
+        out.push({ pl: { id: key + ':' + n, name: n, ll: null, props: { ...props, ...Object.fromEntries(Object.entries(c).filter(([k, v]) => v && !['district_name', 'checked', 'notes'].includes(k))) } }, d: null, where: t('nbInside'), contact });
+      }
+      return out;
+    }
     if (key === 'groups') {
       const r = Groups.of({ kind: 'int', x: pl.ll[0], y: pl.ll[1], cnn: 'nb:' + pl.ll.join(','), coords: [pl.ll] });
       for (const g of r ? r.groups : []) out.push({ pl: { id: 'g:' + g.org, name: g.org, ll: null, props: { org: g.org, people: g.people.map(p => p.name).filter(Boolean).join('; '), emails: g.people.map(p => p.email).filter(Boolean).join('; ') } },
@@ -6172,7 +6253,7 @@ const NearbyView = (() => {
         return best == null ? null : HOW_WORDS(Math.floor(best));
       };
     } else if (how.by === 'area') {
-      const mine = new Set(Areas.areasAt(area, pl.ll[0], pl.ll[1])); if (!mine.size) return out;
+      const mine = new Set(Drops.withAdj(area, Areas.areasAt(area, pl.ll[0], pl.ll[1]))); if (!mine.size) return out;
       const gs = [...mine].map(n => Areas.geom(area, n)).filter(Boolean);
       region = bboxM(gs.flatMap(g => g.coordinates.flatMap(p => p[0])).map(toM), 0);
       words = cand => { const n = cand.ll && Areas.areasAt(area, cand.ll[0], cand.ll[1]).find(a => mine.has(a)); return n || null; };
@@ -6196,7 +6277,7 @@ const NearbyView = (() => {
     if (start === 'me' && !me) { await locate(); if (!me) return; }
     if (how.by === 'area') await Areas.need(area);
     if (chosen.has('groups')) await Groups.ensure();
-    const starts = await placesOf(start), lists = [...chosen].filter(k => k !== start).map(listOf).filter(Boolean);
+    const starts = await placesOf(start), lists = [...chosen].filter(k => k !== start).map(listOf).filter(Boolean).sort((a, b) => (b.file ? 1 : 0) - (a.file ? 1 : 0));
     const rows = [];
     const out = $('nb-out');
     for (let i = 0; i < starts.length; i++) {
@@ -6210,7 +6291,7 @@ const NearbyView = (() => {
     drawMap(); showOut();
     const o = $('nb-out'); if (o && window.innerWidth <= 860) o.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' });
     if (start !== 'me' || rows.length > 1) { try { Table.show('nearby'); } catch (e) { } }
-    if (start === 'me') Drops.showExtent({ kind: 'int', cnn: 'me', x: me[0], y: me[1], coords: [me] });
+    if (res.rows.length === 1) showArea(res.rows[0].pl);
   }
   // ---- where you are
   function locate() {
@@ -6262,9 +6343,17 @@ const NearbyView = (() => {
     }
     map.getSource('nb-hl').setData({ type: 'FeatureCollection', features: feats });
   }
+  // a place as Drops' extent understands it: on the network for blocks, else the point or line itself
+  function asItem(pl) {
+    if (Drops.nearMode.by === 'blocks') return targetOf(pl);
+    const ll = pl.m.map(([x, y]) => [x / KX, y / KY]);
+    return ll.length > 1 ? { cnn: 'nb:' + pl.id, coords: ll } : { kind: 'int', cnn: 'nb:' + pl.id, x: pl.ll[0], y: pl.ll[1], coords: [pl.ll] };
+  }
+  function showArea(pl) { try { Drops.showExtent(pl ? asItem(pl) : null, true); } catch (e) { console.warn('[block-party] extent', e); } }
   function focusRow(id) {
     onRow = onRow === id ? null : id; drawMap();
     const r = res && res.rows.find(x => x.pl.id === id);
+    showArea(r && onRow ? r.pl : null);
     if (r && onRow && mapReady) {
       const pts = [r.pl.ll, ...res.lists.flatMap(l => r.m[l.key].map(x => x.pl.ll))].filter(Boolean);
       const b = new maplibregl.LngLatBounds(); pts.forEach(p => b.extend(p));
@@ -6310,12 +6399,12 @@ const NearbyView = (() => {
     p.innerHTML = panelHTML(); p.hidden = false; $('nearby-btn').setAttribute('aria-pressed', 'true');
     if (res) showOut();
   }
-  function close() { $('nb-panel').hidden = true; $('nearby-btn').setAttribute('aria-pressed', 'false'); }
+  function close() { $('nb-panel').hidden = true; $('nearby-btn').setAttribute('aria-pressed', 'false'); showArea(null); }
   // ---- exports
   const flat = props => Object.fromEntries(Object.entries(props || {}).filter(([k, v]) => !k.startsWith('_') && (v == null || typeof v !== 'object')));
-  function csvRows() {
+  function csvRows(only) {
     const out = [];
-    for (const r of res.rows) {
+    for (const r of res.rows.filter(x => !only || x.pl.id === only)) {
       const base = { start_list: res.startLabel, start_name: r.pl.name, start_id: r.pl.id, start_lat: r.pl.ll ? +r.pl.ll[1].toFixed(6) : '', start_lon: r.pl.ll ? +r.pl.ll[0].toFixed(6) : '', how_near_setting: res.howLabel };
       const ms = res.lists.flatMap(l => r.m[l.key].map(x => ({ x, l })));
       if (!ms.length) out.push({ ...base, found_list: t('nbNoneFound') });
@@ -6324,11 +6413,12 @@ const NearbyView = (() => {
     }
     return out;
   }
-  function exportAs(kind) {
+  function exportAs(kind, only) {
     if (!res) return;
-    const name = `nearby-${String(res.startLabel).replace(/[^\w-]+/g, '-').toLowerCase()}-${fileDate()}`;
+    const one = only && res.rows.find(x => x.pl.id === only);
+    const name = `nearby-${String(one ? one.pl.name : res.startLabel).replace(/[^\w-]+/g, '-').toLowerCase()}-${fileDate()}`;
     if (kind === 'copy' || kind === 'csv') {
-      const rows = csvRows(), cols = [...new Set(rows.flatMap(r => Object.keys(r)))];
+      const rows = csvRows(only), cols = [...new Set(rows.flatMap(r => Object.keys(r)))];
       if (kind === 'csv') saveText(rowsCSV([cols, ...rows.map(r => cols.map(c => r[c] ?? ''))]), name + '.csv');
       else copyText([cols.join('\t'), ...rows.map(r => cols.map(c => String(r[c] ?? '').replace(/[\t\n\r]+/g, ' ')).join('\t'))].join('\n'), t('nbCopied', { n: rows.length }));
     } else if (kind === 'json') {
@@ -6354,7 +6444,7 @@ const NearbyView = (() => {
     });
     p.addEventListener('change', e => {
       if (e.target.id === 'nb-start') { start = e.target.value; p.innerHTML = panelHTML(); if (start === 'me' && !me) locate(); }
-      else if (e.target.id === 'nb-how') Drops.setNearFrom(e.target.value);
+      else if (e.target.id === 'nb-how') { Drops.setNearFrom(e.target.value); if (res && res.rows.length === 1) run(); }
       else if (e.target.matches('.nb-chk input')) e.target.checked ? chosen.add(e.target.value) : chosen.delete(e.target.value);
     });
   }
@@ -6364,14 +6454,24 @@ const NearbyView = (() => {
     const cols = [res.startLabel, ...res.lists.map(l => l.label)];
     return { cols, rows: res.rows.map(r => ({ key: r.pl.id, nb: r, cells: { [res.startLabel]: r.pl.name, ...Object.fromEntries(res.lists.map(l => [l.label, r.m[l.key].length])) } })) };
   }
+  const openGroups = new Set();
   function subRowsHTML(r, span) {
-    const ms = res.lists.flatMap(l => r.m[l.key].map(x => ({ x, l })));
-    if (!ms.length) return `<tr class="nb-sub"><td></td><td colspan="${span}" class="muted">${esc(t('nbNone'))}</td></tr>`;
-    return ms.slice(0, 200).map(({ x, l }) => `<tr class="nb-sub"><td></td><td colspan="${span}"><span class="nb-pill" style="background:${l.color}">${esc(l.label)}</span> <b>${esc(x.pl.name)}</b>
-      <span class="muted">· ${esc(x.where)}${x.d != null ? ' · ' + esc(t('nbM', { m: x.d })) : ''}</span>${x.contact ? ` <span class="nb-contact">${esc(x.contact)}</span>` : ''}</td></tr>`).join('')
-      + (ms.length > 200 ? `<tr class="nb-sub"><td></td><td colspan="${span}" class="muted">${esc(t('nbMore', { n: ms.length - 200 }))}</td></tr>` : '');
+    const id = r.pl.id;
+    const head = `<tr class="nb-sub nb-tools"><td></td><td colspan="${span}"><span class="muted">${esc(t('nbThisOne'))}</span>
+      <button type="button" class="btn small" data-nb-row-x="copy" data-nb-id="${esc(id)}">${esc(t('nbCopy'))}</button> <button type="button" class="btn small" data-nb-row-x="csv" data-nb-id="${esc(id)}">CSV</button></td></tr>`;
+    return head + res.lists.map(l => {
+      const ms = r.m[l.key], gk = id + '|' + l.key, open = openGroups.has(gk);
+      const top = `<tr class="nb-sub nb-grp-row"><td></td><td colspan="${span}"><button type="button" class="nb-grp-btn" data-nb-grp="${esc(gk)}" aria-expanded="${open}" ${ms.length ? '' : 'disabled'}>
+        <span class="nb-tri">${open ? '▾' : '▸'}</span><span class="nb-pill" style="background:${l.color}">${esc(l.label)}</span> <b>${ms.length.toLocaleString()}</b></button></td></tr>`;
+      if (!open) return top;
+      return top + ms.slice(0, 200).map(x => `<tr class="nb-sub"><td></td><td colspan="${span}" class="nb-match"><b>${esc(x.pl.name)}</b>
+        <span class="muted">· ${esc(x.where)}${x.d != null ? ' · ' + esc(t('nbM', { m: x.d })) : ''}</span>${x.contact ? ` <span class="nb-contact">${esc(x.contact)}</span>` : ''}</td></tr>`).join('')
+        + (ms.length > 200 ? `<tr class="nb-sub"><td></td><td colspan="${span}" class="muted">${esc(t('nbMore', { n: ms.length - 200 }))}</td></tr>` : '');
+    }).join('');
   }
-  return { setup, open, close, run, tableRows, subRowsHTML, focusRow, has: () => !!res, label: () => res ? t('nbTableSrc', { name: res.startLabel, n: res.rows.length }) : '', exportAs };
+  const toggleGroup = gk => openGroups.has(gk) ? openGroups.delete(gk) : openGroups.add(gk);
+  const showAreaOf = id => { const r = id && res && res.rows.find(x => x.pl.id === id); showArea(r ? r.pl : null); };
+  return { setup, open, close, run, tableRows, subRowsHTML, focusRow, toggleGroup, showAreaOf, has: () => !!res, label: () => res ? t('nbTableSrc', { name: res.startLabel, n: res.rows.length }) : '', exportAs };
 })();
 
 const SelAreas = (() => {
@@ -6387,9 +6487,10 @@ const SelAreas = (() => {
   const setId = k => k === 'parcel' ? 'parcels' : Areas.conf(k).set;
   const propsOf = n => pickSet === 'parcel' ? (() => { const o = lotStore.get(n); return o ? { address: o.l.addr, land_use: landuseName(o.l.use), zoning: o.l.code, homes: o.l.units } : {}; })() : Areas.props(pickSet, n);
   const needSet = k => k === 'parcel' ? Parcels.ready() : Areas.need(k);
+  let autoParcels = false;   // picking parcels turned the Parcels layer on
   // show the set on the map to click on: its borders, or (parcels) the Parcels layer
   const showSet = k => {
-    if (k === 'parcel') { if (overlayMode.landuse === 'off') setOverlay('landuse', ((OVERLAYS.landuse.modes || []).find(([m]) => m !== 'off') || ['landuse'])[0]); return; }
+    if (k === 'parcel') { if (overlayMode.landuse === 'off') { autoParcels = true; setOverlay('landuse', ((OVERLAYS.landuse.modes || []).find(([m]) => m !== 'off') || ['landuse'])[0]); } return; }
     setArea('admin', k); if (areaMode.adminMode === 'off') setArea('adminMode', 'borders');
   };
   // undo: the selection before each grow step
@@ -6434,6 +6535,7 @@ const SelAreas = (() => {
   }
   async function pickMode(k) {
     if (k && k !== pickSet) { if (picks.size) toast(t('pickCleared', { n: picks.size })); picks = new Set(); pickSet = k; }
+    if (k !== 'parcel' && autoParcels) { autoParcels = false; setOverlay('landuse', 'off'); }
     clicking = !!k;
     document.querySelectorAll('#pick-mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === k));
     map.getCanvas().style.cursor = '';
@@ -7289,13 +7391,33 @@ const Areas = (() => {
     // load one set (neighborhoods load only when shown or asked for)
     need: k => sets.has(k) ? load(k) : Promise.resolve(),
     loaded: k => !!(sets.get(k) && sets.get(k).polys),
-    // names of the set's areas a point (lon, lat) is in
+    // the areas touching one (sharing a border, within 8 m), for "adjacent neighborhoods"
+    neighbors(k, name) {
+      const st = sets.get(k); if (!st || !st.polys) return [];
+      st.adj ||= new Map();
+      if (st.adj.has(name)) return st.adj.get(name);
+      const bb = bboxes(st), i = st.polys.findIndex(p => p.name === name); if (i < 0) return [];
+      const TOL = 8, pad = [TOL / KX, TOL / KY], me = st.polys[i];
+      const edges = p => p.parts.flatMap(part => part.flatMap(r => r.slice(1).map((v, j) => [r[j], v])));
+      const verts = me.parts.flatMap(part => part[0]).filter((_, j) => j % 2 === 0);
+      const near = (x, y, [a, b]) => { const ax = a[0] * KX, ay = a[1] * KY, bx = b[0] * KX, by = b[1] * KY, dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
+        const u = L ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / L)) : 0; return Math.hypot(x - ax - u * dx, y - ay - u * dy) <= TOL; };
+      const out = [];
+      st.polys.forEach((p, j) => {
+        if (j === i || bb[j][0] > bb[i][2] + pad[0] || bb[j][2] < bb[i][0] - pad[0] || bb[j][1] > bb[i][3] + pad[1] || bb[j][3] < bb[i][1] - pad[1]) return;
+        const es = edges(p);
+        if (verts.some(([x, y]) => es.some(e => near(x * KX, y * KY, e)))) out.push(p.name);
+      });
+      st.adj.set(name, out);
+      return out;
+    },
     // the areas whose bounding box meets a box
     inBox(k, b) {
       const st = sets.get(k); if (!st || !st.polys) return [];
       const bb = bboxes(st);
       return st.polys.filter((p, i) => bb[i][0] <= b[2] && bb[i][2] >= b[0] && bb[i][1] <= b[3] && bb[i][3] >= b[1]).map(p => p.name);
     },
+    // names of the set's areas a point (lon, lat) is in
     areasAt(k, x, y) {
       const st = sets.get(k); if (!st || !st.polys) return [];
       const bb = bboxes(st), out = [];
