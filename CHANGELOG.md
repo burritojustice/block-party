@@ -2,6 +2,18 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v78
+
+- **Address / Places** (the Address button's new name). In this mode the first box finds more than streets:
+  - **Addresses:** "2900 24th St" goes straight to the spot: a **pin**, its **lot** in yellow, and **the street it's on** in your list (like the Address mode). If the number isn't in the city's address list, the closest numbers are offered.
+  - **Lots** by number ("4207-014B").
+  - **Businesses by name** ("taqueria"), storefronts first, with their industry. **All N as a file** adds every match as one of your files, so they're on the map, in the table, and ready for Nearby.
+  - **Industries by NAICS code or name:** "722511" or "restaurants" offers NAICS 722511 Full-Service Restaurants (1,822 businesses), 7225 and so on; picking one adds those businesses as a file.
+  - **Landmarks** (San Francisco City Hall), **schools, clinics, fire and police, city land**, and **your files' rows** by name.
+  - Streets still work: pick one and the Street number box opens as before.
+- A **place card** under the search box: the address or name, lot, land use and homes, zoning, the street it's on, businesses registered there (for a business: owner, industry, and whether it's not a storefront), and **Pick the lot**, **Nearby** and **Copy**. Clear selections and Start over clear it.
+- The address list, business names and NAICS titles come from sf-blocks' new search index (burritojustice/sf-blocks#35), loaded only when you type in Address / Places. Until that's merged the box searches streets only.
+
 ## v77
 
 - **Filter draws the angle:** hovering a magenta ring draws each street leaving the corner (the first 25 m, which is what's measured), shades the sharpest corner between two different streets and labels it in degrees, with a dashed 90° to compare. Mission & Valencia reads 30°.
