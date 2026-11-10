@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v77 -->
+<!-- build: v78 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -529,6 +529,15 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .tbl.tbl-nbmode td.tbl-num { text-align: right; max-width: 110px; }
 .nb-th i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; vertical-align: 0; }
 .tbl tr[data-nb-ll]:hover td, .nb-item[data-nb-ll]:hover { background: #FFF3C4; }
+.place-card { margin: 12px 0 0; border: 2px solid var(--ink); border-radius: 14px; padding: 10px 12px; background: #fff; font-size: 14px; box-shadow: 0 3px 0 var(--ink); }
+.place-card .pc-head { display: flex; justify-content: space-between; align-items: start; gap: 8px; font-size: 16px; }
+.place-card .pc-head::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: #FF3D7F; border: 2px solid #fff; box-shadow: 0 0 0 2px #FF3D7F; flex: none; margin-top: 5px; }
+.place-card .pc-head b { flex: 1; }
+.place-card .pc-x { border: 0; background: none; font-size: 20px; line-height: 1; cursor: pointer; color: var(--ink-soft); }
+.place-card .pc-sub { margin: 2px 0 6px; color: var(--ink-soft); font-size: 13px; }
+.place-card dl { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 3px 10px; margin: 6px 0; font-size: 13.5px; }
+.place-card dt { color: var(--ink-soft); } .place-card dd { margin: 0; overflow-wrap: anywhere; }
+.place-card .pc-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .opt-reset { display: grid; gap: 4px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #E3E6F3; justify-items: start; }
 .opt-reset small, .opt-what { font-size: 12.5px; color: var(--ink-soft); margin: 4px 0 0; line-height: 1.45; }
 .opt-what b { color: var(--ink); }
@@ -893,6 +902,7 @@ summary::marker { font-size: 1.15em; }
     </details>
   </div>
 
+  <div class="place-card" id="place-card" hidden aria-live="polite"></div>
   <section class="results" id="results" hidden aria-live="polite">
     <div class="results-head">
       <h2 id="results-title"></h2>
@@ -1191,7 +1201,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v77';
+const _BUILD_VERSION = 'v78';
 
 /* =====================================================================
    CONFIG
@@ -1257,7 +1267,14 @@ const I18N = {
     streetLabel: 'Your street',
     streetPh: 'Start typing, like Valencia or 24th',
     modeCross: 'Cross streets',
-    modeAddr: 'Address',
+    modeAddr: 'Address / Places',
+    plLabel: 'Address or place', plPh: 'An address, business, school, lot number or street', plLoading: 'Loading the address list…',
+    plAddresses: 'Addresses', plLots: 'Lot', plStreets: 'Streets', plIndustries: 'Industries (NAICS)', plBusinesses: 'Businesses ({n})', plLandmarks: 'Landmarks',
+    plLayers: 'Schools, clinics, stations, city land', plFiles: 'Your files', plPlaces: 'Places', plNear: 'closest numbers', plLot: 'lot {lot}',
+    plLotTitle: 'Lot {lot}', plLotSub: 'Show this lot', plBizN: '{n} businesses: add them as a file', plAllAsFile: 'All {n} as a file', plAllAsFileSub: 'On the map, in the table, and for Nearby',
+    plMatching: 'Businesses matching “{q}”', plAddedFile: 'Added {name} ({n}) to your files', plAtTitle: 'At {name}',
+    plOwner: 'Owner', plIndustry: 'Industry', plKind: 'Not a storefront', plLotLabel: 'Lot', plLanduse: 'Land use', plZoning: 'Zoning', plOnBlock: 'On the street',
+    plBizHere: 'Businesses here', plAddLot: 'Pick the lot', plCopy: 'Copy', plCopied: 'Copied', plClose: 'Close',
     fromLabel: 'One cross street',
     toLabel: 'The other cross street',
     crossPh: 'Type or pick from the list',
@@ -2232,7 +2249,7 @@ function combobox(root, { getOptions, onSelect, onClear, onHover, showAllOnFocus
     }
   }
   function choose(i) {
-    const o = opts[i]; if (!o) return;
+    const o = opts[i]; if (!o || o.value === '') return;
     set(o.value, o.label); close(); onSelect(o.value);
   }
   function set(value, label) {
@@ -2269,6 +2286,7 @@ function combobox(root, { getOptions, onSelect, onClear, onHover, showAllOnFocus
 
   return {
     set,
+    refresh() { if (document.activeElement === input && input.value.trim()) render(); },
     enable(on) { input.disabled = !on; root.closest('.step').classList.toggle('is-disabled', !on); },
     get value() { return chosen; },
   };
@@ -2279,10 +2297,11 @@ function setupForm() {
   streetBox = combobox($('street-combo'), {
     getOptions: q => {
       if (!q.trim()) return { items: [] };
-      const r = Logic.searchStreets(q, 60);
-      return { items: r.items.map(e => ({ value: e.name, label: e.pretty })), more: r.total > r.items.length };
+      const r = Logic.searchStreets(q, 60), streets = r.items.map(e => ({ value: e.name, label: e.pretty }));
+      if (state.mode === 'addr') return { items: Places.options(q, streets) };
+      return { items: streets, more: r.total > r.items.length };
     },
-    onSelect: name => selectStreet(name),
+    onSelect: name => { if (String(name).startsWith('place:')) { const p = Places.pick(name); if (p) Places.show(p); } else { Places.clear(); selectStreet(name); } },
     onClear: () => startOver({ keepView: true }),  // clearing the street keeps the map where it is
   });
   fromBox = combobox($('from-combo'), {
@@ -2326,7 +2345,9 @@ function setupForm() {
 
   $('mode-cross').addEventListener('click', () => setMode('cross'));
   $('mode-int').addEventListener('click', () => setMode('int'));
-  $('mode-addr').addEventListener('click', () => setMode('addr'));
+  $('mode-addr').addEventListener('click', () => { setMode('addr'); Places.warm(); });
+  Places.onLoad = () => streetBox.refresh();
+  Places.setup();
   let numTimer;
   $('num-input').addEventListener('input', e => {
     const v = e.target.value.replace(/\D/g, '');
@@ -2430,7 +2451,7 @@ function startOver({ keepView = false } = {}) {
 }
 // what both buttons clear besides the list: file rows picked onto cards, Nearby results, the How near area
 function clearPicked() {
-  try { Drops.cards.clear(); NearbyView.clear(true); Drops.showExtent(null); lastCardCnn = null; } catch (e) { }   // not there yet while the page starts
+  try { Drops.cards.clear(); NearbyView.clear(true); Drops.showExtent(null); lastCardCnn = null; Places.clear(); } catch (e) { }   // not there yet while the page starts
 }
 // Empties the block list (and the cross street / number fields) but keeps the street and the map view
 function clearSelections() {
@@ -2450,6 +2471,8 @@ function setMode(mode) {
   $('int-steps').hidden = mode !== 'int';
   $('cross-steps').hidden = mode !== 'cross';
   $('addr-steps').hidden = mode !== 'addr';
+  document.querySelector('#step-street [data-i18n="streetLabel"]').textContent = t(mode === 'addr' ? 'plLabel' : 'streetLabel');
+  $('street-input').placeholder = t(mode === 'addr' ? 'plPh' : 'streetPh');
   rerunLookup();
 }
 function selectStreet(name) {
@@ -3533,12 +3556,12 @@ let basemapLabelIds = [], satOn = false;
 //   3D           buildings, when tilted
 //   labels       all of them, the basemap's (street and place names) included, so nothing above covers a name
 const LAYER_ORDER = [
-  ['shading', id => id === 'bp-pick-fill' || id === 'bp-near-fill' || id === 'bp-pick-hover-fill' || /^bp-drop-\d+-fill$/.test(id) || /^bp-area-.*-fill$/.test(id) || /^bp-water-over-/.test(id) || ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill', 'bp-lyr-buildings-fill'].includes(id)],
+  ['shading', id => id === 'bp-place-lot-fill' || id === 'bp-pick-fill' || id === 'bp-near-fill' || id === 'bp-pick-hover-fill' || /^bp-drop-\d+-fill$/.test(id) || /^bp-area-.*-fill$/.test(id) || /^bp-water-over-/.test(id) || ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill', 'bp-lyr-buildings-fill'].includes(id)],
   ['edges', id => id === CONTOUR_LINE || ['bp-lyr-curbs', 'bp-lyr-landuse-line', 'bp-adj-lots-casing', 'bp-adj-lots', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-buildings-line'].includes(id)
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-near-line', 'bp-nb-hover', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
+  ['selection', id => ['bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
@@ -6926,6 +6949,205 @@ const NearbyView = (() => {
   return { setup, open, close, run, clear, uses, dropFile, tableRows, headHTML, hover, subRowsHTML, focusRow, toggleGroup, showAreaOf, has: () => !!res, label: () => res ? t('nbTableSrc', { name: res.startLabel, n: res.rows.length }) : '', exportAs };
 })();
 
+/* ---------- Address / Places: one box for addresses, lots, businesses (by name or NAICS), landmarks,
+   schools and the other layers, and your files ----------
+   The index is sf-blocks' data/search/ (scripts/build_search.py), loaded only when the box is used in
+   Address / Places mode: index.json, then businesses.json, landmarks.json and naics.json, and one
+   addresses/<first character>.json per street asked for. Picking an address shows a pin, its lot and the
+   block it's on (in the list, like the Address mode); a business goes to its address the same way. */
+const Places = (() => {
+  let failed = false, idx = null, idxP = null, biz = null, bizP = null, lm = null, naics = null, naicsN = null, layerPlaces = null;
+  let searchPath = 'data/search/index.json';
+  const shards = new Map(), dir = () => searchPath.replace(/[^/]*$/, '');
+  let onLoad = () => { };
+  const ll = (x, y) => [idx.x0 + x / idx.scale, idx.y0 + y / idx.scale];
+  const lower = s => String(s || '').toLowerCase();
+  // ---- loading
+  function index() {
+    return idxP ||= SFBlocks.ready.then(reg => { searchPath = reg.search || searchPath; return SFBlocks.json(searchPath); }).then(j => { idx = j; onLoad(); return j; })
+      .catch(e => { console.warn('[block-party] search index', e); failed = true; return null; });
+  }
+  function business() {
+    return bizP ||= index().then(i => i && Promise.all([SFBlocks.json(dir() + i.businesses.file), SFBlocks.json(dir() + i.landmarks.file), SFBlocks.json(dir() + i.naics.file)]))
+      .then(([b, l, n]) => {
+        biz = b.rows.map(r => ({ name: r[0], owner: r[1], address: r[2], naics: r[3], kind: r[4], x: r[5], y: r[6], key: lower(r[0] + ' ' + r[1]) }));
+        lm = l.rows.map(r => ({ name: r[0], address: r[1], x: r[2], y: r[3], lot: r[4], cnn: r[5], key: lower(r[0]) }));
+        naics = n; naicsN = new Map();
+        for (const b of biz) for (let k = 2; k <= b.naics.length; k++) { const c = b.naics.slice(0, k); naicsN.set(c, (naicsN.get(c) || 0) + 1); }
+        onLoad();
+      }).catch(e => { console.warn('[block-party] businesses index', e); bizP = null; });
+  }
+  function shard(street) {
+    if (!idx) return null;
+    const key = idx.streets[street]; if (!key) return null;
+    if (!shards.has(key)) shards.set(key, SFBlocks.json(dir() + idx.addresses.dir + key + '.json').then(j => { shards.set(key, j); onLoad(); return j; })
+      .catch(e => { console.warn('[block-party] addresses', e); shards.delete(key); }));
+    const s = shards.get(key);
+    return s && !s.then ? s[street] || [] : null;
+  }
+  async function shardAsync(street) { shard(street); const s = shards.get(idx.streets[street]); return s && s.then ? (await s)[street] || [] : (s || {})[street] || []; }
+  // the index's name for a street someone typed ("20th st", "Valencia")
+  function streetOf(text) {
+    if (!idx || !text.trim()) return null;
+    const up = text.trim().toUpperCase().replace(/\s+/g, ' ');
+    if (idx.streets[up]) return up;
+    const r = Logic.searchStreets(text, 6).items.map(e => e.name).find(n => idx.streets[n]);
+    return r || Object.keys(idx.streets).find(s => s.startsWith(up + ' ')) || null;
+  }
+  const parseAddr = q => { const m = /^\s*(\d+)\s*([A-Za-z](?=\s))?\s+(.+?)\s*(#.*)?$/.exec(q); return m ? { num: +m[1], sfx: (m[2] || '').toUpperCase(), street: m[3] } : null; };
+  // the address row (and its street) for a business's address text, if it's in the address list
+  async function addressOf(text) {
+    const a = parseAddr(String(text || '').replace(/,.*$/, '')); if (!a || !idx) return null;
+    const st = streetOf(a.street); if (!st) return null;
+    const rows = await shardAsync(st), r = rows.find(r => r[0] === a.num && (!a.sfx || r[1] === a.sfx)) || rows.find(r => r[0] === a.num);
+    return r ? { num: r[0], sfx: r[1], street: st, x: r[2], y: r[3], lot: r[4], cnn: r[5] } : null;
+  }
+  // the layers' own places (schools, clinics, fire and police, city land), searched by name
+  function layerList() {
+    if (layerPlaces) return layerPlaces;
+    layerPlaces = [];
+    for (const k of ['schools', 'health', 'stations', 'lands']) if (OVERLAYS[k] && !OVERLAYS[k].pmtiles)
+      fetchLayer(k).then(fc => { for (const f of fc.features) { const p = f.properties || {}, nm = p.name || p.facility_name || p.campus_name; if (!nm) continue;
+        const g = f.geometry, pt = g.type === 'Point' ? g.coordinates : (g.type === 'Polygon' ? g.coordinates[0] : g.coordinates[0][0]).reduce((a, c, i, arr) => [a[0] + c[0] / arr.length, a[1] + c[1] / arr.length], [0, 0]);
+        layerPlaces.push({ layer: k, name: nm, key: lower(nm), ll: pt, props: p, geom: g }); } onLoad(); }).catch(() => { });
+    return layerPlaces;
+  }
+  // ---- the dropdown
+  let picks = [];   // this render's place items, by position
+  const item = (p, label, sub, sep) => { picks.push(p); return { value: 'place:' + (picks.length - 1), label, sub, sepBefore: sep }; };
+  const words = q => lower(q).split(/\s+/).filter(Boolean);
+  const nameScore = (key, q, ws) => key.startsWith(q) ? 0 : ws.every(w => key.includes(' ' + w) || key.startsWith(w)) ? 1 : 2;
+  function options(q, streetItems) {
+    picks = [];
+    const out = [];
+    if (!idx) { if (failed) return streetItems; index(); return [...streetItems, { value: '', label: t('plLoading'), sub: '', sepBefore: t('plPlaces'), dim: true }]; }
+    business(); layerList();
+    const qt = q.trim(), ws = words(qt);
+    // an address: "3450 20th st"
+    const a = parseAddr(qt);
+    if (a) {
+      const st = streetOf(a.street), rows = st ? shard(st) : [];
+      if (rows === null) out.push({ value: '', label: t('plLoading'), dim: true, sepBefore: t('plAddresses') });
+      else if (rows.length) {
+        const exact = rows.filter(r => r[0] === a.num && (!a.sfx || r[1] === a.sfx));
+        const near = exact.length ? exact : rows.filter(r => Math.abs(r[0] - a.num) <= 20 && r[0] % 2 === a.num % 2).sort((p, q) => Math.abs(p[0] - a.num) - Math.abs(q[0] - a.num)).slice(0, 4);
+        near.slice(0, 6).forEach((r, i) => out.push(item({ kind: 'address', num: r[0], sfx: r[1], street: st, x: r[2], y: r[3], lot: r[4], cnn: r[5] },
+          `${r[0]}${r[1]} ${P(st)}`, [r[4] ? t('plLot', { lot: lotText(r[4]) }) : '', exact.length ? '' : t('plNear')].filter(Boolean).join(' · '), i ? undefined : t('plAddresses'))));
+      }
+    }
+    // a lot number: 3596-012, 3596012
+    const lot = /^\s*(\d{4}[A-Z]?)[-\s]?(\d{3}[A-Z]?)\s*$/i.exec(qt);
+    if (lot) out.push(item({ kind: 'lot', lot: (lot[1] + lot[2]).toUpperCase() }, t('plLotTitle', { lot: `${lot[1]}-${lot[2]}`.toUpperCase() }), t('plLotSub'), t('plLots')));
+    const streets = a ? [] : streetItems;
+    if (streets.length) { streets[0] = { ...streets[0], sepBefore: t('plStreets') }; out.push(...streets.slice(0, 5)); }
+    if (biz && qt.length >= 2 && !a) {
+      // NAICS: a code, or words from a NAICS title ("restaurants")
+      const codes = /^\d{2,6}$/.test(qt) ? Object.keys(naics).filter(c => c === qt || (c.startsWith(qt) && c.length === qt.length + 1)).slice(0, 4)
+        : qt.length >= 4 ? Object.keys(naics).filter(c => ws.every(w => lower(naics[c]).includes(w))).sort((x, y) => (naicsN.get(y) || 0) - (naicsN.get(x) || 0)).slice(0, 3) : [];
+      codes.filter(c => naicsN.get(c)).forEach((c, i) => out.push(item({ kind: 'naics', code: c }, `NAICS ${c} · ${naics[c]}`, t('plBizN', { n: (naicsN.get(c) || 0).toLocaleString() }), i ? undefined : t('plIndustries'))));
+      // businesses by name (storefronts first)
+      const hits = biz.filter(b => ws.every(w => b.key.includes(w)));
+      hits.sort((x, y) => (x.kind !== '') - (y.kind !== '') || nameScore(x.key, lower(qt), ws) - nameScore(y.key, lower(qt), ws) || x.name.localeCompare(y.name));
+      hits.slice(0, 6).forEach((b, i) => out.push(item({ kind: 'business', b }, b.name, [b.address, b.naics && naics[b.naics] ? naics[b.naics] : ''].filter(Boolean).join(' · '), i ? undefined : t('plBusinesses', { n: hits.length.toLocaleString() }))));
+      if (hits.length > 6) out.push(item({ kind: 'bizall', q: qt, hits }, t('plAllAsFile', { n: hits.length.toLocaleString() }), t('plAllAsFileSub')));
+      // landmarks
+      lm.filter(l => ws.every(w => l.key.includes(w))).slice(0, 3).forEach((l, i) => out.push(item({ kind: 'landmark', l }, l.name, P(l.address), i ? undefined : t('plLandmarks'))));
+    }
+    if (qt.length >= 2 && !a) {
+      (layerPlaces || []).filter(p => ws.every(w => p.key.includes(w))).slice(0, 4).forEach((p, i) => out.push(item({ kind: 'layer', p }, p.name, t('lyr_' + p.layer), i ? undefined : t('plLayers'))));
+      const mine = Drops.files().flatMap(f => Drops.items(f.id).filter(it => ws.every(w => lower(it.name).includes(w))).map(it => ({ f, it }))).slice(0, 4);
+      mine.forEach(({ f, it }, i) => out.push(item({ kind: 'file', fid: f.id, i: it.i }, it.name, Drops.fileName(f.id), i ? undefined : t('plFiles'))));
+    }
+    return out.length ? out : streetItems;
+  }
+  // lots are block (4 digits, maybe a letter) + lot (3 digits, maybe a letter): 4207014B is block 4207, lot 014B
+  const lotParts = l => /^(\d{4}[A-Z]?)(\d{3}[A-Z]?)$/.exec(String(l || '').toUpperCase());
+  const lotText = l => { const m = lotParts(l); return m ? `${m[1]}-${m[2]}` : l || ''; };
+  // ---- showing a pick
+  let shown = null;
+  function ensureLayers() {
+    if (map.getSource('place')) return;
+    map.addSource('place', { type: 'geojson', data: EMPTY });
+    map.addLayer({ id: 'bp-place-lot-fill', type: 'fill', source: 'place', filter: ['==', ['get', 'part'], 'lot'], paint: { 'fill-color': '#FFC53D', 'fill-opacity': 0.5 } });
+    map.addLayer({ id: 'bp-place-lot', type: 'line', source: 'place', filter: ['==', ['get', 'part'], 'lot'], paint: { 'line-color': '#1E2340', 'line-width': 2.5 } });
+    map.addLayer({ id: 'bp-place-pin', type: 'circle', source: 'place', filter: ['==', ['get', 'part'], 'pin'],
+      paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 7, 18, 11], 'circle-color': '#FF3D7F', 'circle-stroke-color': '#fff', 'circle-stroke-width': 3 } });
+    map.addLayer({ id: 'bp-place-pin-dot', type: 'circle', source: 'place', filter: ['==', ['get', 'part'], 'pin'], paint: { 'circle-radius': 3, 'circle-color': '#fff' } });
+    arrangeLayers();
+  }
+  function draw(pin, lotGeom) {
+    if (!mapReady) return;
+    ensureLayers();
+    const feats = [];
+    if (lotGeom) feats.push({ type: 'Feature', properties: { part: 'lot' }, geometry: lotGeom });
+    if (pin) feats.push({ type: 'Feature', properties: { part: 'pin' }, geometry: { type: 'Point', coordinates: pin } });
+    map.getSource('place').setData(fc(feats));
+  }
+  function clear() { shown = null; if (mapReady && map.getSource('place')) map.getSource('place').setData(EMPTY); const el = $('place-card'); if (el) { el.hidden = true; el.innerHTML = ''; } }
+  async function lotFacts(lot) {
+    if (!lot) return null;
+    await Areas.need('ablk');
+    const m = lotParts(lot); if (!m) return null;
+    return Parcels.findLot(lot, Areas.geom('ablk', m[1])).catch(() => null);
+  }
+  const bizAt = (num, street) => biz ? biz.filter(b => { const a = parseAddr(b.address); return a && a.num === num && streetOf(a.street) === street; }) : [];
+  async function show(p) {
+    clear();
+    let addr = null, title = '', sub = '', extra = [], pin = null, lot = null, props = null;
+    if (p.kind === 'address') { addr = p; title = `${p.num}${p.sfx} ${P(p.street)}`; }
+    else if (p.kind === 'landmark') { addr = { ...p.l, x: p.l.x, y: p.l.y }; title = p.l.name; sub = P(p.l.address); }
+    else if (p.kind === 'business') {
+      const b = p.b; title = b.name; sub = b.address; pin = ll(b.x, b.y);
+      extra = [[t('plOwner'), b.owner], [t('plIndustry'), b.naics ? `${naics[b.naics] || ''} (NAICS ${b.naics})` : ''], [t('plKind'), b.kind ? (idx.businesses.kinds || {})[b.kind] || b.kind : '']];
+      addr = await addressOf(b.address);
+    } else if (p.kind === 'layer') { title = p.p.name; sub = t('lyr_' + p.p.layer); pin = p.p.ll; props = p.p.props; }
+    else if (p.kind === 'lot') { lot = p.lot; title = t('plLotTitle', { lot: lotText(lot) }); }
+    else if (p.kind === 'file') { Drops.cards.toggle(p.fid, p.i); const c = Drops.cards.spot(p.fid, p.i); if (c && mapReady) map.easeTo({ center: c, zoom: Math.max(map.getZoom(), 17) }); return; }
+    else if (p.kind === 'naics' || p.kind === 'bizall') {
+      const rows = (p.kind === 'naics' ? biz.filter(b => b.naics.startsWith(p.code)) : p.hits);
+      const name = p.kind === 'naics' ? `NAICS ${p.code} · ${naics[p.code]}` : t('plMatching', { q: p.q });
+      const ok = Drops.addRows(name, rows.map(b => ({ name: b.name, owner: b.owner, address: b.address, naics: b.naics, industry: naics[b.naics] || '', not_storefront: b.kind ? ((idx.businesses.kinds || {})[b.kind] || b.kind) : '',
+        latitude: +ll(b.x, b.y)[1].toFixed(6), longitude: +ll(b.x, b.y)[0].toFixed(6) })));
+      if (ok) toast(t('plAddedFile', { name, n: rows.length.toLocaleString() }));
+      return;
+    }
+    if (addr) { pin = pin || ll(addr.x, addr.y); lot = lot || addr.lot; }
+    const lf = await lotFacts(lot);
+    if (!pin && lf) { const c = lf.geom.coordinates[0][0]; pin = c.reduce((a, q) => [a[0] + q[0] / c.length, a[1] + q[1] / c.length], [0, 0]); }
+    shown = { p, title, addr, lot, lf, pin };
+    draw(pin, lf && lf.geom);
+    // the block it's on goes in the list, as the Address mode does
+    const seg = addr && addr.cnn && Logic.db.byCnn.get(addr.cnn);
+    if (seg) { setResults([seg], t('plAtTitle', { name: title }), 'all'); }
+    const here = addr ? bizAt(addr.num, addr.street) : [];
+    const l = lf && lf.l;
+    const rows = [[t('plLotLabel'), lot ? lotText(lot) : ''], ...extra,
+      [t('plLanduse'), l ? [landuseName(l.use), l.units ? (l.units === 1 ? t('homes1') : t('homesN', { n: l.units })) : ''].filter(Boolean).join(' · ') : ''],
+      [t('plZoning'), l && l.zone ? `${zoneName(l.zone)}${l.code ? ` (${l.code})` : ''}` : ''],
+      [t('plOnBlock'), seg ? `${P(seg.street)}, ${P(seg.f)} – ${P(seg.t)}` : ''],
+      [t('plBizHere'), here.length ? [...new Set(here.map(b => b.name))].slice(0, 5).join(', ') + (new Set(here.map(b => b.name)).size > 5 ? ` +${new Set(here.map(b => b.name)).size - 5}` : '') : ''],
+      ...(props ? Object.entries(props).filter(([k, v]) => v !== '' && v != null && typeof v !== 'object' && !/^(name|_)/.test(k)).slice(0, 6) : [])];
+    const el = $('place-card');
+    el.innerHTML = `<div class="pc-head"><b>${esc(title)}</b><button type="button" class="pc-x" data-pc="x" aria-label="${esc(t('plClose'))}">×</button></div>${sub ? `<p class="pc-sub">${esc(sub)}</p>` : ''}
+      <dl>${rows.filter(([, v]) => v).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+      <div class="pc-btns">${lf ? `<button type="button" class="btn small" data-pc="lot">${esc(t('plAddLot'))}</button>` : ''}${pin ? `<button type="button" class="btn small" data-pc="near">${esc(t('nearbyBtn'))}</button>` : ''}<button type="button" class="btn small" data-pc="copy">${esc(t('plCopy'))}</button></div>`;
+    el.hidden = false;
+    if (mapReady && pin) map.easeTo({ center: pin, zoom: Math.max(map.getZoom(), 18), duration: reducedMotion() ? 0 : 700 });
+  }
+  function setup() {
+    $('step-street').closest('.lookup').appendChild($('place-card'));   // under the search, above the list
+    $('place-card').addEventListener('click', e => {
+      const b = e.target.closest('[data-pc]'); if (!b || !shown) return;
+      const k = b.dataset.pc;
+      if (k === 'x') clear();
+      else if (k === 'lot' && shown.lf) SelAreas.addLot(shown.lot, shown.lf);
+      else if (k === 'near') Drops.addRows(shown.title, [{ name: shown.title, address: shown.addr ? `${shown.addr.num}${shown.addr.sfx || ''} ${P(shown.addr.street)}` : '', lot: lotText(shown.lot), latitude: shown.pin[1], longitude: shown.pin[0] }]) && NearbyView.open('f' + Drops.files()[Drops.files().length - 1].id);
+      else if (k === 'copy') { const txt = [...$('place-card').querySelectorAll('dt')].map(dt => `${dt.textContent}: ${dt.nextElementSibling.textContent}`); copyText([shown.title, ...txt].join('\n'), t('plCopied')); }
+    });
+  }
+  return { options, show, clear, setup, pick: v => picks[+String(v).slice(6)], loaded: () => !!idx, warm: index, set onLoad(f) { onLoad = f; } };
+})();
+
 const SelAreas = (() => {
   let fc = null, fileName = 'areas.geojson', current = null;
   // what can be picked: a boundary set (ablk, cblk, ctract) or parcels (lots from the parcel tiles, kept in lotStore)
@@ -7485,7 +7707,13 @@ const SelAreas = (() => {
     render(); writeHash(); fitSegs(items);
     $('area-status').textContent = t('areaEditing', { name: (f.properties || {}).name || '', n: items.length });
   }
-  return { around, save, open, pick, undo, remember, forget, pickMode, onMapClick, onMapMove, hoverArea, alongStreets, reset, clearPicks, dropPick, goPick, streetsAround, previewOutline, picking: () => false,
+  // a lot from Address / Places: picked as a parcel (other kinds of picks give way)
+  async function addLot(lot, r) {
+    if (pickSet !== 'parcel') { picks = new Set(); pickSet = 'parcel'; }
+    lotStore.set(lot, { geom: r.geom, l: r.l }); picks.add(lot);
+    await needSet('parcel'); showSet('parcel'); drawPicks();
+  }
+  return { addLot, around, save, open, pick, undo, remember, forget, pickMode, onMapClick, onMapMove, hoverArea, alongStreets, reset, clearPicks, dropPick, goPick, streetsAround, previewOutline, picking: () => false,
     active: () => clicking || picks.size > 0, armed: () => clicking, cardsHTML, exportRows,
     countText: () => t(({ ablk: 'cntAblk', cblk: 'cntCblk', ctract: 'cntCtract', parcel: 'cntParcel' }[pickSet] || 'cntArea') + (picks.size === 1 ? '1' : ''), { n: picks.size }), cardClick, restore, pickHash, count: () => picks.size,
     picks: () => ({ set: pickSet, names: [...picks] }) };
