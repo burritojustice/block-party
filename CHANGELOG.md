@@ -2,6 +2,13 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v80
+
+- **Gaps in a route:** when the streets you've picked don't all touch, Block Party draws a dashed red line across each gap (the shortest hop between loose ends, up to 2 km) with its length, and the count line says so: "80 streets · 1 intersection · 1 gap (45 m)". In your Lake Merced route that's the 45 m between Sloat Blvd (11960101) and Lancaster Ln (8080000).
+- **No cross streets for long lists:** with more than 3 streets picked, cross streets stay off. Check "Cross streets" in the map key to bring them back for that list.
+- **Loading:** a spinner and "Opening 81 streets…" over the map until a long link has drawn (at most 6 seconds).
+- **A long link that includes a corner** now opens as a list ("Your selection") instead of as that intersection with 3rd St in the street box.
+
 ## v79
 
 - **Your files say where they came from** (File, Google Drive, Google Sheets link, DataSF, Link, Airtable, From search), and a file's Focus and × stay on one line.
