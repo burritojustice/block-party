@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v81 -->
+<!-- build: v82 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -450,6 +450,30 @@ td.tbl-num { text-align: right; font-variant-numeric: tabular-nums; }
 .tbl-more td { color: var(--muted, #667); font-style: italic; cursor: default; }
 .map-ui { position: absolute; top: 12px; left: 12px; right: 56px; z-index: 6; display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; pointer-events: none; }
 .map-ui > * { pointer-events: auto; }
+/* v82: phones get Settings ☰ + Nearby + full screen in one row; Settings opens the other buttons */
+.mob-only { display: none !important; }
+#full-btn { padding: 4px 10px; font-size: 17px; line-height: 1; }
+.map-ui .badge#more-badge { margin-left: 6px; }
+@media (max-width: 860px) {
+  .mob-only { display: flex !important; }
+  .map-ui > .map-toggle:not(.keep), .map-ui > #focus-wrap, .map-ui > .zoom-read { display: none; }
+  .map-ui.more-open > .map-toggle:not(.keep), .map-ui.more-open > #focus-wrap { display: flex; }
+  .map-ui.more-open { background: rgba(255,255,255,.92); border-radius: 18px; padding: 8px; margin: -8px; right: 48px; box-shadow: 0 4px 16px rgba(30,35,64,.18); }
+  /* Focus stays in sight while it's on */
+  .map-ui > #focus-wrap:has(#focus-off:not([hidden])) { display: flex; }
+  .map-ui > .map-toggle.keep { order: -1; }
+}
+/* full screen: the map takes the whole window (a class, since iPhones can't make one element full screen) */
+body.bp-full { overflow: hidden; }
+body.bp-full .map-wrap { position: fixed !important; inset: 0; height: 100vh; height: 100dvh; z-index: 60; border: 0; }
+/* Nearby on a phone: the list takes the lower half of the map area, the map the upper */
+@media (max-width: 860px) {
+  .map-wrap.nb-open { height: 88vh; height: 88dvh; }
+  .map-wrap.nb-open #map { bottom: 50%; }
+  .map-wrap.nb-open .nb-panel { position: absolute; top: 50%; bottom: 0; max-height: none; height: auto; }
+  body.bp-full .map-wrap.nb-open { height: 100dvh; }
+  .map-wrap.nb-open .legend { display: none; }
+}
 .map-toggle { display: flex; background: var(--card); border: 2px solid var(--ink); border-radius: 999px; padding: 3px; box-shadow: 0 3px 0 var(--ink); }
 .map-toggle button { border: 0; background: none; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 14px; cursor: pointer; }
 .map-toggle button[aria-pressed="true"] { background: var(--ink); color: #fff; }
@@ -800,8 +824,8 @@ summary::marker { font-size: 1.15em; }
         </button>
       </div>
       <div class="opt-panel" id="opt-panel" hidden>
-        <label class="check"><input type="checkbox" id="include-minor" checked><span data-i18n="includeMinor">Include pedestrian paths and streets the city doesn’t maintain</span></label>
-        <label class="check"><input type="checkbox" id="search-all"><span data-i18n="searchAll">Include retired, freeway, and paper streets</span></label>
+        <label class="check"><input autocomplete="off" type="checkbox" id="include-minor" checked><span data-i18n="includeMinor">Include pedestrian paths and streets the city doesn’t maintain</span></label>
+        <label class="check"><input autocomplete="off" type="checkbox" id="search-all"><span data-i18n="searchAll">Include retired, freeway, and paper streets</span></label>
         <div class="opt-reset"><button type="button" class="btn small" id="reset-map" data-i18n="resetMap">Reset the map</button><small data-i18n="resetMapHint">Layers, areas, borders, basemap, 3D, Filter and How near back to how they start. Your files and picks stay.</small></div>
         <p class="opt-what"><b data-i18n="clearSel">Clear selections</b>: <span data-i18n="clearSelTitle"></span><br><b data-i18n="startOver">Start over</b>: <span data-i18n="startOverTitle"></span></p>
       </div>
@@ -812,7 +836,10 @@ summary::marker { font-size: 1.15em; }
     <div id="map" role="region" aria-label="Map"></div>
     <div class="busy-pill" id="busy" hidden aria-live="polite"></div>
     <div class="map-loading" id="map-loading"><span class="spin" aria-hidden="true"></span><span id="map-loading-text" data-i18n="loading">Loading streets…</span></div>
-    <div class="map-ui">
+    <div class="map-ui" id="map-ui">
+      <div class="map-toggle single keep mob-only" id="more-wrap">
+        <button type="button" id="more-btn" aria-expanded="false" data-i18n-title="moreTitle" title="Map, layers, areas, Filter, Focus and Table"><span data-i18n="moreBtn">☰ Settings</span><span class="badge" id="more-badge" hidden></span></button>
+      </div>
       <div class="map-toggle" role="group" aria-label="Map style">
         <button type="button" id="bm-map" aria-pressed="true" data-i18n="bmMap">Map</button>
         <button type="button" id="bm-sat" aria-pressed="false" data-i18n="bmSat" title="Satellite">Sat</button>
@@ -833,11 +860,14 @@ summary::marker { font-size: 1.15em; }
         <button type="button" id="focus-off" class="focus-x" hidden data-i18n-title="focusOffTitle" title="Stop focusing (Esc)" aria-label="Stop focusing">✕</button>
         <div class="flavor-pop focus-pop" id="focus-pop" hidden></div>
       </div>
-      <div class="map-toggle single">
+      <div class="map-toggle single keep">
         <button type="button" id="nearby-btn" aria-pressed="false" data-i18n="nearbyBtn" title="Match one list against others: what's near each place">◎ Nearby</button>
       </div>
       <div class="map-toggle single">
         <button type="button" id="table-btn" aria-pressed="false" data-i18n="tableBtn" title="Your streets and files as a table under the map">Table</button>
+      </div>
+      <div class="map-toggle single keep">
+        <button type="button" id="full-btn" aria-pressed="false" data-i18n-title="fullTitle" title="Map full screen" aria-label="Map full screen"><span id="full-ico">⛶</span></button>
       </div>
       <div class="zoom-read" id="zoom-read" data-i18n-title="zoomRead" title="Zoom level"></div>
       <div class="map-pop" id="layers-panel" hidden>
@@ -852,16 +882,16 @@ summary::marker { font-size: 1.15em; }
       <div class="map-pop" id="quiet-panel" hidden>
         <p class="quiet-count" id="quiet-count" aria-live="polite"></p>
         <p class="quiet-group" data-i18n="quietShow">Show any of these</p>
-        <label class="qchip"><input type="checkbox" data-quiet="dead"><b data-i18n="quiet_dead">Dead ends</b><span class="n" data-quiet-n="dead"></span></label>
-        <label class="qchip"><input type="checkbox" data-quiet="ped"><b data-i18n="quiet_ped">Pedestrian streets</b><span class="n" data-quiet-n="ped"></span></label>
-        <label class="qchip"><input type="checkbox" data-quiet="unmaint"><b data-i18n="quiet_unmaint">Not maintained by the city</b><span class="n" data-quiet-n="unmaint"></span></label>
+        <label class="qchip"><input type="checkbox" autocomplete="off" data-quiet="dead"><b data-i18n="quiet_dead">Dead ends</b><span class="n" data-quiet-n="dead"></span></label>
+        <label class="qchip"><input type="checkbox" autocomplete="off" data-quiet="ped"><b data-i18n="quiet_ped">Pedestrian streets</b><span class="n" data-quiet-n="ped"></span></label>
+        <label class="qchip"><input type="checkbox" autocomplete="off" data-quiet="unmaint"><b data-i18n="quiet_unmaint">Not maintained by the city</b><span class="n" data-quiet-n="unmaint"></span></label>
         <p class="quiet-group" data-i18n="quietCorners">Intersections</p>
-        <label class="qchip"><input type="checkbox" data-quiet="tee"><span><b data-i18n="quiet_tee">T intersections</b><small data-i18n="quiet_teeHint">Only three streets meet, like an alley off a street</small></span><span class="n" data-quiet-n="tee"></span></label>
-        <label class="qchip"><input type="checkbox" data-quiet="skew"><span><b data-i18n="quiet_skew">Streets meeting at an angle</b><small id="skew-text"></small></span><span class="n" data-quiet-n="skew"></span></label>
-        <div class="skew-row"><input type="range" id="skew-angle" min="20" max="80" step="5" value="50" aria-label="Corners sharper than"><span id="skew-val"></span></div>
+        <label class="qchip"><input type="checkbox" autocomplete="off" data-quiet="tee"><span><b data-i18n="quiet_tee">T intersections</b><small data-i18n="quiet_teeHint">Only three streets meet, like an alley off a street</small></span><span class="n" data-quiet-n="tee"></span></label>
+        <label class="qchip"><input type="checkbox" autocomplete="off" data-quiet="skew"><span><b data-i18n="quiet_skew">Streets meeting at an angle</b><small id="skew-text"></small></span><span class="n" data-quiet-n="skew"></span></label>
+        <div class="skew-row"><input type="range" id="skew-angle" autocomplete="off" min="20" max="80" step="5" value="50" aria-label="Corners sharper than"><span id="skew-val"></span></div>
         <p class="quiet-group" data-i18n="quietNarrow">Narrow them down</p>
-        <label class="qchip"><input type="checkbox" data-quiet="res"><span><b data-i18n="quiet_res">Residential streets only</b><small data-i18n="quiet_resHint">Leaves out collectors, arterials, and bigger</small></span></label>
-        <label class="qchip" id="qchip-flat"><input type="checkbox" data-quiet="flat"><b data-i18n="quiet_flat">Flat to moderate (under 10%)</b></label>
+        <label class="qchip"><input type="checkbox" autocomplete="off" data-quiet="res"><span><b data-i18n="quiet_res">Residential streets only</b><small data-i18n="quiet_resHint">Leaves out collectors, arterials, and bigger</small></span></label>
+        <label class="qchip" id="qchip-flat"><input type="checkbox" autocomplete="off" data-quiet="flat"><b data-i18n="quiet_flat">Flat to moderate (under 10%)</b></label>
         <div class="quiet-foot"><span data-i18n="quietHint">Matches show in magenta. Tap one to add it to your list.</span>
           <button type="button" class="btn small" id="quiet-clear" data-i18n="quietClear">Clear</button></div>
       </div>
@@ -873,8 +903,8 @@ summary::marker { font-size: 1.15em; }
       <div class="tbl-head">
         <select id="tbl-src" aria-label="Which rows"></select>
         <span class="tbl-count" id="tbl-count"></span>
-        <input type="search" id="tbl-search" data-i18n-placeholder="tableSearch" placeholder="Search rows" spellcheck="false">
-        <label class="tbl-all"><input type="checkbox" id="tbl-allcols"> <span data-i18n="tableAllCols">All columns</span></label>
+        <input autocomplete="off" type="search" id="tbl-search" data-i18n-placeholder="tableSearch" placeholder="Search rows" spellcheck="false">
+        <label class="tbl-all"><input autocomplete="off" type="checkbox" id="tbl-allcols"> <span data-i18n="tableAllCols">All columns</span></label>
         <span class="tbl-nb" id="tbl-nb" hidden><select id="tbl-nb-how" aria-label="How near"></select>
           <button type="button" class="btn small" data-nb-x="copy" data-i18n="nbCopy">Copy</button><button type="button" class="btn small" data-nb-x="csv">CSV</button>
           <button type="button" class="btn small" data-nb-x="json">JSON</button><button type="button" class="btn small" data-nb-x="geojson" data-i18n="nbGeojson">GeoJSON view</button><button type="button" class="btn small nb-clear" data-nb-clear data-i18n="nbClear">Clear</button></span>
@@ -888,13 +918,13 @@ summary::marker { font-size: 1.15em; }
         <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#FFC53D" stroke-width="10" stroke-linecap="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="#FF3D7F" stroke-width="5" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="7.5" fill="#FFC53D"/><circle cx="8" cy="8" r="4.5" fill="#FF3D7F"/><circle cx="8" cy="8" r="1.8" fill="#fff"/></svg></span><span data-i18n="lgChecked">Your blocks / intersections</span></li>
         <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#6D4AF5" stroke-width="4" stroke-dasharray="6 4"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="6" fill="#fff" stroke="#6D4AF5" stroke-width="2" stroke-dasharray="3 2.5"/><circle cx="8" cy="8" r="2" fill="#6D4AF5"/></svg></span><span data-i18n="lgUnchecked">Matches</span></li>
         <li><span class="sw lg-halo"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#fff" stroke-width="10" stroke-linecap="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="#6D4AF5" stroke-width="5" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="7" fill="#fff"/><circle cx="8" cy="8" r="5" fill="#6D4AF5"/></svg></span><span data-i18n="lgPreview">Preview</span></li>
-        <li><label class="lg-toggle" data-i18n-title="lgCrossTitle" title="Show cross streets after you choose a block"><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#0EA5C6" stroke-width="4"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgCross">Cross streets</span><input type="checkbox" id="lg-cross" checked></label></li>
+        <li><label class="lg-toggle" data-i18n-title="lgCrossTitle" title="Show cross streets after you choose a block"><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#0EA5C6" stroke-width="4"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgCross">Cross streets</span><input autocomplete="off" type="checkbox" id="lg-cross" checked></label></li>
         <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#6D4AF5" stroke-opacity=".55" stroke-width="5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgStreet">Your whole street</span></li>
         <li><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="4" fill="#fff" stroke="#1E2340" stroke-width="2"/></svg></span><span data-i18n="lgEnds">Corners</span></li>
         <li><span class="sw"><svg viewBox="0 0 24 12"><line class="lg-other" x1="3" y1="6" x2="21" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOther">Other streets</span></li>
         <li id="lg-quiet" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#B5179E" stroke-width="6" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgQuiet">Quiet street matches</span></li>
         <li id="lg-oneway" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/><path d="M15 6 l-6 -4 v8z" fill="#545B7F"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOneway">One-way</span></li>
-        <li id="lg-lyr-muni" hidden><label class="lg-toggle" data-i18n-title="lgMuniNumsTitle" title="Show the route numbers on the map (there are a lot downtown)"><span class="sw"><svg viewBox="0 0 24 12"><line x1="2" y1="6" x2="22" y2="6" stroke="#D9480F" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/><line x1="2" y1="6" x2="22" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span><span data-i18n="lgMuni">Muni routes</span>, <svg class="lg-shield" viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="1" width="16" height="10" rx="3" fill="#D9480F"/><text x="8" y="9" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg> <span data-i18n="lgMuniNums">numbers</span></span><input type="checkbox" id="lg-muni-nums-check" checked></label></li>
+        <li id="lg-lyr-muni" hidden><label class="lg-toggle" data-i18n-title="lgMuniNumsTitle" title="Show the route numbers on the map (there are a lot downtown)"><span class="sw"><svg viewBox="0 0 24 12"><line x1="2" y1="6" x2="22" y2="6" stroke="#D9480F" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/><line x1="2" y1="6" x2="22" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span><span data-i18n="lgMuni">Muni routes</span>, <svg class="lg-shield" viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="1" width="16" height="10" rx="3" fill="#D9480F"/><text x="8" y="9" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg> <span data-i18n="lgMuniNums">numbers</span></span><input autocomplete="off" type="checkbox" id="lg-muni-nums-check" checked></label></li>
         <li id="lg-lyr-bike" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3" x2="23" y2="3" stroke="#1A7F37" stroke-width="3"/><line x1="1" y1="9.5" x2="23" y2="9.5" stroke="#1A7F37" stroke-width="1.6" stroke-dasharray="3 2.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBike">Bike lanes (dashed: shared routes)</span></li>
         <li id="lg-lyr-landuse" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12"><rect width="6" height="12" fill="#E9C845" fill-opacity=".6"/><rect x="6" width="6" height="12" fill="#F0A04B" fill-opacity=".6"/><rect x="12" width="6" height="12" fill="#9C6FB6" fill-opacity=".6"/><rect x="18" width="6" height="12" fill="#4C9A3F" fill-opacity=".6"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span id="lg-landuse-title">Land use (2023)</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-landuse-table"></table></details></li>
         <li id="lg-lyr-lands" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12" id="lg-lands-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLands">City-owned land</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-lands-table"></table></details></li>
@@ -919,7 +949,7 @@ summary::marker { font-size: 1.15em; }
       <h2 id="results-title"></h2>
     </div>
     <p class="results-sub" id="results-sub"></p>
-    <label class="route-wrap" id="route-wrap" hidden data-i18n-title="routeTitle" title=""><input type="checkbox" id="route-on"> <span data-i18n="routeOn">This is a route</span><small data-i18n="routeHint">shows its length and any gaps under 150 m</small></label>
+    <label class="route-wrap" id="route-wrap" hidden data-i18n-title="routeTitle" title=""><input autocomplete="off" type="checkbox" id="route-on"> <span data-i18n="routeOn">This is a route</span><small data-i18n="routeHint">shows its length and any gaps under 150 m</small></label>
     <div class="actions">
       <button type="button" class="btn primary apply" id="apply" data-i18n="apply">Apply for a Block Party</button>
       <details class="sel-panel save-panel" id="save-panel">
@@ -930,12 +960,12 @@ summary::marker { font-size: 1.15em; }
           <button type="button" class="btn small" id="copy-link" data-i18n="copyLinkShort" title="Copy link">Link</button></div>
         <div class="sel-row"><span class="sel-step" data-i18n="dlStep">Save</span>
           <span class="dl-what" id="dl-what" role="group" aria-label="What to download">
-            <label><input type="checkbox" value="blocks" checked> <span data-i18n="dlBlocks">Streets and intersections</span></label>
-            <label><input type="checkbox" value="picked" checked> <span data-i18n="dlPicked">Blocks</span></label>
-            <label><input type="checkbox" value="parcels"> <span data-i18n="dlParcelsS">Parcels</span></label>
-            <label><input type="checkbox" value="businesses"> <span data-i18n="dlBusinessesS">Businesses</span></label>
-            <label><input type="checkbox" value="cblocks"> <span data-i18n="dlCblocksS">Census blocks</span></label>
-            <label><input type="checkbox" value="ablocks"> <span data-i18n="dlAblocksS">Assessor blocks along the streets</span></label>
+            <label><input autocomplete="off" type="checkbox" value="blocks" checked> <span data-i18n="dlBlocks">Streets and intersections</span></label>
+            <label><input autocomplete="off" type="checkbox" value="picked" checked> <span data-i18n="dlPicked">Blocks</span></label>
+            <label><input autocomplete="off" type="checkbox" value="parcels"> <span data-i18n="dlParcelsS">Parcels</span></label>
+            <label><input autocomplete="off" type="checkbox" value="businesses"> <span data-i18n="dlBusinessesS">Businesses</span></label>
+            <label><input autocomplete="off" type="checkbox" value="cblocks"> <span data-i18n="dlCblocksS">Census blocks</span></label>
+            <label><input autocomplete="off" type="checkbox" value="ablocks"> <span data-i18n="dlAblocksS">Assessor blocks along the streets</span></label>
           </span></div>
         <div class="sel-row"><span class="sel-step"></span>
           <button type="button" class="btn small" id="dl-csv">CSV</button>
@@ -964,7 +994,7 @@ summary::marker { font-size: 1.15em; }
           <button type="button" class="btn small" id="add-cross" data-i18n="crossBtn" title="Add the first block of every street that crosses these">＋ Cross streets</button>
           <button type="button" class="btn small" id="add-around" data-i18n="aroundBtn" title="Add every street around the assessor blocks these face">＋ Around the blocks</button>
           <button type="button" class="btn small" id="sel-undo" data-i18n="selUndo" disabled>↶ Undo</button></div>
-        <label class="sel-check"><input type="checkbox" id="sel-ablk"> <span data-i18n="selShowAblk">Show the assessor blocks along these streets</span></label>
+        <label class="sel-check"><input autocomplete="off" type="checkbox" id="sel-ablk"> <span data-i18n="selShowAblk">Show the assessor blocks along these streets</span></label>
         <p class="sel-hint" data-i18n="selTrim">Trim: click a street on the map to take it out (or uncheck its card).</p>
         <div class="sel-row" id="outline-row" hidden><span class="sel-step" data-i18n="selOutline">Outline</span>
           <select id="outline-how" aria-label="Outline">
@@ -973,10 +1003,10 @@ summary::marker { font-size: 1.15em; }
             <option value="blocks" data-i18n="outlineBlocks">The blocks as they are</option>
           </select></div>
         <div class="sel-row"><span class="sel-step" data-i18n="selSave">Save</span>
-          <input type="text" id="area-name" class="area-name" data-i18n-placeholder="areaNamePh" placeholder="Name, like Fillmore Street">
+          <input autocomplete="off" type="text" id="area-name" class="area-name" data-i18n-placeholder="areaNamePh" placeholder="Name, like Fillmore Street">
           <button type="button" class="btn small" id="area-save" data-i18n="areaSave">Save area</button></div>
         <div class="sel-row"><span class="sel-step" data-i18n="selEdit">Edit</span>
-          <label class="btn small"><input type="file" accept=".geojson,.json" hidden id="area-open"><span data-i18n="areaOpen">Open an areas file…</span></label>
+          <label class="btn small"><input autocomplete="off" type="file" accept=".geojson,.json" hidden id="area-open"><span data-i18n="areaOpen">Open an areas file…</span></label>
           <select id="area-pick" class="dl-what" hidden></select></div>
         <p class="sel-hint" id="area-status"></p>
       </details>
@@ -1213,7 +1243,9 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v81';
+const _BUILD_VERSION = 'v82';
+// a phone-sized screen: flat map, census on request, and one Settings menu on the map
+const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
 /* =====================================================================
    CONFIG
@@ -1448,6 +1480,8 @@ const I18N = {
     dlLabel: 'Download:', dlBlocks: 'Streets and intersections', dlBlocksOld: 'Streets', dlAll: 'All of these', dlBusinessesS: 'Businesses', dlParcelsS: 'Parcels', dlCblocksS: 'Census blocks', dlAblocksS: 'Assessor blocks along the streets',
     dlPick: 'Check what to download first', dlBusinesses: 'Businesses along them', dlParcels: 'Parcels along them', dlCblocks: 'Census blocks along them',
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
+    moreBtn: '☰ Settings', moreTitle: 'Map, layers, areas, Filter, Focus and Table', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
+    censusLoad: 'Count people and homes',
     tableBtn: 'Table', tableGrip: 'Drag to resize', tableSearch: 'Search rows', tableAllCols: 'All columns', tableClose: 'Close the table',
     tableStreets: 'Your streets and intersections ({n})', tableFile: '{name} ({n})', tableCount: '{n} rows', tableCountOf: '{n} of {total} rows',
     tableSort: 'Sort by this column (click again to reverse)', tableCheckAll: 'Check all', tableCheck: 'Check', tableCard: 'Card',
@@ -2642,6 +2676,35 @@ function drawGaps(gaps) {
   map.getSource('gaps').setData(fc(gaps.map(g => ({ type: 'Feature', properties: { m: g.m, label: `${g.m} m` },
     geometry: { type: 'LineString', coordinates: [g.from.p, g.to.p] } }))));
 }
+// Reads the parcel and map tiles for cards as they come near the screen (and the first few right away),
+// then redraws once per batch. A long route no longer reads every card's tiles before you scroll to it.
+const CardFacts = (() => {
+  const FIRST = 4, seen = new Set();
+  let obs = null, queue = new Set(), timer = 0;
+  const need = s => !Tiles.peek(s) || (Parcels.available() && !Parcels.peek(s));
+  function flush() {
+    timer = 0;
+    const segs = state.results.filter(s => queue.has(s.cnn) && need(s)); queue.clear();
+    if (!segs.length) return;
+    const ps = segs.flatMap(s => [...(Parcels.available() && !Parcels.peek(s) ? [Busy.track('parcels', s.cnn, Parcels.fetch(s))] : []),
+      ...(!Tiles.peek(s) ? [Busy.track('tiles', s.cnn, Tiles.fetch(s))] : [])]);
+    // ones that came back empty (tiles not ready yet) are asked for again on the next redraw
+    Promise.all(ps).then(rs => { segs.forEach(s => { if (need(s)) seen.delete(s.cnn); }); if (rs.some(Boolean)) render(); });
+  }
+  const want = cnn => { if (seen.has(cnn)) return; seen.add(cnn); queue.add(cnn); if (!timer) timer = setTimeout(flush, 60); };
+  return {
+    watch(segs) {
+      if (!obs && 'IntersectionObserver' in window)
+        obs = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) want(+e.target.dataset.cnn); }), { rootMargin: '300px 0px' });
+      // streets taken off the list can be read again if they come back
+      const live = new Set(state.results.map(o => o.cnn)); for (const c of [...seen]) if (!live.has(c)) seen.delete(c);
+      segs.slice(0, FIRST).forEach(s => { if (need(s)) want(s.cnn); });
+      if (!obs) { segs.forEach(s => { if (need(s)) want(s.cnn); }); return; }
+      obs.disconnect();
+      document.querySelectorAll('#seg-list > li.seg[data-cnn]').forEach(li => { const s = state.results.find(o => o.cnn === +li.dataset.cnn); if (s && need(s)) obs.observe(li); });
+    },
+  };
+})();
 function render() {
   updateCross();
   Areas.updateShade();
@@ -2693,11 +2756,8 @@ function render() {
   if (segs.length && !Nearby.ready) Nearby.ensure().then(() => { if (Nearby.ready) render(); });
   if (segs.length && !Groups.ready) Groups.ensure().then(() => { if (Groups.ready) render(); });
   if (segs.length && !Areas.ready) Busy.track('areas', 'all', Areas.ensure()).then(() => { if (Areas.ready) render(); });
-  // land use per block: read the parcel tiles for any card that doesn't have it yet, then redraw once
-  const needParcels = segs.filter(s => !Parcels.peek(s));
-  if (needParcels.length && Parcels.available()) Promise.all(needParcels.map(s => Busy.track('parcels', s.cnn, Parcels.fetch(s)))).then(rs => { if (rs.some(Boolean)) render(); });
-  const needTiles = segs.filter(s => !Tiles.peek(s));
-  if (needTiles.length) Promise.all(needTiles.map(s => Busy.track('tiles', s.cnn, Tiles.fetch(s)))).then(rs => { if (rs.some(Boolean)) render(); });
+  // land use, trees and businesses per card: read once a card scrolls near the screen, so the streets show first
+  CardFacts.watch(segs);
   updateAdjLots();
   const d = Logic.db && Logic.db.dataAsOf;
   $('foot-note').textContent = d ? t('dataNote', { date: d.slice(0, 10) }) : '';
@@ -3169,9 +3229,8 @@ function readHash() {
 function applyHash() {
   const h = readHash();
   if (h.lang && I18N[h.lang]) { LANG = h.lang; applyI18n(); }
-  if (h.quiet.length) {
-    document.querySelectorAll('[data-quiet]').forEach(i => i.checked = h.quiet.includes(i.dataset.quiet));
-  }
+  // always from the link, so a reload never brings back boxes the browser remembered (or put on the wrong ones)
+  document.querySelectorAll('[data-quiet]').forEach(i => i.checked = h.quiet.includes(i.dataset.quiet));
   for (const [k, v] of Object.entries(h.layers)) setOverlay(k, v, false);
   for (const k of AREA_GROUP_KEYS) if (h.areas[k]) setArea(k, h.areas[k], false);
   for (const [k, v] of Object.entries(h.areas)) if (!AREA_GROUP_KEYS.includes(k)) setArea(k, v, false);
@@ -3887,7 +3946,7 @@ async function setFlavor(v) {
   document.documentElement.dataset.flavor = v;
 }
 const FLAT_KEY = 'bp-flat';
-let flatMap = (() => { try { return localStorage.getItem(FLAT_KEY) === '1'; } catch (e) { return false; } })();
+let flatMap = (() => { try { const v = localStorage.getItem(FLAT_KEY); return v == null ? PHONE : v === '1'; } catch (e) { return PHONE; } })();
 function applyTerrain() {
   if (!map || !map.getSource('dem-terrain')) return;
   if (flatMap) { if (map.getPitch() > 0) map.jumpTo({ pitch: 0 }); map.setMaxPitch(0); } else map.setMaxPitch(60);
@@ -7018,9 +7077,11 @@ const NearbyView = (() => {
     const p = $('nb-panel'); if (startKey) start = startKey;
     const nt = $('next-toast'); if (nt) nt.hidden = true;
     p.innerHTML = panelHTML(); p.hidden = false; $('nearby-btn').setAttribute('aria-pressed', 'true');
+    p.closest('.map-wrap').classList.add('nb-open'); requestAnimationFrame(() => map && map.resize());
     if (res) showOut();
   }
-  function close() { $('nb-panel').hidden = true; $('nearby-btn').setAttribute('aria-pressed', 'false'); showArea(null); }
+  function close() { $('nb-panel').hidden = true; $('nearby-btn').setAttribute('aria-pressed', 'false'); showArea(null);
+    $('nb-panel').closest('.map-wrap').classList.remove('nb-open'); requestAnimationFrame(() => map && map.resize()); }
   // ---- exports
   const flat = props => Object.fromEntries(Object.entries(props || {}).filter(([k, v]) => !k.startsWith('_') && (v == null || typeof v !== 'object')));
   function csvRows(only) {
@@ -8097,8 +8158,9 @@ const AREA_SETS = [
     label: 'Neighborhood', title: 'Neighborhoods', color: '#0E7490', width: 1.8, chip: n => n, col: 'nh_' + hs })),
   // administrative: census geography, for population. Off at first; Borders or Density (colored by people
   // per square mile, the set's `choropleth` field in sf-blocks).
-  { k: 'cblk', set: 'census_blocks', kind: 'admin', label: 'Blocks', title: 'Census blocks', color: '#5B6478', width: 1, col: 'census_block' },
-  { k: 'ctract', set: 'census_tracts', kind: 'admin', label: 'Tracts', title: 'Census tracts', color: '#5B6478', width: 1.6, col: 'census_tract' },
+  // (on phones these load only when asked for: they're the biggest files a card uses)
+  { k: 'cblk', set: 'census_blocks', kind: 'admin', label: 'Blocks', title: 'Census blocks', color: '#5B6478', width: 1, col: 'census_block', onDemand: PHONE },
+  { k: 'ctract', set: 'census_tracts', kind: 'admin', label: 'Tracts', title: 'Census tracts', color: '#5B6478', width: 1.6, col: 'census_tract', onDemand: PHONE },
   // the city's assessor blocks (lots joined by block number, in sf-blocks); no population, so no Density
   { k: 'ablk', set: 'assessor_blocks', kind: 'admin', label: 'Assessor', title: 'Assessor blocks', color: '#5B6478', width: 1.2, col: 'assessor_block', noDensity: true, onDemand: true },
 ];
@@ -8578,8 +8640,14 @@ const Areas = (() => {
 // "About 120 people and 60 homes" (rounded: to 5 under 100, to 10 above)
 const roundEst = n => n < 10 ? Math.round(n) : n < 100 ? Math.round(n / 5) * 5 : Math.round(n / 10) * 10;
 const censusText = e => t('censusEst', { people: roundEst(e.people).toLocaleString(), homes: roundEst(e.homes).toLocaleString() });
+let censusAsked = false;
+function loadCensus() { if (censusAsked) return; censusAsked = true; render(); Busy.track('areas', 'cblk', Areas.need('cblk')).then(() => render()); }
+document.addEventListener('click', e => { if (e.target.closest('[data-census-load]')) { e.stopPropagation(); e.preventDefault(); loadCensus(); } }, true);
 function censusFacts(s) {
   if (!Areas.has('cblk')) return '';
+  if (!Areas.loaded('cblk')) return Areas.conf('cblk').onDemand
+    ? `<dt>${esc(t('censusRow'))}</dt><dd>${censusAsked ? `<span class="wait-inline">${esc(t('checking'))}</span>` : `<button type="button" class="btn small" data-census-load>${esc(t('censusLoad'))}</button>`}</dd>`
+    : `<dt>${esc(t('censusRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
   const e = Areas.census(s);
   if (!e) return Areas.ready ? '' : `<dt>${esc(t('censusRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
   const c = Areas.corners(s);
@@ -8973,8 +9041,28 @@ function setupMapMenus() {
     const open = $(p).hidden; close(b);
     $(p).hidden = !open; $(b).setAttribute('aria-expanded', open);
   });
-  document.addEventListener('click', e => { if (!e.target.closest('.map-ui')) close(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  document.addEventListener('click', e => { if (!e.target.closest('.map-ui')) { close(); setMore(false); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { close(); setMore(false); } });
+  // phones: ☰ Settings shows the other buttons; picking a menu (or Table) folds them back so its panel has room
+  const ui = $('map-ui');
+  function setMore(on) { ui.classList.toggle('more-open', on); $('more-btn').setAttribute('aria-expanded', on); }
+  $('more-btn').addEventListener('click', () => { close(); setMore(!ui.classList.contains('more-open')); });
+  ui.addEventListener('click', e => {
+    if (!PHONE || !ui.classList.contains('more-open')) return;
+    if (e.target.closest('#layers-btn, #areas-btn, #quiet-btn, #focus-btn, #table-btn')) setTimeout(() => setMore(false));
+  });
+  // the badge on Settings: how many Filter boxes are on
+  const syncMoreBadge = () => { const n = quietOn().length, b = $('more-badge'); b.hidden = !n; b.textContent = n; };
+  $('quiet-panel').addEventListener('change', syncMoreBadge); document.addEventListener('bp-rendered', syncMoreBadge);
+  // full screen: the map over the whole window; Esc or the button again leaves
+  const full = on => {
+    document.body.classList.toggle('bp-full', on);
+    $('full-btn').setAttribute('aria-pressed', on); $('full-ico').textContent = on ? '✕' : '⛶';
+    { const fb = $('full-btn'), tt = t(on ? 'fullOff' : 'fullTitle'); fb.title = tt; fb.setAttribute('aria-label', tt); }
+    requestAnimationFrame(() => map && map.resize());
+  };
+  $('full-btn').addEventListener('click', () => full(!document.body.classList.contains('bp-full')));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('bp-full') && !document.querySelector('dialog[open]')) full(false); });
   setLandCats([...landCats], false);     // draws the map-key swatch
 }
 

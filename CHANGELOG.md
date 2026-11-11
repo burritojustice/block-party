@@ -2,6 +2,17 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v82
+
+- **Filters no longer turn themselves on after a reload.** The browser was restoring checkboxes from before the reload, sometimes onto the wrong ones. Now Filter only follows the link.
+- **One row of buttons on phones:** **☰ Settings**, **◎ Nearby** and full screen. Settings opens the rest (Map / Sat / 3D, Layers, Areas, Filter, Focus, Table); picking one folds them away again so its panel has room. A small badge on Settings counts the Filters that are on, and Focus stays in sight while it's on.
+- **Full-screen map** (⛶, phones and computers): the map fills the window. Tap ✕ or press Esc to leave.
+- **Nearby shares the screen on phones:** the map gets the top half and the list the bottom half, so you can see what it found. Before, the list covered the map.
+- **Streets first, facts as you scroll:** the streets show on the map and as cards right away. Lots, businesses and trees are read for the first few cards and then for each card as it comes on screen, so a long route doesn't read 80 cards' worth of tiles at once.
+- **Lighter on phones** (to stop the page reloading itself):
+  - The map starts flat; 3D is still a tap away and remembered once you choose it.
+  - Census blocks and tracts load only when asked for: a card shows **Count people and homes**, and picking census blocks or Density in Areas loads them too.
+
 ## v81
 
 - **Routes vs. sets of streets:** a **This is a route** checkbox under the list's title. Off (the default), the streets are just a set: no gaps, no length. On, Block Party adds up the length ("9.03 km") and shows gaps, and the page link carries `route=1` so whoever opens it sees it as a route. Start over turns it off.
