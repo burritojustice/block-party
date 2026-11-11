@@ -2,6 +2,12 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v81
+
+- **Routes vs. sets of streets:** a **This is a route** checkbox under the list's title. Off (the default), the streets are just a set: no gaps, no length. On, Block Party adds up the length ("9.03 km") and shows gaps, and the page link carries `route=1` so whoever opens it sees it as a route. Start over turns it off.
+- **Gaps only up to 150 m** (was 2 km), and only for routes.
+- **Loading says what it's doing:** loading the city's streets, drawing the map, reading districts and layers, opening the streets in the link. After that, a small pill over the map says what the cards are still reading ("Reading lots 12 / 81 · businesses and trees 30 / 81 · census blocks") and goes away when they're done.
+
 ## v80
 
 - **Gaps in a route:** when the streets you've picked don't all touch, Block Party draws a dashed red line across each gap (the shortest hop between loose ends, up to 2 km) with its length, and the count line says so: "80 streets · 1 intersection · 1 gap (45 m)". In your Lake Merced route that's the 45 m between Sloat Blvd (11960101) and Lancaster Ln (8080000).
