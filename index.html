@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v80 -->
+<!-- build: v81 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -692,6 +692,10 @@ summary::marker { font-size: 1.15em; }
 .map-loading { position: absolute; inset: 0; display: flex; gap: 10px; align-items: center; justify-content: center; font-weight: 600; color: var(--ink); z-index: 4; pointer-events: none; background: rgba(255,255,255,.55); }
 .map-loading .spin { width: 22px; height: 22px; border-radius: 50%; border: 3px solid rgba(30,35,64,.2); border-top-color: var(--ink); animation: bp-spin .8s linear infinite; }
 @keyframes bp-spin { to { transform: rotate(360deg); } }
+.busy-pill { position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); z-index: 5; background: var(--ink); color: #fff; font: 600 12.5px Figtree, sans-serif; padding: 6px 12px 6px 30px; border-radius: 999px; pointer-events: none; white-space: nowrap; max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis; }
+.busy-pill::before { content: ''; position: absolute; left: 10px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; animation: bp-spin .8s linear infinite; }
+.route-wrap { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: -2px 0 10px; font-weight: 700; font-size: 14px; cursor: pointer; }
+.route-wrap small { font-weight: 500; color: var(--ink-soft); font-size: 12.5px; }
 @media (prefers-reduced-motion: reduce) { .map-loading .spin { animation-duration: 2.4s; } }
 /* hover popups only (no links): the pointer passes through, so a popup that opens under it doesn't count as leaving the map */
 .maplibregl-popup, .maplibregl-popup .maplibregl-popup-content { pointer-events: none; }
@@ -806,6 +810,7 @@ summary::marker { font-size: 1.15em; }
 
   <div class="map-wrap">
     <div id="map" role="region" aria-label="Map"></div>
+    <div class="busy-pill" id="busy" hidden aria-live="polite"></div>
     <div class="map-loading" id="map-loading"><span class="spin" aria-hidden="true"></span><span id="map-loading-text" data-i18n="loading">Loading streets…</span></div>
     <div class="map-ui">
       <div class="map-toggle" role="group" aria-label="Map style">
@@ -914,6 +919,7 @@ summary::marker { font-size: 1.15em; }
       <h2 id="results-title"></h2>
     </div>
     <p class="results-sub" id="results-sub"></p>
+    <label class="route-wrap" id="route-wrap" hidden data-i18n-title="routeTitle" title=""><input type="checkbox" id="route-on"> <span data-i18n="routeOn">This is a route</span><small data-i18n="routeHint">shows its length and any gaps under 150 m</small></label>
     <div class="actions">
       <button type="button" class="btn primary apply" id="apply" data-i18n="apply">Apply for a Block Party</button>
       <details class="sel-panel save-panel" id="save-panel">
@@ -1207,7 +1213,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v80';
+const _BUILD_VERSION = 'v81';
 
 /* =====================================================================
    CONFIG
@@ -1294,7 +1300,9 @@ const I18N = {
     copyCsvShort: 'CSV', copyJsonShort: 'JSON', copyLinkShort: 'Link',
     lgContours: '{n} ft contours',
     clearSel: 'Clear selections',
-    loading: 'Loading streets…', loadingN: 'Opening {n} streets…',
+    loading: 'Loading streets…', loadingN: 'Opening {n} streets…', loadingStreets: 'Loading the city’s streets (about 0.8 MB)…', loadingMap: 'Drawing the map…', loadingAreas: 'Reading districts and layers…',
+    busyReading: 'Reading {what}', busy_parcels: 'lots {n} / {total}', busy_tiles: 'businesses and trees {n} / {total}', busyAreas: 'census blocks',
+    routeOn: 'This is a route', routeHint: 'shows its length and any gaps under 150 m', routeTitle: 'A route is streets you mean to travel in one go: Block Party adds up its length and shows where it doesn’t connect. Leave it off for a set of streets you’re looking at.', routeKm: '{km} km',
     gaps1: '1 gap ({list}), shown dashed red', gapsN: '{n} gaps ({list}), shown dashed red',
     loadFailed: 'Street data couldn’t load from sf-blocks or the copy here. Reload to try again.',
     bmMap: 'Map', bmSat: 'Sat',
@@ -2356,6 +2364,7 @@ function setupForm() {
   $('mode-cross').addEventListener('click', () => setMode('cross'));
   $('mode-int').addEventListener('click', () => setMode('int'));
   $('mode-addr').addEventListener('click', () => { setMode('addr'); Places.warm(); });
+  $('route-on').addEventListener('change', e => { state.route = e.target.checked; render(); writeHash(); });
   Places.onLoad = () => streetBox.refresh();
   Places.setup();
   let numTimer;
@@ -2456,6 +2465,7 @@ function startOver({ keepView = false } = {}) {
   fromBox.enable(false); toBox.enable(false); intBox.enable(false); enableNum(false);
   try { SelAreas.reset(); } catch (e) { }   // not there yet while the page starts
   clearPicked();
+  state.route = false;
   try { Focus.set(null); clearQuiet(); } catch (e) { }
   render(); writeHash();
   if (!keepView) resetView();
@@ -2575,12 +2585,32 @@ function updateCross() {
   map.setPaintProperty('bp-context', 'line-opacity', on ? 1 : 0);
   for (const id of ['bp-context-label', 'bp-context-label-3d']) if (map.getLayer(id)) map.setPaintProperty(id, 'text-opacity', on ? 1 : 0);
 }
+// "Still reading…": a pill over the map while cards fetch their details (lots, businesses and trees, census)
+const Busy = (() => {
+  const pending = { parcels: new Set(), tiles: new Set(), areas: new Set() }, total = { parcels: 0, tiles: 0, areas: 0 };
+  let timer = null;
+  function show() {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const el = $('busy'); if (!el) return;
+      const parts = Object.keys(pending).filter(k => pending[k].size).map(k => k === 'areas' ? t('busyAreas') : t('busy_' + k, { n: (total[k] - pending[k].size).toLocaleString(), total: total[k].toLocaleString() }));
+      el.hidden = !parts.length; el.textContent = parts.length ? t('busyReading', { what: parts.join(' · ') }) : '';
+      if (!parts.length) for (const k in total) total[k] = 0;
+    }, 250);
+  }
+  function track(kind, key, p) {
+    if (!pending[kind].has(key)) { pending[kind].add(key); total[kind]++; }
+    show();
+    return Promise.resolve(p).finally(() => { pending[kind].delete(key); show(); });
+  }
+  return { track };
+})();
 // the picked streets as pieces that touch (share a corner); between pieces, the shortest hop from a loose end
 // of one to a loose end of another, joined greedily into one chain. For long routes with a missing link.
-const GAP_MAX_M = 2000;
+const GAP_MAX_M = 150;
 function routeGaps() {
   const segs = state.results.filter(s => !isInt(s) && state.checked.has(s.cnn) && s.coords);
-  if (segs.length < 2) return [];
+  if (!state.route || segs.length < 2) return [];
   const par = new Map(), find = a => { while (par.has(a) && par.get(a) !== a) a = par.get(a); return a; };
   const join = (a, b) => { par.set(a, find(a)); par.set(b, find(b)); par.set(find(a), find(b)); };
   for (const s of segs) join(s.fn, s.tn);
@@ -2629,7 +2659,12 @@ function render() {
   const what = [kindLine(segs.filter(o => !isInt(o)), 'subStreet1', 'subStreets', 'subStreetsOf'), kindLine(segs.filter(isInt), 'subInt1', 'subInts', 'subIntsOf'),
     nBlk ? SelAreas.countText() : ''].filter(Boolean).join(' · ') || t('subNone');
   const gaps = routeGaps(); drawGaps(gaps);
+  const routeSegs = state.route ? segs.filter(o => !isInt(o) && state.checked.has(o.cnn)) : [];
+  const routeKm = (routeSegs.reduce((a, o) => a + (o.len || 0), 0) + gaps.reduce((a, g) => a + g.m, 0)) / 1000;
+  $('route-on').checked = !!state.route;
+  $('route-wrap').hidden = !segs.some(o => !isInt(o));
   $('results-sub').textContent = (state.kind === 'pick' ? t('subPick', { what }) : t('subAll', { what }))
+    + (state.route && routeSegs.length ? ' · ' + t('routeKm', { km: routeKm.toFixed(routeKm < 10 ? 2 : 1) }) : '')
     + (gaps.length ? ' · ' + t(gaps.length === 1 ? 'gaps1' : 'gapsN', { n: gaps.length, list: gaps.map(g => `${g.m} m`).join(', ') }) : '');
   if (!state.title && nBlk) $('results-title').textContent = t('linkedBlocks');
   ['apply', 'add-cross', 'add-around', 'area-save', 'pick-along'].forEach(id => $(id).disabled = !n);
@@ -2657,12 +2692,12 @@ function render() {
   if (segs.length && !Transit.ready) Transit.ensure().then(() => { if (Transit.ready) render(); });
   if (segs.length && !Nearby.ready) Nearby.ensure().then(() => { if (Nearby.ready) render(); });
   if (segs.length && !Groups.ready) Groups.ensure().then(() => { if (Groups.ready) render(); });
-  if (segs.length && !Areas.ready) Areas.ensure().then(() => { if (Areas.ready) render(); });
+  if (segs.length && !Areas.ready) Busy.track('areas', 'all', Areas.ensure()).then(() => { if (Areas.ready) render(); });
   // land use per block: read the parcel tiles for any card that doesn't have it yet, then redraw once
   const needParcels = segs.filter(s => !Parcels.peek(s));
-  if (needParcels.length && Parcels.available()) Promise.all(needParcels.map(s => Parcels.fetch(s))).then(rs => { if (rs.some(Boolean)) render(); });
+  if (needParcels.length && Parcels.available()) Promise.all(needParcels.map(s => Busy.track('parcels', s.cnn, Parcels.fetch(s)))).then(rs => { if (rs.some(Boolean)) render(); });
   const needTiles = segs.filter(s => !Tiles.peek(s));
-  if (needTiles.length) Promise.all(needTiles.map(s => Tiles.fetch(s))).then(rs => { if (rs.some(Boolean)) render(); });
+  if (needTiles.length) Promise.all(needTiles.map(s => Busy.track('tiles', s.cnn, Tiles.fetch(s)))).then(rs => { if (rs.some(Boolean)) render(); });
   updateAdjLots();
   const d = Logic.db && Logic.db.dataAsOf;
   $('foot-note').textContent = d ? t('dataNote', { date: d.slice(0, 10) }) : '';
@@ -3106,6 +3141,7 @@ function writeHash() {
   const parts = [];
   const cnns = [...state.checked];
   if (cnns.length) parts.push('cnn=' + cnns.join(','));
+  if (cnns.length && state.route) parts.push('route=1');
   else if (state.street) parts.push('street=' + encodeURIComponent(P(state.street).toLowerCase()).replace(/%20/g, '+'));
   if (Logic.db && Logic.db.searchAll) parts.push('all=1');
   if (Logic.db && !Logic.db.includeMinor) parts.push('minor=0');
@@ -3128,7 +3164,7 @@ function readHash() {
   const list = k => (p.get(k) || '').split(',').map(s => s.trim()).filter(Boolean);
   return { cnn: list('cnn').map(Number).filter(Boolean), street: list('street'), all: p.get('all') === '1', minor: p.get('minor') !== '0', lang: p.get('lang'), quiet: list('quiet'),
     layers: Object.fromEntries(list('layers').map(x => x.split(':')).filter(x => x.length === 2)), lands: p.get('lands'),
-    areas: Object.fromEntries(list('areas').map(x => x.split(':')).filter(x => x.length === 2)), urls: p.getAll('url'), pick: p.get('pick') };
+    areas: Object.fromEntries(list('areas').map(x => x.split(':')).filter(x => x.length === 2)), urls: p.getAll('url'), pick: p.get('pick'), route: p.get('route') === '1' };
 }
 function applyHash() {
   const h = readHash();
@@ -3142,6 +3178,7 @@ function applyHash() {
   if (h.lands) setLandCats(h.lands.split(','), false);
   for (const u of h.urls) Drops.addURL(u, true);
   if (h.pick) SelAreas.restore(h.pick);
+  state.route = h.route;
   if (h.minor !== Logic.db.includeMinor) { $('include-minor').checked = h.minor; Logic.setIncludeMinor(h.minor); refreshMapFilter(); }
   if (h.all !== Logic.db.searchAll) { $('search-all').checked = h.all; Logic.setSearchAll(h.all); refreshMapFilter(); }
   if (h.cnn.length) {
@@ -9205,16 +9242,20 @@ function drawBunting() {
   const dataP = SFBlocks.ready.then(reg => SFBlocks.json(reg.streets.built));
   await SFBlocks.ready.catch(() => {});
   const mapP = initMap();
+  const step = k => { const el = $('map-loading-text'); if (el) el.textContent = t(k); };
+  step('loadingStreets');
   try {
     const raw = await dataP;
     Logic.load(raw);
     $('street-input').disabled = false;
+    step('loadingMap');
   } catch (err) {
     console.error('[block-party] data load failed', err);
     $('map-loading').textContent = t('loadFailed');   // (the spinner goes with it)
     return;
   }
   await mapP;
+  step('loadingAreas');
   await Areas.register();
   await Tiles.register();
   addMapLayers();
