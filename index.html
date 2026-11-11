@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v79 -->
+<!-- build: v80 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -689,7 +689,10 @@ summary::marker { font-size: 1.15em; }
 .lg-table td small { display: block; white-space: normal; max-width: 190px; line-height: 1.3; color: var(--ink-soft); }
 .lg-table i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; opacity: .75; vertical-align: -1px; }
 .legend-hint { margin: 6px 0 0; font-size: 12px; color: var(--ink-soft); }
-.map-loading { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 600; color: var(--ink-soft); z-index: 4; pointer-events: none; }
+.map-loading { position: absolute; inset: 0; display: flex; gap: 10px; align-items: center; justify-content: center; font-weight: 600; color: var(--ink); z-index: 4; pointer-events: none; background: rgba(255,255,255,.55); }
+.map-loading .spin { width: 22px; height: 22px; border-radius: 50%; border: 3px solid rgba(30,35,64,.2); border-top-color: var(--ink); animation: bp-spin .8s linear infinite; }
+@keyframes bp-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .map-loading .spin { animation-duration: 2.4s; } }
 /* hover popups only (no links): the pointer passes through, so a popup that opens under it doesn't count as leaving the map */
 .maplibregl-popup, .maplibregl-popup .maplibregl-popup-content { pointer-events: none; }
 /* …except a clicked record, which scrolls and has a close button */
@@ -803,7 +806,7 @@ summary::marker { font-size: 1.15em; }
 
   <div class="map-wrap">
     <div id="map" role="region" aria-label="Map"></div>
-    <div class="map-loading" id="map-loading" data-i18n="loading">Loading streets…</div>
+    <div class="map-loading" id="map-loading"><span class="spin" aria-hidden="true"></span><span id="map-loading-text" data-i18n="loading">Loading streets…</span></div>
     <div class="map-ui">
       <div class="map-toggle" role="group" aria-label="Map style">
         <button type="button" id="bm-map" aria-pressed="true" data-i18n="bmMap">Map</button>
@@ -1204,7 +1207,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v79';
+const _BUILD_VERSION = 'v80';
 
 /* =====================================================================
    CONFIG
@@ -1291,7 +1294,8 @@ const I18N = {
     copyCsvShort: 'CSV', copyJsonShort: 'JSON', copyLinkShort: 'Link',
     lgContours: '{n} ft contours',
     clearSel: 'Clear selections',
-    loading: 'Loading streets…',
+    loading: 'Loading streets…', loadingN: 'Opening {n} streets…',
+    gaps1: '1 gap ({list}), shown dashed red', gapsN: '{n} gaps ({list}), shown dashed red',
     loadFailed: 'Street data couldn’t load from sf-blocks or the copy here. Reload to try again.',
     bmMap: 'Map', bmSat: 'Sat',
     lgCrossTitle: 'Show cross streets after you choose a block',
@@ -2384,6 +2388,7 @@ function setupForm() {
   $('lg-cross').checked = showCross;
   $('lg-cross').addEventListener('change', e => {
     showCross = e.target.checked;
+    crossForced = showCross && state.checked.size > CROSS_MAX;   // turned on by hand with a long list: keep them on
     try { localStorage.setItem(CROSS_KEY, showCross ? '1' : '0'); } catch (err) { }
     updateCross();
   });
@@ -2560,11 +2565,52 @@ function checkedSegs() { return state.results.filter(s => state.checked.has(s.cn
 const CROSS_KEY = 'bp-cross', MUNI_NUMS_KEY = 'bp-muni-nums';
 let showMuniNums = (() => { try { return localStorage.getItem(MUNI_NUMS_KEY) !== '0'; } catch (e) { return true; } })();
 let showCross = (() => { try { return localStorage.getItem(CROSS_KEY) !== '0'; } catch (e) { return true; } })();
+const CROSS_MAX = 3;      // more streets than this picked: cross streets stay off unless turned on (crossForced)
+let crossForced = false;
 function updateCross() {
   if (typeof map === 'undefined' || !map || !map.getLayer('bp-context')) return;
-  const on = showCross || !state.checked.size;
+  const many = state.checked.size > CROSS_MAX && !crossForced;
+  const on = !state.checked.size || (showCross && !many);
+  const box = $('lg-cross'); if (box && box.checked !== (showCross && !many)) box.checked = showCross && !many;
   map.setPaintProperty('bp-context', 'line-opacity', on ? 1 : 0);
   for (const id of ['bp-context-label', 'bp-context-label-3d']) if (map.getLayer(id)) map.setPaintProperty(id, 'text-opacity', on ? 1 : 0);
+}
+// the picked streets as pieces that touch (share a corner); between pieces, the shortest hop from a loose end
+// of one to a loose end of another, joined greedily into one chain. For long routes with a missing link.
+const GAP_MAX_M = 2000;
+function routeGaps() {
+  const segs = state.results.filter(s => !isInt(s) && state.checked.has(s.cnn) && s.coords);
+  if (segs.length < 2) return [];
+  const par = new Map(), find = a => { while (par.has(a) && par.get(a) !== a) a = par.get(a); return a; };
+  const join = (a, b) => { par.set(a, find(a)); par.set(b, find(b)); par.set(find(a), find(b)); };
+  for (const s of segs) join(s.fn, s.tn);
+  const use = new Map(); for (const s of segs) for (const n of [s.fn, s.tn]) use.set(n, (use.get(n) || 0) + 1);
+  const ends = [];
+  for (const s of segs) { if (use.get(s.fn) === 1) ends.push({ n: s.fn, p: s.coords[0], s }); if (use.get(s.tn) === 1) ends.push({ n: s.tn, p: s.coords[s.coords.length - 1], s }); }
+  const groups = new Set(segs.map(s => find(s.fn)));
+  if (groups.size < 2) return [];
+  const KXm = 111320 * Math.cos(37.76 * Math.PI / 180), KYm = 110540;
+  const d = (a, b) => Math.hypot((a[0] - b[0]) * KXm, (a[1] - b[1]) * KYm);
+  // a piece with no loose end (a loop) still offers its corners
+  for (const g of groups) if (!ends.some(e => find(e.n) === g)) for (const s of segs) if (find(s.fn) === g) ends.push({ n: s.fn, p: s.coords[0], s });
+  const out = [], merged = new Map([...groups].map(g => [g, g])), top = g => { while (merged.get(g) !== g) g = merged.get(g); return g; };
+  for (let k = 0; k < groups.size - 1; k++) {
+    let best = null;
+    for (const a of ends) for (const b of ends) {
+      const ga = top(find(a.n)), gb = top(find(b.n));
+      if (ga === gb) continue;
+      const dist = d(a.p, b.p); if (!best || dist < best.dist) best = { a, b, dist, ga, gb };
+    }
+    if (!best || best.dist > GAP_MAX_M) break;
+    merged.set(best.ga, best.gb);
+    out.push({ from: best.a, to: best.b, m: Math.round(best.dist) });
+  }
+  return out;
+}
+function drawGaps(gaps) {
+  if (typeof map === 'undefined' || !mapReady || !map.getSource('gaps')) return;
+  map.getSource('gaps').setData(fc(gaps.map(g => ({ type: 'Feature', properties: { m: g.m, label: `${g.m} m` },
+    geometry: { type: 'LineString', coordinates: [g.from.p, g.to.p] } }))));
 }
 function render() {
   updateCross();
@@ -2582,7 +2628,9 @@ function render() {
     return !all.length ? '' : c === all.length ? t(all.length === 1 ? k1 : kN, { n: all.length }) : t(kOf, { n: c, total: all.length }); };
   const what = [kindLine(segs.filter(o => !isInt(o)), 'subStreet1', 'subStreets', 'subStreetsOf'), kindLine(segs.filter(isInt), 'subInt1', 'subInts', 'subIntsOf'),
     nBlk ? SelAreas.countText() : ''].filter(Boolean).join(' · ') || t('subNone');
-  $('results-sub').textContent = state.kind === 'pick' ? t('subPick', { what }) : t('subAll', { what });
+  const gaps = routeGaps(); drawGaps(gaps);
+  $('results-sub').textContent = (state.kind === 'pick' ? t('subPick', { what }) : t('subAll', { what }))
+    + (gaps.length ? ' · ' + t(gaps.length === 1 ? 'gaps1' : 'gapsN', { n: gaps.length, list: gaps.map(g => `${g.m} m`).join(', ') }) : '');
   if (!state.title && nBlk) $('results-title').textContent = t('linkedBlocks');
   ['apply', 'add-cross', 'add-around', 'area-save', 'pick-along'].forEach(id => $(id).disabled = !n);
   ['copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson'].forEach(id => $(id).disabled = !n && !nBlk);
@@ -3100,7 +3148,8 @@ function applyHash() {
     const items = h.cnn.map(c => Logic.item(c)).filter(Boolean);
     if (!items.length) return;
     const ints = items.filter(isInt);
-    if (ints.length) {
+    // an intersection link (a corner and maybe its blocks); a long list that happens to hold corners opens as a list
+    if (ints.length && items.length - ints.length <= 2) {
       // an intersection link: open intersection mode on it, with the blocks leading in
       const i = ints[0], a = i.streets[0], b = i.streets[1];
       state.street = a; streetBox.set(a, P(a));
@@ -3117,11 +3166,11 @@ function applyHash() {
     }
     const segs = items;
     // retired or non-public CNNs still load from a link
-    const main = segs[0];
+    const main = segs.find(s => !isInt(s)) || segs[0];
     state.street = main.street; state.focusNode = null;
     streetBox.set(main.street, P(main.street));
     fromBox.enable(true); enableNum(true); setMode('cross');
-    const single = segs.length === 1 || segs.every(s => s.street === main.street && s.f === main.f && s.t === main.t);
+    const single = !ints.length && (segs.length === 1 || segs.every(s => s.street === main.street && s.f === main.f && s.t === main.t));
     if (single) { state.from = main.f; state.to = main.t; fromBox.set(main.f, P(main.f)); toBox.set(main.t, P(main.t)); toBox.enable(true); }
     else { state.from = state.to = null; fromBox.set(null, ''); toBox.set(null, ''); toBox.enable(false); }
     setResults(segs, single ? t('blocksBetween', { street: P(main.street), a: P(main.f), b: P(main.t) }) : t('linkedBlocks'), 'all');
@@ -3258,6 +3307,7 @@ function addMapLayers() {
   map.addSource('quiet', { type: 'geojson', data: EMPTY });
   map.addSource('quiet-int', { type: 'geojson', data: EMPTY });
   map.addSource('quiet-angle', { type: 'geojson', data: EMPTY });
+  map.addSource('gaps', { type: 'geojson', data: EMPTY });
   map.addSource('all-mid', { type: 'geojson', data: fc(Logic.db.segs.map(s => midFeature(s))) });
   map.addSource('context-mid', { type: 'geojson', data: EMPTY });
   map.addSource('results-mid', { type: 'geojson', data: EMPTY });
@@ -3282,6 +3332,11 @@ function addMapLayers() {
   map.addLayer({ id: 'bp-quiet-int', type: 'circle', source: 'quiet-int',
     paint: { 'circle-color': '#fff', 'circle-stroke-color': '#B5179E', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 11, 2, 16, 4],
       'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 3, 14, 5, 18, 11] } });
+  // gaps between picked streets that don't touch
+  map.addLayer({ id: 'bp-gaps', type: 'line', source: 'gaps', layout: { 'line-cap': 'round' },
+    paint: { 'line-color': '#E03131', 'line-width': 3, 'line-dasharray': [1.5, 1.5] } });
+  map.addLayer({ id: 'bp-gaps-label', type: 'symbol', source: 'gaps', layout: { 'symbol-placement': 'line-center', 'text-field': ['get', 'label'], 'text-size': 12, 'text-font': LABEL_FONT, 'text-allow-overlap': true },
+    paint: { 'text-color': '#E03131', 'text-halo-color': '#fff', 'text-halo-width': 2 } });
   // the angle at a Filter intersection, while hovering it
   map.addLayer({ id: 'bp-quiet-angle-fill', type: 'fill', source: 'quiet-angle', filter: ['==', ['get', 'part'], 'wedge'], paint: { 'fill-color': '#B5179E', 'fill-opacity': 0.22 } });
   map.addLayer({ id: 'bp-quiet-angle', type: 'line', source: 'quiet-angle', filter: ['in', ['get', 'part'], ['literal', ['leg', 'arc']]], layout: { 'line-cap': 'round' },
@@ -3568,7 +3623,7 @@ const LAYER_ORDER = [
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
+  ['selection', id => ['bp-gaps', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
@@ -9156,20 +9211,24 @@ function drawBunting() {
     $('street-input').disabled = false;
   } catch (err) {
     console.error('[block-party] data load failed', err);
-    $('map-loading').textContent = t('loadFailed');
+    $('map-loading').textContent = t('loadFailed');   // (the spinner goes with it)
     return;
   }
   await mapP;
   await Areas.register();
   await Tiles.register();
   addMapLayers();
-  $('map-loading').remove();
+  const many = readHash().cnn.length;
+  if (many > 3) $('map-loading-text').textContent = t('loadingN', { n: many.toLocaleString() });
   setupQuiet();
   setupMapMenus();
   Drops.setupUI();
   applyHash();
   applyQuiet();
   render();
+  // keep the spinner until the map has drawn the link (or a few seconds, whichever comes first)
+  const done = () => { const el = $('map-loading'); if (el) el.remove(); };
+  if (many) { map.once('idle', done); setTimeout(done, 6000); } else done();
 })();
 </script>
 </body>
