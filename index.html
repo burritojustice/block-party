@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v82 -->
+<!-- build: v83 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1243,7 +1243,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v82';
+const _BUILD_VERSION = 'v83';
 // a phone-sized screen: flat map, census on request, and one Settings menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1482,6 +1482,7 @@ const I18N = {
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
     moreBtn: '☰ Settings', moreTitle: 'Map, layers, areas, Filter, Focus and Table', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
     censusLoad: 'Count people and homes',
+    censusShowBlocks: 'Show the census blocks and corners',
     tableBtn: 'Table', tableGrip: 'Drag to resize', tableSearch: 'Search rows', tableAllCols: 'All columns', tableClose: 'Close the table',
     tableStreets: 'Your streets and intersections ({n})', tableFile: '{name} ({n})', tableCount: '{n} rows', tableCountOf: '{n} of {total} rows',
     tableSort: 'Sort by this column (click again to reverse)', tableCheckAll: 'Check all', tableCheck: 'Check', tableCard: 'Card',
@@ -2681,13 +2682,15 @@ function drawGaps(gaps) {
 const CardFacts = (() => {
   const FIRST = 4, seen = new Set();
   let obs = null, queue = new Set(), timer = 0;
-  const need = s => !Tiles.peek(s) || (Parcels.available() && !Parcels.peek(s));
+  // with street facts a card needs no tiles, except lot outlines while Parcels is on the map
+  const need = s => Facts.has(s) ? (Parcels.available() && overlayMode.landuse && overlayMode.landuse !== 'off' && !Parcels.peek(s))
+    : (!Tiles.peek(s) || (Parcels.available() && !Parcels.peek(s)));
   function flush() {
     timer = 0;
     const segs = state.results.filter(s => queue.has(s.cnn) && need(s)); queue.clear();
     if (!segs.length) return;
     const ps = segs.flatMap(s => [...(Parcels.available() && !Parcels.peek(s) ? [Busy.track('parcels', s.cnn, Parcels.fetch(s))] : []),
-      ...(!Tiles.peek(s) ? [Busy.track('tiles', s.cnn, Tiles.fetch(s))] : [])]);
+      ...(!Tiles.peek(s) && !Facts.has(s) ? [Busy.track('tiles', s.cnn, Tiles.fetch(s))] : [])]);
     // ones that came back empty (tiles not ready yet) are asked for again on the next redraw
     Promise.all(ps).then(rs => { segs.forEach(s => { if (need(s)) seen.delete(s.cnn); }); if (rs.some(Boolean)) render(); });
   }
@@ -3027,6 +3030,8 @@ function setupResultsEvents() {
     if (!k) return;
     const host = d.closest('[data-cnn]'); if (!host) return;   // block cards: no rings yet
     const cnn = +host.dataset.cnn;
+    const s = d.open && state.results.find(r => r.cnn === cnn);
+    if (s && !Tiles.peek(s)) { Busy.track('tiles', cnn, Tiles.fetch(s)).then(() => { render(); Tiles.highlight(cnn, k); }); return; }
     if (d.open) Tiles.highlight(cnn, k);
     else if (Tiles.hlFor === cnn + '|' + k) Tiles.highlight(null, k);
   }, true);
@@ -5124,6 +5129,7 @@ function tileFacts(s, only) {
   if (only === 'trees' && !Tiles.has('trees')) return '';
   if (only === 'biz' && !Tiles.has('businesses')) return '';
   const r = Tiles.peek(s);
+  if (!r && Facts.has(s)) return factTileFacts(s, only);
   if (!r) return `<dt>${esc(t(only === 'biz' ? 'bizRow' : only === 'trees' || Tiles.has('trees') ? 'treesRow' : 'bizRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
   let html = '';
   if (r.trees && only !== 'biz') {
@@ -5145,6 +5151,24 @@ function tileFacts(s, only) {
         <label class="biz-all" title="${esc(t('bizAllHint'))}"><input type="checkbox" data-biz-all ${bizAll ? 'checked' : ''}> ${esc(t('bizAll'))}</label>
         <span>${esc(t('bizSource', { date: Tiles.asOf('businesses') || '' }))} <a href="${esc((m && m.page) || '#')}" target="_blank" rel="noopener">${esc(t('bizSourceLink'))}</a></span></p>
     </details></dd>`;
+  }
+  return html;
+}
+// the same rows from the street facts, before the tiles are read: tree names in full, businesses as counts
+// (opening the business list reads the tiles for the names, and "Show all registrations" needs them too)
+function factTileFacts(s, only) {
+  let html = '';
+  const tr = Tiles.has('trees') && Facts.trees(s);
+  if (tr && only !== 'biz') {
+    const top = tr.kinds.length;
+    const kinds = `<table class="lu-table">${tr.kinds.map(([k, n]) => `<tr><td>${esc(k)}</td><td>${n}</td></tr>`).join('')}</table><small class="lu-note">${esc(t('treesSource', { date: Tiles.asOf('trees') || '' }))}</small>`;
+    html += `<dt>${esc(t('treesRow'))}</dt><dd>${tr.n ? foldDD(esc(t('treesCount', { n: tr.n, k: top })), kinds, 'trees') : esc(t('treesNone'))}</dd>`;
+  }
+  const b = Tiles.has('businesses') && Facts.biz(s);
+  if (b && only !== 'trees' && (b.n || b.hidden.length)) {
+    const hidden = b.hidden.reduce((a, [, n]) => a + n, 0), kinds = b.hidden.map(([k]) => t('kind_' + k)).join(', ');
+    if (b.n || bizAll) html += `<dt>${esc(t('bizRow'))}</dt><dd><details class="ng biz" data-biz-load="${s.cnn}"><summary>${esc(b.addrs === 1 ? t('bizN1', { n: b.n }) : t('bizN', { n: b.n, a: b.addrs }))}${hidden ? ` <small class="muted">${esc(t('bizHidden', { n: hidden, kinds }))}</small>` : ''}</summary>
+      <ul class="ng-list"><li class="muted"><span class="wait-inline">${esc(t('checking'))}</span></li></ul></details></dd>`;
   }
   return html;
 }
@@ -6580,6 +6604,7 @@ const Downloads = (() => {
     }
     if (what === 'picked') return SelAreas.exportRows();
     if (what === 'ablocks') await Areas.need('ablk');
+    if (what === 'cblocks') await Areas.need('cblk');
     const segs = await exportSegs(), out = new Map();
     const add = (key, props, geom, s) => {
       const r = out.get(key);
@@ -7840,14 +7865,18 @@ const SelAreas = (() => {
   let turfP = null;
   const turf = () => turfP ||= new Promise((ok, no) => { if (window.turf) return ok(window.turf);
     const sc = document.createElement('script'); sc.src = TURF; sc.onload = () => ok(window.turf); sc.onerror = no; document.head.appendChild(sc); });
-  const blockOf = lot => String(lot).slice(0, -3);
+  // the assessor block of a lot: 4 digits (and a letter), then 3 digits (and a letter): 4207014B → 4207
+  const blockOf = lot => { const m = /^(\d{4}[A-Z]?)\d{3}[A-Z]?$/.exec(String(lot)); return m ? m[1] : String(lot).slice(0, -3); };
   // every street around the city (assessor) blocks the checked streets face
   async function around() {
     const segs = checkedSegs().filter(s => !isInt(s));
     if (!segs.length) return;
     $('area-status').textContent = t('aroundWorking');
-    await Promise.all(segs.map(s => Parcels.fetch(s)));
-    const blocks = new Set(segs.flatMap(s => ((Parcels.peek(s) || {}).lotIds || []).map(blockOf)));
+    // lot ids from the street facts when sf-blocks has them (no tiles to read), else from the parcel tiles
+    const haveFacts = await Facts.lots();
+    const idsOf = s => (haveFacts && Facts.lotIds(s)) || (Parcels.peek(s) || {}).lotIds || [];
+    await Promise.all(segs.filter(s => !(haveFacts && Facts.lotIds(s))).map(s => Parcels.fetch(s)));
+    const blocks = new Set(segs.flatMap(s => idsOf(s).map(blockOf)));
     // candidates: streets within two steps of the selection
     const have = new Set(state.results.map(r => r.cnn)), cand = new Map();
     let front = segs;
@@ -7857,9 +7886,9 @@ const SelAreas = (() => {
         if (Logic.eligible(o) && !have.has(o.cnn) && !cand.has(o.cnn)) { cand.set(o.cnn, o); next.push(o); }
       front = next;
     }
-    await Promise.all([...cand.values()].map(o => Parcels.fetch(o)));
+    await Promise.all([...cand.values()].filter(o => !(haveFacts && Facts.lotIds(o))).map(o => Parcels.fetch(o)));
     // a street goes in when most of the lots along it are on those blocks
-    const add = [...cand.values()].filter(o => { const ids = (Parcels.peek(o) || {}).lotIds || []; return ids.length && ids.filter(l => blocks.has(blockOf(l))).length >= ids.length / 2; });
+    const add = [...cand.values()].filter(o => { const ids = idsOf(o); return ids.length && ids.filter(l => blocks.has(blockOf(l))).length >= ids.length / 2; });
     $('area-status').textContent = '';
     if (!add.length) { toast(t('aroundNone')); return; }
     remember();
@@ -7960,6 +7989,48 @@ const SelAreas = (() => {
     picks: () => ({ set: pickSet, names: [...picks] }) };
 })();
 
+/* ---------- Facts: each street block's card worked out ahead of time (sf-blocks data/facts/) ----------
+   streets.json: lots, homes, land use and zoning, trees, businesses (counts), people and homes from the census,
+   built by sf-blocks' build_facts.py with the same rules as Parcels / Tiles / Areas.census here. Cards show these
+   at once; the tiles are read only for what the file doesn't hold: the business and tree lists (when a fold is
+   opened), lot outlines, intersections (half of each street), and blocks the file doesn't have.
+   lots.json: each block's lot ids, loaded only when growing a selection. */
+const Facts = (() => {
+  let file = null, strs = [], F = {}, lotsP = null;
+  const rows = new Map(), lotIds = new Map();
+  const pairs = a => { const out = []; for (let i = 0; i < (a || []).length; i += 2) out.push([strs[a[i]], a[i + 1]]); return out; };
+  const ok = s => s && !isInt(s) && !s.halfOf && rows.has(s.cnn);
+  return {
+    ready: null,
+    load() {
+      return this.ready ||= SFBlocks.ready.then(reg => SFBlocks.json((reg.facts && reg.facts.streets) || 'data/facts/streets.json')).then(j => {
+        file = j; strs = j.strings; j.fields.forEach((f, i) => F[f] = i);
+        for (const r of j.rows) rows.set(r[0], r);
+        return true;
+      }).catch(err => { console.warn('[block-party] no street facts; cards read the tiles', err); return false; });
+    },
+    has: s => ok(s),
+    asOf: () => file && file.built,
+    // the same shape as Parcels.peek's summary (no outlines)
+    parcels(s) {
+      if (!ok(s)) return null;
+      const r = rows.get(s.cnn), z = r[F.zones] || [], zones = [];
+      for (let i = 0; i < z.length; i += 3) zones.push({ code: strs[z[i]], name: strs[z[i + 1]], n: z[i + 2] });
+      return { lots: r[F.lots], homes: r[F.homes], uses: pairs(r[F.uses]), zones, facts: true };
+    },
+    trees(s) { if (!ok(s)) return null; const r = rows.get(s.cnn); return { n: r[F.trees], kinds: pairs(r[F.tree_kinds]) }; },
+    biz(s) { if (!ok(s)) return null; const r = rows.get(s.cnn); return { n: r[F.biz], addrs: r[F.biz_addrs], hidden: pairs(r[F.biz_hidden]) }; },
+    census(s) { if (!ok(s)) return null; const r = rows.get(s.cnn); return { people: r[F.people], homes: r[F.census_homes], facts: true }; },
+    // lot ids along a block, from lots.json (loaded the first time it's asked for)
+    lots() {
+      return lotsP ||= SFBlocks.ready.then(reg => SFBlocks.json((reg.facts && reg.facts.lots) || 'data/facts/lots.json')).then(j => {
+        for (const [cnn, ids] of j.rows) lotIds.set(cnn, ids ? ids.split('|').flatMap(b => { const [blk, ...ls] = b.split(' '); return ls.map(l => blk + l); }) : []);
+        return true;
+      }).catch(() => false);
+    },
+    lotIds: s => ok(s) && lotIds.has(s.cnn) ? lotIds.get(s.cnn) : null,
+  };
+})();
 const Parcels = (() => {
   const Z = 15, NEAR_M = 14, ADDR_M = 25, PAD_M = 30;
   const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
@@ -8099,7 +8170,7 @@ const Parcels = (() => {
 })();
 function parcelFacts(s, onBlock) {
   if (!Parcels.available()) return '';
-  const r = Parcels.peek(s);
+  const r = Parcels.peek(s) || (!onBlock && Facts.parcels(s));
   if (!r) return `<dt>${esc(t('landuseRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
   if (!r.lots) return '';
   // one line of codes; the names folded
@@ -8544,7 +8615,7 @@ const Areas = (() => {
       const line = kind => [...sets.values()].filter(st => st.c.kind === kind)
         .flatMap(st => (Areas.of(st.c.k, item) || []).map(a => kind === 'elected' ? a.chip : `${st.c.label}: ${a.name}`));
       const e = line('elected'), sp = line('special');
-      const est = Areas.census(item);
+      const est = Areas.census(item) || Facts.census(item);
       return [`${t('cardElected')}: ${e.join('; ') || item.sup}`, ...(sp.length ? [`${t('cardSpecial')}: ${sp.join('; ')}`] : []),
         ...(est ? [`${t('censusRow')}: ${censusText(est)} (${t('censusNote')})`] : []),
         ...((c => c ? [`${t('cornersRow')}: ${t('cornersEst', { people: roundEst(c.people).toLocaleString(), homes: roundEst(c.homes).toLocaleString() })} (${t('cornersNote', { n: c.parts.length })})`] : [])(Areas.corners(item)))];
@@ -8624,11 +8695,11 @@ const Areas = (() => {
     },
     // export columns, full names
     fields(item) {
-      const est = Areas.census(item);
+      const est = Areas.census(item) || Facts.census(item);
       // a street is the line between census blocks: list the blocks (and their tracts) on both sides
-      const sides = est ? est.blocks : [];
-      return { ...Object.fromEntries([...sets.values()].filter(st => st.c.kind !== 'hood' && !st.c.onDemand).map(st => [st.c.col, st.c.k === 'cblk' && est ? sides.join('; ')
-          : st.c.k === 'ctract' && est ? [...new Set(sides.map(g => g.slice(0, 11)))].join('; ')
+      const sides = (est && est.blocks) || [];
+      return { ...Object.fromEntries([...sets.values()].filter(st => st.c.kind !== 'hood' && !st.c.onDemand).map(st => [st.c.col, st.c.k === 'cblk' && est && est.blocks ? sides.join('; ')
+          : st.c.k === 'ctract' && est && est.blocks ? [...new Set(sides.map(g => g.slice(0, 11)))].join('; ')
           : (Areas.of(st.c.k, item) || []).map(a => a.col).join('; ')])),
         ...(sets.has('cblk') ? { census_people_est: est ? Math.round(est.people) : '', census_homes_est: est ? Math.round(est.homes) : '',
           ...(() => { const c = Areas.corners(item); return { census_within_block_people: c ? c.people : '', census_within_block_homes: c ? c.homes : '',
@@ -8643,8 +8714,14 @@ const censusText = e => t('censusEst', { people: roundEst(e.people).toLocaleStri
 let censusAsked = false;
 function loadCensus() { if (censusAsked) return; censusAsked = true; render(); Busy.track('areas', 'cblk', Areas.need('cblk')).then(() => render()); }
 document.addEventListener('click', e => { if (e.target.closest('[data-census-load]')) { e.stopPropagation(); e.preventDefault(); loadCensus(); } }, true);
+// from the street facts: the estimate at once; the census blocks behind it (and the corners) load on request
+function censusRowHTML(s, e) {
+  const more = censusAsked ? `<span class="wait-inline">${esc(t('checking'))}</span>` : `<button type="button" class="btn small" data-census-load>${esc(t('censusShowBlocks'))}</button>`;
+  return `<dt>${esc(t('censusRow'))}</dt><dd>${foldDD(esc(censusText(e)), `<small class="muted">${esc(t('censusNote'))}</small><p>${more}</p>`, 'census')}</dd>`;
+}
 function censusFacts(s) {
   if (!Areas.has('cblk')) return '';
+  if (!Areas.loaded('cblk') && Facts.census(s)) return censusRowHTML(s, Facts.census(s));
   if (!Areas.loaded('cblk')) return Areas.conf('cblk').onDemand
     ? `<dt>${esc(t('censusRow'))}</dt><dd>${censusAsked ? `<span class="wait-inline">${esc(t('checking'))}</span>` : `<button type="button" class="btn small" data-census-load>${esc(t('censusLoad'))}</button>`}</dd>`
     : `<dt>${esc(t('censusRow'))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
@@ -9328,6 +9405,7 @@ function drawBunting() {
 
   // street data and the region (paths, basemap key) come from sf-blocks, live or the copy here
   const dataP = SFBlocks.ready.then(reg => SFBlocks.json(reg.streets.built));
+  const factsP = Facts.load();
   await SFBlocks.ready.catch(() => {});
   const mapP = initMap();
   const step = k => { const el = $('map-loading-text'); if (el) el.textContent = t(k); };
@@ -9352,6 +9430,9 @@ function drawBunting() {
   setupQuiet();
   setupMapMenus();
   Drops.setupUI();
+  // the street facts (small) before the first cards, so they don't start reading tiles; at most 4 s
+  await Promise.race([factsP, new Promise(r => setTimeout(r, 4000))]);
+  factsP.then(() => render());
   applyHash();
   applyQuiet();
   render();

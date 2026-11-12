@@ -2,6 +2,15 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v83
+
+- **Cards fill in at once** from sf-blocks' new street facts (`data/facts/streets.json`, 0.47 MB gzipped, worked out ahead of time with the same rules as the cards): lots, homes, zoning and land use, street trees by name, how many businesses and at how many addresses, and people and homes from the census. Before, every card read its own parcel and point tiles first.
+- **Tiles only when needed:** opening a card's business list reads the tiles for the names (and rings them on the map, as before). Lot outlines, intersections (half of each street) and saving an area's outline still read the tiles.
+- **Growing the selection** ("Add the streets around") uses each street's lot ids from `data/facts/lots.json`, loaded the first time you grow, instead of reading the parcel tiles for every street nearby. It's about twice as fast in testing.
+- **Lots with a letter** (like 4207014B) now count toward their assessor block when growing the selection; before, they were put on the wrong block.
+- **Phones:** the census estimate shows on cards without loading the census blocks. **Show the census blocks and corners** (under the estimate) loads them for the full breakdown.
+- Backup copies of the facts files are here too, from sf-blocks 2026.11.11.7, so this works before sf-blocks #38 is merged.
+
 ## v82
 
 - **Filters no longer turn themselves on after a reload.** The browser was restoring checkboxes from before the reload, sometimes onto the wrong ones. Now Filter only follows the link.
