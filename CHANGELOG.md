@@ -2,6 +2,17 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v89
+
+- **🚲 Ride:** turn it on (toolbar, or ☰ on a phone) and the streets you ride along go into a route, in the order you ride them.
+  - It follows your location and keeps the screen awake. On a phone the map goes full screen and zooms in.
+  - A street is added once you've covered about half of it, moving along it (within 15 m, heading within 35°). Crossing streets at corners don't count, so they aren't added.
+  - The street you're on is lit in yellow, and your track is a dotted blue line.
+  - The bar over the map shows the count and distance, and the street you're on. It has **＋ Add this street** / **− Take it off**, **✎ Note**, **Pause**, **Stop**, and **◎ Follow me** after you pan the map.
+  - **Notes** go on the street's card and into Copy / Save, downloads and sheets (a `note` column). Adding a note also adds that street.
+  - The ride is kept in this browser: after a reload or a crash, you're asked whether to carry on.
+  - A web page can't follow you with the screen off, so keep the phone mounted and the page open.
+
 ## v88
 
 - **Closed cards read better:** under the street name, the cross streets are in bold with the address range in front ("600–649 · 18th St to Hancock St"), and the street type tag sits below them.
