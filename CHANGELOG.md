@@ -2,6 +2,25 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v84
+
+- **Phones: one ☰ button** at the top left, with no word next to it. Nearby moved into the ☰ menu with the rest.
+- **Full screen and 3D sit under the zoom buttons**, the same size as ☰ on phones (bigger for fingers). Full screen uses corner-arrow icons: pointing out to fill the window, pointing in to leave.
+- **3D in one tap:** the new **3D / 2D** button tilts the map over the hills, or lays it flat and seen from above (with the hills turned off, which is lighter). 3D is on by default on phones again.
+- **Routes:** with **This is a route** checked, each street's end dots shrink to small dots, tiny when zoomed out, so the line reads as one route. The page link keeps `route=1`.
+- **Filter → angles:** each street's direction now runs from the corner to the block's other end, so the curve where a divided street splits around an island no longer sets the angle. The drawn legs follow the same directions. The intersection's popup sits beside the corner, in the widest gap between the streets, so it doesn't cover the legs or the angle.
+- **Save to Google Sheets** (Copy / Save → Save to): **New Google Sheet** makes a sheet in your Drive; **Add to a sheet…** adds tabs to one you pick. You get a Streets tab (the same columns as Copy CSV) and an About tab (name, whether it's a route, counts, link, date). For a route, an `order` column gives each street's place along it, and About has the length and the number of gaps. The name box is optional.
+- **Save to Airtable is wired in but off.** It turns on when `CONFIG.AIRTABLE_SAVE` names a table and which of its fields get which columns, and it writes one record per street.
+
+## v83
+
+- **Cards fill in at once** from sf-blocks' new street facts (`data/facts/streets.json`, 0.47 MB gzipped, worked out ahead of time with the same rules as the cards): lots, homes, zoning and land use, street trees by name, how many businesses and at how many addresses, and people and homes from the census. Before, every card read its own parcel and point tiles first.
+- **Tiles only when needed:** opening a card's business list reads the tiles for the names (and rings them on the map, as before). Lot outlines, intersections (half of each street) and saving an area's outline still read the tiles.
+- **Growing the selection** ("Add the streets around") uses each street's lot ids from `data/facts/lots.json`, loaded the first time you grow, instead of reading the parcel tiles for every street nearby. It's about twice as fast in testing.
+- **Lots with a letter** (like 4207014B) now count toward their assessor block when growing the selection; before, they were put on the wrong block.
+- **Phones:** the census estimate shows on cards without loading the census blocks. **Show the census blocks and corners** (under the estimate) loads them for the full breakdown.
+- Backup copies of the facts files are here too, from sf-blocks 2026.11.11.7, so this works before sf-blocks #38 is merged.
+
 ## v82
 
 - **Filters no longer turn themselves on after a reload.** The browser was restoring checkboxes from before the reload, sometimes onto the wrong ones. Now Filter only follows the link.
