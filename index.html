@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v86 -->
+<!-- build: v87 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -705,6 +705,28 @@ summary::marker { font-size: 1.15em; }
 .import-list .imp-sw { width: 12px; height: 12px; border-radius: 50%; }
 .import-panel summary small { font-weight: 400; margin-left: 4px; }
 .save-new { display: inline-flex; gap: 6px; flex-wrap: wrap; flex: 1 1 100%; }
+/* v87: compact cards */
+.results-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.results-head h2 { flex: 1 1 auto; }
+.card-view { display: flex; gap: 6px; align-items: center; }
+.cv-wrap { position: relative; }
+.cv-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; width: 250px; background: #fff; border: 1.5px solid var(--ink); border-radius: 12px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(30,35,64,.18); }
+.cv-pop p { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
+.cv-pop label { display: flex; gap: 8px; align-items: center; padding: 2px 0; font-size: 14px; }
+.cls-tag { display: inline-block; font-size: 11px; font-weight: 700; border: 1px solid var(--line); border-radius: 5px; padding: 0 5px; margin-right: 2px; vertical-align: 1px; color: var(--ink); background: #fff; }
+.cls-tag.non-city { border-style: dashed; color: var(--muted); }
+.seg .ord { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 5px; margin-right: 6px; border-radius: 11px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 800; vertical-align: 2px; }
+.seg-sum { display: none; }
+li.seg.compact { padding-top: 8px; padding-bottom: 8px; cursor: pointer; }
+li.seg.compact .tags, li.seg.compact .facts, li.seg.compact .profile, li.seg.compact .seg-btns, li.seg.compact .kind { display: none; }
+li.seg.compact .seg-top { align-items: center; }
+li.seg.compact .seg-name { font-size: 16px; }
+li.seg.compact .seg-between { font-size: 13px; }
+li.seg.compact .seg-sum { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; align-items: center; max-width: 52%; }
+.seg-sum .sv { font-size: 12px; background: var(--bg, #F3F3FA); border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; white-space: nowrap; }
+.seg-sum .caret { color: var(--muted); font-size: 12px; }
+li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px; }
+@media (max-width: 860px) { li.seg.compact .seg-sum .sv:nth-of-type(n+3) { display: none; } .card-view { flex: 1 1 100%; } }
 .save-name { flex: 1 1 140px; min-width: 120px; font: inherit; font-size: 14px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
 .area-name { flex: 1; min-width: 140px; font: inherit; font-size: 14px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
 .lyr-reset { display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 10px; }
@@ -976,6 +998,11 @@ summary::marker { font-size: 1.15em; }
   <section class="results" id="results" hidden aria-live="polite">
     <div class="results-head">
       <h2 id="results-title"></h2>
+      <div class="card-view" id="card-view" hidden>
+        <button type="button" class="btn small" id="cards-all" aria-pressed="false" data-i18n="cardsAll">Open all</button>
+        <span class="cv-wrap"><button type="button" class="btn small" id="cv-btn" aria-expanded="false" data-i18n="cvBtn">Compact cards show ▾</button>
+          <div class="cv-pop" id="cv-pop" hidden><p data-i18n="cvHint">On each closed card (up to 3; phones show the first 2):</p><div id="cv-opts"></div></div></span>
+      </div>
     </div>
     <p class="results-sub" id="results-sub"></p>
     <label class="route-wrap" id="route-wrap" hidden data-i18n-title="routeTitle" title=""><input autocomplete="off" type="checkbox" id="route-on"> <span data-i18n="routeOn">This is a route</span><small data-i18n="routeHint">shows its length and any gaps under 150 m</small></label>
@@ -1291,7 +1318,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v86';
+const _BUILD_VERSION = 'v87';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1534,6 +1561,11 @@ const I18N = {
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
     moreBtn: 'Menu', moreTitle: 'Map, layers, areas, Nearby, Filter, Focus and Table', ctl3d: '3D: tilt the map over the hills (tap again for flat)', ctl2d: 'Flat map, seen from above', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
     censusLoad: 'Count people and homes',
+    clsRetired: 'Retired', clsPed: 'Pedestrian', clsPaper: 'Paper street', clsPrivate: 'Private', clsNotMaint: 'Not city maintained', clsOther: 'Other',
+    clsCity: 'The city’s street class', clsNone: 'The city gives no class; this is what kind of street it is',
+    cardsAll: 'Open all', cardsFold: 'Compact', cvBtn: 'Compact cards show ▾', cvHint: 'On each closed card (up to 3; phones show the first 2):',
+    cvSlope: 'Slope', cvHomes: 'Homes', cvBiz: 'Businesses', cvTrees: 'Trees', cvLen: 'Length', cvMuni: 'Muni', cvPeople: 'People', cvZone: 'Zoning',
+    sumSlope: '{pct}% slope', sumHomes: '{n} homes', sumBiz: '{n} biz', sumTrees: '{n} trees', sumMuni: 'Muni {r}', sumNoMuni: 'no Muni', sumPeople: '{n} people', sumLegs: '{n} streets meet',
     streetView: 'Street View ↗', streetViewShort: 'Open ↗', street_view: 'Street View', gapRow: 'Gap', gapFrom: '{street} at {corner}',
     bizCatNote: 'Kinds come from each business’s self-reported NAICS code, which is sometimes wrong.',
     sinceAge: 'Here since {d} · {age}', sinceOnly: 'Here since {d}', ageYears: '{n} years', ageMonths: '{n} months', ageNew: 'new this month',
@@ -2817,6 +2849,8 @@ function render() {
   // rings from a card list that's no longer open (or whose card is gone)
   if (Tiles.hlFor && !openNg.has(Tiles.hlFor.split('|')[0] + (Tiles.hlFor.endsWith('|trees') ? 'ftrees' : 'b'))) Tiles.highlight(null);
   $('clear-sel-bottom').hidden = !segs.length;
+  document.querySelectorAll('#seg-list > li.seg[data-cnn]').forEach(li => li.tabIndex = 0);
+  CardView.syncHead();
   hydrateElevation();
   // Muni and bike rows fill in once those files have loaded (the first time cards appear)
   if (segs.length && !Transit.ready) Transit.ensure().then(() => { if (Transit.ready) render(); });
@@ -2847,14 +2881,80 @@ function describeStreets(segs) {
   });
   return parts.length > 3 ? `${parts.slice(0, 3).join(' · ')} · ${t('alongMore', { n: parts.length - 3 })}` : parts.join(' · ');
 }
+// One tag under every street's name: the city's class, or (when the city gives none) what kind of street it is
+function streetClass(s) {
+  if (CLASS_KEYS[s.classcode]) return { label: t(CLASS_KEYS[s.classcode]), city: true };
+  if (s.dropped || !s.active) return { label: t('clsRetired'), city: false };
+  if (s.layer === 'STREETS_PEDESTRI') return { label: t('clsPed'), city: false };
+  if (/^PAPER/.test(s.layer)) return { label: t('clsPaper'), city: false };
+  if (/^PRIVATE/.test(s.layer)) return { label: t('clsPrivate'), city: false };
+  if (s.layer === 'UPROW' || !s.accepted) return { label: t('clsNotMaint'), city: false };
+  return { label: t('clsOther'), city: false };
+}
+/* ---------- Compact cards: one open at a time ----------
+   Closed cards are one line: the street, its class and cross streets, and up to three numbers chosen under
+   "Compact cards show" (slope, homes and businesses to start; phones show two). A click opens a card and folds
+   the one that was open; a street added from the map opens. "Open all" shows every card in full. */
+const CardView = (() => {
+  const VKEY = 'bp-card-vals', AKEY = 'bp-cards-all';
+  const MAX = 3, DEFAULT = ['slope', 'homes', 'biz'];
+  let vals = (() => { try { const v = JSON.parse(localStorage.getItem(VKEY)); return Array.isArray(v) && v.length ? v.slice(0, MAX) : DEFAULT; } catch (e) { return DEFAULT; } })();
+  let all = (() => { try { return localStorage.getItem(AKEY) === '1'; } catch (e) { return false; } })();
+  let open = null;
+  const num = n => n == null || n === '' ? null : Number(n).toLocaleString();
+  const VALS = {
+    slope: s => { if (isInt(s)) return null; const p = Elev.peek(s.cnn); const v = p ? Math.abs(p.net) : s.slopeAvg != null ? Math.abs(s.slopeAvg) : null; return v == null ? null : t('sumSlope', { pct: v.toFixed(1) }); },
+    homes: s => { const r = Parcels.peek(s) || Facts.parcels(s); return r && r.homes != null ? t('sumHomes', { n: num(r.homes) }) : null; },
+    biz: s => { const b = Facts.biz(s); if (b) return t('sumBiz', { n: num(b.n) }); const r = Tiles.peek(s); return r && r.businesses ? t('sumBiz', { n: num(bizShown(r.businesses).reduce((a, x) => a + x.shown.length, 0)) }) : null; },
+    trees: s => { const r = Facts.trees(s) || (Tiles.peek(s) || {}).trees; return r ? t('sumTrees', { n: num(r.n) }) : null; },
+    len: s => isInt(s) ? null : t('ft', { n: fmtFt(s.len) }),
+    muni: s => { const m = transitFields(s).muni_routes; return m ? t('sumMuni', { r: m.replace(/ \([^)]*\)/g, '').split('; ').slice(0, 3).join(' ') }) : t('sumNoMuni'); },
+    people: s => { const e = Areas.census(s) || Facts.census(s); return e ? t('sumPeople', { n: num(Math.round(e.people)) }) : null; },
+    zone: s => { const r = Parcels.peek(s) || Facts.parcels(s); return r && r.zones && r.zones.length ? r.zones[0].code : null; },
+  };
+  const LABELS = { slope: 'cvSlope', homes: 'cvHomes', biz: 'cvBiz', trees: 'cvTrees', len: 'cvLen', muni: 'cvMuni', people: 'cvPeople', zone: 'cvZone' };
+  const isCompact = s => !all && state.results.length > 1 && s.cnn !== open;
+  function sumHTML(s) {
+    if (isInt(s)) return `<div class="seg-sum"><span class="sv">${esc(t('sumLegs', { n: (s.legs || []).length || (s.streets || []).length }))}</span><span class="caret">▸</span></div>`;
+    const out = vals.map(k => VALS[k] && VALS[k](s)).filter(Boolean);
+    return `<div class="seg-sum">${out.map(v => `<span class="sv">${esc(v)}</span>`).join('')}<span class="caret">▸</span></div>`;
+  }
+  // a route's cards start with their place along it
+  const orderTag = s => { if (!state.route || state.results.length < 2) return ''; const i = state.results.indexOf(s); return i < 0 ? '' : `<span class="ord">${i + 1}</span>`; };
+  function setOpen(cnn, redraw = true) { open = cnn; if (redraw) render(); }
+  function setAll(on) { all = on; try { localStorage.setItem(AKEY, on ? '1' : '0'); } catch (e) { } render(); syncHead(); }
+  function setVals(v) { vals = v.slice(0, MAX); try { localStorage.setItem(VKEY, JSON.stringify(vals)); } catch (e) { } render(); syncHead(); }
+  function syncHead() {
+    const h = $('card-view'); if (!h) return;
+    h.hidden = state.results.length < 2;
+    $('cards-all').setAttribute('aria-pressed', all); $('cards-all').textContent = t(all ? 'cardsFold' : 'cardsAll');
+    $('cv-opts').innerHTML = Object.keys(VALS).map(k => `<label><input type="checkbox" value="${k}" ${vals.includes(k) ? 'checked' : ''} ${!vals.includes(k) && vals.length >= MAX ? 'disabled' : ''}> ${esc(t(LABELS[k]))}</label>`).join('');
+  }
+  function setup() {
+    $('cards-all').addEventListener('click', () => setAll(!all));
+    const b = $('cv-btn'), m = $('cv-pop');
+    b.addEventListener('click', e => { e.stopPropagation(); m.hidden = !m.hidden; b.setAttribute('aria-expanded', !m.hidden); });
+    document.addEventListener('click', e => { if (!e.target.closest('#card-view')) { m.hidden = true; b.setAttribute('aria-expanded', 'false'); } });
+    $('cv-opts').addEventListener('change', e => { const k = e.target.value; setVals(e.target.checked ? [...vals, k] : vals.filter(x => x !== k)); });
+    // ↑ ↓ between cards, Enter opens
+    $('seg-list').addEventListener('keydown', e => {
+      const li = e.target.closest && e.target.closest('li.seg[data-cnn]'); if (!li || e.target.matches('input, select, textarea, a, button, summary')) return;
+      if (e.key === 'Enter') { e.preventDefault(); const cnn = +li.dataset.cnn; setOpen(open === cnn ? null : cnn); const n = document.querySelector(`li.seg[data-cnn="${cnn}"]`); if (n) n.focus(); }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = e.key === 'ArrowDown' ? li.nextElementSibling : li.previousElementSibling; if (n && n.matches('li.seg')) n.focus(); }
+    });
+    syncHead();
+  }
+  return { isCompact, sumHTML, orderTag, setup, syncHead, setOpen, get open() { return open; }, get all() { return all; } };
+})();
 function intCardHTML(i) {
   const on = state.checked.has(i.cnn);
   const elev = Elev.hasPoint(i.cnn) ? (Elev.peekPoint(i.cnn) == null ? '' : t('ft', { n: Math.round(Elev.peekPoint(i.cnn) * M2FT) })) : t('measuring');
-  return `<li class="seg int ${on ? 'is-checked' : ''}" data-cnn="${i.cnn}">
+  return `<li class="seg int ${on ? 'is-checked' : ''}${CardView.isCompact(i) ? ' compact' : ''}" data-cnn="${i.cnn}">
     <input type="checkbox" ${on ? 'checked' : ''} aria-label="${esc(intName(i))}">
     <div class="seg-top">
-      <div><div class="kind">${esc(t('intKind'))}</div><div class="seg-name">${esc(intName(i))}</div>
+      <div><div class="kind">${esc(t('intKind'))}</div><div class="seg-name">${CardView.orderTag(i)}${esc(intName(i))}</div>
       ${i.side ? `<div class="seg-between">${esc(t('sideTag', { side: t(i.side) }))}</div>` : ''}</div>
+      ${CardView.sumHTML(i)}
       <div class="seg-btns">
         <button type="button" class="cnn-chip" data-copy="${i.cnn}" title="Copy CNN"><small>CNN</small>${i.cnn}</button>
         <button type="button" class="remove-btn" data-remove="${i.cnn}" title="${esc(t('removeCard'))}" aria-label="${esc(t('removeCard'))}: ${esc(intName(i))}">×</button>
@@ -2937,16 +3037,17 @@ function cardHTML(s) {
   if (s.deadAt) tags.push(['good', t('deadEndTag')]);
   if (s.owAlong) tags.push(['info', t('onewayDir', { arrow: ARROWS[s.owDir], dir: t('bound_' + s.owDir),
     a: P(s.oneway === 'F' ? s.f : s.t), b: P(s.oneway === 'F' ? s.t : s.f) })]);
-  if (CLASS_KEYS[s.classcode]) tags.push(['', t(CLASS_KEYS[s.classcode])]);
   const sides = Logic.addressSides(s);
+  const cls = streetClass(s);
   const addr = sides.length
     ? sides.map(x => `${t(x.parity)} ${x.from}–${x.to}, ${t('sideOf', { side: t(x.side) })}`).join('<br>')
     : t('noAddr');
-  return `<li class="seg ${on ? 'is-checked' : ''}" data-cnn="${s.cnn}">
+  return `<li class="seg ${on ? 'is-checked' : ''}${CardView.isCompact(s) ? ' compact' : ''}" data-cnn="${s.cnn}">
     <input type="checkbox" ${on ? 'checked' : ''} aria-label="${esc(P(s.street))} ${esc(P(s.f))} – ${esc(P(s.t))}">
     <div class="seg-top">
-      <div><div class="seg-name">${esc(P(s.street))}</div>
-      <div class="seg-between">${esc(betweenText(s))}</div></div>
+      <div><div class="seg-name">${CardView.orderTag(s)}${esc(P(s.street))}</div>
+      <div class="seg-between"><span class="cls-tag${cls.city ? '' : ' non-city'}" title="${esc(t(cls.city ? 'clsCity' : 'clsNone'))}">${esc(cls.label)}</span> ${esc(betweenText(s))}</div></div>
+      ${CardView.sumHTML(s)}
       <div class="seg-btns">
         <button type="button" class="cnn-chip" data-copy="${s.cnn}" title="Copy CNN"><small>CNN</small>${s.cnn}</button>
         <button type="button" class="copy-card" data-copy-card="${s.cnn}" title="${esc(t('copyCard'))}" aria-label="${esc(t('copyCard'))}">⧉</button>
@@ -3146,8 +3247,14 @@ function setupResultsEvents() {
     const cnn = +li.dataset.cnn;
     const own = li.querySelector(':scope > input');
     if (e.target.tagName === 'INPUT' && e.target !== own) return;
-    // the checkbox checks; anywhere else on the card goes to it on the map
-    if (e.target !== own) { goToCard(state.results.find(r => r.cnn === cnn)); return; }
+    // the checkbox checks; anywhere else on the card goes to it on the map (and opens it, folding the last one;
+    // a click on the open card's top line folds it)
+    if (e.target !== own) {
+      const s = state.results.find(r => r.cnn === cnn);
+      if (li.classList.contains('compact')) { CardView.setOpen(cnn); goToCard(s); requestAnimationFrame(() => jumpToCard(cnn)); return; }
+      if (!CardView.all && state.results.length > 1 && e.target.closest('.seg-top') && CardView.open === cnn) { CardView.setOpen(null); return; }
+      goToCard(s); return;
+    }
     toggleChecked(cnn, own.checked);
   });
 }
@@ -9620,6 +9727,7 @@ function toggleFromMap(s) {
     state.results = [...state.results, s];
     if (!state.title) state.title = t('linkedBlocks');
     state.checked.add(s.cnn);
+    CardView.setOpen(s.cnn, false);
     toast(t('added', { name: `${itemName(s)} (CNN ${s.cnn})` }));
   } else if (state.checked.has(s.cnn)) {
     state.checked.delete(s.cnn);
@@ -9829,6 +9937,7 @@ function drawBunting() {
   if (many > 3) $('map-loading-text').textContent = t('loadingN', { n: many.toLocaleString() });
   setupQuiet();
   setupMapMenus();
+  CardView.setup();
   Drops.setupUI();
   // the street facts (small) before the first cards, so they don't start reading tiles; at most 4 s
   await Promise.race([factsP, new Promise(r => setTimeout(r, 4000))]);

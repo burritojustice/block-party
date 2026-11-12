@@ -2,6 +2,17 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v87
+
+- **Compact cards, one open at a time:** with more than one street, closed cards are one line: the street, its type and cross streets, and a few numbers.
+  - Clicking a card opens it, zooms the map to it and folds the one that was open. Clicking the open card's top line folds it too.
+  - A street you add from the map opens, so collecting streets on a ride keeps the newest one in view.
+  - **Open all** shows every card in full, as before; the choice is remembered.
+  - **↑ / ↓** move between cards and **Enter** opens one.
+- **Compact cards show ▾:** pick up to three numbers for closed cards: slope, homes and businesses to start, or trees, length, Muni, people or zoning. Phones show the first two.
+- **Street type under every name:** the city's class (Residential, Collector, Arterial, Major street, Freeway, Freeway ramp). When the city gives none, a dashed tag says what kind of street it is instead: Private, Not city maintained, Paper street, Pedestrian or Retired. That covers every current street.
+- **Routes number their cards** (1, 2, 3…) in route order.
+
 ## v86
 
 - **Projects in Google Sheets:** a project is one sheet with a **Routes** tab and a tab for each route or list you save.
