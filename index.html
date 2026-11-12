@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v87 -->
+<!-- build: v88 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -722,9 +722,14 @@ li.seg.compact .tags, li.seg.compact .facts, li.seg.compact .profile, li.seg.com
 li.seg.compact .seg-top { align-items: center; }
 li.seg.compact .seg-name { font-size: 16px; }
 li.seg.compact .seg-between { font-size: 13px; }
-li.seg.compact .seg-sum { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; align-items: center; max-width: 52%; }
+li.seg.compact .seg-sum { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; align-items: center; max-width: 50%; }
 .seg-sum .sv { font-size: 12px; background: var(--bg, #F3F3FA); border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; white-space: nowrap; }
-.seg-sum .caret { color: var(--muted); font-size: 12px; }
+.seg-sum .caret { color: var(--ink); font-size: 22px; line-height: 1; margin-left: 4px; }
+.seg-ft, .seg-cls { display: none; }
+li.seg.compact .seg-between { display: none; }
+li.seg.compact .seg-ft { display: block; font-weight: 700; font-size: 14px; margin-top: 1px; }
+li.seg.compact .seg-ft .seg-addr { color: var(--ink-soft); }
+li.seg.compact .seg-cls { display: block; margin-top: 3px; }
 li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px; }
 @media (max-width: 860px) { li.seg.compact .seg-sum .sv:nth-of-type(n+3) { display: none; } .card-view { flex: 1 1 100%; } }
 .save-name { flex: 1 1 140px; min-width: 120px; font: inherit; font-size: 14px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
@@ -996,16 +1001,6 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
 
   <div class="place-card" id="place-card" hidden aria-live="polite"></div>
   <section class="results" id="results" hidden aria-live="polite">
-    <div class="results-head">
-      <h2 id="results-title"></h2>
-      <div class="card-view" id="card-view" hidden>
-        <button type="button" class="btn small" id="cards-all" aria-pressed="false" data-i18n="cardsAll">Open all</button>
-        <span class="cv-wrap"><button type="button" class="btn small" id="cv-btn" aria-expanded="false" data-i18n="cvBtn">Compact cards show ▾</button>
-          <div class="cv-pop" id="cv-pop" hidden><p data-i18n="cvHint">On each closed card (up to 3; phones show the first 2):</p><div id="cv-opts"></div></div></span>
-      </div>
-    </div>
-    <p class="results-sub" id="results-sub"></p>
-    <label class="route-wrap" id="route-wrap" hidden data-i18n-title="routeTitle" title=""><input autocomplete="off" type="checkbox" id="route-on"> <span data-i18n="routeOn">This is a route</span><small data-i18n="routeHint">shows its length and any gaps under 150 m</small></label>
     <div class="actions">
       <button type="button" class="btn primary apply" id="apply" data-i18n="apply">Apply for a Block Party</button>
       <details class="sel-panel save-panel" id="save-panel">
@@ -1079,6 +1074,16 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
         <p class="sel-hint" id="area-status"></p>
       </details>
     </div>
+    <div class="results-head">
+      <h2 id="results-title"></h2>
+      <div class="card-view" id="card-view" hidden>
+        <button type="button" class="btn small" id="cards-all" aria-pressed="false" data-i18n="cardsAll">Open all</button>
+        <span class="cv-wrap"><button type="button" class="btn small" id="cv-btn" aria-expanded="false" data-i18n="cvBtn">Compact cards show ▾</button>
+          <div class="cv-pop" id="cv-pop" hidden><p data-i18n="cvHint">On each closed card (up to 6; phones show the first 2):</p><div id="cv-opts"></div></div></span>
+      </div>
+    </div>
+    <p class="results-sub" id="results-sub"></p>
+    <label class="route-wrap" id="route-wrap" hidden data-i18n-title="routeTitle" title=""><input autocomplete="off" type="checkbox" id="route-on"> <span data-i18n="routeOn">This is a route</span><small data-i18n="routeHint">shows its length and any gaps under 150 m</small></label>
     <ul class="seg-list feat-list" id="feat-list"></ul>
     <ul class="seg-list" id="seg-list"></ul>
     <button type="button" class="btn small list-clear" id="clear-sel-bottom" data-i18n="clearSel">Clear selections</button>
@@ -1318,7 +1323,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v87';
+const _BUILD_VERSION = 'v88';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1563,8 +1568,8 @@ const I18N = {
     censusLoad: 'Count people and homes',
     clsRetired: 'Retired', clsPed: 'Pedestrian', clsPaper: 'Paper street', clsPrivate: 'Private', clsNotMaint: 'Not city maintained', clsOther: 'Other',
     clsCity: 'The city’s street class', clsNone: 'The city gives no class; this is what kind of street it is',
-    cardsAll: 'Open all', cardsFold: 'Compact', cvBtn: 'Compact cards show ▾', cvHint: 'On each closed card (up to 3; phones show the first 2):',
-    cvSlope: 'Slope', cvHomes: 'Homes', cvBiz: 'Businesses', cvTrees: 'Trees', cvLen: 'Length', cvMuni: 'Muni', cvPeople: 'People', cvZone: 'Zoning',
+    cardsAll: 'Open all', cardsFold: 'Compact', cvBtn: 'Compact cards show ▾', cvHint: 'On each closed card (up to 6; phones show the first 2):',
+    cvSlope: 'Slope', cvHomes: 'Homes', cvBiz: 'Businesses', cvTrees: 'Trees', cvLen: 'Length', cvMuni: 'Muni', cvPeople: 'People', cvZone: 'Zoning', cvSup: 'Supervisor district', cvZip: 'ZIP code', cvHood: 'Neighborhood',
     sumSlope: '{pct}% slope', sumHomes: '{n} homes', sumBiz: '{n} biz', sumTrees: '{n} trees', sumMuni: 'Muni {r}', sumNoMuni: 'no Muni', sumPeople: '{n} people', sumLegs: '{n} streets meet',
     streetView: 'Street View ↗', streetViewShort: 'Open ↗', street_view: 'Street View', gapRow: 'Gap', gapFrom: '{street} at {corner}',
     bizCatNote: 'Kinds come from each business’s self-reported NAICS code, which is sometimes wrong.',
@@ -2881,6 +2886,11 @@ function describeStreets(segs) {
   });
   return parts.length > 3 ? `${parts.slice(0, 3).join(' · ')} · ${t('alongMore', { n: parts.length - 3 })}` : parts.join(' · ');
 }
+// "601–649": the lowest and highest address on the block, both sides
+function addrRange(sides) {
+  const ns = (sides || []).flatMap(x => [+x.from, +x.to]).filter(n => n > 0);
+  return ns.length ? `${Math.min(...ns)}–${Math.max(...ns)}` : '';
+}
 // One tag under every street's name: the city's class, or (when the city gives none) what kind of street it is
 function streetClass(s) {
   if (CLASS_KEYS[s.classcode]) return { label: t(CLASS_KEYS[s.classcode]), city: true };
@@ -2897,7 +2907,7 @@ function streetClass(s) {
    the one that was open; a street added from the map opens. "Open all" shows every card in full. */
 const CardView = (() => {
   const VKEY = 'bp-card-vals', AKEY = 'bp-cards-all';
-  const MAX = 3, DEFAULT = ['slope', 'homes', 'biz'];
+  const MAX = 6, DEFAULT = ['slope', 'homes', 'biz'];
   let vals = (() => { try { const v = JSON.parse(localStorage.getItem(VKEY)); return Array.isArray(v) && v.length ? v.slice(0, MAX) : DEFAULT; } catch (e) { return DEFAULT; } })();
   let all = (() => { try { return localStorage.getItem(AKEY) === '1'; } catch (e) { return false; } })();
   let open = null;
@@ -2908,11 +2918,14 @@ const CardView = (() => {
     biz: s => { const b = Facts.biz(s); if (b) return t('sumBiz', { n: num(b.n) }); const r = Tiles.peek(s); return r && r.businesses ? t('sumBiz', { n: num(bizShown(r.businesses).reduce((a, x) => a + x.shown.length, 0)) }) : null; },
     trees: s => { const r = Facts.trees(s) || (Tiles.peek(s) || {}).trees; return r ? t('sumTrees', { n: num(r.n) }) : null; },
     len: s => isInt(s) ? null : t('ft', { n: fmtFt(s.len) }),
-    muni: s => { const m = transitFields(s).muni_routes; return m ? t('sumMuni', { r: m.replace(/ \([^)]*\)/g, '').split('; ').slice(0, 3).join(' ') }) : t('sumNoMuni'); },
+    muni: s => { if (!Transit.ready) return null; const m = transitFields(s).muni_routes; return m ? t('sumMuni', { r: m.replace(/ \([^)]*\)/g, '').split('; ').slice(0, 3).join(' ') }) : t('sumNoMuni'); },
     people: s => { const e = Areas.census(s) || Facts.census(s); return e ? t('sumPeople', { n: num(Math.round(e.people)) }) : null; },
     zone: s => { const r = Parcels.peek(s) || Facts.parcels(s); return r && r.zones && r.zones.length ? r.zones[0].code : null; },
+    sup: s => { const a = Areas.loaded('sup') && Areas.of('sup', s); return a && a.length ? a.map(x => x.short).join('/') : null; },
+    zip: s => s.zip || null,
+    hood: s => { const h = s.hoods && (s.hoods[hoodSet] || s.hoods.analysis); return h ? String(h).split('; ')[0] : (s.anhood || null); },
   };
-  const LABELS = { slope: 'cvSlope', homes: 'cvHomes', biz: 'cvBiz', trees: 'cvTrees', len: 'cvLen', muni: 'cvMuni', people: 'cvPeople', zone: 'cvZone' };
+  const LABELS = { slope: 'cvSlope', homes: 'cvHomes', biz: 'cvBiz', trees: 'cvTrees', len: 'cvLen', muni: 'cvMuni', people: 'cvPeople', zone: 'cvZone', sup: 'cvSup', zip: 'cvZip', hood: 'cvHood' };
   const isCompact = s => !all && state.results.length > 1 && s.cnn !== open;
   function sumHTML(s) {
     if (isInt(s)) return `<div class="seg-sum"><span class="sv">${esc(t('sumLegs', { n: (s.legs || []).length || (s.streets || []).length }))}</span><span class="caret">▸</span></div>`;
@@ -3046,7 +3059,9 @@ function cardHTML(s) {
     <input type="checkbox" ${on ? 'checked' : ''} aria-label="${esc(P(s.street))} ${esc(P(s.f))} – ${esc(P(s.t))}">
     <div class="seg-top">
       <div><div class="seg-name">${CardView.orderTag(s)}${esc(P(s.street))}</div>
-      <div class="seg-between"><span class="cls-tag${cls.city ? '' : ' non-city'}" title="${esc(t(cls.city ? 'clsCity' : 'clsNone'))}">${esc(cls.label)}</span> ${esc(betweenText(s))}</div></div>
+      <div class="seg-between"><span class="cls-tag${cls.city ? '' : ' non-city'}" title="${esc(t(cls.city ? 'clsCity' : 'clsNone'))}">${esc(cls.label)}</span> ${esc(betweenText(s))}</div>
+      <div class="seg-ft">${addrRange(sides) ? `<span class="seg-addr">${esc(addrRange(sides))}</span> · ` : ''}${esc(betweenText(s))}</div>
+      <div class="seg-cls"><span class="cls-tag${cls.city ? '' : ' non-city'}">${esc(cls.label)}</span></div></div>
       ${CardView.sumHTML(s)}
       <div class="seg-btns">
         <button type="button" class="cnn-chip" data-copy="${s.cnn}" title="Copy CNN"><small>CNN</small>${s.cnn}</button>
