@@ -2,6 +2,21 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v86
+
+- **Projects in Google Sheets:** a project is one sheet with a **Routes** tab and a tab for each route or list you save.
+  - **New project sheet** (name it, or it's dated) starts one. **Add to “…”** puts the next route in the last project you used, and **Add to a project…** picks any other.
+  - Each save adds a row to Routes: the name, route or list, street count, gaps, length, date, the tab's name, a link to the tab, and the Block Party link.
+  - The tab link uses the tab's id, so it still works after you rename the tab. The Routes tab is found by its id too, then by its name.
+  - Name boxes: one for the route or list, one for a new project.
+- **Saving says where it went:** "Saved 16 streets to “Mission rides”, tab “Valencia ride”." shows as a message and under the buttons, with a link to open the tab.
+- **Gaps in a route are rows** in Copy CSV / JSON, downloads and sheets. Each gap sits right after the street it leaves from, with its length, its two corners and a line between them. A route's `order` counts the gaps too, so the rows read along the route.
+- **Street View:** each card's length line has a **Street View ↗** link that opens Google Street View in a new window, standing mid-block and looking along the street. The table and exports have a `street_view` column with the same link.
+- **Filter → Alleys:** streets named as an alley (ALY).
+- **How near:** "This street and the streets at its ends" is now **Around the corner(s)**.
+- **Import under Copy / Save:** the sidebar has its own Import panel, the same as the one in Layers, listing the files you've brought in (with ×). The count shows on the folded panel.
+- **Business kinds note:** the business map key and Nearby's kind chips say the kinds come from self-reported NAICS codes, which are sometimes wrong.
+
 ## v85
 
 - **A business from search shows its whole registration:** the place card now has the owner, mailing address, license, industry and start date. Clicking the pink pin on the map opens the same record.
