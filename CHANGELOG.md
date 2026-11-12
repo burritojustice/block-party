@@ -2,6 +2,19 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v85
+
+- **A business from search shows its whole registration:** the place card now has the owner, mailing address, license, industry and start date. Clicking the pink pin on the map opens the same record.
+- **"Here since" stands out:** every business record (on the map, on cards and in search) shows its start date in a yellow badge near the top, with how long ago that was ("Here since 2019-06-28 · 7 years").
+- **Where am I, on any screen:** a new ◎ button with the map controls finds you (computers use Wi-Fi location) and shows the blue dot. Nearby can then start from "Near me".
+- **How near, in plain words:** streets are streets and blocks are assessor blocks now.
+  - This street (both sides) · This street and the streets at its ends · Two streets out
+  - **New:** The assessor blocks it touches (a street: the blocks on both sides; a corner: the four blocks around it; a place: the block it's on), and Those assessor blocks and the ones around them (about nine for a place mid-block).
+  - Cards say "on this street", "at the end of this street", "2 streets out" and "assessor block 3608".
+  - The streets counted are drawn a little stronger on the map.
+- **Nearby businesses by kind:** checking Businesses in Nearby shows Food & drink, Retail, Services and Everything else, so you can look for just one or two kinds.
+- **Nearby table and map, linked:** clicking a match in the table (or the Nearby list) rings it on the map, and the ring stays, panning there if it's off screen. Clicking a match on the map opens its row in the table and marks it.
+
 ## v84
 
 - **Phones: one ☰ button** at the top left, with no word next to it. Nearby moved into the ☰ menu with the rest.

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v84 -->
+<!-- build: v85 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -462,6 +462,9 @@ td.tbl-num { text-align: right; font-variant-numeric: tabular-nums; }
 /* v84: full screen and 3D sit with the zoom buttons */
 .bp-ctl button { display: grid; place-items: center; }
 .bp-ctl button svg { width: 17px; height: 17px; stroke: #1E2340; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.bp-ctl #ctl-me[aria-pressed="true"] svg { stroke: #1C7ED6; }
+.bp-ctl #ctl-me.is-busy svg { animation: bp-spin 1s linear infinite; }
+@keyframes bp-spin { to { transform: rotate(360deg); } }
 .bp-ctl #ctl-3d { font: 700 12px/1 system-ui, sans-serif; color: #1E2340; letter-spacing: -.02em; }
 .bp-ctl #ctl-3d[aria-pressed="true"] { background: #1E2340; color: #fff; }
 @media (max-width: 860px) {
@@ -567,6 +570,8 @@ span.dl-what label { display: inline-flex; gap: 4px; align-items: center; white-
 .tbl.tbl-nbmode td.tbl-num { text-align: right; max-width: 110px; }
 .nb-th i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; vertical-align: 0; }
 .tbl tr[data-nb-ll]:hover td, .nb-item[data-nb-ll]:hover { background: #FFF3C4; }
+.tbl tr.is-picked td, .nb-item.is-picked { background: #FFE08A; box-shadow: inset 4px 0 0 #FF3D7F; }
+.tbl tr.nb-sub[data-nb-ll], .nb-item[data-nb-ll] { cursor: pointer; }
 .place-card { margin: 12px 0 0; border: 2px solid var(--ink); border-radius: 14px; padding: 10px 12px; background: #fff; font-size: 14px; box-shadow: 0 3px 0 var(--ink); }
 .place-card .pc-head { display: flex; justify-content: space-between; align-items: start; gap: 8px; font-size: 16px; }
 .place-card .pc-head::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: #FF3D7F; border: 2px solid #fff; box-shadow: 0 0 0 2px #FF3D7F; flex: none; margin-top: 5px; }
@@ -691,6 +696,8 @@ summary::marker { font-size: 1.15em; }
 .sel-step { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-soft); width: 56px; flex: none; overflow-wrap: anywhere; }
 #pick-count { font-size: 13px; color: var(--ink-soft); }
 .sel-hint { font-size: 13px; color: var(--ink-soft); margin: 6px 0 0 62px; }
+.nb-bizcats { margin: 2px 0 6px 26px; }
+.nb-bizcats .land-chip { font-size: 12px; }
 .save-name { flex: 1 1 140px; min-width: 120px; font: inherit; font-size: 14px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
 .area-name { flex: 1; min-width: 140px; font: inherit; font-size: 14px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
 .lyr-reset { display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 10px; }
@@ -739,6 +746,9 @@ summary::marker { font-size: 1.15em; }
 .maplibregl-popup, .maplibregl-popup .maplibregl-popup-content { pointer-events: none; }
 /* …except a clicked record, which scrolls and has a close button */
 .maplibregl-popup.bp-rec, .maplibregl-popup.bp-rec .maplibregl-popup-content { pointer-events: auto; }
+.li-since { font-weight: 700; font-size: 12px; background: #FFF3C4; border-radius: 5px; padding: 0 5px; white-space: nowrap; }
+.pc-rec { margin: 4px 0 8px; } .pc-rec .rec-biz > b { display: none; }
+.rec-since { display: block; margin: 2px 0 4px; font-weight: 800; font-size: 13px; color: #1E2340; background: #FFF3C4; border-radius: 6px; padding: 2px 7px; width: fit-content; }
 .bp-rec .rec-list { max-height: 260px; overflow: auto; margin-top: 6px; }
 .bp-rec .rec-biz + .rec-biz { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; }
 .rec-table { border-collapse: collapse; font-size: 12.5px; margin: 4px 0; }
@@ -1267,7 +1277,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v84';
+const _BUILD_VERSION = 'v85';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1465,7 +1475,7 @@ const I18N = {
     nbNearMe: 'Near me (your location)', nbStreetsN: 'Your selected streets ({n})', nbNoFiles: 'Add a file (Layers ▾) to look for your own lists.', nbByHood: 'by neighborhood',
     nbStorefronts: 'storefronts', nbAllRegs: 'all registrations', nbYou: 'You', nbYourStreets: 'Your streets', nbWorking: 'Matching {n} of {total}…',
     nbSum: '{n} places · {m} matches · {how}', nbInTable: 'Open a row in the table to see its matches; the map rings them.', nbNearYou: 'Near you · {how}', nbNearOne: 'Near {name} · {how}',
-    nbNone: 'Nothing found', nbNoneFound: '(nothing found)', nbMore: '…and {n} more (all in the CSV)', nbM: '{m} m', nbWithin: 'within {m} m', nbAround: 'around the corner', nbBlocksAway: '{n} blocks away',
+    nbNone: 'Nothing found', nbNoneFound: '(nothing found)', nbMore: '…and {n} more (all in the CSV)', nbM: '{m} m', nbWithin: 'within {m} m', nbAround: 'on a street at the end', nbBlocksAway: '{n} streets away',
     nearAdjHood: 'Same or touching neighborhood', nbInside: 'inside', nbThisOne: 'Just this one:', bizMoreN: '…and {n} more',
     focusToast: 'Focus: clicks and hover now go only to {name}. Press Esc or ✕ to go back.', focusToastInts: 'Focus: clicks and hover now go only to intersections (zoom in to see the corners). Press Esc or ✕ to go back.',
     focusBtnTitle: 'Choose what clicks on the map go to', focusOffTitle: 'Stop focusing (Esc)', focusPopTitle: 'Clicks go to', focusFiles: 'Your files',
@@ -1475,11 +1485,11 @@ const I18N = {
     nextTitle: '{name}: {n} places on the map', nextText: 'Click one to see what’s around it, or use Nearby to match it against your other lists.', dismiss: 'Dismiss',
     nearbyHead: 'Nearby', nearYourFiles: 'Your files:', nearSame: 'Same {area}', nearWithin: 'Within {m} m', bizMoreHere: '…and {n} more at {a}',
     dropCopyList: 'Copy list', dropCopied: 'Copied {n} rows from {name}',
-    dropNear: '{n} within {m} m', dropNoneNear: 'None', dropOn: 'on this block', dropM: '{m} m', dropOnStreet: 'on {street}',
-    dropAround: '{street}, around the corner', dropAway: '{street}, {n} blocks out',
+    dropNear: '{n} within {m} m', dropNoneNear: 'None', dropOn: 'on this street', dropM: '{m} m', dropOnStreet: 'on {street}',
+    dropAround: '{street}, at the end of this street', dropAway: '{street}, {n} streets out', dropAblk: 'assessor block {b}',
     dropNearBlock: '{n} on this block', dropNearBlocks: '{n} within {k} block(s)', dropNearInt: '{n} on these streets', dropNearIntN: '{n} within {k} block(s)', dropNearArea: '{n} in {area}',
-    nearTitle: 'Nearby on cards', nearHint: 'How cards list your files’ rows', nearBlocks: 'Blocks', nearArea: 'Area', nearRadius: 'Radius',
-    nearStep0: 'This block', nearStep1: 'Around the corner', nearStep2: '2 blocks',
+    nearTitle: 'Nearby on cards', nearHint: 'How cards list your files’ rows', nearBlocks: 'Streets', nearArea: 'Area', nearRadius: 'Radius',
+    nearStep0: 'This street (both sides)', nearStep1: 'This street and the streets at its ends', nearStep2: 'Two streets out', nearAblk1: 'The assessor blocks it touches', nearAblk2: 'Those assessor blocks and the ones around them', nearByAblk: 'Assessor blocks',
     urlPh: 'Or paste a link: CSV, GeoJSON, Google Sheet, DataSF', urlAdd: 'Add', urlBad: 'That isn’t a link (it should start with https://)',
     urlLoading: 'Loading…', urlSheetName: 'Google Sheet',
     urlSheet: 'Couldn’t read that sheet. In Google Sheets, set Share › General access to “Anyone with the link” (Viewer), then try again.',
@@ -1489,7 +1499,7 @@ const I18N = {
     fmtTiny: 'Tiny', fmtSmall: 'Small', fmtMedium: 'Medium', fmtBig: 'Big', fmtStyle: 'Style', fmtFill: 'Fill', fmtRing: 'Ring', fmtGhost: 'Ghost',
     fmtLabels: 'Labels', fmtLabelZoom: 'Labels from zoom', fmtOther: 'Other', fmtByKey: 'by {col}',
     featKind: 'From {file}', featOn: 'On', featOnN: 'On blocks', featNoBlock: 'No block within 40 m', featAddBlock: 'Add this block', featRow: 'Details', featFields: '{n} fields', featMatchCols: 'Matcher columns ({n})', featLocCols: 'Location columns ({n})',
-    featOnCard: '{name}: on the card for {card}', dropAtCorner: 'at this corner', dropAtInt: 'at {name}', dropAtIntAway: 'at {name}, {n} block(s) out',
+    featOnCard: '{name}: on the card for {card}', dropAtCorner: 'at this corner', dropAtInt: 'at {name}', dropAtIntAway: 'at {name}, {n} street(s) out',
     cornersNoteFeat: 'Everyone in the {n} census blocks at this spot (full counts): neighbors who could see it and walk over',
     resetView: 'Reset the map', resetMap: 'Reset the map', resetMapHint: 'Layers, areas, borders, basemap, 3D, Filter and How near back to how they start. Your files and picks stay.', resetDone: 'The map is back to how it starts',
     clearSelTitle: 'Unpicks the streets, intersections, blocks and file rows you picked, and clears Nearby results. Your search, files and map stay.',
@@ -1510,6 +1520,8 @@ const I18N = {
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
     moreBtn: 'Menu', moreTitle: 'Map, layers, areas, Nearby, Filter, Focus and Table', ctl3d: '3D: tilt the map over the hills (tap again for flat)', ctl2d: 'Flat map, seen from above', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
     censusLoad: 'Count people and homes',
+    sinceAge: 'Here since {d} · {age}', sinceOnly: 'Here since {d}', ageYears: '{n} years', ageMonths: '{n} months', ageNew: 'new this month',
+    meTitle: 'Where am I? (then ◎ Nearby → Near me)', meFound: 'Found you. Open Nearby and pick “Near me” to see what’s around.',
     saveToStep: 'Save to', saveNamePh: 'Name (optional)', saveSheetNew: 'New Google Sheet', saveSheetAdd: 'Add to a sheet…', saveAirtable: 'Airtable',
     saveDefaultRoute: 'Block Party route', saveDefaultSel: 'Block Party streets', saveTabStreets: 'Streets', saveTabAbout: 'About',
     saveWorking: 'Reading the streets’ details and saving…', saveDone: 'Saved {n} rows.', saveDoneRoute: 'Saved the route ({n} rows, in order).', saveOpen: 'Open the sheet',
@@ -3454,7 +3466,7 @@ function initMap() {
   map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), 'top-right');
   // full screen and 3D, under the zoom buttons (wired up in setupMapMenus)
   map.addControl({ onAdd() { const d = document.createElement('div'); d.className = 'maplibregl-ctrl maplibregl-ctrl-group bp-ctl';
-    d.innerHTML = `<button type="button" id="full-btn" aria-pressed="false"></button><button type="button" id="ctl-3d" aria-pressed="false">3D</button>`; return d; }, onRemove() {} }, 'top-right');
+    d.innerHTML = `<button type="button" id="ctl-me" aria-pressed="false"></button><button type="button" id="full-btn" aria-pressed="false"></button><button type="button" id="ctl-3d" aria-pressed="false">3D</button>`; return d; }, onRemove() {} }, 'top-right');
   return new Promise(res => map.on('load', res));
 }
 // Basemap creek fix, ported from Selecter: OSM tags many Bay Area creeks (some of them underground, like
@@ -3831,7 +3843,7 @@ const LAYER_ORDER = [
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-gaps', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
+  ['selection', id => ['bp-gaps', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
@@ -5212,9 +5224,16 @@ function bizAddrs(p) {
       cat: ['food', 'retail', 'services', 'other'].find(c => cats.has(c)) || 'other' };
   });
 }
-const bizOne = (i, p) => `<div class="rec-biz">${(i.dba || i.owner) && (i.dba || i.owner) !== p.address ? `<b>${esc(i.dba || i.owner)}</b>` : ''}` + recRows([[t('recOwner'), i.owner],
+// "Here since 2019-12-04 · 6 years" (or months, for under two years)
+function sinceText(d) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || ''); if (!m) return d ? t('sinceOnly', { d }) : '';
+  const months = Math.max(0, Math.floor((Date.now() - new Date(+m[1], +m[2] - 1, +m[3])) / (30.44 * 864e5)));
+  return t('sinceAge', { d: m[0], age: months >= 24 ? t('ageYears', { n: Math.floor(months / 12) }) : months >= 1 ? t('ageMonths', { n: months }) : t('ageNew') });
+}
+const sinceBadge = d => d ? `<span class="rec-since">${esc(sinceText(d))}</span>` : '';
+const bizOne = (i, p) => `<div class="rec-biz">${(i.dba || i.owner) && (i.dba || i.owner) !== p.address ? `<b>${esc(i.dba || i.owner)}</b>` : ''}${sinceBadge(i.since)}` + recRows([[t('recOwner'), i.owner],
     [t('recMail'), i.mail ? [i.mail, i.mail_place].filter(Boolean).join(', ') : ''], [t('recLicense'), i.lic],
-    [t('recIndustry'), [i.sector, i.naics ? `NAICS ${i.naics}` : ''].filter(Boolean).join(' · ')], [t('recSince'), i.since]])
+    [t('recIndustry'), [i.sector, i.naics ? `NAICS ${i.naics}` : ''].filter(Boolean).join(' · ')]])
     + (i.kind ? `<small class="muted">${esc(t('recHidden', { kind: t('kind_' + i.kind) }))}</small>` : '') + '</div>';
 function bizRecord(p) {
   const items = bizItems(p), one = i => bizOne(i, p);
@@ -5252,7 +5271,7 @@ function tileFacts(s, only) {
     const hidden = r.businesses.flatMap(x => x.items.filter(i => i.kind && !bizAll));
     const kinds = [...new Set(hidden.map(i => t('kind_' + i.kind)))].join(', ');
     // one line per business, its name first, then where it is
-    const li = x => x.shown.slice(0, 40).map(i => `<li><b>${esc(i.dba || i.owner || '')}</b>${i.owner && i.dba && i.owner !== i.dba ? ` <small class="muted">· ${esc(t('bizOwner'))}: ${esc(i.owner)}</small>` : ''}<br><span class="muted">${esc(x.address)}</span></li>`).join('')
+    const li = x => x.shown.slice(0, 40).map(i => `<li><b>${esc(i.dba || i.owner || '')}</b>${i.owner && i.dba && i.owner !== i.dba ? ` <small class="muted">· ${esc(t('bizOwner'))}: ${esc(i.owner)}</small>` : ''}<br><span class="muted">${esc(x.address)}</span>${i.since ? ` <span class="li-since">${esc(sinceText(i.since))}</span>` : ''}</li>`).join('')
       + (x.shown.length > 40 ? `<li class="muted">${esc(t('bizMoreHere', { n: x.shown.length - 40, a: x.address }))}</li>` : '');
     const m = Tiles.meta('businesses');
     html += `<dt>${esc(t(isInt(s) ? 'bizRowInt' : 'bizRow'))}</dt><dd><details class="ng biz"><summary>${esc(addrs === 1 ? t('bizN1', { n }) : t('bizN', { n, a: addrs }))}${hidden.length ? ` <small class="muted">${esc(t('bizHidden', { n: hidden.length, kinds }))}</small>` : ''}</summary>
@@ -5351,7 +5370,8 @@ function shapeSVG(k, color, size = 12) {
 const DROP_NEAR_M = 50;      // radius, the default for "Radius"
 const DROP_ON_M = 30;        // a point this close to a block's centerline is on it (lots are deep)
 const NEAR_KEY = 'bp-near';
-const NEAR_DEFAULT = { by: 'blocks', steps: 0, area: 'hood', radius: 50 };
+const NEAR_DEFAULT = { by: 'blocks', steps: 0, area: 'hood', radius: 50, ring: 1 };
+const ABLK_ACROSS_M = 35;    // assessor blocks across a street from each other (curb to curb plus sidewalks)
 let nearMode = (() => { try { return { ...NEAR_DEFAULT, ...JSON.parse(localStorage.getItem(NEAR_KEY) || '{}') }; } catch (e) { return { ...NEAR_DEFAULT }; } })();
 /* ---------- Airtable: a table or view as one of your files ----------
    A personal access token alone (pick from the bases and tables it can read), or with a link or
@@ -6197,8 +6217,9 @@ const Drops = (() => {
   function nearHTML() {
     const seg = (k, opts) => `<div class="lseg" role="group" data-near="${k}">${opts.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${String(nearMode[k]) === String(v)}">${esc(l)}</button>`).join('')}</div>`;
     return `<div class="lyr-row near-row"><span></span><b>${esc(t('nearTitle'))}<small>${esc(t('nearHint'))}</small></b>
-        ${seg('by', [['blocks', t('nearBlocks')], ['area', t('nearArea')], ['radius', t('nearRadius')]])}</div>
+        ${seg('by', [['blocks', t('nearBlocks')], ['ablk', t('nearByAblk')], ['area', t('nearArea')], ['radius', t('nearRadius')]])}</div>
       <div class="lyr-row lyr-sub" data-near-opt="blocks" ${nearMode.by === 'blocks' ? '' : 'hidden'}><span></span><b></b>${seg('steps', [[0, t('nearStep0')], [1, t('nearStep1')], [2, t('nearStep2')]])}</div>
+      <div class="lyr-row lyr-sub" data-near-opt="ablk" ${nearMode.by === 'ablk' ? '' : 'hidden'}><span></span><b></b>${seg('ring', [[1, t('nearAblk1')], [2, t('nearAblk2')]])}</div>
       <div class="lyr-row lyr-sub" data-near-opt="area" ${nearMode.by === 'area' ? '' : 'hidden'}><span></span><b></b><select class="hood-sel" data-near-area>${AREA_PICKS().map(([v, l]) =>
         `<option value="${v}" ${nearMode.area === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
       <div class="lyr-row lyr-sub" data-near-opt="radius" ${nearMode.by === 'radius' ? '' : 'hidden'}><span></span><b></b>${seg('radius', [[50, '50 m'], [100, '100 m'], [200, '200 m']])}</div>`;
@@ -6206,9 +6227,10 @@ const Drops = (() => {
   // on a card's Nearby line: one menu for what "nearby" means (for your files)
   // the "how near" choices: blocks, areas (and the neighborhoods touching yours), radius, then the special districts
   function nearOptions() {
-    const cur = nearMode.by === 'blocks' ? 'blocks:' + nearMode.steps : nearMode.by === 'area' ? (nearMode.adj ? 'adj:' : 'area:') + nearMode.area : 'radius:' + nearMode.radius;
+    const cur = nearMode.by === 'blocks' ? 'blocks:' + nearMode.steps : nearMode.by === 'ablk' ? 'ablk:' + nearMode.ring : nearMode.by === 'area' ? (nearMode.adj ? 'adj:' : 'area:') + nearMode.area : 'radius:' + nearMode.radius;
     const SPECIAL = ['cbd', 'cult', 'hist'], picks = AREA_PICKS();
     return { cur, opts: [['blocks:0', t('nearStep0')], ['blocks:1', t('nearStep1')], ['blocks:2', t('nearStep2')],
+      ...(Areas.has('ablk') ? [['ablk:1', t('nearAblk1')], ['ablk:2', t('nearAblk2')]] : []),
       ...picks.filter(([v]) => !SPECIAL.includes(v)).flatMap(([v, l]) => [['area:' + v, t('nearSame', { area: l })], ...(v === 'hood' ? [['adj:hood', t('nearAdjHood')]] : [])]),
       ...[50, 100, 200].map(m => ['radius:' + m, t('nearWithin', { m })]),
       ...picks.filter(([v]) => SPECIAL.includes(v)).map(([v, l]) => ['area:' + v, t('nearSame', { area: l })])] };
@@ -6220,15 +6242,31 @@ const Drops = (() => {
   }
   function setNearFrom(v) {
     let [by, x] = String(v).split(':'); const adj = by === 'adj'; if (adj) by = 'area';
-    nearMode = { ...nearMode, by, adj, ...(by === 'blocks' ? { steps: +x } : by === 'area' ? { area: x } : { radius: +x }) };
+    nearMode = { ...nearMode, by, adj, ...(by === 'blocks' ? { steps: +x } : by === 'ablk' ? { ring: +x } : by === 'area' ? { area: x } : { radius: +x }) };
     setNear('by', by);
   }
   // the areas a card (or place) is in, plus the ones touching them when "adjacent" is on
   const withAdj = (k, names) => nearMode.adj ? [...new Set([...names, ...names.flatMap(n => Areas.neighbors(k, n))])] : names;
+  // "assessor blocks": the ones a street, corner or place touches (ring 1), or those and the blocks across the
+  // streets around them (ring 2: about nine for a place mid-block)
+  function ablkOf(it, ring = nearMode.ring) {
+    if (!Areas.loaded('ablk')) return null;
+    const mine = Areas.touching('ablk', it);
+    return ring > 1 ? [...new Set([...mine, ...mine.flatMap(n => Areas.neighbors('ablk', n, ABLK_ACROSS_M))])] : mine;
+  }
+  // is a place in (or right at the edge of, on the sidewalk) one of these blocks?
+  function inAblk(lls, set) {
+    for (const [lo, la] of lls) {
+      for (const n of Areas.areasAt('ablk', lo, la)) if (set.has(n)) return n;
+      for (let a = 0; a < 4; a++) for (const n of Areas.areasAt('ablk', lo + Math.sin(a * Math.PI / 2) * 10 / KX, la + Math.cos(a * Math.PI / 2) * 10 / KY)) if (set.has(n)) return n;
+    }
+    return null;
+  }
   // what "nearby" covers around a card, drawn on the map: the blocks counted, the area, or the radius
   let extentFor = null;
   function extentOf(s) {
     if (nearMode.by === 'blocks') return blocksOut(s, nearMode.steps).map(({ b }) => ({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: b.coords } }));
+    if (nearMode.by === 'ablk') return (ablkOf(s) || []).map(n => Areas.geom('ablk', n)).filter(Boolean).map(g => ({ type: 'Feature', properties: {}, geometry: g }));
     if (nearMode.by === 'area') {
       const k = areaKey(); if (!Areas.loaded(k)) return [];
       return withAdj(k, (Areas.of(k, s) || []).map(a => a.name)).map(n => Areas.geom(k, n)).filter(Boolean).map(g => ({ type: 'Feature', properties: {}, geometry: g }));
@@ -6252,19 +6290,20 @@ const Drops = (() => {
     if (!map.getSource('near-extent')) {
       map.addSource('near-extent', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       map.addLayer({ id: 'bp-near-fill', type: 'fill', source: 'near-extent', filter: ['==', ['geometry-type'], 'Polygon'], paint: { 'fill-color': '#1C7ED6', 'fill-opacity': 0.08 } });
-      map.addLayer({ id: 'bp-near-line', type: 'line', source: 'near-extent', paint: { 'line-color': '#1C7ED6', 'line-width': ['case', ['==', ['geometry-type'], 'LineString'], 9, 2], 'line-opacity': ['case', ['==', ['geometry-type'], 'LineString'], 0.25, 0.8], 'line-dasharray': [2, 1.5] } });
+      map.addLayer({ id: 'bp-near-line', type: 'line', source: 'near-extent', paint: { 'line-color': '#1C7ED6', 'line-width': ['case', ['==', ['geometry-type'], 'LineString'], 9, 2], 'line-opacity': ['case', ['==', ['geometry-type'], 'LineString'], 0.4, 0.8], 'line-dasharray': [2, 1.5] } });
       arrangeLayers();
     }
     extentFor = s && (extentForce || files.some(f => f.on)) ? s : null;
     map.getSource('near-extent').setData({ type: 'FeatureCollection', features: extentFor ? extentOf(extentFor) : [] });
   }
   function setNear(k, v) {
-    nearMode = { ...nearMode, [k]: k === 'steps' || k === 'radius' ? +v : v };
+    nearMode = { ...nearMode, [k]: k === 'steps' || k === 'radius' || k === 'ring' ? +v : v };
     try { localStorage.setItem(NEAR_KEY, JSON.stringify(nearMode)); } catch (e) { }
     const el = $('drop-rows');
     el.querySelectorAll('[data-near]').forEach(g => g.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(nearMode[g.dataset.near]) === b.dataset.v)));
     el.querySelectorAll('[data-near-opt]').forEach(r => r.hidden = r.dataset.nearOpt !== nearMode.by);
     if (nearMode.by === 'area') Areas.need(areaKey()).then(() => { render(); showExtent(extentFor, extentForce); });
+    if (nearMode.by === 'ablk') Areas.need('ablk').then(() => { render(); showExtent(extentFor, extentForce); });
     render(); showExtent(extentFor, extentForce);
   }
   function setupUI() {
@@ -6366,6 +6405,10 @@ const Drops = (() => {
           : best.k === 0 ? t('dropOnStreet', { street: P(best.b.street) }) : t(best.k === 1 ? 'dropAround' : 'dropAway', { street: P(best.b.street), n: best.k });
         hits.push({ d: best.k, p: x.properties, where });
       }
+    } else if (nearMode.by === 'ablk') {
+      const mine = ablkOf(s); if (!mine) return null;
+      const set = new Set(mine);
+      for (const x of f.feats) { const n = inAblk(x._sh.ll, set); if (n) hits.push({ d: 0, p: x.properties, where: t('dropAblk', { b: n }) }); }
     } else if (nearMode.by === 'area') {
       const k = areaKey(), mine = Areas.loaded(k) ? withAdj(k, (Areas.of(k, s) || []).map(a => a.name)) : null;
       if (!mine) return null;
@@ -6386,7 +6429,7 @@ const Drops = (() => {
     return hits.sort((a, b) => a.d - b.d);
   }
   function near(s) {
-    const mode = nearMode.by + (nearMode.by === 'blocks' ? nearMode.steps : nearMode.by === 'area' ? areaKey() : nearMode.radius);
+    const mode = nearMode.by + (nearMode.by === 'blocks' ? nearMode.steps : nearMode.by === 'ablk' ? nearMode.ring : nearMode.by === 'area' ? areaKey() : nearMode.radius);
     return files.filter(f => f.on).map(f => {
       const k = f.id + '|' + s.cnn + '|' + mode;
       if (!cache.has(k)) { const h = hitsFor(f, s); if (!h) return { f, hits: null }; cache.set(k, h); }
@@ -6398,6 +6441,7 @@ const Drops = (() => {
   function facts(s) {
     if (!files.some(f => f.on)) return '';
     if (nearMode.by === 'area' && !Areas.loaded(areaKey())) Areas.need(areaKey()).then(() => render());
+    if (nearMode.by === 'ablk' && !Areas.loaded('ablk')) Areas.need('ablk').then(() => render());
     return near(s).map(({ f, hits }) => {
       const label = p => nameOf(f, p) || t('dropUnnamed');
       if (!hits) return `<dt>${esc(shown(f))}</dt><dd><span class="wait-inline">${esc(t('checking'))}</span></dd>`;
@@ -6596,7 +6640,7 @@ const Drops = (() => {
       paint: { 'icon-color': '#FFD43B', 'icon-halo-color': '#1E2340', 'icon-halo-width': 1.5 } });
     wire(popup); for (const f of files) if (!map.getSource('drop-' + f.id)) addLayers(f); }
   return { add, addURL, addRows: (name, rows, url, src, extra) => { const f = addText('', name, url, rows, src || 'search'); if (f && extra) { Object.assign(f, extra); renderMenu(); } return !!f; },
-    removeNow: id => remove(id), relocate, syncExtent: () => syncExtent(), combineWKT, urls, listRows, nearPicker, setNearFrom, showExtent, withAdj: (k, n) => withAdj(k, n), parseCSV, focus, focusedId: () => focusId, items, blocksOut: (s, k) => blocksOut(s, k), areaKey: () => areaKey(), get nearMode() { return nearMode; }, nearOptions, fileColor: fid => (files.find(x => x.id === fid) || {}).color, fileName: fid => { const f = files.find(x => x.id === fid); return f ? shown(f) : ''; }, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
+    removeNow: id => remove(id), relocate, syncExtent: () => syncExtent(), combineWKT, urls, listRows, nearPicker, setNearFrom, showExtent, withAdj: (k, n) => withAdj(k, n), parseCSV, focus, focusedId: () => focusId, items, blocksOut: (s, k) => blocksOut(s, k), ablkOf: (it, r) => ablkOf(it, r), inAblk: (l, set) => inAblk(l, set), areaKey: () => areaKey(), get nearMode() { return nearMode; }, nearOptions, fileColor: fid => (files.find(x => x.id === fid) || {}).color, fileName: fid => { const f = files.find(x => x.id === fid); return f ? shown(f) : ''; }, setupUI, show, cards: FeatCards, picked: s => FeatCards.facts(s), reset: () => { nearMode = { ...NEAR_DEFAULT }; try { localStorage.removeItem(NEAR_KEY); } catch (e) { } renderMenu(); }, facts, text, areaNames, pointIds, onMap: mapReady_, files: () => files };
 })();
 /* ---------- the map key's checkboxes and category highlights ----------
    A checkbox on every row that can be turned off: layers (back to their last setting), area sets, your
@@ -6913,6 +6957,9 @@ const Table = (() => {
       if (ng) { NearbyView.toggleGroup(ng.dataset.nbGrp); refresh(); return; }
       const nx = e.target.closest('[data-nb-row-x]');
       if (nx) { NearbyView.exportAs(nx.dataset.nbRowX, nx.dataset.nbId); return; }
+      // a match row (under a place): ring it on the map and keep it ringed
+      const mr = src === 'nearby' && !e.target.closest('button, a, input') && e.target.closest('tr.nb-sub[data-nb-ll]');
+      if (mr) { NearbyView.pick(mr.dataset.nbLl.split(',').map(Number), true); return; }
       const nbo = e.target.closest('[data-nb-open]');
       if (nbo) { const k = nbo.dataset.nbOpen; opened.has(k) ? opened.delete(k) : opened.add(k); NearbyView.showAreaOf(opened.has(k) ? k : null); refresh(); return; }
       if (e.target.closest('.nb-sub')) return;
@@ -7003,10 +7050,12 @@ const NearbyView = (() => {
     return [];
   }
   // businesses and trees from the tiles in a box: one place per business (storefronts unless "show all"), per tree
+  // which kinds of business Nearby looks for (its own choice, apart from the map's)
+  const nbBizCats = new Set(BIZ_CATS.map(([k]) => k));
   async function tilePlaces(key, b) {
     const pts = await Tiles.inBox(key, b), out = [];
     for (const f of pts) {
-      if (key === 'businesses') bizItems(f.p).filter(i => bizAll || !i.kind).forEach((i, n) => out.push({ id: `b:${f.p.address}:${n}`, name: i.dba || i.owner || f.p.address, ll: f.ll, m: [toM(f.ll)],
+      if (key === 'businesses') bizItems(f.p).filter(i => (bizAll || !i.kind) && nbBizCats.has(i.cat || 'other')).forEach((i, n) => out.push({ id: `b:${f.p.address}:${n}`, name: i.dba || i.owner || f.p.address, ll: f.ll, m: [toM(f.ll)],
         props: { name: i.dba || '', owner: i.owner || '', address: f.p.address || '', ...Object.fromEntries(Object.entries(i).filter(([k, v]) => typeof v !== 'object' && !['dba', 'owner'].includes(k))) }, contact: i.owner || '' }));
       else out.push({ id: `t:${f.ll.join(',')}`, name: f.p.common || f.p.species || t('lyr_trees'), ll: f.ll, m: [toM(f.ll)], props: { ...f.p } });
     }
@@ -7078,6 +7127,12 @@ const NearbyView = (() => {
         }
         return best == null ? null : HOW_WORDS(Math.floor(best));
       };
+    } else if (how.by === 'ablk') {
+      const it = onNet(pl) ? targetOf(pl) : { ll: pl.ll };
+      const mine = it && Drops.ablkOf(it, how.ring); if (!mine || !mine.length) return out;
+      const set = new Set(mine), gs = mine.map(n => Areas.geom('ablk', n)).filter(Boolean);
+      region = bboxM(gs.flatMap(g => g.coordinates.flatMap(p => p[0])).map(toM), 12);
+      words = cand => { const n = Drops.inAblk(cand.m.map(([x, y]) => [x / KX, y / KY]), set); return n ? t('dropAblk', { b: n }) : null; };
     } else if (how.by === 'area') {
       const mine = new Set(Drops.withAdj(area, Areas.areasAt(area, pl.ll[0], pl.ll[1]))); if (!mine.size) return out;
       const gs = [...mine].map(n => Areas.geom(area, n)).filter(Boolean);
@@ -7102,6 +7157,7 @@ const NearbyView = (() => {
     if (!start) return;
     if (start === 'me' && !me) { await locate(); if (!me) return; }
     if (how.by === 'area') await Areas.need(area);
+    if (how.by === 'ablk') await Areas.need('ablk');
     if (chosen.has('groups')) await Groups.ensure();
     const starts = await placesOf(start), lists = [...chosen].filter(k => k !== start).map(listOf).filter(Boolean).sort((a, b) => (b.file ? 1 : 0) - (a.file ? 1 : 0));
     const rows = [];
@@ -7124,12 +7180,12 @@ const NearbyView = (() => {
     return new Promise(done => {
       if (!navigator.geolocation) { toast(t('nbNoGeo')); return done(); }
       toast(t('nbLocating'));
-      navigator.geolocation.getCurrentPosition(p => { me = [p.coords.longitude, p.coords.latitude]; drawMe(); done(); }, () => { toast(t('nbNoGeo')); done(); }, { enableHighAccuracy: true, timeout: 15000 });
+      navigator.geolocation.getCurrentPosition(p => { me = [p.coords.longitude, p.coords.latitude]; drawMe(); done(); }, () => { toast(t('nbNoGeo')); done(); }, { enableHighAccuracy: PHONE, timeout: 20000, maximumAge: 60000 });
       if (watch == null) watch = navigator.geolocation.watchPosition(p => {
         const n = [p.coords.longitude, p.coords.latitude], moved = me ? Math.hypot((n[0] - me[0]) * KX, (n[1] - me[1]) * KY) : Infinity;
         me = n; drawMe();
         if (moved > 30 && start === 'me' && res) run();   // the list follows you
-      }, () => { }, { enableHighAccuracy: true, maximumAge: 10000 });
+      }, () => { }, { enableHighAccuracy: PHONE, maximumAge: 10000 });
     });
   }
   function drawMe() {
@@ -7144,9 +7200,16 @@ const NearbyView = (() => {
     map.addSource('nb-hl', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addSource('nb-me', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addSource('nb-hover', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addSource('nb-pin', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    // the place picked in the table or the list: a bold ring that stays
+    map.addLayer({ id: 'bp-nb-pin', type: 'circle', source: 'nb-pin', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 11, 17, 20], 'circle-color': 'rgba(255,197,61,0.45)', 'circle-stroke-color': '#FF3D7F', 'circle-stroke-width': 4 } });
     map.addLayer({ id: 'bp-nb-hover', type: 'circle', source: 'nb-hover', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 9, 17, 16], 'circle-color': 'rgba(255,197,61,0.35)', 'circle-stroke-color': '#1E2340', 'circle-stroke-width': 3 } });
     map.addLayer({ id: 'bp-nb-match', type: 'circle', source: 'nb-hl', filter: ['==', ['get', 'role'], 'match'],
       paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 3, 17, 7], 'circle-color': ['get', 'color'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } });
+    // a click on a match: pick it, and show its row in the table (or the list)
+    // (the exact point comes from the feature's own property: rendered coordinates are rounded)
+    map.on('click', 'bp-nb-match', e => { const f = e.features[0]; if (!f) return; const ll = String(f.properties.ll).split(',').map(Number);
+      pick(ll); revealMatch(f.properties.sid, f.properties.lkey, ll); });
     map.addLayer({ id: 'bp-nb-start', type: 'circle', source: 'nb-hl', filter: ['==', ['get', 'role'], 'start'],
       paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 5, 17, 11], 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': '#1E2340', 'circle-stroke-width': ['case', ['get', 'on'], 4, 2] } });
     map.addLayer({ id: 'bp-nb-me', type: 'circle', source: 'nb-me', paint: { 'circle-radius': 8, 'circle-color': '#1C7ED6', 'circle-stroke-color': '#fff', 'circle-stroke-width': 3 } });
@@ -7167,13 +7230,16 @@ const NearbyView = (() => {
       if (r.pl.ll && r.pl.id !== 'me') feats.push({ type: 'Feature', properties: { role: 'start', sid: r.pl.id, on: r.pl.id === onRow }, geometry: { type: 'Point', coordinates: r.pl.ll } });
       if (onRow != null && r.pl.id !== onRow && res.rows.length > 1) continue;
       for (const l of res.lists) for (const x of r.m[l.key]) if (x.pl.ll && !drawn.has(l.key + '|' + x.pl.id) && drawn.add(l.key + '|' + x.pl.id)) feats.push({ type: 'Feature', geometry: { type: 'Point', coordinates: x.pl.ll },
-        properties: { role: 'match', color: l.color, name: x.pl.name, list: l.label, where: x.where, d: x.d ?? '', contact: x.contact || '' } });
+        properties: { role: 'match', color: l.color, name: x.pl.name, list: l.label, where: x.where, d: x.d ?? '', contact: x.contact || '', sid: r.pl.id, lkey: l.key, ll: x.pl.ll.join(',') } });
     }
     map.getSource('nb-hl').setData({ type: 'FeatureCollection', features: feats });
   }
   // a place as Drops' extent understands it: on the network for blocks, else the point or line itself
+  // a place on the network (a street, a corner) stays one for assessor blocks; anything else is its point
+  const onNet = pl => pl.cnn != null || pl.node != null || (pl.segs && pl.segs.size) || (pl.nodes && pl.nodes.size);
   function asItem(pl) {
     if (Drops.nearMode.by === 'blocks') return targetOf(pl);
+    if (Drops.nearMode.by === 'ablk') return onNet(pl) ? targetOf(pl) : { cnn: 'nb:' + pl.id, ll: pl.ll };
     const ll = pl.m.map(([x, y]) => [x / KX, y / KY]);
     return ll.length > 1 ? { cnn: 'nb:' + pl.id, coords: ll } : { kind: 'int', cnn: 'nb:' + pl.id, x: pl.ll[0], y: pl.ll[1], coords: [pl.ll] };
   }
@@ -7195,7 +7261,7 @@ const NearbyView = (() => {
       ...files.map(l => [l.key, `${l.label} (${l.n.toLocaleString()})`]), ...['schools', 'health', 'stations', 'lands'].filter(k => OVERLAYS[k]).map(k => [k, t('lyr_' + k)])];
     if (!start || !startOpts.some(([v]) => v === start)) start = files.length ? files[0].key : 'me';
     for (const l of files) if (!seenFiles.has(l.key)) { seenFiles.add(l.key); chosen.add(l.key); }
-    const box = l => `<label class="nb-chk"><input type="checkbox" value="${l.key}" ${chosen.has(l.key) ? 'checked' : ''} ${l.key === start ? 'disabled' : ''}><i class="nb-sw" style="background:${l.color}"></i>${esc(l.label)}${l.n ? ` <span class="muted">· ${l.n.toLocaleString()}</span>` : ''}${l.key === 'groups' ? ` <span class="muted">· ${esc(t('nbByHood'))}</span>` : l.key === 'businesses' ? ` <span class="muted">· ${esc(t(bizAll ? 'nbAllRegs' : 'nbStorefronts'))}</span>` : ''}</label>`;
+    const box = l => `<label class="nb-chk"><input type="checkbox" value="${l.key}" ${chosen.has(l.key) ? 'checked' : ''} ${l.key === start ? 'disabled' : ''}><i class="nb-sw" style="background:${l.color}"></i>${esc(l.label)}${l.n ? ` <span class="muted">· ${l.n.toLocaleString()}</span>` : ''}${l.key === 'groups' ? ` <span class="muted">· ${esc(t('nbByHood'))}</span>` : l.key === 'businesses' ? ` <span class="muted">· ${esc(t(bizAll ? 'nbAllRegs' : 'nbStorefronts'))}</span>` : ''}</label>${l.key === 'businesses' && chosen.has('businesses') ? `<div class="land-chips nb-bizcats">${BIZ_CATS.map(([k, lab]) => `<label class="land-chip"><input type="checkbox" data-nb-bizcat="${k}" ${nbBizCats.has(k) ? 'checked' : ''}><i class="nb-sw" style="background:${BIZ_COLOR[k]}"></i>${esc(t(lab))}</label>`).join('')}</div>` : ''}`;
     const { cur, opts } = Drops.nearOptions();
     return `<div class="nb-head"><b>${esc(t('nearbyBtn'))}</b><button type="button" class="nb-x" data-nb-close aria-label="${esc(t('tableClose'))}">✕</button></div>
       <div class="nb-step"><span class="nb-n">1</span><div><b>${esc(t('nbStart'))}</b><select id="nb-start">${startOpts.map(([v, l]) => `<option value="${v}" ${v === start ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div></div>
@@ -7216,7 +7282,7 @@ const NearbyView = (() => {
     if (res.rows.length === 1) {
       const r = res.rows[0], all = res.lists.flatMap(l => r.m[l.key].map(x => ({ ...x, l }))).sort((a, b) => (a.d ?? 1e9) - (b.d ?? 1e9));
       out.innerHTML = `<p class="nb-sum">${esc(t(res.start === 'me' ? 'nbNearYou' : 'nbNearOne', { how: res.howLabel, name: r.pl.name }))}</p>
-        ${all.length ? all.slice(0, 80).map(x => `<div class="nb-item"${x.pl.ll ? ` data-nb-ll="${x.pl.ll.join(',')}"` : ''}><span class="nb-pill" style="background:${x.l.color}">${esc(x.l.label)}</span><b>${esc(x.pl.name)}</b>
+        ${all.length ? all.slice(0, 80).map(x => `<div class="nb-item${isPinned(x.pl.ll) ? ' is-picked' : ''}"${x.pl.ll ? ` data-nb-ll="${x.pl.ll.join(',')}"` : ''}><span class="nb-pill" style="background:${x.l.color}">${esc(x.l.label)}</span><b>${esc(x.pl.name)}</b>
           <span class="muted">${x.d != null ? esc(t('nbM', { m: x.d })) + ' · ' : ''}${esc(x.where)}</span>${x.contact ? `<span class="nb-contact">${esc(x.contact)}</span>` : ''}</div>`).join('') : `<p class="muted">${esc(t('nbNone'))}</p>`}${btns}`;
       return;
     }
@@ -7269,6 +7335,7 @@ const NearbyView = (() => {
     $('nearby-btn').addEventListener('click', () => $('nb-panel').hidden ? open() : close());
     const p = $('nb-panel');
     p.addEventListener('mouseover', e => { const r = e.target.closest('[data-nb-ll]'); hover(r ? r.dataset.nbLl.split(',').map(Number) : null); });
+    p.addEventListener('click', e => { const r = e.target.closest('.nb-item[data-nb-ll]'); if (r && !e.target.closest('button, a')) pick(r.dataset.nbLl.split(',').map(Number), true); });
     p.addEventListener('mouseleave', () => hover(null));
     p.addEventListener('click', e => {
       if (e.target.closest('[data-nb-close]')) return close();
@@ -7279,7 +7346,8 @@ const NearbyView = (() => {
     p.addEventListener('change', e => {
       if (e.target.id === 'nb-start') { start = e.target.value; p.innerHTML = panelHTML(); if (start === 'me' && !me) locate(); }
       else if (e.target.id === 'nb-how') { Drops.setNearFrom(e.target.value); if (res && res.rows.length === 1) run(); }
-      else if (e.target.matches('.nb-chk input')) e.target.checked ? chosen.add(e.target.value) : chosen.delete(e.target.value);
+      else if (e.target.matches('[data-nb-bizcat]')) { const k = e.target.dataset.nbBizcat; e.target.checked ? nbBizCats.add(k) : nbBizCats.delete(k); if (res) run(); }
+      else if (e.target.matches('.nb-chk input')) { e.target.checked ? chosen.add(e.target.value) : chosen.delete(e.target.value); if (e.target.value === 'businesses') p.innerHTML = panelHTML(), res && showOut(); }
     });
   }
   // for the table: one row per starting place
@@ -7305,12 +7373,33 @@ const NearbyView = (() => {
       const top = `<tr class="nb-sub nb-grp-row"><td></td><td colspan="${span}"><button type="button" class="nb-grp-btn" data-nb-grp="${esc(gk)}" aria-expanded="${open}" ${ms.length ? '' : 'disabled'}>
         <span class="nb-tri">${open ? '▾' : '▸'}</span><span class="nb-pill" style="background:${l.color}">${esc(l.label)}</span> <b>${ms.length.toLocaleString()}</b></button></td></tr>`;
       if (!open) return top;
-      return top + ms.slice(0, 200).map(x => `<tr class="nb-sub"${x.pl.ll ? ` data-nb-ll="${x.pl.ll.join(',')}"` : ''}><td></td><td colspan="${span}" class="nb-match"><b>${esc(x.pl.name)}</b>
+      return top + ms.slice(0, 200).map(x => `<tr class="nb-sub${isPinned(x.pl.ll) ? ' is-picked' : ''}"${x.pl.ll ? ` data-nb-ll="${x.pl.ll.join(',')}"` : ''}><td></td><td colspan="${span}" class="nb-match"><b>${esc(x.pl.name)}</b>
         <span class="muted">· ${esc(x.where)}${x.d != null ? ' · ' + esc(t('nbM', { m: x.d })) : ''}</span>${x.contact ? ` <span class="nb-contact">${esc(x.contact)}</span>` : ''}</td></tr>`).join('')
         + (ms.length > 200 ? `<tr class="nb-sub"><td></td><td colspan="${span}" class="muted">${esc(t('nbMore', { n: ms.length - 200 }))}</td></tr>` : '');
     }).join('');
   }
   const toggleGroup = gk => openGroups.has(gk) ? openGroups.delete(gk) : openGroups.add(gk);
+  // picking a row or a match: a ring that stays (pan to it if it's off the map)
+  let pinned = null;
+  const isPinned = ll => !!(pinned && ll && ll.join(',') === pinned.join(','));   // rows redrawn later keep the mark
+  function pick(ll, pan) {
+    pinned = ll && pinned && pinned.join() === ll.join() && !pan ? pinned : ll;
+    if (!mapReady || !map.getSource('nb-pin')) return;
+    map.getSource('nb-pin').setData({ type: 'FeatureCollection', features: pinned ? [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: pinned } }] : [] });
+    document.querySelectorAll('[data-nb-ll].is-picked').forEach(el => el.classList.remove('is-picked'));
+    if (pinned) document.querySelectorAll(`[data-nb-ll="${pinned.join(',')}"]`).forEach(el => el.classList.add('is-picked'));
+    if (pinned && pan) { const b = map.getBounds(); if (!b.contains(pinned)) map.easeTo({ center: pinned, duration: reducedMotion() ? 0 : 600 }); }
+  }
+  // a match clicked on the map: open its starting place and list in the table, and scroll to it
+  function revealMatch(sid, lkey, ll) {
+    const key = ll.join(',');
+    if (res && res.rows.length === 1) { const el = document.querySelector(`#nb-out [data-nb-ll="${key}"]`); if (el) { el.scrollIntoView({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' }); el.classList.add('is-picked'); } return; }
+    if (sid == null) return;
+    openGroups.add(sid + '|' + lkey);
+    try { Table.reveal('nearby', sid); } catch (e) { }
+    const tr = document.querySelector(`#tbl tr[data-nb-ll="${key}"]`);
+    if (tr) { tr.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' }); tr.classList.add('is-picked'); }
+  }
   // hovering a row or a match in the table or the panel: a ring on it on the map
   function hover(ll) {
     if (!mapReady || !map.getSource('nb-hover')) return;
@@ -7319,7 +7408,7 @@ const NearbyView = (() => {
   // clear the results: rings, the How near area, the table's Nearby rows (quiet: no toast)
   function clear(quiet) {
     const had = !!res;
-    res = null; onRow = null; openGroups.clear();
+    res = null; onRow = null; openGroups.clear(); pick(null);
     if (watch != null) { navigator.geolocation.clearWatch(watch); watch = null; }
     if (mapReady) for (const k of ['nb-hl', 'nb-me']) if (map.getSource(k)) map.getSource(k).setData({ type: 'FeatureCollection', features: [] });
     showArea(null);
@@ -7336,7 +7425,13 @@ const NearbyView = (() => {
     const p = $('nb-panel'); if (p && !p.hidden) p.innerHTML = panelHTML();
   }
   const showAreaOf = id => { const r = id && res && res.rows.find(x => x.pl.id === id); showArea(r ? r.pl : null); };
-  return { setup, open, close, run, clear, uses, dropFile, tableRows, headHTML, hover, subRowsHTML, focusRow, toggleGroup, showAreaOf, has: () => !!res, label: () => res ? t('nbTableSrc', { name: res.startLabel, n: res.rows.length }) : '', exportAs };
+  // the map's ◎ button: where you are (blue dot, followed as you move), then Nearby can start there
+  async function locateMe() {
+    if (!me) await locate();
+    if (me && mapReady) { drawMe(); map.easeTo({ center: me, zoom: Math.max(map.getZoom(), 16.5), duration: reducedMotion() ? 0 : 700 }); }
+    return !!me;
+  }
+  return { setup, open, close, run, clear, uses, dropFile, tableRows, headHTML, hover, pick, locateMe, subRowsHTML, focusRow, toggleGroup, showAreaOf, has: () => !!res, label: () => res ? t('nbTableSrc', { name: res.startLabel, n: res.rows.length }) : '', exportAs };
 })();
 
 /* ---------- Address / Places: one box for addresses, lots, businesses (by name or NAICS), landmarks,
@@ -7464,6 +7559,17 @@ const Places = (() => {
       paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 7, 18, 11], 'circle-color': '#FF3D7F', 'circle-stroke-color': '#fff', 'circle-stroke-width': 3 } });
     map.addLayer({ id: 'bp-place-pin-dot', type: 'circle', source: 'place', filter: ['==', ['get', 'part'], 'pin'], paint: { 'circle-radius': 3, 'circle-color': '#fff' } });
     arrangeLayers();
+    // a click on the pin: the place's full record (a business's whole registration)
+    const rp = new maplibregl.Popup({ closeButton: true, closeOnClick: true, maxWidth: '340px', className: 'bp-rec', offset: 14 });
+    map.on('click', 'bp-place-pin', e => {
+      if (!shown || !shown.pin) return;
+      if (e.originalEvent) e.originalEvent.stopPropagation();
+      const html = shown.rec ? bizRecord({ address: shown.rec.i.address || shown.rec.p.address, items: [shown.rec.i] })
+        : `<div class="rec"><b>${esc(shown.title)}</b>${shown.sub ? `<br><span class="pop-lyr">${esc(shown.sub)}</span>` : ''}</div>`;
+      setTimeout(() => rp.setLngLat(shown.pin).setHTML(html).addTo(map));
+    });
+    map.on('mouseenter', 'bp-place-pin', () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseleave', 'bp-place-pin', () => map.getCanvas().style.cursor = '');
   }
   function draw(pin, lotGeom) {
     if (!mapReady) return;
@@ -7480,16 +7586,32 @@ const Places = (() => {
     const m = lotParts(lot); if (!m) return null;
     return Parcels.findLot(lot, Areas.geom('ablk', m[1])).catch(() => null);
   }
+  // the full registration (since, license, mailing address…) is in the business tiles, not the search index:
+  // find the same business at its point
+  async function bizRec(b, pin) {
+    if (!pin || !Tiles.has('businesses')) return null;
+    const pad = 0.0005, same = (x, y) => String(x || '').trim().toUpperCase() === String(y || '').trim().toUpperCase();
+    let near = []; try { near = await Tiles.inBox('businesses', [pin[0] - pad, pin[1] - pad, pin[0] + pad, pin[1] + pad]); } catch (e) { return null; }
+    let best = null;
+    for (const f of near) for (const i of bizItems(f.p)) {
+      if (!(same(i.dba, b.name) || same(i.owner, b.name))) continue;
+      const exact = same(i.address || f.p.address, b.address), d = Math.hypot(f.ll[0] - pin[0], f.ll[1] - pin[1]);
+      if (!best || exact > best.exact || (exact === best.exact && d < best.d)) best = { i, p: f.p, ll: f.ll, exact, d };
+    }
+    return best;
+  }
   const bizAt = (num, street) => biz ? biz.filter(b => { const a = parseAddr(b.address); return a && a.num === num && streetOf(a.street) === street; }) : [];
   async function show(p) {
     clear();
-    let addr = null, title = '', sub = '', extra = [], pin = null, lot = null, props = null;
+    let addr = null, title = '', sub = '', extra = [], pin = null, lot = null, props = null, rec = null;
     if (p.kind === 'address') { addr = p; title = `${p.num}${p.sfx} ${P(p.street)}`; }
     else if (p.kind === 'landmark') { addr = { ...p.l, x: p.l.x, y: p.l.y }; title = p.l.name; sub = P(p.l.address); }
     else if (p.kind === 'business') {
       const b = p.b; title = b.name; sub = b.address; pin = ll(b.x, b.y);
       extra = [[t('plOwner'), b.owner], [t('plIndustry'), b.naics ? `${naics[b.naics] || ''} (NAICS ${b.naics})` : ''], [t('plKind'), b.kind ? (idx.businesses.kinds || {})[b.kind] || b.kind : '']];
       addr = await addressOf(b.address);
+      rec = await bizRec(b, pin);
+      if (rec) extra = [[t('plKind'), b.kind ? (idx.businesses.kinds || {})[b.kind] || b.kind : '']];
     } else if (p.kind === 'layer') { title = p.p.name; sub = t('lyr_' + p.p.layer); pin = p.p.ll; props = p.p.props; }
     else if (p.kind === 'lot') { lot = p.lot; title = t('plLotTitle', { lot: lotText(lot) }); }
     else if (p.kind === 'file') { Drops.cards.toggle(p.fid, p.i); const c = Drops.cards.spot(p.fid, p.i); if (c && mapReady) map.easeTo({ center: c, zoom: Math.max(map.getZoom(), 17) }); return; }
@@ -7504,7 +7626,7 @@ const Places = (() => {
     if (addr) { pin = pin || ll(addr.x, addr.y); lot = lot || addr.lot; }
     const lf = await lotFacts(lot);
     if (!pin && lf) { const c = lf.geom.coordinates[0][0]; pin = c.reduce((a, q) => [a[0] + q[0] / c.length, a[1] + q[1] / c.length], [0, 0]); }
-    shown = { p, title, addr, lot, lf, pin };
+    shown = { p, title, sub, addr, lot, lf, pin, rec };
     draw(pin, lf && lf.geom);
     // the block it's on goes in the list, as the Address mode does
     const seg = addr && addr.cnn && Logic.db.byCnn.get(addr.cnn);
@@ -7519,6 +7641,7 @@ const Places = (() => {
       ...(props ? Object.entries(props).filter(([k, v]) => v !== '' && v != null && typeof v !== 'object' && !/^(name|_)/.test(k)).slice(0, 6) : [])];
     const el = $('place-card');
     el.innerHTML = `<div class="pc-head"><b>${esc(title)}</b><button type="button" class="pc-x" data-pc="x" aria-label="${esc(t('plClose'))}">×</button></div>${sub ? `<p class="pc-sub">${esc(sub)}</p>` : ''}
+      ${rec ? `<div class="pc-rec">${bizOne(rec.i, rec.p)}</div>` : ''}
       <dl>${rows.filter(([, v]) => v).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
       <div class="pc-btns">${lf ? `<button type="button" class="btn small" data-pc="lot">${esc(t('plAddLot'))}</button>` : ''}${pin ? `<button type="button" class="btn small" data-pc="near">${esc(t('nearbyBtn'))}</button>` : ''}<button type="button" class="btn small" data-pc="copy">${esc(t('plCopy'))}</button></div>`;
     el.hidden = false;
@@ -8508,13 +8631,15 @@ const Areas = (() => {
     // load one set (neighborhoods load only when shown or asked for)
     need: k => sets.has(k) ? load(k) : Promise.resolve(),
     loaded: k => !!(sets.get(k) && sets.get(k).polys),
-    // the areas touching one (sharing a border, within 8 m), for "adjacent neighborhoods"
-    neighbors(k, name) {
+    // the areas touching one (sharing a border, within 8 m), for "adjacent neighborhoods"; assessor blocks
+    // ask for more (across the street, ABLK_ACROSS_M)
+    neighbors(k, name, TOL = 8) {
       const st = sets.get(k); if (!st || !st.polys) return [];
       st.adj ||= new Map();
-      if (st.adj.has(name)) return st.adj.get(name);
+      const ck = TOL + '|' + name;
+      if (st.adj.has(ck)) return st.adj.get(ck);
       const bb = bboxes(st), i = st.polys.findIndex(p => p.name === name); if (i < 0) return [];
-      const TOL = 8, pad = [TOL / KX, TOL / KY], me = st.polys[i];
+      const pad = [TOL / KX, TOL / KY], me = st.polys[i];
       const edges = p => p.parts.flatMap(part => part.flatMap(r => r.slice(1).map((v, j) => [r[j], v])));
       const verts = me.parts.flatMap(part => part[0]).filter((_, j) => j % 2 === 0);
       const near = (x, y, [a, b]) => { const ax = a[0] * KX, ay = a[1] * KY, bx = b[0] * KX, by = b[1] * KY, dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy;
@@ -8525,8 +8650,29 @@ const Areas = (() => {
         const es = edges(p);
         if (verts.some(([x, y]) => es.some(e => near(x * KX, y * KY, e)))) out.push(p.name);
       });
-      st.adj.set(name, out);
+      st.adj.set(ck, out);
       return out;
+    },
+    // the areas something touches: a street, R m to each side at 15/50/85% along (both sides); a corner, the
+    // blocks around it (the four at a crossing); a point, the area it's in, else what's around it
+    touching(k, it, R = 18) {
+      const st = sets.get(k); if (!st || !st.polys) return [];
+      const pts = [], out = new Set(), at = (x, y) => Areas.areasAt(k, x, y).forEach(n => out.add(n));
+      // around a corner: 16 directions, 26 and 36 m out (past the sidewalks of wide streets, into the corner lots)
+      const ring = (x, y) => { for (const r of [26, 36]) for (let a = 0; a < 16; a++) pts.push([x + Math.sin(a * Math.PI / 8) * r / KX, y + Math.cos(a * Math.PI / 8) * r / KY]); };
+      if (it.coords && it.coords.length > 1 && !isInt(it)) {
+        for (const f of [0.15, 0.5, 0.85]) {
+          const [x, y] = along(it.coords, f), [x2, y2] = along(it.coords, Math.min(1, f + 0.02));
+          let dx = (x2 - x) * KX, dy = (y2 - y) * KY; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+          pts.push([x - dy * R / KX, y + dx * R / KY], [x + dy * R / KX, y - dx * R / KY]);
+        }
+      } else {
+        const [x, y] = isInt(it) ? [it.x, it.y] : it.ll || [it.x, it.y];
+        if (!isInt(it)) { at(x, y); if (out.size) return [...out]; }
+        ring(x, y);
+      }
+      pts.forEach(([x, y]) => at(x, y));
+      return [...out];
     },
     // the areas whose bounding box meets a box
     inBox(k, b) {
@@ -9265,6 +9411,11 @@ function setupMapMenus() {
     { const fb = $('full-btn'), tt = t(on ? 'fullOff' : 'fullTitle'); fb.title = tt; fb.setAttribute('aria-label', tt); }
     requestAnimationFrame(() => map && map.resize());
   };
+  // where you are: on any screen with location (computers use Wi-Fi), then Nearby can start from there
+  $('ctl-me').innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
+  $('ctl-me').title = t('meTitle'); $('ctl-me').setAttribute('aria-label', t('meTitle'));
+  $('ctl-me').addEventListener('click', async () => { const b = $('ctl-me'); b.classList.add('is-busy');
+    const ok = await NearbyView.locateMe(); b.classList.remove('is-busy'); b.setAttribute('aria-pressed', ok); if (ok) toast(t('meFound')); });
   $('full-btn').innerHTML = ICO_FULL; $('full-btn').title = t('fullTitle'); $('full-btn').setAttribute('aria-label', t('fullTitle'));
   $('full-btn').addEventListener('click', () => full(!document.body.classList.contains('bp-full')));
   // 3D in one tap: hills and a tilt; tap again for a flat map from above (no terrain, lighter on memory)
