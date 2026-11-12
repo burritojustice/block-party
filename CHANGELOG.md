@@ -2,6 +2,13 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v88
+
+- **Closed cards read better:** under the street name, the cross streets are in bold with the address range in front ("600–649 · 18th St to Hancock St"), and the street type tag sits below them.
+- **A bigger ▸** on closed cards.
+- **More numbers when they fit:** Compact cards show allows up to six. New choices are Supervisor district (D8), ZIP code and neighborhood (from the set chosen on cards). The numbers wrap onto more lines, and phones still show the first two. Muni stays blank until the Muni routes have loaded, instead of saying "no Muni".
+- **Copy / Save, Import and Select blocks sit above "Your selection"**, so the list starts right under its heading.
+
 ## v87
 
 - **Compact cards, one open at a time:** with more than one street, closed cards are one line: the street, its type and cross streets, and a few numbers.
