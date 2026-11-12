@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v85 -->
+<!-- build: v86 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -698,6 +698,13 @@ summary::marker { font-size: 1.15em; }
 .sel-hint { font-size: 13px; color: var(--ink-soft); margin: 6px 0 0 62px; }
 .nb-bizcats { margin: 2px 0 6px 26px; }
 .nb-bizcats .land-chip { font-size: 12px; }
+.lg-note { display: block; font-size: 11px; color: var(--muted); margin: 4px 2px 2px; line-height: 1.3; }
+.sv-link { white-space: nowrap; font-weight: 600; }
+.import-list { list-style: none; margin: 4px 0 8px; padding: 0; }
+.import-list li { display: grid; grid-template-columns: 12px auto 1fr auto; gap: 6px; align-items: center; padding: 3px 0; font-size: 13px; }
+.import-list .imp-sw { width: 12px; height: 12px; border-radius: 50%; }
+.import-panel summary small { font-weight: 400; margin-left: 4px; }
+.save-new { display: inline-flex; gap: 6px; flex-wrap: wrap; flex: 1 1 100%; }
 .save-name { flex: 1 1 140px; min-width: 120px; font: inherit; font-size: 14px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
 .area-name { flex: 1; min-width: 140px; font: inherit; font-size: 14px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
 .lyr-reset { display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 10px; }
@@ -906,6 +913,7 @@ summary::marker { font-size: 1.15em; }
         <label class="qchip"><input type="checkbox" autocomplete="off" data-quiet="dead"><b data-i18n="quiet_dead">Dead ends</b><span class="n" data-quiet-n="dead"></span></label>
         <label class="qchip"><input type="checkbox" autocomplete="off" data-quiet="ped"><b data-i18n="quiet_ped">Pedestrian streets</b><span class="n" data-quiet-n="ped"></span></label>
         <label class="qchip"><input type="checkbox" autocomplete="off" data-quiet="unmaint"><b data-i18n="quiet_unmaint">Not maintained by the city</b><span class="n" data-quiet-n="unmaint"></span></label>
+        <label class="qchip"><input type="checkbox" autocomplete="off" data-quiet="alley"><span><b data-i18n="quiet_alley">Alleys</b><small data-i18n="quiet_alleyHint">Named as an alley (Clarion Alley, Balmy Alley…)</small></span><span class="n" data-quiet-n="alley"></span></label>
         <p class="quiet-group" data-i18n="quietCorners">Intersections</p>
         <label class="qchip"><input type="checkbox" autocomplete="off" data-quiet="tee"><span><b data-i18n="quiet_tee">T intersections</b><small data-i18n="quiet_teeHint">Only three streets meet, like an alley off a street</small></span><span class="n" data-quiet-n="tee"></span></label>
         <label class="qchip"><input type="checkbox" autocomplete="off" data-quiet="skew"><span><b data-i18n="quiet_skew">Streets meeting at an angle</b><small id="skew-text"></small></span><span class="n" data-quiet-n="skew"></span></label>
@@ -951,7 +959,7 @@ summary::marker { font-size: 1.15em; }
         <li id="lg-lyr-lands" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12" id="lg-lands-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLands">City-owned land</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-lands-table"></table></details></li>
         <li id="lg-lyr-slow" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#2457D6" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0.1 7"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlow">Slow Streets</span></li>
         <li id="lg-lyr-trees" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12" id="lg-trees-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgTrees">Street trees</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-trees-table"></table></details></li>
-        <li id="lg-lyr-businesses" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12"><circle cx="6" cy="6" r="3" fill="#C2255C"/><circle cx="16" cy="6" r="5" fill="#5F3DC4" fill-opacity=".85"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBusinesses">Businesses</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-biz-table"></table></details></li>
+        <li id="lg-lyr-businesses" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12"><circle cx="6" cy="6" r="3" fill="#C2255C"/><circle cx="16" cy="6" r="5" fill="#5F3DC4" fill-opacity=".85"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBusinesses">Businesses</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-biz-table"></table><small class="lg-note" data-i18n="bizCatNote">Kinds come from each business’s self-reported NAICS code, which is sometimes wrong.</small></details></li>
         <li id="lg-lyr-curbs" hidden><span class="sw"><svg viewBox="0 0 24 12"><path d="M1 9 H15 Q20 9 20 4 V1" fill="none" stroke="#9CA2AD" stroke-width="1.4"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgCurbs">Curbs and islands (2016)</span></li>
         <li id="lg-lyr-buildings" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect x="3" y="1" width="8" height="10" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/><rect x="13" y="4" width="8" height="7" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBuildings">Buildings (2016)</span></li>
         <li id="lg-lyr-schools" hidden><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1.5" y="1.5" width="13" height="13" rx="3.5" fill="#8A5A00" stroke="#fff"/><path d="M4.5 8 L8 5 L11.5 8 V11.5 H4.5Z" fill="#fff"/></svg></span><span data-i18n="lgSchools">Schools</span></li>
@@ -992,11 +1000,17 @@ summary::marker { font-size: 1.15em; }
           <button type="button" class="btn small" id="dl-csv">CSV</button>
           <button type="button" class="btn small" id="dl-geojson">GeoJSON</button></div>
         <div class="sel-row"><span class="sel-step" data-i18n="saveToStep">Save to</span>
-          <input autocomplete="off" type="text" id="save-name" class="save-name" data-i18n-placeholder="saveNamePh" placeholder="Name (optional)">
-          <button type="button" class="btn small" id="save-sheet-new" data-i18n="saveSheetNew" title="A new Google Sheet in your Drive">New Google Sheet</button>
-          <button type="button" class="btn small" id="save-sheet-add" data-i18n="saveSheetAdd" title="Add tabs to a Google Sheet you pick">Add to a sheet…</button>
+          <input autocomplete="off" type="text" id="save-name" class="save-name" data-i18n-placeholder="saveNamePh" placeholder="Route or list name">
+          <button type="button" class="btn small" id="save-sheet-last" hidden></button>
+          <span class="save-new"><input autocomplete="off" type="text" id="save-project" class="save-name" data-i18n-placeholder="saveProjectPh" placeholder="New project's name">
+          <button type="button" class="btn small" id="save-sheet-new" data-i18n="saveSheetNew" title="A new project sheet in your Google Drive">New project sheet</button></span>
+          <button type="button" class="btn small" id="save-sheet-add" data-i18n="saveSheetAdd" title="Add this as a tab in a project sheet you pick">Add to a project…</button>
           <button type="button" class="btn small" id="save-airtable" data-i18n="saveAirtable" hidden>Airtable</button></div>
         <p class="sel-hint" id="save-status" hidden></p>
+      </details>
+      <details class="sel-panel import-panel" id="import-panel">
+        <summary><span data-i18n="importTitle">Import</span> <span class="badge" id="import-n" hidden></span> <small class="muted" data-i18n="importHint">A file, a link, Google Drive</small></summary>
+        <div id="import-side"></div>
       </details>
       <details class="sel-panel" id="sel-panel">
         <summary data-i18n="selTitle">Select blocks</summary>
@@ -1131,7 +1145,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-// Copied from burritojustice/sf-blocks 2026.11.11.8 (matcher/google-drive.js); change it there first.
+// Copied from burritojustice/sf-blocks 2026.11.12 (matcher/google-drive.js); change it there first.
 // Google Drive for static pages: sign in, pick a file with Google's own picker, and read it.
 // Written for Matcher; Joiner and Block Party can copy this file as is.
 //
@@ -1153,7 +1167,7 @@ const SFBlocks = (() => {
 //   await GoogleDrive.addTab(id, title)              -> sheetId
 //   await GoogleDrive.clearValues(id, "'Tab'")
 //   await GoogleDrive.putValues(id, "'Tab'!A1", rows) // rows written as typed (RAW), so CNNs stay text
-//   await GoogleDrive.createSheet(title, ['Tab', ...]) -> {id, url}   // a new spreadsheet
+//   await GoogleDrive.createSheet(title, ['Tab', ...]) -> {id, url, tabs}   // a new spreadsheet
 'use strict';
 window.GoogleDrive = (() => {
     const GIS = 'https://accounts.google.com/gsi/client';
@@ -1248,11 +1262,11 @@ window.GoogleDrive = (() => {
     async function clearValues(id, range) {
         await api(`${SHEETS(id)}/values/${encodeURIComponent(range)}:clear`, json('POST', {}));
     }
-    // a new spreadsheet in the person's Drive (drive.file covers files this page makes) -> {id, url}
+    // a new spreadsheet in the person's Drive (drive.file covers files this page makes) -> {id, url, tabs: [{title, sheetId}]}
     async function createSheet(title, tabs = ['Sheet1']) {
         const r = await (await api('https://sheets.googleapis.com/v4/spreadsheets', json('POST', { properties: { title },
             sheets: tabs.map(t => ({ properties: { title: t } })) }))).json();
-        return { id: r.spreadsheetId, url: r.spreadsheetUrl };
+        return { id: r.spreadsheetId, url: r.spreadsheetUrl, tabs: (r.sheets || []).map(x => ({ title: x.properties.title, sheetId: x.properties.sheetId })) };
     }
     async function putValues(id, range, values) {
         await api(`${SHEETS(id)}/values/${encodeURIComponent(range)}?valueInputOption=RAW`, json('PUT', { range, majorDimension: 'ROWS', values }));
@@ -1277,7 +1291,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v85';
+const _BUILD_VERSION = 'v86';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1417,7 +1431,7 @@ const I18N = {
     class1: 'Freeway', class2: 'Major street', class3: 'Arterial', class4: 'Collector', class5: 'Residential', class6: 'Freeway ramp',
     copyCard: 'Copy this card’s details', copiedCard: 'Copied block details',
     quietBtn: 'Filter', quietTitle: 'Quiet streets for a party', quietShow: 'Show any of these',
-    quietNarrow: 'Narrow them down', quiet_dead: 'Dead ends', quiet_ped: 'Pedestrian streets',
+    quietNarrow: 'Narrow them down', quiet_dead: 'Dead ends', quiet_ped: 'Pedestrian streets', quiet_alley: 'Alleys', quiet_alleyHint: 'Named as an alley (Clarion Alley, Balmy Alley…)',
     quiet_unmaint: 'Not maintained by the city', quiet_res: 'Residential streets only',
     quiet_resHint: 'Leaves out collectors, arterials, and bigger', quiet_flat: 'Flat to moderate (under 10%)',
     quietCount: '{n} streets match', quietIntCount: '{n} intersections', quietCorners: 'Intersections',
@@ -1489,7 +1503,7 @@ const I18N = {
     dropAround: '{street}, at the end of this street', dropAway: '{street}, {n} streets out', dropAblk: 'assessor block {b}',
     dropNearBlock: '{n} on this block', dropNearBlocks: '{n} within {k} block(s)', dropNearInt: '{n} on these streets', dropNearIntN: '{n} within {k} block(s)', dropNearArea: '{n} in {area}',
     nearTitle: 'Nearby on cards', nearHint: 'How cards list your files’ rows', nearBlocks: 'Streets', nearArea: 'Area', nearRadius: 'Radius',
-    nearStep0: 'This street (both sides)', nearStep1: 'This street and the streets at its ends', nearStep2: 'Two streets out', nearAblk1: 'The assessor blocks it touches', nearAblk2: 'Those assessor blocks and the ones around them', nearByAblk: 'Assessor blocks',
+    nearStep0: 'This street (both sides)', nearStep1: 'Around the corner(s)', nearStep2: 'Two streets out', nearAblk1: 'The assessor blocks it touches', nearAblk2: 'Those assessor blocks and the ones around them', nearByAblk: 'Assessor blocks',
     urlPh: 'Or paste a link: CSV, GeoJSON, Google Sheet, DataSF', urlAdd: 'Add', urlBad: 'That isn’t a link (it should start with https://)',
     urlLoading: 'Loading…', urlSheetName: 'Google Sheet',
     urlSheet: 'Couldn’t read that sheet. In Google Sheets, set Share › General access to “Anyone with the link” (Viewer), then try again.',
@@ -1520,10 +1534,13 @@ const I18N = {
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
     moreBtn: 'Menu', moreTitle: 'Map, layers, areas, Nearby, Filter, Focus and Table', ctl3d: '3D: tilt the map over the hills (tap again for flat)', ctl2d: 'Flat map, seen from above', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
     censusLoad: 'Count people and homes',
+    streetView: 'Street View ↗', streetViewShort: 'Open ↗', street_view: 'Street View', gapRow: 'Gap', gapFrom: '{street} at {corner}',
+    bizCatNote: 'Kinds come from each business’s self-reported NAICS code, which is sometimes wrong.',
     sinceAge: 'Here since {d} · {age}', sinceOnly: 'Here since {d}', ageYears: '{n} years', ageMonths: '{n} months', ageNew: 'new this month',
     meTitle: 'Where am I? (then ◎ Nearby → Near me)', meFound: 'Found you. Open Nearby and pick “Near me” to see what’s around.',
-    saveToStep: 'Save to', saveNamePh: 'Name (optional)', saveSheetNew: 'New Google Sheet', saveSheetAdd: 'Add to a sheet…', saveAirtable: 'Airtable',
-    saveDefaultRoute: 'Block Party route', saveDefaultSel: 'Block Party streets', saveTabStreets: 'Streets', saveTabAbout: 'About',
+    saveToStep: 'Save to', saveNamePh: 'Route or list name', saveProjectPh: 'New project’s name', saveSheetNew: 'New project sheet', saveSheetAdd: 'Add to a project…', saveAirtable: 'Airtable',
+    saveDefaultRoute: 'Block Party route', saveDefaultSel: 'Block Party streets', saveTabStreets: 'Streets', saveTabAbout: 'About', saveTabRoutes: 'Routes',
+    saveProject: 'project', saveProjectDefault: 'Block Party project', saveAddTo: 'Add to “{name}”', saveWhere: '“{project}”, tab “{tab}”', saveDoneN: 'Saved {n} streets to {where}.',
     saveWorking: 'Reading the streets’ details and saving…', saveDone: 'Saved {n} rows.', saveDoneRoute: 'Saved the route ({n} rows, in order).', saveOpen: 'Open the sheet',
     saveFailed: 'Couldn’t save: {why}', saveAtStep: 'Saving to Airtable: {i} of {n}', saveAtDone: 'Saved {n} records to Airtable.', atSaveNoTable: 'Pick a table to save to.',
     censusShowBlocks: 'Show the census blocks and corners',
@@ -1892,6 +1909,7 @@ const Logic = (() => {
     dead: s => !!s.deadAt,
     ped: s => s.layer === 'STREETS_PEDESTRI',
     unmaint: s => !s.accepted,
+    alley: s => /\b(ALY|ALLEY)$/i.test(s.street || ''),   // named as an alley (SF's suffix is ALY)
   };
   // …then narrow them down (all that are on must pass)
   const QUIET_NARROW = {
@@ -2493,6 +2511,7 @@ function setupForm() {
   $('copy-link').addEventListener('click', () => copyText(linkFor(checkedSegs()), t('copiedLink')));
   $('dl-csv').addEventListener('click', () => Downloads.go('csv'));
   $('save-sheet-new').addEventListener('click', () => SaveTo.sheet('new'));
+  $('save-sheet-last').addEventListener('click', () => SaveTo.sheet('last'));
   $('save-sheet-add').addEventListener('click', () => SaveTo.sheet('add'));
   $('save-airtable').hidden = !(CONFIG.AIRTABLE_SAVE && CONFIG.AIRTABLE_SAVE.table);
   $('save-airtable').addEventListener('click', () => SaveTo.airtable());
@@ -2779,7 +2798,7 @@ function render() {
     + (gaps.length ? ' · ' + t(gaps.length === 1 ? 'gaps1' : 'gapsN', { n: gaps.length, list: gaps.map(g => `${g.m} m`).join(', ') }) : '');
   if (!state.title && nBlk) $('results-title').textContent = t('linkedBlocks');
   ['apply', 'add-cross', 'add-around', 'area-save', 'pick-along'].forEach(id => $(id).disabled = !n);
-  ['copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson', 'save-sheet-new', 'save-sheet-add', 'save-airtable'].forEach(id => $(id).disabled = !n && !nBlk);
+  ['copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson', 'save-sheet-new', 'save-sheet-add', 'save-sheet-last', 'save-airtable'].forEach(id => $(id).disabled = !n && !nBlk);
   if (picking && SelAreas.picks().names.length) $('area-save').disabled = false;
   // Intersection results: intersection cards, then checked blocks as full cards, then the unchecked
   // blocks leading into the intersection as compact rows.
@@ -2942,7 +2961,7 @@ function cardHTML(s) {
       <dt>${esc(t('zip'))}</dt><dd>${esc(s.zip)}</dd>
       <dt>${esc(t('nhood'))}</dt><dd>${hoodsHTML(s)}</dd>
       ${censusFacts(s)}
-      <dt>${esc(t('length'))}</dt><dd>${esc(t('ft', { n: fmtFt(s.len) }))}</dd>
+      <dt>${esc(t('length'))}</dt><dd>${esc(t('ft', { n: fmtFt(s.len) }))} · <a href="${esc(streetViewUrl(s))}" target="_blank" rel="noopener" class="sv-link">${esc(t('streetView'))}</a></dd>
       <dt>${esc(t('slope'))}</dt><dd data-slope="${s.cnn}">${slopeHTML(s)}</dd>
       ${transitFacts(s)}
       ${parcelFacts(s)}
@@ -3167,6 +3186,21 @@ function transitFields(s) {
     planning_neighborhood: ((Groups.of(s) || {}).hoods || []).join('; '), neighborhood_groups: (Groups.of(s) || { groups: [] }).groups.length || '',
     ...(isInt(s) ? {} : parcelFields(Parcels.peek(s))) };
 }
+// Google Street View in a new window (Google's terms allow opening it there, not inside another map): the
+// middle of the street, looking along it toward its "to" end; a corner, from the corner
+function streetViewUrl(o) {
+  const COS_LAT = Math.cos(37.76 * Math.PI / 180);
+  let x, y, h = null;
+  if (isInt(o)) { x = o.x; y = o.y; }
+  else {
+    const c = o.coords, seg = c.slice(1).map((p, i) => Math.hypot((p[0] - c[i][0]) * COS_LAT, p[1] - c[i][1])), half = seg.reduce((a, b) => a + b, 0) / 2;
+    let d = 0, k = 0; while (k < seg.length - 1 && d + seg[k] < half) d += seg[k++];
+    const u = seg[k] ? (half - d) / seg[k] : 0, a = c[k], b = c[k + 1] || a;
+    x = a[0] + u * (b[0] - a[0]); y = a[1] + u * (b[1] - a[1]);
+    h = Math.round((Math.atan2((b[0] - a[0]) * COS_LAT, b[1] - a[1]) * 180 / Math.PI + 360) % 360);
+  }
+  return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${y.toFixed(6)},${x.toFixed(6)}${h != null ? `&heading=${h}` : ''}`;
+}
 const wktOf = o => isInt(o) ? `POINT (${o.x.toFixed(5)} ${o.y.toFixed(5)})`
   : `LINESTRING (${o.coords.map(c => `${c[0].toFixed(5)} ${c[1].toFixed(5)}`).join(', ')})`;
 function record(s) {
@@ -3177,7 +3211,7 @@ function record(s) {
       from_street: s.streets.slice(1).join(' & '), to_street: '',
       supervisor_district: s.sup, zip_code: s.zip, nhood: s.nhood, analysis_neighborhood: s.anhood,
       ...Object.fromEntries(HOOD_SETS.map(([k]) => ['hood_' + k, (s.hoods && s.hoods[k]) || ''])),
-      elev_from_ft: e == null ? '' : Math.round(e * M2FT), ...transitFields(s), ...Areas.fields(s), wkt: wktOf(s), link: linkFor([s]) };
+      elev_from_ft: e == null ? '' : Math.round(e * M2FT), ...transitFields(s), ...Areas.fields(s), wkt: wktOf(s), link: linkFor([s]), street_view: streetViewUrl(s) };
   }
   const sides = Logic.addressSides(s);
   const side = p => { const x = sides.find(y => y.parity === p); return x ? x.side : ''; };
@@ -3200,6 +3234,7 @@ function record(s) {
     ...tileFields(s),
     wkt: wktOf(s),
     link: linkFor([s]),
+    street_view: streetViewUrl(s),
   };
 }
 function tileFields(s) {
@@ -3208,8 +3243,20 @@ function tileFields(s) {
     businesses: b ? b.reduce((a, x) => a + x.shown.length, 0) : '', business_addresses: b ? b.length : '' };
 }
 // streets and intersections, then the picked blocks or parcels, one kind column (and every column any row has)
+// a route's gaps as rows, each right after the street it leaves from
+function gapRecord(g) {
+  const corner = n => { const i = Logic.item(n); return i && i.streets ? i.streets.join(' & ') : String(n); };
+  return { kind: 'gap', type: 'gap', cnn: '', streetname: t('gapRow'), from_street: t('gapFrom', { street: g.from.s.street, corner: corner(g.from.n) }),
+    to_street: t('gapFrom', { street: g.to.s.street, corner: corner(g.to.n) }), length_ft: fmtFt(g.m), gap_from_corner: g.from.n, gap_to_corner: g.to.n,
+    wkt: `LINESTRING (${[g.from.p, g.to.p].map(c => `${c[0].toFixed(5)} ${c[1].toFixed(5)}`).join(', ')})` };
+}
+function withGaps(segs, recs) {
+  const gaps = state.route ? routeGaps() : []; if (!gaps.length) return recs;
+  const after = new Map(); gaps.forEach(g => { const k = g.from.s.cnn; if (!after.has(k)) after.set(k, []); after.get(k).push(gapRecord(g)); });
+  return recs.flatMap((r, i) => [r, ...(segs[i] && after.get(segs[i].cnn) || [])]);
+}
 function copyRecords(segs) {
-  const rows = segs.map(record).map(r => ({ kind: r.type || 'street', ...r }));
+  const rows = withGaps(segs, segs.map(record).map(r => ({ kind: r.type || 'street', ...r })));
   let picked = []; try { picked = SelAreas.exportRows().map(r => r.props); } catch (e) { }
   return [...rows, ...picked];
 }
@@ -3245,47 +3292,67 @@ const SaveTo = (() => {
   const status = (msg, html) => { const el = $('save-status'); el.hidden = !msg; if (html) el.innerHTML = msg; else el.textContent = msg || ''; };
   const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   const nameOf = () => $('save-name').value.trim() || t(state.route ? 'saveDefaultRoute' : 'saveDefaultSel');
+  const q = tab => `'${String(tab).replace(/'/g, "''")}'`;
+  const ROUTE_COLS = ['route', 'kind', 'streets', 'intersections', 'gaps', 'length_km', 'saved', 'tab', 'tab_id', 'tab_link', 'block_party_link', 'made_with'];
+  // the last project sheet saved to, for "Add to <name>"
+  const PKEY = 'bp-sheet-project';
+  const lastProject = () => { try { return JSON.parse(localStorage.getItem(PKEY)); } catch (e) { return null; } };
+  const showLast = () => { const p = lastProject(), b = $('save-sheet-last'); if (!b) return; b.hidden = !p; if (p) { b.textContent = t('saveAddTo', { name: p.name }); b.title = p.url; } };
+  const remember = p => { try { localStorage.setItem(PKEY, JSON.stringify({ id: p.id, name: p.name, url: p.url, routesTab: p.routesTab })); } catch (e) { } showLast(); };
   function gather(segs) {
     const isRoute = !!state.route;
     const order = new Map(segs.filter(s => !isInt(s)).map((s, i) => [s.cnn, i + 1]));
-    const recs = copyRecords(segs).map(r => isRoute ? { order: (r.kind === 'street' && order.get(r.cnn)) || '', ...r } : r);
+    let n = 0;   // a route's order counts its gaps too, so the rows read in order along it
+    const recs = copyRecords(segs).map(r => isRoute && (r.kind === 'street' || r.kind === 'gap' || r.kind === 'intersection') ? { order: ++n, ...r } : r);
     const cols = [...new Set(recs.flatMap(r => Object.keys(r)))];
     const streets = segs.filter(s => !isInt(s)), gaps = isRoute ? routeGaps() : [];
     const lenM = streets.reduce((a, s) => a + (s.len || 0), 0) + gaps.reduce((a, g) => a + (g.m || 0), 0);
-    const about = [['field', 'value'], ['name', nameOf()], ['kind', isRoute ? 'route' : 'selection'], ['route', isRoute ? 'yes' : 'no'],
-      ['streets', streets.length], ['intersections', segs.length - streets.length],
-      ...(isRoute ? [['length_km', (lenM / 1000).toFixed(2)], ['gaps', gaps.length], ['order', 'the order column is the place along the route, as listed']] : []),
-      ['link', linkFor(segs)], ['saved', today()], ['made_with', `Block Party ${_BUILD_VERSION}`],
-      ['sf_blocks', (window.SFBlocks && SFBlocks.describe && SFBlocks.describe()) || '']];
-    return { isRoute, cols, rows: [cols, ...recs.map(r => cols.map(c => r[c] == null ? '' : String(r[c])))], about, recs };
+    return { isRoute, cols, rows: [cols, ...recs.map(r => cols.map(c => r[c] == null ? '' : String(r[c])))], recs,
+      streets: streets.length, ints: segs.length - streets.length, gaps: gaps.length, km: (lenM / 1000).toFixed(2), link: linkFor(segs) };
   }
   return {
-    prepare() { if (!GoogleDrive.ready) GoogleDrive.config(SFBlocks.url('matcher/google.json')).catch(() => {}); },
+    prepare() { showLast(); if (!GoogleDrive.ready) GoogleDrive.config(SFBlocks.url('matcher/google.json')).catch(() => {}); },
+    // A project is one Google Sheet: a "Routes" tab with a row per saved route or list, and a tab for each one.
+    // Each row has the tab's name and a link by the tab's id (gid), which still works after a rename; the Routes
+    // tab itself is found by its id first (remembered here), then by name.
     async sheet(mode) {
       try {
         if (!GoogleDrive.ready && !(await GoogleDrive.config(SFBlocks.url('matcher/google.json')))) { toast(t('driveNotSetUp')); return; }
         await GoogleDrive.signIn();   // first, while the click still counts, so the browser lets Google's window open
-        let target = null;
-        if (mode === 'add') { target = await GoogleDrive.pick(['application/vnd.google-apps.spreadsheet']); if (!target) return; }
+        let proj = null;
+        if (mode === 'last') proj = lastProject();
+        else if (mode === 'add') { const d = await GoogleDrive.pick(['application/vnd.google-apps.spreadsheet']); if (!d) return;
+          proj = { id: d.id, name: d.name, url: d.url || `https://docs.google.com/spreadsheets/d/${d.id}/edit` }; if (lastProject() && lastProject().id === d.id) proj.routesTab = lastProject().routesTab; }
         status(t('saveWorking'));
         const segs = await exportSegs(), g = gather(segs), name = nameOf();
-        let id, url;
+        let tabs;
         if (mode === 'new') {
-          ({ id, url } = await GoogleDrive.createSheet(`${name} ${today()}`, [t('saveTabStreets'), t('saveTabAbout')]));
-          await GoogleDrive.putValues(id, `'${t('saveTabStreets')}'!A1`, g.rows);
-          await GoogleDrive.putValues(id, `'${t('saveTabAbout')}'!A1`, g.about);
-        } else {
-          id = target.id; url = target.url || `https://docs.google.com/spreadsheets/d/${id}/edit`;
-          const have = new Set((await GoogleDrive.sheetTabs(id)).map(x => x.title));
-          let base = `${name} ${today()}`.slice(0, 90), k = 2, tab = base;
-          while (have.has(tab) || have.has(tab + ' ' + t('saveTabAbout'))) tab = `${base} (${k++})`;
-          await GoogleDrive.addTab(id, tab, g.rows.length + 10, g.cols.length + 2);
-          await GoogleDrive.putValues(id, `'${tab.replace(/'/g, "''")}'!A1`, g.rows);
-          const at = `${tab} ${t('saveTabAbout')}`;
-          await GoogleDrive.addTab(id, at, 40, 4);
-          await GoogleDrive.putValues(id, `'${at.replace(/'/g, "''")}'!A1`, g.about);
-        }
-        status(`${esc(t(g.isRoute ? 'saveDoneRoute' : 'saveDone', { n: g.rows.length - 1 }))} <a href="${esc(url)}" target="_blank" rel="noopener">${esc(t('saveOpen'))}</a>`, true);
+          const title = $('save-project').value.trim() || `${t('saveProjectDefault')} ${today()}`;
+          const r = await GoogleDrive.createSheet(title, [t('saveTabRoutes')]);
+          proj = { id: r.id, name: title, url: r.url, routesTab: r.tabs[0] && r.tabs[0].sheetId };
+          tabs = r.tabs;
+          await GoogleDrive.putValues(proj.id, `${q(t('saveTabRoutes'))}!A1`, [ROUTE_COLS]);
+        } else tabs = await GoogleDrive.sheetTabs(proj.id);
+        // the Routes tab: by id, then by name, else make it
+        let rt = tabs.find(x => proj.routesTab != null && x.sheetId === proj.routesTab) || tabs.find(x => x.title === t('saveTabRoutes'));
+        if (!rt) { const id = await GoogleDrive.addTab(proj.id, t('saveTabRoutes'), 200, ROUTE_COLS.length + 2); rt = { title: t('saveTabRoutes'), sheetId: id };
+          await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A1`, [ROUTE_COLS]); tabs.push(rt); }
+        proj.routesTab = rt.sheetId;
+        // this route's own tab
+        const have = new Set(tabs.map(x => x.title)); let tab = name.slice(0, 90), k = 2;
+        while (have.has(tab)) tab = `${name.slice(0, 85)} (${k++})`;
+        const gid = await GoogleDrive.addTab(proj.id, tab, g.rows.length + 10, g.cols.length + 2);
+        await GoogleDrive.putValues(proj.id, `${q(tab)}!A1`, g.rows);
+        // and its row on Routes
+        const used = await GoogleDrive.getValues(proj.id, `${q(rt.title)}!A:A`), next = Math.max(2, used.length + 1);
+        const base = `https://docs.google.com/spreadsheets/d/${proj.id}/edit`;
+        await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A${next}`, [ROUTE_COLS.map(c => ({ route: name, kind: g.isRoute ? 'route' : 'selection', streets: g.streets, intersections: g.ints,
+          gaps: g.isRoute ? g.gaps : '', length_km: g.isRoute ? g.km : '', saved: today(), tab, tab_id: gid, tab_link: `${base}#gid=${gid}`, block_party_link: g.link,
+          made_with: `Block Party ${_BUILD_VERSION}` })[c] ?? '')]);
+        remember(proj);
+        const where = t('saveWhere', { project: proj.name, tab });
+        status(`${esc(t('saveDoneN', { n: g.streets, where }))} <a href="${esc(`${base}#gid=${gid}`)}" target="_blank" rel="noopener">${esc(t('saveOpen'))}</a>`, true);
+        toast(t('saveDoneN', { n: g.streets, where }));
       } catch (err) { console.warn('[block-party] save to sheet', err); status(t('saveFailed', { why: err.message || String(err) })); }
     },
     // one record per street (order and route included); CONFIG.AIRTABLE_SAVE says where and which columns
@@ -6154,14 +6221,24 @@ const Drops = (() => {
         <button type="button" class="btn small drop-focus" data-drop-focus aria-pressed="${focusId === f.id}" title="${esc(t('focusTitle'))}">${esc(t(focusId === f.id ? 'focusOn' : 'focusBtn'))}</button>
         <button type="button" class="drop-x" data-drop-x title="${esc(t('dropRemove'))}" aria-label="${esc(t('dropRemove'))}">×</button></div>${fmtHTML(f)}`).join('')
       + `<details class="import-fold" data-import ${openImport ?? !files.length ? 'open' : ''}><summary>${esc(t('importTitle'))}<small>${esc(t('importHint'))}</small></summary>
-      <div class="drop-box"><div class="drop-btns"><label class="btn small"><input type="file" accept=".csv,.tsv,.txt,.geojson,.json" multiple hidden data-drop-pick>${esc(t('dropPick'))}</label>
+      ${importControls()}
+      </details>`
+      + (files.length ? nearHTML() : '');
+    // the same controls under Copy / Save in the sidebar, with the files you've brought in
+    const side = $('import-side');
+    if (side) {
+      side.innerHTML = (files.length ? `<ul class="import-list">${files.map(f => `<li data-imp="${f.id}"><span class="imp-sw" style="background:${f.color}"></span><b>${esc(shown(f))}</b> <small class="muted">${esc(t('dropCount', { n: f.feats.length.toLocaleString() }))} · ${esc(t('src_' + (f.src || 'file')))}</small>
+        <button type="button" class="drop-x" data-imp-x="${f.id}" title="${esc(t('dropRemove'))}" aria-label="${esc(t('dropRemove'))}">×</button></li>`).join('')}</ul>` : '') + importControls();
+      const b = $('import-n'); b.hidden = !files.length; b.textContent = files.length;
+    }
+    legend();
+  }
+  function importControls() {
+    return `<div class="drop-box"><div class="drop-btns"><label class="btn small"><input type="file" accept=".csv,.tsv,.txt,.geojson,.json" multiple hidden data-drop-pick>${esc(t('dropPick'))}</label>
         <button type="button" class="btn small" data-drive title="${esc(t('driveTitle'))}">${esc(t('driveBtn'))}</button>
         <button type="button" class="btn small" data-airtable title="${esc(t('airtableTitle'))}">${esc(t('airtableBtn'))}</button></div>
         <small>${esc(t('dropHint'))}</small></div>
-      <form class="drop-url" data-drop-url><input type="url" name="u" placeholder="${esc(t('urlPh'))}" aria-label="${esc(t('urlPh'))}"><button type="submit" class="btn small">${esc(t('urlAdd'))}</button></form>
-      </details>`
-      + (files.length ? nearHTML() : '');
-    legend();
+      <form class="drop-url" data-drop-url><input type="url" name="u" placeholder="${esc(t('urlPh'))}" aria-label="${esc(t('urlPh'))}"><button type="submit" class="btn small">${esc(t('urlAdd'))}</button></form>`;
   }
   // the map key: a line per shown file, and its color classes under it
   function legend() {
@@ -6352,6 +6429,16 @@ const Drops = (() => {
       else { const b = e.target.closest('[data-drop-on]'); if (b) setTimeout(() => show(id, b.dataset.dropOn === '1')); }
     });
     el.addEventListener('change', e => { if (e.target.matches('[data-drop-pick]')) { [...e.target.files].forEach(add); e.target.value = ''; } });
+    // the sidebar's Import panel does the same things
+    const side = $('import-side');
+    side.addEventListener('change', e => { if (e.target.matches('[data-drop-pick]')) { [...e.target.files].forEach(add); e.target.value = ''; } });
+    side.addEventListener('submit', e => { if (!e.target.matches('[data-drop-url]')) return; e.preventDefault(); const i = e.target.elements.u; addURL(i.value); i.value = ''; });
+    side.addEventListener('click', e => {
+      if (e.target.closest('[data-drive]')) fromDrive();
+      else if (e.target.closest('[data-airtable]')) BPAirtable.open('');
+      else { const x = e.target.closest('[data-imp-x]'); if (x) askRemove(+x.dataset.impX); }
+    });
+    renderMenu();
     // drop anywhere on the page
     const zone = $('drop-zone'); let depth = 0;
     const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
@@ -6779,6 +6866,10 @@ const Downloads = (() => {
       if (r) { if (!r.props.cnns.split(';').includes(String(s.cnn))) r.props.cnns += ';' + s.cnn; return; }
       out.set(key, { props: { ...props, cnns: String(s.cnn) }, geom });
     };
+    if (what === 'blocks' && state.route) {   // a route keeps its order, with its gaps as rows
+      return withGaps(segs, segs.map(s => { const r = record(s); return { kind: r.type || 'street', ...r }; }))
+        .map((r, i) => ({ props: r, geom: r.kind === 'gap' ? { type: 'LineString', coordinates: r.wkt.replace(/^LINESTRING \(|\)$/g, '').split(', ').map(p => p.split(' ').map(Number)) } : geomOfSeg(segs.find(s => s.cnn === r.cnn)) }));
+    }
     for (const s of segs) {
       if (what === 'blocks') { const r = record(s); out.set(s.cnn, { props: { kind: r.type || 'street', ...r }, geom: geomOfSeg(s) }); }
       else if (what === 'businesses') for (const x of (Tiles.peek(s) || {}).businesses || []) for (const i of x.items || [])
@@ -6845,7 +6936,7 @@ function addCrossStreets() {
 const Table = (() => {
   const H_KEY = 'bp-table-h', MAX = 2000;
   const STREET_COLS = ['streetname', 'from_street', 'to_street', 'cnn', 'type', 'length_ft', 'supervisor_district', 'zip_code', 'analysis_neighborhood',
-    'businesses', 'street_trees', 'muni_routes', 'bike_facility', 'next_to', 'census_people'];
+    'businesses', 'street_trees', 'muni_routes', 'bike_facility', 'next_to', 'census_people', 'street_view'];
   const HIDE = new Set(['wkt', 'link']);
   let open = false, src = 'streets', sort = null, dir = 1, q = '', allCols = false, shown = [];
   const opened = new Set();   // Nearby rows opened to their matches
@@ -6910,6 +7001,7 @@ const Table = (() => {
     const head = `<thead><tr><th>${isStreets ? `<input type="checkbox" data-tbl-all ${state.results.length && state.checked.size === state.results.length ? 'checked' : ''} aria-label="${esc(t('tableCheckAll'))}">` : ''}</th>`
       + cols.map(c => `<th data-sort="${esc(c)}" class="${sort === c ? (dir > 0 ? 'asc' : 'desc') : ''}" title="${esc(t('tableSort'))}">${src === 'nearby' ? NearbyView.headHTML(c) : esc(label(c))}</th>`).join('') + '</tr></thead>';
     const cell = (r, c) => { const v = r.cells[c]; const s = v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
+      if (c === 'street_view' && /^https:/.test(s)) return `<td><a href="${esc(s)}" target="_blank" rel="noopener" class="sv-link">${esc(t('streetViewShort'))}</a></td>`;
       return `<td class="${numCol.has(c) ? 'tbl-num' : ''}" title="${esc(s.length > 30 ? s : '')}">${esc(s)}</td>`; };
     const lead = r => r.nb ? `<td><button type="button" class="tbl-card" data-nb-open="${esc(r.key)}" aria-expanded="${opened.has(r.key)}">${opened.has(r.key) ? '▾' : '▸'}</button></td>` : r.pick != null ? `<td><button type="button" class="tbl-card" data-tbl-unpick="${esc(r.pick)}" title="${esc(t('pickDrop', { n: r.pick }))}">×</button></td>` : isStreets ? `<td><input type="checkbox" data-tbl-check="${r.key}" ${state.checked.has(r.key) ? 'checked' : ''} aria-label="${esc(t('tableCheck'))}"></td>`
       : `<td><button type="button" class="tbl-card" data-tbl-card="${r.i}" aria-pressed="${Drops.cards.has ? !!Drops.cards.has(r.f.id, r.i) : false}">${esc(t('tableCard'))}</button></td>`;
@@ -7261,7 +7353,7 @@ const NearbyView = (() => {
       ...files.map(l => [l.key, `${l.label} (${l.n.toLocaleString()})`]), ...['schools', 'health', 'stations', 'lands'].filter(k => OVERLAYS[k]).map(k => [k, t('lyr_' + k)])];
     if (!start || !startOpts.some(([v]) => v === start)) start = files.length ? files[0].key : 'me';
     for (const l of files) if (!seenFiles.has(l.key)) { seenFiles.add(l.key); chosen.add(l.key); }
-    const box = l => `<label class="nb-chk"><input type="checkbox" value="${l.key}" ${chosen.has(l.key) ? 'checked' : ''} ${l.key === start ? 'disabled' : ''}><i class="nb-sw" style="background:${l.color}"></i>${esc(l.label)}${l.n ? ` <span class="muted">· ${l.n.toLocaleString()}</span>` : ''}${l.key === 'groups' ? ` <span class="muted">· ${esc(t('nbByHood'))}</span>` : l.key === 'businesses' ? ` <span class="muted">· ${esc(t(bizAll ? 'nbAllRegs' : 'nbStorefronts'))}</span>` : ''}</label>${l.key === 'businesses' && chosen.has('businesses') ? `<div class="land-chips nb-bizcats">${BIZ_CATS.map(([k, lab]) => `<label class="land-chip"><input type="checkbox" data-nb-bizcat="${k}" ${nbBizCats.has(k) ? 'checked' : ''}><i class="nb-sw" style="background:${BIZ_COLOR[k]}"></i>${esc(t(lab))}</label>`).join('')}</div>` : ''}`;
+    const box = l => `<label class="nb-chk"><input type="checkbox" value="${l.key}" ${chosen.has(l.key) ? 'checked' : ''} ${l.key === start ? 'disabled' : ''}><i class="nb-sw" style="background:${l.color}"></i>${esc(l.label)}${l.n ? ` <span class="muted">· ${l.n.toLocaleString()}</span>` : ''}${l.key === 'groups' ? ` <span class="muted">· ${esc(t('nbByHood'))}</span>` : l.key === 'businesses' ? ` <span class="muted">· ${esc(t(bizAll ? 'nbAllRegs' : 'nbStorefronts'))}</span>` : ''}</label>${l.key === 'businesses' && chosen.has('businesses') ? `<div class="land-chips nb-bizcats">${BIZ_CATS.map(([k, lab]) => `<label class="land-chip"><input type="checkbox" data-nb-bizcat="${k}" ${nbBizCats.has(k) ? 'checked' : ''}><i class="nb-sw" style="background:${BIZ_COLOR[k]}"></i>${esc(t(lab))}</label>`).join('')}<small class="lg-note">${esc(t('bizCatNote'))}</small></div>` : ''}`;
     const { cur, opts } = Drops.nearOptions();
     return `<div class="nb-head"><b>${esc(t('nearbyBtn'))}</b><button type="button" class="nb-x" data-nb-close aria-label="${esc(t('tableClose'))}">✕</button></div>
       <div class="nb-step"><span class="nb-n">1</span><div><b>${esc(t('nbStart'))}</b><select id="nb-start">${startOpts.map(([v, l]) => `<option value="${v}" ${v === start ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div></div>
