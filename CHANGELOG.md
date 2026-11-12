@@ -2,6 +2,16 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v84
+
+- **Phones: one ☰ button** at the top left, with no word next to it. Nearby moved into the ☰ menu with the rest.
+- **Full screen and 3D sit under the zoom buttons**, the same size as ☰ on phones (bigger for fingers). Full screen uses corner-arrow icons: pointing out to fill the window, pointing in to leave.
+- **3D in one tap:** the new **3D / 2D** button tilts the map over the hills, or lays it flat and seen from above (with the hills turned off, which is lighter). 3D is on by default on phones again.
+- **Routes:** with **This is a route** checked, each street's end dots shrink to small dots, tiny when zoomed out, so the line reads as one route. The page link keeps `route=1`.
+- **Filter → angles:** each street's direction now runs from the corner to the block's other end, so the curve where a divided street splits around an island no longer sets the angle. The drawn legs follow the same directions. The intersection's popup sits beside the corner, in the widest gap between the streets, so it doesn't cover the legs or the angle.
+- **Save to Google Sheets** (Copy / Save → Save to): **New Google Sheet** makes a sheet in your Drive; **Add to a sheet…** adds tabs to one you pick. You get a Streets tab (the same columns as Copy CSV) and an About tab (name, whether it's a route, counts, link, date). For a route, an `order` column gives each street's place along it, and About has the length and the number of gaps. The name box is optional.
+- **Save to Airtable is wired in but off.** It turns on when `CONFIG.AIRTABLE_SAVE` names a table and which of its fields get which columns, and it writes one record per street.
+
 ## v83
 
 - **Cards fill in at once** from sf-blocks' new street facts (`data/facts/streets.json`, 0.47 MB gzipped, worked out ahead of time with the same rules as the cards): lots, homes, zoning and land use, street trees by name, how many businesses and at how many addresses, and people and homes from the census. Before, every card read its own parcel and point tiles first.

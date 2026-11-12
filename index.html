@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v83 -->
+<!-- build: v84 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -452,8 +452,18 @@ td.tbl-num { text-align: right; font-variant-numeric: tabular-nums; }
 .map-ui > * { pointer-events: auto; }
 /* v82: phones get Settings ☰ + Nearby + full screen in one row; Settings opens the other buttons */
 .mob-only { display: none !important; }
-#full-btn { padding: 4px 10px; font-size: 17px; line-height: 1; }
-.map-ui .badge#more-badge { margin-left: 6px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* ☰ looks like the zoom buttons: white square, soft ring */
+#more-wrap { border: 0; padding: 0; background: none; box-shadow: none; }
+#more-btn { position: relative; width: 38px; height: 38px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 4px; background: #fff; color: #1E2340; box-shadow: 0 0 0 2px rgba(0,0,0,.1); }
+#more-btn[aria-expanded="true"] { background: #1E2340; color: #fff; }
+#more-btn .more-ico { font-size: 20px; line-height: 1; }
+.map-ui .badge#more-badge { position: absolute; top: -6px; right: -6px; margin: 0; }
+/* v84: full screen and 3D sit with the zoom buttons */
+.bp-ctl button { display: grid; place-items: center; }
+.bp-ctl button svg { width: 17px; height: 17px; stroke: #1E2340; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.bp-ctl #ctl-3d { font: 700 12px/1 system-ui, sans-serif; color: #1E2340; letter-spacing: -.02em; }
+.bp-ctl #ctl-3d[aria-pressed="true"] { background: #1E2340; color: #fff; }
 @media (max-width: 860px) {
   .mob-only { display: flex !important; }
   .map-ui > .map-toggle:not(.keep), .map-ui > #focus-wrap, .map-ui > .zoom-read { display: none; }
@@ -462,6 +472,9 @@ td.tbl-num { text-align: right; font-variant-numeric: tabular-nums; }
   /* Focus stays in sight while it's on */
   .map-ui > #focus-wrap:has(#focus-off:not([hidden])) { display: flex; }
   .map-ui > .map-toggle.keep { order: -1; }
+  /* the zoom, compass, full screen and 3D buttons as big as ☰, for fingers */
+  .maplibregl-ctrl-group button { width: 38px; height: 38px; }
+  .map-ui { right: 60px; }
 }
 /* full screen: the map takes the whole window (a class, since iPhones can't make one element full screen) */
 body.bp-full { overflow: hidden; }
@@ -678,6 +691,7 @@ summary::marker { font-size: 1.15em; }
 .sel-step { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--ink-soft); width: 56px; flex: none; overflow-wrap: anywhere; }
 #pick-count { font-size: 13px; color: var(--ink-soft); }
 .sel-hint { font-size: 13px; color: var(--ink-soft); margin: 6px 0 0 62px; }
+.save-name { flex: 1 1 140px; min-width: 120px; font: inherit; font-size: 14px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
 .area-name { flex: 1; min-width: 140px; font: inherit; font-size: 14px; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); }
 .lyr-reset { display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--line); margin-top: 8px; padding-top: 10px; }
 .lyr-reset small { color: var(--ink-soft); }
@@ -838,7 +852,7 @@ summary::marker { font-size: 1.15em; }
     <div class="map-loading" id="map-loading"><span class="spin" aria-hidden="true"></span><span id="map-loading-text" data-i18n="loading">Loading streets…</span></div>
     <div class="map-ui" id="map-ui">
       <div class="map-toggle single keep mob-only" id="more-wrap">
-        <button type="button" id="more-btn" aria-expanded="false" data-i18n-title="moreTitle" title="Map, layers, areas, Filter, Focus and Table"><span data-i18n="moreBtn">☰ Settings</span><span class="badge" id="more-badge" hidden></span></button>
+        <button type="button" id="more-btn" aria-expanded="false" data-i18n-title="moreTitle" title="Map, layers, areas, Filter, Focus and Table"><span class="more-ico" aria-hidden="true">☰</span><span class="sr" data-i18n="moreBtn">Menu</span><span class="badge" id="more-badge" hidden></span></button>
       </div>
       <div class="map-toggle" role="group" aria-label="Map style">
         <button type="button" id="bm-map" aria-pressed="true" data-i18n="bmMap">Map</button>
@@ -860,14 +874,11 @@ summary::marker { font-size: 1.15em; }
         <button type="button" id="focus-off" class="focus-x" hidden data-i18n-title="focusOffTitle" title="Stop focusing (Esc)" aria-label="Stop focusing">✕</button>
         <div class="flavor-pop focus-pop" id="focus-pop" hidden></div>
       </div>
-      <div class="map-toggle single keep">
+      <div class="map-toggle single">
         <button type="button" id="nearby-btn" aria-pressed="false" data-i18n="nearbyBtn" title="Match one list against others: what's near each place">◎ Nearby</button>
       </div>
       <div class="map-toggle single">
         <button type="button" id="table-btn" aria-pressed="false" data-i18n="tableBtn" title="Your streets and files as a table under the map">Table</button>
-      </div>
-      <div class="map-toggle single keep">
-        <button type="button" id="full-btn" aria-pressed="false" data-i18n-title="fullTitle" title="Map full screen" aria-label="Map full screen"><span id="full-ico">⛶</span></button>
       </div>
       <div class="zoom-read" id="zoom-read" data-i18n-title="zoomRead" title="Zoom level"></div>
       <div class="map-pop" id="layers-panel" hidden>
@@ -970,6 +981,12 @@ summary::marker { font-size: 1.15em; }
         <div class="sel-row"><span class="sel-step"></span>
           <button type="button" class="btn small" id="dl-csv">CSV</button>
           <button type="button" class="btn small" id="dl-geojson">GeoJSON</button></div>
+        <div class="sel-row"><span class="sel-step" data-i18n="saveToStep">Save to</span>
+          <input autocomplete="off" type="text" id="save-name" class="save-name" data-i18n-placeholder="saveNamePh" placeholder="Name (optional)">
+          <button type="button" class="btn small" id="save-sheet-new" data-i18n="saveSheetNew" title="A new Google Sheet in your Drive">New Google Sheet</button>
+          <button type="button" class="btn small" id="save-sheet-add" data-i18n="saveSheetAdd" title="Add tabs to a Google Sheet you pick">Add to a sheet…</button>
+          <button type="button" class="btn small" id="save-airtable" data-i18n="saveAirtable" hidden>Airtable</button></div>
+        <p class="sel-hint" id="save-status" hidden></p>
       </details>
       <details class="sel-panel" id="sel-panel">
         <summary data-i18n="selTitle">Select blocks</summary>
@@ -1104,7 +1121,7 @@ const SFBlocks = (() => {
 })();
 </script>
 <script>
-// Copied from burritojustice/sf-blocks 2026.11.07.5 (matcher/google-drive.js); change it there first.
+// Copied from burritojustice/sf-blocks 2026.11.11.8 (matcher/google-drive.js); change it there first.
 // Google Drive for static pages: sign in, pick a file with Google's own picker, and read it.
 // Written for Matcher; Joiner and Block Party can copy this file as is.
 //
@@ -1126,6 +1143,7 @@ const SFBlocks = (() => {
 //   await GoogleDrive.addTab(id, title)              -> sheetId
 //   await GoogleDrive.clearValues(id, "'Tab'")
 //   await GoogleDrive.putValues(id, "'Tab'!A1", rows) // rows written as typed (RAW), so CNNs stay text
+//   await GoogleDrive.createSheet(title, ['Tab', ...]) -> {id, url}   // a new spreadsheet
 'use strict';
 window.GoogleDrive = (() => {
     const GIS = 'https://accounts.google.com/gsi/client';
@@ -1220,6 +1238,12 @@ window.GoogleDrive = (() => {
     async function clearValues(id, range) {
         await api(`${SHEETS(id)}/values/${encodeURIComponent(range)}:clear`, json('POST', {}));
     }
+    // a new spreadsheet in the person's Drive (drive.file covers files this page makes) -> {id, url}
+    async function createSheet(title, tabs = ['Sheet1']) {
+        const r = await (await api('https://sheets.googleapis.com/v4/spreadsheets', json('POST', { properties: { title },
+            sheets: tabs.map(t => ({ properties: { title: t } })) }))).json();
+        return { id: r.spreadsheetId, url: r.spreadsheetUrl };
+    }
     async function putValues(id, range, values) {
         await api(`${SHEETS(id)}/values/${encodeURIComponent(range)}?valueInputOption=RAW`, json('PUT', { range, majorDimension: 'ROWS', values }));
     }
@@ -1238,19 +1262,23 @@ window.GoogleDrive = (() => {
         return { kind: 'file', id: doc.id, name: doc.name, file: new File([await r.blob()], doc.name, { type: doc.mimeType || '' }) };
     }
 
-    return { config, pick, read, signIn, sheetTabs, getValues, addTab, resizeTab, clearValues, putValues, get ready() { return !!cfg; } };
+    return { config, pick, read, signIn, sheetTabs, getValues, addTab, resizeTab, clearValues, putValues, createSheet, get ready() { return !!cfg; } };
 })();
 
 </script>
 <script>
-const _BUILD_VERSION = 'v83';
-// a phone-sized screen: flat map, census on request, and one Settings menu on the map
+const _BUILD_VERSION = 'v84';
+// a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
 /* =====================================================================
    CONFIG
    ===================================================================== */
 const CONFIG = {
+  // Save to Airtable (off): the table (link or appX/tblY) and which of its fields get which column, e.g.
+  // { table: 'appXXXXXXXXXXXXXX/tblXXXXXXXXXXXXXX', fields: { Name: 'route_name', CNN: 'cnn', Order: 'order', Route: 'route',
+  //   Street: 'streetname', From: 'from_street', To: 'to_street', WKT: 'wkt', Link: 'selection_link', Saved: 'saved' } }
+  AIRTABLE_SAVE: null,
   // Protomaps key for burritojustice.github.io (and any localhost); region.json can name another for other origins
   PROTOMAPS_KEY: '071e272e8d5e13b7',
   styleUrl: (key, flavor = 'light') => `https://api.protomaps.com/styles/v5/${flavor}/en.json?key=${key}`,
@@ -1480,8 +1508,12 @@ const I18N = {
     dlLabel: 'Download:', dlBlocks: 'Streets and intersections', dlBlocksOld: 'Streets', dlAll: 'All of these', dlBusinessesS: 'Businesses', dlParcelsS: 'Parcels', dlCblocksS: 'Census blocks', dlAblocksS: 'Assessor blocks along the streets',
     dlPick: 'Check what to download first', dlBusinesses: 'Businesses along them', dlParcels: 'Parcels along them', dlCblocks: 'Census blocks along them',
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
-    moreBtn: '☰ Settings', moreTitle: 'Map, layers, areas, Filter, Focus and Table', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
+    moreBtn: 'Menu', moreTitle: 'Map, layers, areas, Nearby, Filter, Focus and Table', ctl3d: '3D: tilt the map over the hills (tap again for flat)', ctl2d: 'Flat map, seen from above', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
     censusLoad: 'Count people and homes',
+    saveToStep: 'Save to', saveNamePh: 'Name (optional)', saveSheetNew: 'New Google Sheet', saveSheetAdd: 'Add to a sheet…', saveAirtable: 'Airtable',
+    saveDefaultRoute: 'Block Party route', saveDefaultSel: 'Block Party streets', saveTabStreets: 'Streets', saveTabAbout: 'About',
+    saveWorking: 'Reading the streets’ details and saving…', saveDone: 'Saved {n} rows.', saveDoneRoute: 'Saved the route ({n} rows, in order).', saveOpen: 'Open the sheet',
+    saveFailed: 'Couldn’t save: {why}', saveAtStep: 'Saving to Airtable: {i} of {n}', saveAtDone: 'Saved {n} records to Airtable.', atSaveNoTable: 'Pick a table to save to.',
     censusShowBlocks: 'Show the census blocks and corners',
     tableBtn: 'Table', tableGrip: 'Drag to resize', tableSearch: 'Search rows', tableAllCols: 'All columns', tableClose: 'Close the table',
     tableStreets: 'Your streets and intersections ({n})', tableFile: '{name} ({n})', tableCount: '{n} rows', tableCountOf: '{n} of {total} rows',
@@ -1863,16 +1895,11 @@ const Logic = (() => {
   /* ---- intersection shapes: how many streets meet, and how far off square they cross ---- */
   // the legs that count: built, drivable, public streets (not freeways or ramps)
   const legOk = s => s.active && s.isPublic && !NOT_DRIVABLE.has(s.layer) && s.layer !== 'FREEWAYS' && s.classcode !== 1 && s.classcode !== 6;
-  const LEG_M = 25;   // a leg's direction: from the corner to the point this far along it (or its end)
+  // a leg's direction: from the corner to the block's other end, so the curve where a street splits around an
+  // island (the "sausage" ends of divided streets) doesn't set the angle
   function legBearing(s, n) {
     const a = s.coords[0], b = s.coords[s.coords.length - 1];
-    const cs = Math.hypot(a[0] - n.x, a[1] - n.y) <= Math.hypot(b[0] - n.x, b[1] - n.y) ? s.coords : [...s.coords].reverse();
-    let d = 0, p = cs[0], q = cs[cs.length - 1];
-    for (let i = 1; i < cs.length; i++) {
-      const step = Math.hypot((cs[i][0] - cs[i - 1][0]) * COS_LAT * 111320, (cs[i][1] - cs[i - 1][1]) * 110540);
-      if (d + step >= LEG_M) { const u = (LEG_M - d) / step; q = [cs[i - 1][0] + u * (cs[i][0] - cs[i - 1][0]), cs[i - 1][1] + u * (cs[i][1] - cs[i - 1][1])]; break; }
-      d += step;
-    }
+    const [p, q] = Math.hypot(a[0] - n.x, a[1] - n.y) <= Math.hypot(b[0] - n.x, b[1] - n.y) ? [a, b] : [b, a];
     return (Math.atan2((q[0] - p[0]) * COS_LAT, q[1] - p[1]) * 180 / Math.PI + 360) % 360;
   }
   let shapes = null;
@@ -2453,6 +2480,12 @@ function setupForm() {
   $('copy-json').addEventListener('click', async () => copyText(JSON.stringify(copyRecords(await exportSegs()), null, 2), t('copiedJson')));
   $('copy-link').addEventListener('click', () => copyText(linkFor(checkedSegs()), t('copiedLink')));
   $('dl-csv').addEventListener('click', () => Downloads.go('csv'));
+  $('save-sheet-new').addEventListener('click', () => SaveTo.sheet('new'));
+  $('save-sheet-add').addEventListener('click', () => SaveTo.sheet('add'));
+  $('save-airtable').hidden = !(CONFIG.AIRTABLE_SAVE && CONFIG.AIRTABLE_SAVE.table);
+  $('save-airtable').addEventListener('click', () => SaveTo.airtable());
+  // read the Google settings when the panel opens, so the sign-in window can open straight from the click
+  $('save-panel').addEventListener('toggle', () => { if ($('save-panel').open) SaveTo.prepare(); });
   $('dl-geojson').addEventListener('click', () => Downloads.go('geojson'));
   $('add-cross').addEventListener('click', addCrossStreets);
   $('add-around').addEventListener('click', () => SelAreas.around());
@@ -2734,7 +2767,7 @@ function render() {
     + (gaps.length ? ' · ' + t(gaps.length === 1 ? 'gaps1' : 'gapsN', { n: gaps.length, list: gaps.map(g => `${g.m} m`).join(', ') }) : '');
   if (!state.title && nBlk) $('results-title').textContent = t('linkedBlocks');
   ['apply', 'add-cross', 'add-around', 'area-save', 'pick-along'].forEach(id => $(id).disabled = !n);
-  ['copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson'].forEach(id => $(id).disabled = !n && !nBlk);
+  ['copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson', 'save-sheet-new', 'save-sheet-add', 'save-airtable'].forEach(id => $(id).disabled = !n && !nBlk);
   if (picking && SelAreas.picks().names.length) $('area-save').disabled = false;
   // Intersection results: intersection cards, then checked blocks as full cards, then the unchecked
   // blocks leading into the intersection as compact rows.
@@ -3189,9 +3222,76 @@ function applyUrl(segs) {
 const baseUrl = () => location.origin + location.pathname;
 function linkFor(segs) {
   let pk = ''; try { pk = SelAreas.pickHash(); } catch (e) { }
-  const parts = [segs.length ? 'cnn=' + segs.map(s => s.cnn).join(',') : '', pk ? 'pick=' + pk : ''].filter(Boolean);
+  const parts = [segs.length ? 'cnn=' + segs.map(s => s.cnn).join(',') : '', pk ? 'pick=' + pk : '', state.route && segs.length > 1 ? 'route=1' : ''].filter(Boolean);
   return baseUrl() + (parts.length ? '#' + parts.join('&') : '');
 }
+
+/* ---------- Save to: Google Sheets (and Airtable, off until CONFIG.AIRTABLE_SAVE names a table) ----------
+   A sheet gets two tabs: the streets (the same columns as Copy CSV; a route adds `order`, its place along the
+   route) and About (name, route or not, counts, length and gaps for a route, the link, the date, versions). */
+const SaveTo = (() => {
+  const status = (msg, html) => { const el = $('save-status'); el.hidden = !msg; if (html) el.innerHTML = msg; else el.textContent = msg || ''; };
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const nameOf = () => $('save-name').value.trim() || t(state.route ? 'saveDefaultRoute' : 'saveDefaultSel');
+  function gather(segs) {
+    const isRoute = !!state.route;
+    const order = new Map(segs.filter(s => !isInt(s)).map((s, i) => [s.cnn, i + 1]));
+    const recs = copyRecords(segs).map(r => isRoute ? { order: (r.kind === 'street' && order.get(r.cnn)) || '', ...r } : r);
+    const cols = [...new Set(recs.flatMap(r => Object.keys(r)))];
+    const streets = segs.filter(s => !isInt(s)), gaps = isRoute ? routeGaps() : [];
+    const lenM = streets.reduce((a, s) => a + (s.len || 0), 0) + gaps.reduce((a, g) => a + (g.m || 0), 0);
+    const about = [['field', 'value'], ['name', nameOf()], ['kind', isRoute ? 'route' : 'selection'], ['route', isRoute ? 'yes' : 'no'],
+      ['streets', streets.length], ['intersections', segs.length - streets.length],
+      ...(isRoute ? [['length_km', (lenM / 1000).toFixed(2)], ['gaps', gaps.length], ['order', 'the order column is the place along the route, as listed']] : []),
+      ['link', linkFor(segs)], ['saved', today()], ['made_with', `Block Party ${_BUILD_VERSION}`],
+      ['sf_blocks', (window.SFBlocks && SFBlocks.describe && SFBlocks.describe()) || '']];
+    return { isRoute, cols, rows: [cols, ...recs.map(r => cols.map(c => r[c] == null ? '' : String(r[c])))], about, recs };
+  }
+  return {
+    prepare() { if (!GoogleDrive.ready) GoogleDrive.config(SFBlocks.url('matcher/google.json')).catch(() => {}); },
+    async sheet(mode) {
+      try {
+        if (!GoogleDrive.ready && !(await GoogleDrive.config(SFBlocks.url('matcher/google.json')))) { toast(t('driveNotSetUp')); return; }
+        await GoogleDrive.signIn();   // first, while the click still counts, so the browser lets Google's window open
+        let target = null;
+        if (mode === 'add') { target = await GoogleDrive.pick(['application/vnd.google-apps.spreadsheet']); if (!target) return; }
+        status(t('saveWorking'));
+        const segs = await exportSegs(), g = gather(segs), name = nameOf();
+        let id, url;
+        if (mode === 'new') {
+          ({ id, url } = await GoogleDrive.createSheet(`${name} ${today()}`, [t('saveTabStreets'), t('saveTabAbout')]));
+          await GoogleDrive.putValues(id, `'${t('saveTabStreets')}'!A1`, g.rows);
+          await GoogleDrive.putValues(id, `'${t('saveTabAbout')}'!A1`, g.about);
+        } else {
+          id = target.id; url = target.url || `https://docs.google.com/spreadsheets/d/${id}/edit`;
+          const have = new Set((await GoogleDrive.sheetTabs(id)).map(x => x.title));
+          let base = `${name} ${today()}`.slice(0, 90), k = 2, tab = base;
+          while (have.has(tab) || have.has(tab + ' ' + t('saveTabAbout'))) tab = `${base} (${k++})`;
+          await GoogleDrive.addTab(id, tab, g.rows.length + 10, g.cols.length + 2);
+          await GoogleDrive.putValues(id, `'${tab.replace(/'/g, "''")}'!A1`, g.rows);
+          const at = `${tab} ${t('saveTabAbout')}`;
+          await GoogleDrive.addTab(id, at, 40, 4);
+          await GoogleDrive.putValues(id, `'${at.replace(/'/g, "''")}'!A1`, g.about);
+        }
+        status(`${esc(t(g.isRoute ? 'saveDoneRoute' : 'saveDone', { n: g.rows.length - 1 }))} <a href="${esc(url)}" target="_blank" rel="noopener">${esc(t('saveOpen'))}</a>`, true);
+      } catch (err) { console.warn('[block-party] save to sheet', err); status(t('saveFailed', { why: err.message || String(err) })); }
+    },
+    // one record per street (order and route included); CONFIG.AIRTABLE_SAVE says where and which columns
+    async airtable() {
+      const c = CONFIG.AIRTABLE_SAVE; if (!c || !c.table) return;
+      try {
+        status(t('saveWorking'));
+        const segs = await exportSegs(), g = gather(segs), name = nameOf(), link = linkFor(segs);
+        const rows = g.recs.filter(r => r.kind === 'street' || r.kind === 'intersection').map(r => {
+          const all = { ...r, route_name: name, route: g.isRoute, selection_link: link, saved: today() };
+          return Object.fromEntries(Object.entries(c.fields || {}).map(([field, col]) => [field, all[col]]).filter(([, v]) => v !== '' && v != null));
+        });
+        await BPAirtable.save(c.table, rows, (i, n) => status(t('saveAtStep', { i, n })));
+        status(t('saveAtDone', { n: rows.length }));
+      } catch (err) { status(t('saveFailed', { why: err.message || String(err) })); }
+    },
+  };
+})();
 
 /* ---------- URL hash ----------
    #cnn=4888101,4888201        blocks by CNN (checked)
@@ -3352,6 +3452,9 @@ function initMap() {
   });
   Focus.gate(map);
   map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), 'top-right');
+  // full screen and 3D, under the zoom buttons (wired up in setupMapMenus)
+  map.addControl({ onAdd() { const d = document.createElement('div'); d.className = 'maplibregl-ctrl maplibregl-ctrl-group bp-ctl';
+    d.innerHTML = `<button type="button" id="full-btn" aria-pressed="false"></button><button type="button" id="ctl-3d" aria-pressed="false">3D</button>`; return d; }, onRemove() {} }, 'top-right');
   return new Promise(res => map.on('load', res));
 }
 // Basemap creek fix, ported from Selecter: OSM tags many Bay Area creeks (some of them underground, like
@@ -3524,6 +3627,8 @@ function addMapLayers() {
 
   // hover + click to add/remove
   const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
+  // the Filter intersections' own popup, set beside the corner (placeBeside) so it doesn't hide the angle
+  const qpop = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
   const onCorner = e => map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit', 'bp-ints'] }).length > 0;
   map.on('mousemove', 'bp-corners-hit', e => {
     const f = e.features[0]; if (!f) return;
@@ -3553,10 +3658,12 @@ function addMapLayers() {
     map.getCanvas().style.cursor = 'pointer';
     const i = Logic.intItem(f.properties.cnn); if (!i) return;
     popOwner = 'qint';
-    popup.setLngLat([i.x, i.y]).setHTML(`<b>${esc(i.streets.join(' & '))}</b><br><span class="pop-lyr">${esc(t('quietIntTip', { legs: f.properties.legs, corner: f.properties.corner }))}</span>`).addTo(map);
+    if (popup.isOpen()) popup.remove();
+    qpop.setLngLat([i.x, i.y]).setHTML(`<b>${esc(i.streets.join(' & '))}</b><br><span class="pop-lyr">${esc(t('quietIntTip', { legs: f.properties.legs, corner: f.properties.corner }))}</span>`);
+    placeBeside(qpop, f.properties.cnn); qpop.addTo(map);
     drawAngle(f.properties.cnn);
   });
-  map.on('mouseleave', 'bp-quiet-int', () => { map.getCanvas().style.cursor = ''; drawAngle(null); if (popOwner === 'qint') { popup.remove(); popOwner = null; } });
+  map.on('mouseleave', 'bp-quiet-int', () => { map.getCanvas().style.cursor = ''; drawAngle(null); if (popOwner === 'qint') { qpop.remove(); popOwner = null; } });
   map.on('click', 'bp-ints', e => { if (!map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit'] }).length) clickInt(e); });
   map.on('mousemove', 'bp-all-hit', e => {
     if (onCorner(e) || onPoi(e) || onBuilding(e) || onArea(e)) {
@@ -3951,7 +4058,7 @@ async function setFlavor(v) {
   document.documentElement.dataset.flavor = v;
 }
 const FLAT_KEY = 'bp-flat';
-let flatMap = (() => { try { const v = localStorage.getItem(FLAT_KEY); return v == null ? PHONE : v === '1'; } catch (e) { return PHONE; } })();
+let flatMap = (() => { try { return localStorage.getItem(FLAT_KEY) === '1'; } catch (e) { return false; } })();
 function applyTerrain() {
   if (!map || !map.getSource('dem-terrain')) return;
   if (flatMap) { if (map.getPitch() > 0) map.jumpTo({ pitch: 0 }); map.setMaxPitch(0); } else map.setMaxPitch(60);
@@ -3965,6 +4072,9 @@ function setFlat(on) {
 }
 // the toolbar button: 3D (tilt) normally; Contours on a flat map
 function sync3dButton() {
+  const c = $('ctl-3d');
+  if (c) { const on = !flatMap && !!map && map.getPitch() > 5; c.setAttribute('aria-pressed', on); c.textContent = on ? '3D' : '2D';
+    c.title = t(on ? 'ctl3d' : 'ctl2d'); c.setAttribute('aria-label', c.title); }
   const b = $('btn-3d'); if (!b) return;
   b.textContent = t(flatMap ? 'btnContours' : 'btn3d');
   b.title = t(flatMap ? 'btnContoursTitle' : 'btn3dTitle');
@@ -5459,7 +5569,21 @@ const BPAirtable = (() => {
   }
   // reload a table with some left-out fields added back (or taken out again)
   const reload = (fid, at, include) => go(at.link, false, include, fid);
-  return { open, fromHash, parseLink, reload };
+  // write rows as new records in one table (link or path to the table): 10 at a time, typecast so text
+  // lands in number, checkbox and select fields. Needs a token with data.records:write on that base.
+  async function save(link, rows, onStep) {
+    const l = parseLink(link), tok = token.get();
+    if (!l || !l.table) throw new Error(t('atSaveNoTable'));
+    if (!tok) throw new Error(t('at401'));
+    const ids = [];
+    for (let i = 0; i < rows.length; i += 10) {
+      const r = await call(`/${l.base}/${l.table}`, tok, { records: rows.slice(i, i + 10).map(fields => ({ fields })), typecast: true });
+      ids.push(...r.records.map(x => x.id)); if (onStep) onStep(Math.min(rows.length, i + 10), rows.length);
+      await sleep(GAP);
+    }
+    return ids;
+  }
+  return { open, fromHash, parseLink, reload, save };
 })();
 
 const Drops = (() => {
@@ -9126,19 +9250,30 @@ function setupMapMenus() {
   $('more-btn').addEventListener('click', () => { close(); setMore(!ui.classList.contains('more-open')); });
   ui.addEventListener('click', e => {
     if (!PHONE || !ui.classList.contains('more-open')) return;
-    if (e.target.closest('#layers-btn, #areas-btn, #quiet-btn, #focus-btn, #table-btn')) setTimeout(() => setMore(false));
+    if (e.target.closest('#layers-btn, #areas-btn, #quiet-btn, #focus-btn, #table-btn, #nearby-btn')) setTimeout(() => setMore(false));
   });
   // the badge on Settings: how many Filter boxes are on
   const syncMoreBadge = () => { const n = quietOn().length, b = $('more-badge'); b.hidden = !n; b.textContent = n; };
   $('quiet-panel').addEventListener('change', syncMoreBadge); document.addEventListener('bp-rendered', syncMoreBadge);
   // full screen: the map over the whole window; Esc or the button again leaves
+  // corners pointing out to fill the window; pointing in to leave
+  const ICO_FULL = '<svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>';
+  const ICO_SHRINK = '<svg viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
   const full = on => {
     document.body.classList.toggle('bp-full', on);
-    $('full-btn').setAttribute('aria-pressed', on); $('full-ico').textContent = on ? '✕' : '⛶';
+    $('full-btn').setAttribute('aria-pressed', on); $('full-btn').innerHTML = on ? ICO_SHRINK : ICO_FULL;
     { const fb = $('full-btn'), tt = t(on ? 'fullOff' : 'fullTitle'); fb.title = tt; fb.setAttribute('aria-label', tt); }
     requestAnimationFrame(() => map && map.resize());
   };
+  $('full-btn').innerHTML = ICO_FULL; $('full-btn').title = t('fullTitle'); $('full-btn').setAttribute('aria-label', t('fullTitle'));
   $('full-btn').addEventListener('click', () => full(!document.body.classList.contains('bp-full')));
+  // 3D in one tap: hills and a tilt; tap again for a flat map from above (no terrain, lighter on memory)
+  $('ctl-3d').addEventListener('click', () => {
+    const on = !flatMap && map.getPitch() > 5, ms = reducedMotion() ? 0 : 800;
+    if (on) { map.easeTo({ pitch: 0, duration: ms }); setTimeout(() => setFlat(true), ms); }
+    else { if (flatMap) setFlat(false); map.easeTo({ pitch: 60, duration: ms }); }
+  });
+  map.on('pitchend', sync3dButton); sync3dButton();
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('bp-full') && !document.querySelector('dialog[open]')) full(false); });
   setLandCats([...landCats], false);     // draws the map-key swatch
 }
@@ -9175,6 +9310,25 @@ function setupQuiet() {
   $('quiet-clear').onclick = () => { document.querySelectorAll('[data-quiet]').forEach(i => i.checked = false); applyQuiet(); };
 }
 // what Filter measured at a corner: each leg (25 m), the sharpest corner as a wedge with its angle, and a dashed 90° for comparison
+// put a popup in the widest gap between an intersection's legs, past the drawn angle, so the legs, wedge
+// and label stay in sight
+const LEG_DRAW_M = 30;
+function placeBeside(pop, cnn) {
+  const sh = Logic.nodeShapes().get(cnn), n = Logic.db.nodes.get(cnn);
+  if (!sh || !n) { pop.options.anchor = undefined; pop.setOffset(10); return; }
+  const bs = [...sh.bs].sort((a, b) => a - b);
+  let best = 0, mid = 0;
+  bs.forEach((b, k) => { const nx = k + 1 < bs.length ? bs[k + 1] : bs[0] + 360, gap = nx - b; if (gap > best) { best = gap; mid = b + gap / 2; } });
+  const KXm = 111320 * Math.cos(37.76 * Math.PI / 180), KYm = 110540;
+  const far = [n.x + Math.sin(mid * Math.PI / 180) * (LEG_DRAW_M + 6) / KXm, n.y + Math.cos(mid * Math.PI / 180) * (LEG_DRAW_M + 6) / KYm];
+  const a = map.project([n.x, n.y]), b = map.project(far);
+  let dx = b.x - a.x, dy = b.y - a.y; const L = Math.hypot(dx, dy) || 1;
+  if (L < 28) { dx *= 28 / L; dy *= 28 / L; }   // zoomed out: at least clear of the dot
+  // the popup's corner nearest the intersection: going right means its left side, and so on
+  const ang = (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360;
+  pop.options.anchor = ['bottom', 'bottom-left', 'left', 'top-left', 'top', 'top-right', 'right', 'bottom-right'][Math.round(ang / 45) % 8];
+  pop.setOffset([dx, dy]);
+}
 function drawAngle(cnn) {
   if (!mapReady || !map.getSource('quiet-angle')) return;
   const sh = cnn != null && Logic.nodeShapes().get(cnn), n = cnn != null && Logic.db.nodes.get(cnn);
@@ -9185,7 +9339,7 @@ function drawAngle(cnn) {
   let from = b1, span = ((b2 - b1) % 360 + 360) % 360; if (span > 180) { from = b2; span = 360 - span; }
   const arc = (r, a0, sweep) => Array.from({ length: 25 }, (_, k) => at(a0 + sweep * k / 24, r));
   const pair = new Set([i, j]), feats = [];
-  sh.bs.forEach((b, k) => feats.push({ type: 'Feature', properties: { part: 'leg', main: pair.has(k) }, geometry: { type: 'LineString', coordinates: [[n.x, n.y], at(b, 25)] } }));
+  sh.bs.forEach((b, k) => feats.push({ type: 'Feature', properties: { part: 'leg', main: pair.has(k) }, geometry: { type: 'LineString', coordinates: [[n.x, n.y], at(b, LEG_DRAW_M)] } }));
   feats.push({ type: 'Feature', properties: { part: 'wedge' }, geometry: { type: 'Polygon', coordinates: [[[n.x, n.y], ...arc(12, from, span), [n.x, n.y]]] } });
   feats.push({ type: 'Feature', properties: { part: 'arc' }, geometry: { type: 'LineString', coordinates: arc(12, from, span) } });
   if (span < 88) feats.push({ type: 'Feature', properties: { part: 'right' }, geometry: { type: 'LineString', coordinates: arc(9, from, 90) } });
@@ -9326,6 +9480,9 @@ function drawResults() {
   for (const s of ctxBase) { ends.set(s.fn, s.coords[0]); ends.set(s.tn, s.coords[s.coords.length - 1]); }
   if (state.focusNode) ends.set(state.focusNode.cnn, [state.focusNode.x, state.focusNode.y]);
   map.getSource('ends').setData(fc([...ends.values()].map(c => ({ type: 'Feature', geometry: { type: 'Point', coordinates: c }, properties: {} }))));
+  // a route is about the line, so its blocks' ends shrink to dots (tiny when zoomed out)
+  map.setPaintProperty('bp-ends', 'circle-radius', state.route ? ['interpolate', ['linear'], ['zoom'], 12, 1, 15, 2, 18, 4.5] : ['interpolate', ['linear'], ['zoom'], 13, 4, 18, 8]);
+  map.setPaintProperty('bp-ends', 'circle-stroke-width', state.route ? ['interpolate', ['linear'], ['zoom'], 12, 0.8, 16, 1.2, 18, 2] : 2.5);
 }
 function fitSegs(segs) {
   if (!mapReady || !segs.length) return;
