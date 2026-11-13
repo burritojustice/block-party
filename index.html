@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v90 -->
+<!-- build: v91 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -743,6 +743,11 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
 .ride-bar .rb-react { display: flex; gap: 8px; align-items: center; }
 .ride-bar .rb-emoji { font-size: 34px; line-height: 1; width: 64px; height: 64px; border-radius: 16px; border: 2px solid var(--ink); background: #fff; cursor: pointer; flex: none; }
 .ride-bar .rb-emoji:active { transform: scale(.94); background: #FFF3C4; }
+@media (max-width: 860px) {
+  .ride-bar .rb-emoji[data-rb="down"] { order: 0; }
+  .ride-bar .rb-info { order: 1; flex: 1; }
+  .ride-bar .rb-emoji[data-rb="up"] { order: 2; margin-left: auto; }
+}
 .ride-bar .rb-info { min-width: 0; }
 .ride-bar .rb-stats { font-size: 13px; color: var(--ink-soft); }
 .ride-bar .rb-follow { font: 800 17px/1 system-ui, sans-serif; color: #fff; background: #E8590C; border: 0; border-radius: 12px; padding: 12px; cursor: pointer; animation: ride-blink 1.2s infinite; }
@@ -751,6 +756,8 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
 .ride-bar .rb-marks { font-size: 13px; }
 .ride-lost { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); z-index: 9; font: 800 15px/1 system-ui, sans-serif; color: #fff; background: #E8590C; border: 0; border-radius: 999px; padding: 10px 16px; box-shadow: 0 4px 14px rgba(0,0,0,.25); cursor: pointer; }
 .ride-lost[hidden] { display: none; }
+.seg.piece .piece-tag { border-style: dashed; }
+.seg.piece { border-left: 4px dashed #FF3D7F; }
 #ride-btn.is-riding { display: inline-flex; align-items: center; gap: 6px; background: #1C7ED6; color: #fff; border-color: #1C7ED6; }
 .bp-ctl #ctl-me.is-following { background: #1C7ED6; } .bp-ctl #ctl-me.is-following svg { stroke: #fff; }
 .ride-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; animation: ride-blink 1.2s infinite; }
@@ -1351,7 +1358,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v90';
+const _BUILD_VERSION = 'v91';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1594,6 +1601,10 @@ const I18N = {
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
     moreBtn: 'Menu', moreTitle: 'Map, layers, areas, Nearby, Filter, Focus and Table', ctl3d: '3D: tilt the map over the hills (tap again for flat)', ctl2d: 'Flat map, seen from above', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
     censusLoad: 'Count people and homes',
+    piece_line: 'Line from a file', piece_ride: 'Off-street stretch', piece_connector: 'Connector', piece_drawn: 'Drawn line', piece_osm: 'OSM path',
+    pieceAdded: 'Added {name} ({ft} ft) to the selection', pieceNear: 'near', pieceLoose: 'not at a street', pieceEnd: 'end of a piece',
+    pieceFromRide: 'Ride on {date}', rideOffAdded: 'Off-street stretch added ({ft} ft)', pieceKindRow: 'Piece', pieceNotCity: 'not a city street', pieceEnds: 'Ends', pieceFrom: 'From',
+    subPiece1: '1 piece', subPieces: '{n} pieces', subPiecesOf: '{n} of {total} pieces checked', featAddedPiece: '{name} is in the selection as a piece',
     rideBtn: '🚲 Ride', rideDone: 'Ride done', rideStats: '{time} · {km} km · {kmh} km/h · ↑{up} ft ↓{down} ft', rideProfile: 'Elevation along the ride, {lo} to {hi} ft',
     rideMarksN: '👍 {up} · 👎 {down} · ✎ {notes}', rideSaveAs: 'Name', rideName: '{a} to {b}', rideCsv: 'Download CSV', rideClose: 'Close',
     rideUp: 'Thumbs up for this street', rideDown: 'Thumbs down for this street', rideMarked: '{e} on {name}', rideLost: '◎ Not following you · tap to follow', saveTabMarks: 'marks', rideTitle: 'Ride: add the streets you ride along', rideLive: 'Riding', rideLiveTitle: 'Riding: tap for the ride controls',
@@ -2607,7 +2618,7 @@ function setupForm() {
   $('pick-along').addEventListener('click', () => SelAreas.alongStreets());
   $('jump-top').addEventListener('click', () => window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' }));
   $('jump-sel').addEventListener('click', () => { $('sel-panel').open = true; $('sel-panel').scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' }); });
-  const alongWhat = () => { try { $('pick-along-what').textContent = describeStreets(checkedSegs().filter(s => !isInt(s))); } catch (e) { } };
+  const alongWhat = () => { try { $('pick-along-what').textContent = describeStreets(checkedSegs().filter(isStreet)); } catch (e) { } };
   document.addEventListener('bp-rendered', alongWhat);
   const jumpBar = () => { $('jump-bar').hidden = window.scrollY < 500 || $('results').hidden; };
   window.addEventListener('scroll', jumpBar, { passive: true });
@@ -2740,6 +2751,151 @@ function setResults(segs, title, kind, checkedCnns) {
   render(); writeHash();
 }
 function checkedSegs() { return state.results.filter(s => state.checked.has(s.cnn)); }
+/* ---------- Pieces: parts of a selection that aren't city streets ----------
+   A path through a park, a stretch ridden off the street grid, a line from your files. A piece sits in
+   state.results next to the streets, with a negative id in place of a CNN, so it's checked, ordered, counted
+   in a route's length and joined by its gaps like a street. Each end takes the id of a street corner within
+   SNAP_M, so a piece that meets the grid shares that corner with the streets there; a loose end gets an id of
+   its own ('p3a'). Links carry pieces as p0, p1… tokens in cnn= (in order) plus their lines in pc=
+   (kind!name!polyline, joined by ;), which older pages skip. Kinds: line (your files), ride (off-street while
+   riding); connectors, drawn lines and OSM paths come next. */
+const isPiece = s => !!(s && s.piece);
+const isStreet = s => !!s && !isInt(s) && !s.piece;
+const Pieces = (() => {
+  const SNAP_M = 12, NEAR_M = 40, KXm = 111320 * Math.cos(37.76 * Math.PI / 180), KYm = 110540;
+  const KINDS = ['line', 'ride', 'connector', 'drawn', 'osm'];
+  let next = 0;
+  const dm = (a, b) => Math.hypot((a[0] - b[0]) * KXm, (a[1] - b[1]) * KYm);
+  const segDist = (x, y, a, b) => { const vx = b[0] - a[0], vy = b[1] - a[1], L = vx * vx + vy * vy, u = L ? Math.max(0, Math.min(1, ((x - a[0]) * vx + (y - a[1]) * vy) / L)) : 0;
+    return Math.hypot(a[0] + u * vx - x, a[1] + u * vy - y); };
+  const lenOf = c => c.slice(1).reduce((a, p, i) => a + dm(c[i], p), 0);
+  // the street corner nearest a point (where two or more streets meet), within m meters
+  function cornerAt(p, m) {
+    let best = null, bd = m;
+    for (const [id, n] of Logic.db.nodes) {
+      if (Math.abs(n.x - p[0]) > 0.0006 || Math.abs(n.y - p[1]) > 0.0006) continue;
+      const d = dm([n.x, n.y], p); if (d >= bd) continue;
+      if (!(Logic.db.segsAtNode.get(id) || []).some(s => s.active)) continue;
+      bd = d; best = id;
+    }
+    return best;
+  }
+  const cornerName = id => { const i = id != null && Logic.item(id); return i && i.streets && i.streets.length ? i.streets.map(P).join(' & ') : ''; };
+  // fewer points, same shape (Douglas–Peucker, tol meters)
+  function simplify(c, tol = 2) {
+    if (c.length < 3) return c;
+    const keep = new Uint8Array(c.length); keep[0] = keep[c.length - 1] = 1;
+    const st = [[0, c.length - 1]];
+    while (st.length) {
+      const [a, b] = st.pop(); let k = -1, dmax = tol;
+      const A = [c[a][0] * KXm, c[a][1] * KYm], B = [c[b][0] * KXm, c[b][1] * KYm];
+      for (let i = a + 1; i < b; i++) { const d = segDist(c[i][0] * KXm, c[i][1] * KYm, A, B); if (d > dmax) { dmax = d; k = i; } }
+      if (k > 0) { keep[k] = 1; st.push([a, k], [k, b]); }
+    }
+    return c.filter((_, i) => keep[i]);
+  }
+  // Google's encoded polyline (5 digits), for links
+  function enc(c) {
+    let out = '', px = 0, py = 0;
+    const one = v => { v = v < 0 ? ~(v << 1) : v << 1; while (v >= 0x20) { out += String.fromCharCode((0x20 | (v & 0x1f)) + 63); v >>= 5; } out += String.fromCharCode(v + 63); };
+    for (const [x, y] of c) { const X = Math.round(x * 1e5), Y = Math.round(y * 1e5); one(Y - py); one(X - px); px = X; py = Y; }
+    return out;
+  }
+  function dec(str) {
+    const out = []; let i = 0, x = 0, y = 0;
+    const one = () => { let r = 0, sh = 0, b; do { b = str.charCodeAt(i++) - 63; r |= (b & 0x1f) << sh; sh += 5; } while (b >= 0x20 && i <= str.length); return r & 1 ? ~(r >> 1) : r >> 1; };
+    while (i < str.length) { y += one(); x += one(); out.push([x / 1e5, y / 1e5]); }
+    return out;
+  }
+  // a piece from a line: { coords, name, kind, src }
+  // o.reach: an end within that many meters of a corner is drawn on to it (a ride's stretch, whose first and
+  // last few readings still matched the street it turned off)
+  function make(o) {
+    let coords = o.coords.filter((p, i, a) => !i || p[0] !== a[i - 1][0] || p[1] !== a[i - 1][1]);
+    if (coords.length < 2) return null;
+    const id = -(++next);
+    const snap = (p, first) => { let c = cornerAt(p, SNAP_M); if (c == null && o.reach) { c = cornerAt(p, o.reach);
+      if (c != null) { const n = Logic.db.nodes.get(c); coords = first ? [[n.x, n.y], ...coords] : [...coords, [n.x, n.y]]; } } return c; };
+    const fn = snap(coords[0], true) ?? `p${-id}a`, tn = snap(coords[coords.length - 1], false) ?? `p${-id}b`;
+    const a = coords[0], b = coords[coords.length - 1];
+    const near = (end, snapped) => cornerName(typeof snapped === 'string' ? cornerAt(end, NEAR_M) : snapped);
+    const name = o.name || t('piece_' + o.kind);
+    return { piece: true, pk: KINDS.includes(o.kind) ? o.kind : 'line', cnn: id, street: name, name, coords, len: lenOf(coords), fn, tn,
+      f: near(a, fn), t: near(b, tn), atF: typeof fn !== 'string', atT: typeof tn !== 'string', src: o.src || '', partners: [], active: true };
+  }
+  // add to the selection, checked, at the end (the route's order)
+  function add(o, quiet) {
+    const pc = o.piece ? o : make(o); if (!pc) return null;
+    state.results = [...state.results, pc]; state.checked.add(pc.cnn);
+    if (!state.title) state.title = t('linkedBlocks');
+    if (!quiet) { render(); writeHash(); toast(t('pieceAdded', { name: pc.name, ft: fmtFt(pc.len) })); }
+    return pc;
+  }
+  const ends = s => `${s.f ? (s.atF ? '' : t('pieceNear') + ' ') + s.f : t('pieceLoose')} → ${s.t ? (s.atT ? '' : t('pieceNear') + ' ') + s.t : t('pieceLoose')}`;
+  function cardHTML(s) {
+    const on = state.checked.has(s.cnn), kind = t('piece_' + s.pk);
+    const p = Elev.peek(s.cnn);
+    return `<li class="seg piece ${on ? 'is-checked' : ''}${CardView.isCompact(s) ? ' compact' : ''}" data-cnn="${s.cnn}">
+    <input type="checkbox" ${on ? 'checked' : ''} aria-label="${esc(s.name)}">
+    <div class="seg-top">
+      <div><div class="seg-name">${CardView.orderTag(s)}${esc(s.name)}</div>
+      <div class="seg-between"><span class="cls-tag non-city piece-tag">${esc(kind)}</span> ${esc(ends(s))}</div>
+      <div class="seg-ft">${esc(ends(s))}</div>
+      <div class="seg-cls"><span class="cls-tag non-city piece-tag">${esc(kind)}</span></div></div>
+      <div class="seg-sum"><span class="sv">${esc(t('ft', { n: fmtFt(s.len) }))}</span>${p ? `<span class="sv">${esc(t('sumSlope', { pct: Math.abs(p.net).toFixed(1) }))}</span>` : ''}<span class="caret">▸</span></div>
+      <div class="seg-btns">
+        <button type="button" class="copy-card" data-copy-card="${s.cnn}" title="${esc(t('copyCard'))}" aria-label="${esc(t('copyCard'))}">⧉</button>
+        <button type="button" class="remove-btn" data-remove="${s.cnn}" title="${esc(t('removeCard'))}" aria-label="${esc(t('removeCard'))}: ${esc(s.name)}">×</button>
+      </div>
+    </div>
+    <dl class="facts">
+      <dt>${esc(t('pieceKindRow'))}</dt><dd>${esc(kind)} · <small class="muted">${esc(t('pieceNotCity'))}</small></dd>
+      <dt>${esc(t('pieceEnds'))}</dt><dd>${esc(ends(s))}</dd>
+      ${s.src ? `<dt>${esc(t('pieceFrom'))}</dt><dd>${esc(s.src)}</dd>` : ''}
+      <dt>${esc(t('length'))}</dt><dd>${esc(t('ft', { n: fmtFt(s.len) }))} · <a href="${esc(streetViewUrl(s))}" target="_blank" rel="noopener" class="sv-link">${esc(t('streetView'))}</a></dd>
+      <dt>${esc(t('slope'))}</dt><dd data-slope="${s.cnn}">${slopeHTML(s)}</dd>
+    </dl>
+    <div class="profile" data-profile="${s.cnn}" aria-label="${esc(t('profileTitle'))}">${profileHTML(s)}</div>
+  </li>`;
+  }
+  function record(s) {
+    const p = Elev.peek(s.cnn);
+    return { type: 'piece', cnn: '', piece_kind: s.pk, streetname: s.name, from_street: s.f, to_street: s.t,
+      from_corner: s.atF ? s.fn : '', to_corner: s.atT ? s.tn : '', piece_source: s.src, length_ft: fmtFt(s.len),
+      ...(p ? { elev_from_ft: Math.round(p.elev[0] * M2FT), elev_to_ft: Math.round(p.elev[4] * M2FT), slope_pct: Math.round(p.net * 10) / 10 } : {}),
+      wkt: wktOf(s), street_view: streetViewUrl(s) };
+  }
+  const text = s => [`${s.name} (${t('piece_' + s.pk)})`, ends(s), `${t('length')}: ${t('ft', { n: fmtFt(s.len) })}`, ...(s.src ? [`${t('pieceFrom')}: ${s.src}`] : [])].join('\n');
+  // for links: the cnn= tokens in order, and pc= for the pieces among them
+  function hashOf(list) {
+    const pcs = [], toks = list.map(o => { if (!isPiece(o)) return String(o.cnn);
+      pcs.push([o.pk, o.name === t('piece_' + o.pk) ? '' : encodeURIComponent(o.name).replace(/!/g, '%21'), enc(simplify(o.coords, 1))].join('!')); return 'p' + (pcs.length - 1); });
+    return { cnn: toks.join(','), pc: pcs.length ? encodeURIComponent(pcs.join(';')) : '' };
+  }
+  function fromHash(pc) {
+    return (pc || '').split(';').filter(Boolean).map(x => { const [k, n, l] = x.split('!');
+      try { return make({ kind: k, name: decodeURIComponent(n || ''), coords: dec(l || '') }); } catch (e) { return null; } });
+  }
+  function draw() {
+    if (!mapReady || !map.getSource('pieces')) return;
+    map.getSource('pieces').setData(fc(state.results.filter(isPiece).map(s => ({ type: 'Feature', properties: { cnn: s.cnn, on: state.checked.has(s.cnn) },
+      geometry: { type: 'LineString', coordinates: s.coords } }))));
+  }
+  function addLayers() {
+    map.addSource('pieces', { type: 'geojson', data: EMPTY });
+    const w = (a, b) => ['interpolate', ['linear'], ['zoom'], 13, a, 18, b];
+    map.addLayer({ id: 'bp-piece-case', type: 'line', source: 'pieces', filter: ['==', ['get', 'on'], true], layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': '#FFC53D', 'line-width': w(8, 20) } });
+    map.addLayer({ id: 'bp-piece', type: 'line', source: 'pieces', layout: { 'line-cap': 'butt', 'line-join': 'round' },
+      paint: { 'line-color': ['case', ['get', 'on'], '#FF3D7F', '#6D4AF5'], 'line-width': w(3.5, 9), 'line-dasharray': [1.6, 1] } });
+    map.addLayer({ id: 'bp-piece-hit', type: 'line', source: 'pieces', paint: { 'line-color': '#000', 'line-opacity': 0, 'line-width': 18 } });
+    map.on('click', 'bp-piece-hit', e => { const c = e.features[0] && e.features[0].properties.cnn, s = state.results.find(r => r.cnn === c); if (!s) return;
+      CardView.setOpen(c); goToCard(s); requestAnimationFrame(() => jumpToCard(c)); });
+    map.on('mouseenter', 'bp-piece-hit', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('mouseleave', 'bp-piece-hit', () => { map.getCanvas().style.cursor = ''; });
+  }
+  return { make, add, cardHTML, record, text, hashOf, fromHash, draw, addLayers, simplify, cornerAt, enc, dec, ends };
+})();
 
 /* ---------- results rendering ---------- */
 // Cross streets (cyan, with names): always shown while choosing; once a block is checked, only while
@@ -2787,6 +2943,10 @@ function routeGaps() {
   const par = new Map(), find = a => { while (par.has(a) && par.get(a) !== a) a = par.get(a); return a; };
   const join = (a, b) => { par.set(a, find(a)); par.set(b, find(b)); par.set(find(a), find(b)); };
   for (const s of segs) join(s.fn, s.tn);
+  // a piece's end meets a picked street that ends within 12 m of it (corners can be a few meters apart)
+  const KXj = 111320 * Math.cos(37.76 * Math.PI / 180), KYj = 110540, endPt = (s, n) => n === s.fn ? s.coords[0] : s.coords[s.coords.length - 1];
+  for (const pc of segs.filter(isPiece)) for (const n of [pc.fn, pc.tn]) { const a = endPt(pc, n);
+    for (const o of segs) if (o !== pc) for (const m of [o.fn, o.tn]) { const b = endPt(o, m); if (Math.hypot((a[0] - b[0]) * KXj, (a[1] - b[1]) * KYj) <= 12) join(n, m); } }
   const use = new Map(); for (const s of segs) for (const n of [s.fn, s.tn]) use.set(n, (use.get(n) || 0) + 1);
   const ends = [];
   for (const s of segs) { if (use.get(s.fn) === 1) ends.push({ n: s.fn, p: s.coords[0], s }); if (use.get(s.tn) === 1) ends.push({ n: s.tn, p: s.coords[s.coords.length - 1], s }); }
@@ -2821,7 +2981,7 @@ const CardFacts = (() => {
   const FIRST = 4, seen = new Set();
   let obs = null, queue = new Set(), timer = 0;
   // with street facts a card needs no tiles, except lot outlines while Parcels is on the map
-  const need = s => Facts.has(s) ? (Parcels.available() && overlayMode.landuse && overlayMode.landuse !== 'off' && !Parcels.peek(s))
+  const need = s => isPiece(s) ? false : Facts.has(s) ? (Parcels.available() && overlayMode.landuse && overlayMode.landuse !== 'off' && !Parcels.peek(s))
     : (!Tiles.peek(s) || (Parcels.available() && !Parcels.peek(s)));
   function flush() {
     timer = 0;
@@ -2860,7 +3020,8 @@ function render() {
   // what's in the list: "3 streets · 1 intersection · 2 assessor blocks", or "3 of 4 streets checked"
   const kindLine = (all, k1, kN, kOf) => { const c = all.filter(o => state.checked.has(o.cnn)).length;
     return !all.length ? '' : c === all.length ? t(all.length === 1 ? k1 : kN, { n: all.length }) : t(kOf, { n: c, total: all.length }); };
-  const what = [kindLine(segs.filter(o => !isInt(o)), 'subStreet1', 'subStreets', 'subStreetsOf'), kindLine(segs.filter(isInt), 'subInt1', 'subInts', 'subIntsOf'),
+  const what = [kindLine(segs.filter(isStreet), 'subStreet1', 'subStreets', 'subStreetsOf'), kindLine(segs.filter(isPiece), 'subPiece1', 'subPieces', 'subPiecesOf'),
+    kindLine(segs.filter(isInt), 'subInt1', 'subInts', 'subIntsOf'),
     nBlk ? SelAreas.countText() : ''].filter(Boolean).join(' · ') || t('subNone');
   const gaps = routeGaps(); drawGaps(gaps);
   const routeSegs = state.route ? segs.filter(o => !isInt(o) && state.checked.has(o.cnn)) : [];
@@ -2878,14 +3039,14 @@ function render() {
   // blocks leading into the intersection as compact rows.
   const ints = segs.filter(isInt);
   const intNodes = new Set(ints.map(i => i.cnn));
-  const isLeg = s => !isInt(s) && !state.checked.has(s.cnn) && (intNodes.has(s.fn) || intNodes.has(s.tn));
+  const isLeg = s => isStreet(s) && !state.checked.has(s.cnn) && (intNodes.has(s.fn) || intNodes.has(s.tn));
   const full = segs.filter(s => !isLeg(s));
   const legs = segs.filter(isLeg);
   const dkey = d => { const o = d.closest('[data-cnn],[data-blk]'); if (!o) return '';
     return (o.dataset.cnn || 'blk' + o.dataset.blk) + (d.dataset.fold ? 'f' + d.dataset.fold : d.classList.contains('ng-city') ? 'c' : d.classList.contains('hoods') ? 'h' : d.classList.contains('biz') ? 'b' : ''); };
   const openNg = new Set([...document.querySelectorAll('#seg-list details.ng[open], #seg-list details.hoods[open], #seg-list details.fold[open]')].map(dkey));
   let blockCards = ''; try { blockCards = SelAreas.cardsHTML(); } catch (e) { }
-  $('seg-list').innerHTML = full.map(s => isInt(s) ? intCardHTML(s) : cardHTML(s)).join('') + blockCards +
+  $('seg-list').innerHTML = full.map(s => isPiece(s) ? Pieces.cardHTML(s) : isInt(s) ? intCardHTML(s) : cardHTML(s)).join('') + blockCards +
     (legs.length ? `<li class="legs-head"><b>${esc(t('legsTitle'))}</b><span>${esc(t('legsHint'))}</span></li>` + legs.map(s => legHTML(s, ints)).join('') : '');
   document.querySelectorAll('#seg-list details.ng, #seg-list details.hoods, #seg-list details.fold').forEach(d => { if (openNg.has(dkey(d))) d.open = true; });
   // rings from a card list that's no longer open (or whose card is gone)
@@ -2935,7 +3096,21 @@ const Ride = (() => {
   let on = false, paused = false, done = false, watch = null, lock = null, follow = true;
   // pts: [lon, lat, unix s, accuracy, elevation m]; marks: { t, lon, lat, cnn, kind: 'up' | 'down' | 'note', text }
   let pts = [], last = null, heading = null, cur = null, cover = new Map(), added = [], marks = [], seen = new Map(), moving = 0, dist = 0;
-  let grid = null, lastT = null;
+  let grid = null, lastT = null, off = [], lastOn = null;
+  const OFF_MIN_M = 40;
+  // readings that matched no street, between two that did: a stretch ridden off the grid (a park path, a
+  // plaza) becomes a piece once it's OFF_MIN_M long and mostly away from every street line
+  function flushOff(end) {
+    const run = off; off = [];
+    if (run.length < 3) return;
+    const coords = [...(lastOn ? [lastOn] : []), ...run, ...(end ? [end] : [])];
+    const L = coords.slice(1).reduce((a, p, i) => a + Math.hypot((p[0] - coords[i][0]) * KXm, (p[1] - coords[i][1]) * KYm), 0);
+    if (L < OFF_MIN_M) return;
+    const away = run.filter(([lo, la]) => { const x = lo * KXm, y = la * KYm; return !near(x, y).some(s => onStreet(s, x, y).d <= MATCH_M); }).length;
+    if (away < run.length * 0.6) return;
+    const pc = Pieces.add({ coords: Pieces.simplify(coords, 2), kind: 'ride', reach: 40, src: t('pieceFromRide', { date: new Date().toISOString().slice(0, 10) }) }, true);
+    if (pc) { render(); writeHash(); toast(t('rideOffAdded', { ft: fmtFt(pc.len) })); }
+  }
   const save = () => { try { localStorage.setItem(RKEY, JSON.stringify({ on, done, pts: pts.slice(-4000), added, marks, seen: [...seen], moving, dist, at: Date.now() })); } catch (e) { } };
   function near(x, y) {
     if (!grid) {
@@ -2983,6 +3158,7 @@ const Ride = (() => {
     pts.push(p);
     Elev.at([lon, lat]).then(e => { if (e != null) { p[4] = Math.round(e * 10) / 10; if (pts[pts.length - 1] === p) bar(); } }).catch(() => {});
     for (const [px, py] of steps) match(px, py, acc, ts);
+    if (cur) { if (off.length) flushOff([lon, lat]); lastOn = [lon, lat]; } else off.push([lon, lat]);
     draw(); bar(); save();
     if (follow && mapReady) map.easeTo({ center: [lon, lat], zoom: Math.max(map.getZoom(), 17), duration: reducedMotion() ? 0 : 500 });
   }
@@ -3076,6 +3252,7 @@ const Ride = (() => {
     if (!('geolocation' in navigator)) { toast(t('rideNoGeo')); return; }
     ensureLayers();
     on = true; paused = false; done = false; follow = true;
+    off = []; lastOn = null;
     if (!resume) { pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; }
     state.route = true; const rc = $('route-on'); if (rc) rc.checked = true;
     if (watch != null) navigator.geolocation.clearWatch(watch);
@@ -3088,6 +3265,7 @@ const Ride = (() => {
   function pause(p) { paused = p; if (p) { lastT = null; try { lock && lock.release(); } catch (e) { } lock = null; } else wake(); bar(); save(); }
   // Stop keeps the bar open, with the ride's totals and a name, to save it
   function stop() {
+    if (off.length) flushOff(null);
     on = false; paused = false; done = true;
     if (watch != null) navigator.geolocation.clearWatch(watch); watch = null;
     try { lock && lock.release(); } catch (e) { } lock = null;
@@ -3329,6 +3507,7 @@ function betweenText(s) {
 }
 // plain-text version of a card, for the ⧉ button
 function cardText(s) {
+  if (isPiece(s)) return Pieces.text(s);
   const sides = Logic.addressSides(s);
   const p = Elev.peek(s.cnn);
   const lines = [`${P(s.street)}, ${betweenText(s)}`, `CNN ${s.cnn}`];
@@ -3619,7 +3798,8 @@ function elevFields(s) {
 }
 async function exportSegs() {
   const segs = checkedSegs();
-  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure(), Nearby.ensure(), Groups.ensure(), Areas.ensure(), ...segs.map(s => Parcels.fetch(s)), ...segs.map(s => Tiles.fetch(s))]);
+  const st = segs.filter(s => !isPiece(s));
+  await Promise.all([...segs.map(s => isInt(s) ? Elev.point(s) : Elev.get(s)), Transit.ensure(), Nearby.ensure(), Groups.ensure(), Areas.ensure(), ...st.map(s => Parcels.fetch(s)), ...st.map(s => Tiles.fetch(s))]);
   return segs;
 }
 // "14 (Frequent Local); 14R (Rapid Bus)" and "Bike lane · posts"
@@ -3648,6 +3828,7 @@ function streetViewUrl(o) {
 const wktOf = o => isInt(o) ? `POINT (${o.x.toFixed(5)} ${o.y.toFixed(5)})`
   : `LINESTRING (${o.coords.map(c => `${c[0].toFixed(5)} ${c[1].toFixed(5)}`).join(', ')})`;
 function record(s) {
+  if (isPiece(s)) return Pieces.record(s);
   if (isInt(s)) {
     const e = Elev.peekPoint(s.cnn);
     const blank = Object.fromEntries(Object.keys(record(Logic.db.segs[0])).map(k => [k, '']));
@@ -3689,7 +3870,7 @@ function tileFields(s) {
 // streets and intersections, then the picked blocks or parcels, one kind column (and every column any row has)
 // a route's gaps as rows, each right after the street it leaves from
 function gapRecord(g) {
-  const corner = n => { const i = Logic.item(n); return i && i.streets ? i.streets.join(' & ') : String(n); };
+  const corner = n => { if (typeof n === 'string') return t('pieceEnd'); const i = Logic.item(n); return i && i.streets ? i.streets.join(' & ') : String(n); };
   return { kind: 'gap', type: 'gap', cnn: '', streetname: t('gapRow'), from_street: t('gapFrom', { street: g.from.s.street, corner: corner(g.from.n) }),
     to_street: t('gapFrom', { street: g.to.s.street, corner: corner(g.to.n) }), length_ft: fmtFt(g.m), gap_from_corner: g.from.n, gap_to_corner: g.to.n,
     wkt: `LINESTRING (${[g.from.p, g.to.p].map(c => `${c[0].toFixed(5)} ${c[1].toFixed(5)}`).join(', ')})` };
@@ -3725,7 +3906,8 @@ function applyUrl(segs) {
 const baseUrl = () => location.origin + location.pathname;
 function linkFor(segs) {
   let pk = ''; try { pk = SelAreas.pickHash(); } catch (e) { }
-  const parts = [segs.length ? 'cnn=' + segs.map(s => s.cnn).join(',') : '', pk ? 'pick=' + pk : '', state.route && segs.length > 1 ? 'route=1' : ''].filter(Boolean);
+  const ph = Pieces.hashOf(segs);
+  const parts = [segs.length ? 'cnn=' + ph.cnn : '', ph.pc ? 'pc=' + ph.pc : '', pk ? 'pick=' + pk : '', state.route && segs.length > 1 ? 'route=1' : ''].filter(Boolean);
   return baseUrl() + (parts.length ? '#' + parts.join('&') : '');
 }
 
@@ -3738,7 +3920,7 @@ const SaveTo = (() => {
   const nameOf = () => $('save-name').value.trim() || t(state.route ? 'saveDefaultRoute' : 'saveDefaultSel');
   const q = tab => `'${String(tab).replace(/'/g, "''")}'`;
   const ROUTE_COLS = ['route', 'kind', 'streets', 'intersections', 'gaps', 'length_km', 'saved', 'tab', 'tab_id', 'tab_link', 'block_party_link', 'made_with',
-    'ride_time', 'ride_km', 'avg_kmh', 'climb_ft', 'descent_ft', 'thumbs_up', 'thumbs_down', 'notes', 'marks_tab_link'];
+    'pieces', 'ride_time', 'ride_km', 'avg_kmh', 'climb_ft', 'descent_ft', 'thumbs_up', 'thumbs_down', 'notes', 'marks_tab_link'];
   // the last project sheet saved to, for "Add to <name>"
   const PKEY = 'bp-sheet-project';
   const lastProject = () => { try { return JSON.parse(localStorage.getItem(PKEY)); } catch (e) { return null; } };
@@ -3748,12 +3930,12 @@ const SaveTo = (() => {
     const isRoute = !!state.route;
     const order = new Map(segs.filter(s => !isInt(s)).map((s, i) => [s.cnn, i + 1]));
     let n = 0;   // a route's order counts its gaps too, so the rows read in order along it
-    const recs = copyRecords(segs).map(r => isRoute && (r.kind === 'street' || r.kind === 'gap' || r.kind === 'intersection') ? { order: ++n, ...r } : r);
+    const recs = copyRecords(segs).map(r => isRoute && ['street', 'gap', 'intersection', 'piece'].includes(r.kind) ? { order: ++n, ...r } : r);
     const cols = [...new Set(recs.flatMap(r => Object.keys(r)))];
-    const streets = segs.filter(s => !isInt(s)), gaps = isRoute ? routeGaps() : [];
+    const streets = segs.filter(s => !isInt(s)), gaps = isRoute ? routeGaps() : [], pieces = segs.filter(isPiece).length;
     const lenM = streets.reduce((a, s) => a + (s.len || 0), 0) + gaps.reduce((a, g) => a + (g.m || 0), 0);
     return { isRoute, cols, rows: [cols, ...recs.map(r => cols.map(c => r[c] == null ? '' : String(r[c])))], recs,
-      streets: streets.length, ints: segs.length - streets.length, gaps: gaps.length, km: (lenM / 1000).toFixed(2), link: linkFor(segs) };
+      streets: streets.length - pieces, pieces, ints: segs.length - streets.length, gaps: gaps.length, km: (lenM / 1000).toFixed(2), link: linkFor(segs) };
   }
   return {
     lastProject,
@@ -3805,7 +3987,7 @@ const SaveTo = (() => {
         // and its row on Routes
         const used = await GoogleDrive.getValues(proj.id, `${q(rt.title)}!A:A`), next = Math.max(2, used.length + 1);
         await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A${next}`, [ROUTE_COLS.map(c => ({ route: name, kind: g.isRoute ? 'route' : 'selection', streets: g.streets, intersections: g.ints,
-          gaps: g.isRoute ? g.gaps : '', length_km: g.isRoute ? g.km : '', saved: today(), tab, tab_id: gid, tab_link: `${base}#gid=${gid}`, block_party_link: g.link,
+          gaps: g.isRoute ? g.gaps : '', pieces: g.pieces || '', length_km: g.isRoute ? g.km : '', saved: today(), tab, tab_id: gid, tab_link: `${base}#gid=${gid}`, block_party_link: g.link,
           made_with: `Block Party ${_BUILD_VERSION}`, ...rideCells })[c] ?? '')]);
         remember(proj);
         const where = t('saveWhere', { project: proj.name, tab });
@@ -3842,7 +4024,8 @@ let writingHash = false;
 function writeHash() {
   const parts = [];
   const cnns = [...state.checked];
-  if (cnns.length) parts.push('cnn=' + cnns.join(','));
+  if (cnns.length) { const ck = cnns.map(c => state.results.find(r => r.cnn === c) || { cnn: c }), h = Pieces.hashOf(ck);
+    parts.push('cnn=' + h.cnn); if (h.pc) parts.push('pc=' + h.pc); }
   if (cnns.length && state.route) parts.push('route=1');
   else if (state.street) parts.push('street=' + encodeURIComponent(P(state.street).toLowerCase()).replace(/%20/g, '+'));
   if (Logic.db && Logic.db.searchAll) parts.push('all=1');
@@ -3864,7 +4047,7 @@ function writeHash() {
 function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   const list = k => (p.get(k) || '').split(',').map(s => s.trim()).filter(Boolean);
-  return { cnn: list('cnn').map(Number).filter(Boolean), street: list('street'), all: p.get('all') === '1', minor: p.get('minor') !== '0', lang: p.get('lang'), quiet: list('quiet'),
+  return { cnn: list('cnn').filter(x => /^p\d+$/.test(x) || Number(x)), pc: p.get('pc'), street: list('street'), all: p.get('all') === '1', minor: p.get('minor') !== '0', lang: p.get('lang'), quiet: list('quiet'),
     layers: Object.fromEntries(list('layers').map(x => x.split(':')).filter(x => x.length === 2)), lands: p.get('lands'),
     areas: Object.fromEntries(list('areas').map(x => x.split(':')).filter(x => x.length === 2)), urls: p.getAll('url'), pick: p.get('pick'), route: p.get('route') === '1' };
 }
@@ -3883,7 +4066,8 @@ function applyHash() {
   if (h.minor !== Logic.db.includeMinor) { $('include-minor').checked = h.minor; Logic.setIncludeMinor(h.minor); refreshMapFilter(); }
   if (h.all !== Logic.db.searchAll) { $('search-all').checked = h.all; Logic.setSearchAll(h.all); refreshMapFilter(); }
   if (h.cnn.length) {
-    const items = h.cnn.map(c => Logic.item(c)).filter(Boolean);
+    const pcs = Pieces.fromHash(h.pc);
+    const items = h.cnn.map(c => c[0] === 'p' ? pcs[+c.slice(1)] : Logic.item(+c)).filter(Boolean);
     if (!items.length) return;
     const ints = items.filter(isInt);
     // an intersection link (a corner and maybe its blocks); a long list that happens to hold corners opens as a list
@@ -3904,9 +4088,9 @@ function applyHash() {
     }
     const segs = items;
     // retired or non-public CNNs still load from a link
-    const main = segs.find(s => !isInt(s)) || segs[0];
-    state.street = main.street; state.focusNode = null;
-    streetBox.set(main.street, P(main.street));
+    const main = segs.find(isStreet) || segs.find(s => !isInt(s)) || segs[0];
+    state.street = isPiece(main) ? null : main.street; state.focusNode = null;
+    if (!isPiece(main)) streetBox.set(main.street, P(main.street));
     fromBox.enable(true); enableNum(true); setMode('cross');
     const single = !ints.length && (segs.length === 1 || segs.every(s => s.street === main.street && s.f === main.f && s.t === main.t));
     if (single) { state.from = main.f; state.to = main.t; fromBox.set(main.f, P(main.f)); toBox.set(main.t, P(main.t)); toBox.enable(true); }
@@ -4074,6 +4258,7 @@ function addMapLayers() {
     paint: { 'circle-color': '#fff', 'circle-stroke-color': '#B5179E', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 11, 2, 16, 4],
       'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 3, 14, 5, 18, 11] } });
   // gaps between picked streets that don't touch
+  Pieces.addLayers();
   map.addLayer({ id: 'bp-gaps', type: 'line', source: 'gaps', layout: { 'line-cap': 'round' },
     paint: { 'line-color': '#E03131', 'line-width': 3, 'line-dasharray': [1.5, 1.5] } });
   map.addLayer({ id: 'bp-gaps-label', type: 'symbol', source: 'gaps', layout: { 'symbol-placement': 'line-center', 'text-field': ['get', 'label'], 'text-size': 12, 'text-font': LABEL_FONT, 'text-allow-overlap': true },
@@ -4368,7 +4553,7 @@ const LAYER_ORDER = [
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-me', 'bp-gaps', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
+  ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-me', 'bp-gaps', 'bp-piece-hit', 'bp-piece', 'bp-piece-case', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
@@ -5249,7 +5434,7 @@ function updateLanduseLegend() {
 function updateAdjLots() {
   if (!mapReady || !map.getLayer('bp-adj-lots')) return;
   // only while the Parcels layer (land use or zoning) is on
-  const lots = overlayMode.landuse === 'off' ? [] : state.results.filter(s => !isInt(s) && state.checked.has(s.cnn)).flatMap(s => (Parcels.peek(s) || {}).lotIds || []);
+  const lots = overlayMode.landuse === 'off' ? [] : state.results.filter(s => isStreet(s) && state.checked.has(s.cnn)).flatMap(s => (Parcels.peek(s) || {}).lotIds || []);
   const f = ['in', ['get', 'mapblklot'], ['literal', [...new Set(lots)]]];
   for (const id of ['bp-adj-lots', 'bp-adj-lots-casing']) {
     map.setFilter(id, f);
@@ -6821,6 +7006,7 @@ const Drops = (() => {
   function syncExtent() { if (extentFor && !extentForce && !state.results.some(r => r.cnn === extentFor.cnn && state.checked.has(r.cnn))) showExtent(null); }
   function showExtent(s, force) {
     if (!mapReady) return;
+    if (isPiece(s)) s = null;
     extentForce = !!(s && force);
     if (!map.getSource('near-extent')) {
       map.addSource('near-extent', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
@@ -7106,6 +7292,18 @@ const Drops = (() => {
     }
     function toggle(fid, i) {
       const o = featOf([fid, i]); if (!o) return;
+      // a line with no CNNs (a path, a route someone drew) goes in the selection as a piece; again takes it off
+      const g = o.x.geometry;
+      if (!o.x._cnns && g && /LineString$/.test(g.type)) {
+        const fk = `f${fid}:${i}`, have = state.results.filter(r => r.fkey === fk);
+        if (have.length) { state.results = state.results.filter(r => r.fkey !== fk); have.forEach(r => state.checked.delete(r.cnn)); render(); writeHash(); return; }
+        const parts = g.type === 'LineString' ? [g.coordinates] : g.coordinates, nm = nameOf(o.f, o.x.properties) || t('dropUnnamed');
+        const made = parts.map((c, j) => Pieces.make({ coords: c.map(p => [p[0], p[1]]), kind: 'line', name: parts.length > 1 ? `${nm} (${j + 1})` : nm, src: shown(o.f) })).filter(Boolean);
+        made.forEach(pc => { pc.fkey = fk; Pieces.add(pc, true); });
+        render(); writeHash();
+        if (made.length) { toast(t('featAddedPiece', { name: nm })); requestAnimationFrame(() => jumpToCard(made[0].cnn)); }
+        return;
+      }
       const tg = targets(o.x), k = `${fid}:${i}`;
       if (tg.length) {
         if (onCards.has(k)) onCards.delete(k);
@@ -7326,9 +7524,10 @@ const Downloads = (() => {
     };
     if (what === 'blocks' && state.route) {   // a route keeps its order, with its gaps as rows
       return withGaps(segs, segs.map(s => { const r = record(s); return { kind: r.type || 'street', ...r }; }))
-        .map((r, i) => ({ props: r, geom: r.kind === 'gap' ? { type: 'LineString', coordinates: r.wkt.replace(/^LINESTRING \(|\)$/g, '').split(', ').map(p => p.split(' ').map(Number)) } : geomOfSeg(segs.find(s => s.cnn === r.cnn)) }));
+        .map((r, i) => ({ props: r, geom: r.kind === 'gap' || r.kind === 'piece' ? { type: 'LineString', coordinates: r.wkt.replace(/^LINESTRING \(|\)$/g, '').split(', ').map(p => p.split(' ').map(Number)) } : geomOfSeg(segs.find(s => s.cnn === r.cnn)) }));
     }
     for (const s of segs) {
+      if (isPiece(s) && what !== 'blocks') continue;
       if (what === 'blocks') { const r = record(s); out.set(s.cnn, { props: { kind: r.type || 'street', ...r }, geom: geomOfSeg(s) }); }
       else if (what === 'businesses') for (const x of (Tiles.peek(s) || {}).businesses || []) for (const i of x.items || [])
         add([x.address, i.dba, i.owner].join('|'), { address: x.address, business: i.dba || i.owner || '', owner: i.owner || '', category: i.cat || x.cat || '',
@@ -7372,7 +7571,7 @@ const Downloads = (() => {
 function addCrossStreets() {
   const have = new Set(state.results.map(r => r.cnn)), add = [];
   SelAreas.remember();
-  for (const s of checkedSegs()) {
+  for (const s of checkedSegs().filter(o => !isPiece(o))) {
     const legs = isInt(s) ? [[s.cnn, null]] : [[s.fn, s.street], [s.tn, s.street]];
     for (const [n, street] of legs) for (const o of Logic.db.segsAtNode.get(n) || [])
       if (Logic.eligible(o) && o.street !== street && !have.has(o.cnn)) { have.add(o.cnn); add.push(o); }
@@ -7581,7 +7780,7 @@ const NearbyView = (() => {
   const geoCache = new Map();
   async function placesOf(key) {
     if (key === 'me') return me ? [{ id: 'me', name: t('nbYou'), ll: me, m: [toM(me)], props: {} }] : [];
-    if (key === 'streets') return checkedSegs().map(s => isInt(s)
+    if (key === 'streets') return checkedSegs().filter(o => !isPiece(o)).map(s => isInt(s)
       ? { id: String(s.cnn), name: intName(s), ll: [s.x, s.y], m: [toM([s.x, s.y])], node: s.cnn, props: record(s) }
       : { id: String(s.cnn), name: `${P(s.street)}, ${P(s.f)} – ${P(s.t)}`, ll: s.coords[Math.floor(s.coords.length / 2)], m: s.coords.map(toM), cnn: s.cnn, props: record(s) });
     if (key[0] === 'f') return Drops.items(+key.slice(1)).map(it => ({ ...it, id: key + ':' + it.i }));
@@ -7807,7 +8006,7 @@ const NearbyView = (() => {
   // ---- the panel
   function panelHTML() {
     const { files, layers } = listsAvail();
-    const startOpts = [['me', t('nbNearMe')], ...(checkedSegs().length ? [['streets', t('nbStreetsN', { n: checkedSegs().length })]] : []),
+    const startOpts = [['me', t('nbNearMe')], ...(checkedSegs().filter(o => !isPiece(o)).length ? [['streets', t('nbStreetsN', { n: checkedSegs().filter(o => !isPiece(o)).length })]] : []),
       ...files.map(l => [l.key, `${l.label} (${l.n.toLocaleString()})`]), ...['schools', 'health', 'stations', 'lands'].filter(k => OVERLAYS[k]).map(k => [k, t('lyr_' + k)])];
     if (!start || !startOpts.some(([v]) => v === start)) start = files.length ? files[0].key : 'me';
     for (const l of files) if (!seenFiles.has(l.key)) { seenFiles.add(l.key); chosen.add(l.key); }
@@ -8329,7 +8528,7 @@ const SelAreas = (() => {
   function stopHover() { if (hoverPop) hoverPop.remove(); hoverArea(null); }
   // the areas along the checked streets: points beside each street (10–90% along, 10–24 m to each side)
   async function alongStreets() {
-    const segs = checkedSegs().filter(s => !isInt(s));
+    const segs = checkedSegs().filter(isStreet);
     if (!segs.length) { toast(t('alongNone')); return; }
     const k = pickSet || 'ablk';
     if (k === 'parcel') {
@@ -8666,7 +8865,7 @@ const SelAreas = (() => {
   const blockOf = lot => { const m = /^(\d{4}[A-Z]?)\d{3}[A-Z]?$/.exec(String(lot)); return m ? m[1] : String(lot).slice(0, -3); };
   // every street around the city (assessor) blocks the checked streets face
   async function around() {
-    const segs = checkedSegs().filter(s => !isInt(s));
+    const segs = checkedSegs().filter(isStreet);
     if (!segs.length) return;
     $('area-status').textContent = t('aroundWorking');
     // lot ids from the street facts when sf-blocks has them (no tiles to read), else from the parcel tiles
@@ -8718,7 +8917,7 @@ const SelAreas = (() => {
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   }
   async function save() {
-    const segs = checkedSegs(), name = $('area-name').value.trim();
+    const segs = checkedSegs().filter(o => !isPiece(o)), name = $('area-name').value.trim();
     if (!segs.length && !picks.size) return;
     if (!name) { $('area-name').focus(); toast(t('areaNeedName')); return; }
     $('area-status').textContent = t('areaWorking');
@@ -9347,7 +9546,7 @@ const Areas = (() => {
     // the shaded set tints the areas the checked blocks and corners are in
     updateShade() {
       if (!mapReady) return;
-      const items = state.results.filter(s => state.checked.has(s.cnn));
+      const items = state.results.filter(s => !isPiece(s) && state.checked.has(s.cnn));
       for (const [k, st] of sets) {
         if (modeOf(k) !== 'shade' || !st.polys) continue;
         // census blocks: the ones whose edges the blocks make up (what the census estimate counts)
@@ -10114,7 +10313,7 @@ function hoverSegFromCard(cnn) {
   if (cnn === cardHoverCnn || !mapReady) return;
   cardHoverCnn = cnn;
   const s = cnn != null && (state.results.find(r => r.cnn === cnn) || Logic.item(cnn));
-  map.getSource('hover').setData(s && !isInt(s) ? fc([segFeature(s)]) : EMPTY);
+  map.getSource('hover').setData(s && !isInt(s) ? fc([isPiece(s) ? { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: s.coords } } : segFeature(s)]) : EMPTY);
   map.getSource('preview-int').setData(s && isInt(s) ? fc([pointFeature(s)]) : EMPTY);
   // the card's nearby area on the map (your files' extent), while hovering it; else the last card clicked
   Drops.showExtent(s || (lastCardCnn != null && state.results.find(r => r.cnn === lastCardCnn)) || null);
@@ -10153,14 +10352,15 @@ function drawStreet(segs) {
 function drawResults() {
   if (!mapReady) return;
   const ints = state.results.filter(isInt);
-  const segs = state.results.filter(s => !isInt(s));
+  const segs = state.results.filter(isStreet);
+  Pieces.draw();
   map.getSource('ints').setData(fc(ints.map(i => ({ type: 'Feature', id: i.cnn,
     geometry: { type: 'Point', coordinates: [i.x, i.y] },
     properties: { cnn: i.cnn, on: state.checked.has(i.cnn), label: `${intName(i)}${i.side ? ` (${t(i.side)})` : ''}\nCNN ${i.cnn}` } }))));
   if (state.results.length) drawStreet([]);
   else if (state.street) drawStreet(Logic.streetSegs(state.street));
   else drawStreet([]);
-  const anyChecked = segs.some(s => state.checked.has(s.cnn)) || ints.some(i => state.checked.has(i.cnn));
+  const anyChecked = state.results.some(s => !isInt(s) && state.checked.has(s.cnn)) || ints.some(i => state.checked.has(i.cnn));
   const props = s => ({
     on: state.checked.has(s.cnn),
     // once something is checked, only checked blocks get the big stacked label

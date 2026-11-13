@@ -2,6 +2,20 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v91
+
+Step 1 of the plan for gaps and paths: **pieces**, parts of a selection that aren't city streets.
+
+- **What a piece is:** a line in your selection that isn't a city street: a park path, a plaza, a stretch ridden off the street grid, or a line from one of your files. It gets a card with a dashed edge, a kind tag, where its ends are (at a corner, or "near" one), its length, slope and elevation profile, and a Street View link. On the map it's a dashed line, and clicking it opens its card.
+- **In a route:** pieces are checked, numbered and counted in the route's length like streets. An end at a street corner joins the streets there, so a path between two streets closes the gap instead of showing one.
+- **Where pieces come from (for now):**
+  - **Riding:** a stretch of 40 m or more off every street (cutting through a park, say) becomes an "Off-street stretch" between the streets on either side. It reaches to the corner it left from and the one it rejoins.
+  - **Your files:** picking a line that has no CNNs adds it as a piece (lines with CNNs still go on their street's card). Picking it again takes it off.
+- **Links, exports, Sheets:** links keep pieces in their place along the route (`cnn=…,p0,…&pc=…`). CSV, downloads and Sheets get a `piece` row with its kind, ends, length, slope and line, in route order. The Routes row in Sheets counts them.
+- **Ride bar on phones:** 👎 is on the left, 👍 on the right.
+
+Next: one-click connectors from gaps, then saving routes in order, drawn lines and OSM paths, all as pieces.
+
 ## v90
 
 Ride, after the first real rides:
