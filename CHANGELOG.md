@@ -2,6 +2,12 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v92
+
+- **Softer corners:** buttons ("Reset the map" was nearly a circle), toasts ("Found you") and the "Not following you" pill have 12 px corners instead of fully round ends.
+- **Ride notes stay open:** the note box no longer closes while you type and keep moving. The bar updates only its numbers until you save the note (or press Esc).
+- **A flag for notes:** ride notes show as a yellow flag on the map; 👍 and 👎 stay green and red dots.
+
 ## v91
 
 Step 1 of the plan for gaps and paths: **pieces**, parts of a selection that aren't city streets.
