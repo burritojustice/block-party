@@ -2,6 +2,17 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v90
+
+Ride, after the first real rides:
+
+- **Ride stats:** the Ride bar shows ride time (stops over 30 seconds and pauses don't count), distance, average speed, and climb and descent. When you stop, it also shows the elevation along the ride.
+- **Per street, in saved files:** each street gets when you got there (`ride_at`), how long you were on it (`ride_seconds`), your speed (`ride_kmh`) and how much it climbed the way you went (`ride_rise_ft`), plus 👍 / 👎 counts and notes. This goes into CSV, downloads and Sheets.
+- **👍 and 👎:** two big buttons on the Ride bar mark the street you're on. Each mark and note keeps its time, lat/lon and street (CNN). They show as green, red and yellow dots on the map, on the street's card, and in a "marks" tab when saved to Sheets. The Routes row gets the ride's time, distance, speed, climb, descent and mark counts.
+- **Stop asks to save:** the bar stays open with the totals, a name made from the first and last streets ("Valencia St to 21st St"), and Save to your last project, a new project sheet, another project, or Download CSV. Close puts it away, and it's still there after a reload until you close it.
+- **Follow is obvious:** once you pan, an orange "Not following you · tap to follow" pill shows over the map, the bar gets a big Follow me button, and your dot goes hollow. While following, the ◎ button is blue.
+- **Phones:** Ride and Nearby are their own buttons next to ☰. While riding, Ride turns blue ("● Riding"); tapping it shows or hides the bar.
+
 ## v89
 
 - **🚲 Ride:** turn it on (toolbar, or ☰ on a phone) and the streets you ride along go into a route, in the order you ride them.
