@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v91 -->
+<!-- build: v92 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -276,7 +276,7 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height
 .actions { display: grid; gap: 10px; margin-bottom: 16px; }
 .copy-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; color: var(--ink-soft); }
 .btn {
-  border: 2px solid var(--ink); border-radius: 999px;
+  border: 2px solid var(--ink); border-radius: 12px;
   padding: 8px 16px; font-weight: 700; font-size: 15px;
   background: var(--card); cursor: pointer;
   box-shadow: 0 3px 0 var(--ink);
@@ -754,7 +754,7 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
 .ride-bar .rb-name { display: flex; gap: 8px; align-items: center; font-size: 14px; } .ride-bar .rb-name input { flex: 1; font: inherit; padding: 7px 9px; border: 1.5px solid var(--line); border-radius: 8px; }
 .ride-bar .rb-prof { width: 100%; height: 40px; } .rb-prof .area { fill: #D0EBFF; } .rb-prof .line { fill: none; stroke: #1C7ED6; stroke-width: 2; }
 .ride-bar .rb-marks { font-size: 13px; }
-.ride-lost { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); z-index: 9; font: 800 15px/1 system-ui, sans-serif; color: #fff; background: #E8590C; border: 0; border-radius: 999px; padding: 10px 16px; box-shadow: 0 4px 14px rgba(0,0,0,.25); cursor: pointer; }
+.ride-lost { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); z-index: 9; font: 800 15px/1 system-ui, sans-serif; color: #fff; background: #E8590C; border: 0; border-radius: 12px; padding: 10px 16px; box-shadow: 0 4px 14px rgba(0,0,0,.25); cursor: pointer; }
 .ride-lost[hidden] { display: none; }
 .seg.piece .piece-tag { border-style: dashed; }
 .seg.piece { border-left: 4px dashed #FF3D7F; }
@@ -827,7 +827,7 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
 .toast {
   position: fixed; z-index: 50; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   transform: translate(-50%, 20px); opacity: 0;
-  background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; font-weight: 600;
+  background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 12px; font-weight: 600;
   transition: opacity .2s, transform .2s; pointer-events: none;
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
@@ -1358,7 +1358,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v91';
+const _BUILD_VERSION = 'v92';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -3238,11 +3238,24 @@ const Ride = (() => {
     map.addSource('ride', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addLayer({ id: 'bp-ride-cur', type: 'line', source: 'ride', filter: ['==', ['get', 'part'], 'cur'], layout: { 'line-cap': 'round' }, paint: { 'line-color': '#FFC53D', 'line-width': 12, 'line-opacity': 0.75 } });
     map.addLayer({ id: 'bp-ride-track', type: 'line', source: 'ride', filter: ['==', ['get', 'part'], 'track'], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#1C7ED6', 'line-width': 2.5, 'line-dasharray': [1, 1.5] } });
-    map.addLayer({ id: 'bp-ride-mark', type: 'circle', source: 'ride', filter: ['==', ['get', 'part'], 'mark'], paint: { 'circle-radius': 7, 'circle-color': ['match', ['get', 'kind'], 'up', '#2F9E44', 'down', '#E03131', '#FFC53D'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } });
+    if (!map.hasImage('bp-note-flag')) map.addImage('bp-note-flag', flagImage(), { pixelRatio: 1.5 });
+    map.addLayer({ id: 'bp-ride-note', type: 'symbol', source: 'ride', filter: ['all', ['==', ['get', 'part'], 'mark'], ['==', ['get', 'kind'], 'note']],
+      layout: { 'icon-image': 'bp-note-flag', 'icon-anchor': 'bottom-left', 'icon-offset': [-3, 0], 'icon-allow-overlap': true, 'icon-ignore-placement': true } });
+    map.addLayer({ id: 'bp-ride-mark', type: 'circle', source: 'ride', filter: ['all', ['==', ['get', 'part'], 'mark'], ['!=', ['get', 'kind'], 'note']], paint: { 'circle-radius': 7, 'circle-color': ['match', ['get', 'kind'], 'up', '#2F9E44', 'down', '#E03131', '#FFC53D'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } });
     // you: solid blue while the map follows you; hollow once you've panned away
     map.addLayer({ id: 'bp-ride-me', type: 'circle', source: 'ride', filter: ['==', ['get', 'part'], 'me'], paint: { 'circle-radius': 9, 'circle-color': ['case', ['get', 'follow'], '#1C7ED6', '#fff'], 'circle-stroke-color': '#1C7ED6', 'circle-stroke-width': 4 } });
     arrangeLayers();
     map.on('dragstart', () => { if (on && follow) { follow = false; draw(); bar(); } });
+  }
+  // a flag on a pole, for notes (yellow, like the note button)
+  function flagImage() {
+    const W = 44, H = 52, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    g.strokeStyle = '#fff'; g.lineWidth = 9; g.beginPath(); g.moveTo(6, H - 4); g.lineTo(6, 5); g.stroke();
+    g.strokeStyle = '#1E2340'; g.lineWidth = 4; g.beginPath(); g.moveTo(6, H - 4); g.lineTo(6, 5); g.stroke();
+    g.beginPath(); g.moveTo(8, 5); g.lineTo(40, 13); g.lineTo(8, 23); g.closePath();
+    g.fillStyle = '#FFC53D'; g.fill(); g.strokeStyle = '#1E2340'; g.lineWidth = 3; g.stroke();
+    const d = g.getImageData(0, 0, W, H); return { width: W, height: H, data: new Uint8Array(d.data.buffer) };
   }
   async function wake() {
     try { if ('wakeLock' in navigator && document.visibilityState === 'visible') { lock = await navigator.wakeLock.request('screen'); } } catch (e) { lock = null; }
@@ -3306,6 +3319,14 @@ const Ride = (() => {
       return;
     }
     const here = cur ? `${P(cur.street)} · ${betweenText(cur)}` : t('rideNoStreet');
+    // typing a note: keep the box (and what's typed), update only the numbers
+    const nf = el.querySelector('.rb-note');
+    if (nf && !nf.hidden) {
+      const top = el.querySelector('.rb-top span'), st = el.querySelector('.rb-stats'), hr = el.querySelector('.rb-here');
+      if (top) top.textContent = t('rideCount', { n: added.length, km: totals().km.toFixed(1) });
+      if (st) st.textContent = statsLine(); if (hr) hr.textContent = here;
+      return;
+    }
     const has = cur && state.checked.has(cur.cnn);
     el.innerHTML = `${follow ? '' : `<button type="button" class="rb-follow" data-rb="follow">◎ ${esc(t('rideFollow'))}</button>`}
       <div class="rb-react"><button type="button" class="rb-emoji" data-rb="up" aria-label="${esc(t('rideUp'))}">👍</button><button type="button" class="rb-emoji" data-rb="down" aria-label="${esc(t('rideDown'))}">👎</button>
@@ -3330,7 +3351,8 @@ const Ride = (() => {
     else if (k === 'drop' && cur) { state.checked.delete(cur.cnn); added = added.filter(c => c !== cur.cnn); render(); writeHash(); bar(); save(); }
     else if (k === 'note') {
       const f = el.querySelector('.rb-note'); f.hidden = false; const i = f.elements.n; i.focus();
-      f.onsubmit = ev => { ev.preventDefault(); const v = i.value.trim(); if (v) mark('note', v); f.hidden = true; i.value = ''; };
+      f.onsubmit = ev => { ev.preventDefault(); const v = i.value.trim(); f.hidden = true; i.value = ''; if (v) mark('note', v); bar(); };
+      i.onkeydown = ev => { if (ev.key === 'Escape') { f.hidden = true; bar(); } };
     }
     else if (k.startsWith('save-')) { $('save-name').value = $('ride-name').value.trim() || suggestName(); SaveTo.sheet(k === 'save-last' ? 'last' : k === 'save-new' ? 'new' : 'add'); }
     else if (k === 'csv') Downloads.go('csv');
@@ -4553,7 +4575,7 @@ const LAYER_ORDER = [
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-me', 'bp-gaps', 'bp-piece-hit', 'bp-piece', 'bp-piece-case', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
+  ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-note', 'bp-ride-me', 'bp-gaps', 'bp-piece-hit', 'bp-piece', 'bp-piece-case', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
