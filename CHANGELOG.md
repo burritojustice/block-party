@@ -2,6 +2,11 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v93
+
+- **Layers works again during and after a ride:** the Ride bar was drawn over the open Layers menu, so clicks on most of its buttons went to the bar instead. It stays up after Stop until you press Close. An open menu (Layers, Areas, Filter) now sits above the Ride bar, Nearby and the tips.
+- **Fewer redraws at load:** the cards were redrawn about 45 times in the first seconds after opening a link with streets. Each loader (Muni and bike, Next to, groups, districts) redrew once for every draw that had happened while it loaded. Now each redraws once, about 8 redraws in all.
+
 ## v92
 
 - **Softer corners:** buttons ("Reset the map" was nearly a circle), toasts ("Found you") and the "Not following you" pill have 12 px corners instead of fully round ends.

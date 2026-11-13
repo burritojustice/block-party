@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v92 -->
+<!-- build: v93 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -450,6 +450,8 @@ td.tbl-num { text-align: right; font-variant-numeric: tabular-nums; }
 .tbl-more td { color: var(--muted, #667); font-style: italic; cursor: default; }
 .map-ui { position: absolute; top: 12px; left: 12px; right: 56px; z-index: 6; display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; pointer-events: none; }
 .map-ui > * { pointer-events: auto; }
+/* an open menu sits above the Ride bar, Nearby and the next-step tips (they're 8–9) */
+.map-ui:has(.map-pop:not([hidden])), .map-ui.menu-open { z-index: 12; }
 /* v82: phones get Settings ☰ + Nearby + full screen in one row; Settings opens the other buttons */
 .mob-only { display: none !important; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -1358,7 +1360,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v92';
+const _BUILD_VERSION = 'v93';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -2750,6 +2752,12 @@ function setResults(segs, title, kind, checkedCnns) {
   state.checked = new Set(checkedCnns ?? segs.map(s => s.cnn));
   render(); writeHash();
 }
+const renderWaits = new Set();
+function renderWhen(k, ready, load) {
+  if (ready() || renderWaits.has(k)) return;
+  renderWaits.add(k);
+  load().then(() => { renderWaits.delete(k); if (ready()) render(); }, () => renderWaits.delete(k));
+}
 function checkedSegs() { return state.results.filter(s => state.checked.has(s.cnn)); }
 /* ---------- Pieces: parts of a selection that aren't city streets ----------
    A path through a park, a stretch ridden off the street grid, a line from your files. A piece sits in
@@ -3056,10 +3064,13 @@ function render() {
   CardView.syncHead();
   hydrateElevation();
   // Muni and bike rows fill in once those files have loaded (the first time cards appear)
-  if (segs.length && !Transit.ready) Transit.ensure().then(() => { if (Transit.ready) render(); });
-  if (segs.length && !Nearby.ready) Nearby.ensure().then(() => { if (Nearby.ready) render(); });
-  if (segs.length && !Groups.ready) Groups.ensure().then(() => { if (Groups.ready) render(); });
-  if (segs.length && !Areas.ready) Busy.track('areas', 'all', Areas.ensure()).then(() => { if (Areas.ready) render(); });
+  // one redraw per file, however many renders asked while it loaded (each used to queue its own: 3, 6, 12, 24…)
+  if (segs.length) {
+    renderWhen('transit', () => Transit.ready, () => Transit.ensure());
+    renderWhen('nearby', () => Nearby.ready, () => Nearby.ensure());
+    renderWhen('groups', () => Groups.ready, () => Groups.ensure());
+    renderWhen('areas', () => Areas.ready, () => Busy.track('areas', 'all', Areas.ensure()));
+  }
   // land use, trees and businesses per card: read once a card scrolls near the screen, so the streets show first
   CardFacts.watch(segs);
   updateAdjLots();
@@ -10154,10 +10165,11 @@ function setupMapMenus() {
     toast(t('resetDone'));
   }
   const menus = [['layers-btn', 'layers-panel'], ['areas-btn', 'areas-panel'], ['quiet-btn', 'quiet-panel']];
-  const close = except => menus.forEach(([b, p]) => { if (b !== except) { $(p).hidden = true; $(b).setAttribute('aria-expanded', 'false'); } });
+  const syncOpen = () => { const u = document.querySelector('.map-ui'); if (u) u.classList.toggle('menu-open', menus.some(([, p]) => !$(p).hidden)); };
+  const close = except => { menus.forEach(([b, p]) => { if (b !== except) { $(p).hidden = true; $(b).setAttribute('aria-expanded', 'false'); } }); syncOpen(); };
   for (const [b, p] of menus) $(b).addEventListener('click', () => {
     const open = $(p).hidden; close(b);
-    $(p).hidden = !open; $(b).setAttribute('aria-expanded', open);
+    $(p).hidden = !open; $(b).setAttribute('aria-expanded', open); syncOpen();
   });
   document.addEventListener('click', e => { if (!e.target.closest('.map-ui')) { close(); setMore(false); } });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { close(); setMore(false); } });
