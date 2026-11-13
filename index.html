@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v89 -->
+<!-- build: v90 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -740,7 +740,19 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
 .ride-bar .rb-note { display: flex; gap: 6px; } .ride-bar .rb-note input { flex: 1; font: inherit; padding: 6px 8px; border: 1.5px solid var(--line); border-radius: 8px; }
 .ride-bar .rb-note[hidden] { display: none; }
 .ride-bar .btn.small { font-size: 14px; padding: 6px 12px; }
-#ride-live { display: inline-flex; align-items: center; gap: 6px; background: #1C7ED6; color: #fff; border-color: #1C7ED6; }
+.ride-bar .rb-react { display: flex; gap: 8px; align-items: center; }
+.ride-bar .rb-emoji { font-size: 34px; line-height: 1; width: 64px; height: 64px; border-radius: 16px; border: 2px solid var(--ink); background: #fff; cursor: pointer; flex: none; }
+.ride-bar .rb-emoji:active { transform: scale(.94); background: #FFF3C4; }
+.ride-bar .rb-info { min-width: 0; }
+.ride-bar .rb-stats { font-size: 13px; color: var(--ink-soft); }
+.ride-bar .rb-follow { font: 800 17px/1 system-ui, sans-serif; color: #fff; background: #E8590C; border: 0; border-radius: 12px; padding: 12px; cursor: pointer; animation: ride-blink 1.2s infinite; }
+.ride-bar .rb-name { display: flex; gap: 8px; align-items: center; font-size: 14px; } .ride-bar .rb-name input { flex: 1; font: inherit; padding: 7px 9px; border: 1.5px solid var(--line); border-radius: 8px; }
+.ride-bar .rb-prof { width: 100%; height: 40px; } .rb-prof .area { fill: #D0EBFF; } .rb-prof .line { fill: none; stroke: #1C7ED6; stroke-width: 2; }
+.ride-bar .rb-marks { font-size: 13px; }
+.ride-lost { position: absolute; left: 50%; top: 64px; transform: translateX(-50%); z-index: 9; font: 800 15px/1 system-ui, sans-serif; color: #fff; background: #E8590C; border: 0; border-radius: 999px; padding: 10px 16px; box-shadow: 0 4px 14px rgba(0,0,0,.25); cursor: pointer; }
+.ride-lost[hidden] { display: none; }
+#ride-btn.is-riding { display: inline-flex; align-items: center; gap: 6px; background: #1C7ED6; color: #fff; border-color: #1C7ED6; }
+.bp-ctl #ctl-me.is-following { background: #1C7ED6; } .bp-ctl #ctl-me.is-following svg { stroke: #fff; }
 .ride-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; animation: ride-blink 1.2s infinite; }
 @keyframes ride-blink { 50% { opacity: .3; } }
 .ride-note { background: #FFF3C4; border-radius: 6px; padding: 2px 6px; }
@@ -907,9 +919,6 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
     <div class="busy-pill" id="busy" hidden aria-live="polite"></div>
     <div class="map-loading" id="map-loading"><span class="spin" aria-hidden="true"></span><span id="map-loading-text" data-i18n="loading">Loading streets…</span></div>
     <div class="map-ui" id="map-ui">
-      <div class="map-toggle single keep" id="ride-live-wrap" hidden>
-        <button type="button" id="ride-live" data-i18n-title="rideLiveTitle" title="Riding: tap for the ride controls"><span class="ride-dot"></span><span data-i18n="rideLive">Riding</span></button>
-      </div>
       <div class="map-toggle single keep mob-only" id="more-wrap">
         <button type="button" id="more-btn" aria-expanded="false" data-i18n-title="moreTitle" title="Map, layers, areas, Filter, Focus and Table"><span class="more-ico" aria-hidden="true">☰</span><span class="sr" data-i18n="moreBtn">Menu</span><span class="badge" id="more-badge" hidden></span></button>
       </div>
@@ -928,7 +937,7 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
       <div class="map-toggle single sun">
         <button type="button" id="quiet-btn" aria-expanded="false" aria-controls="quiet-panel">✦ <span data-i18n="quietBtn">Quiet streets</span><span class="badge" id="quiet-badge" hidden></span> ▾</button>
       </div>
-      <div class="map-toggle single">
+      <div class="map-toggle single keep">
         <button type="button" id="ride-btn" aria-pressed="false" data-i18n-title="rideTitle" title="Ride: add the streets you ride along"><span data-i18n="rideBtn">🚲 Ride</span></button>
       </div>
       <div class="map-toggle single" id="focus-wrap">
@@ -936,7 +945,7 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
         <button type="button" id="focus-off" class="focus-x" hidden data-i18n-title="focusOffTitle" title="Stop focusing (Esc)" aria-label="Stop focusing">✕</button>
         <div class="flavor-pop focus-pop" id="focus-pop" hidden></div>
       </div>
-      <div class="map-toggle single">
+      <div class="map-toggle single keep">
         <button type="button" id="nearby-btn" aria-pressed="false" data-i18n="nearbyBtn" title="Match one list against others: what's near each place">◎ Nearby</button>
       </div>
       <div class="map-toggle single">
@@ -972,6 +981,7 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
     </div>
     <section class="nb-panel" id="nb-panel" hidden aria-label="Nearby"></section>
     <div class="next-toast" id="next-toast" hidden role="status"></div>
+    <button type="button" class="ride-lost" id="ride-lost" hidden data-i18n="rideLost">◎ Not following you · tap to follow</button>
     <section class="tbl-drawer" id="tbl-drawer" hidden aria-label="Table">
       <div class="tbl-grip" id="tbl-grip" data-i18n-title="tableGrip" title="Drag to resize"></div>
       <div class="tbl-head">
@@ -1341,7 +1351,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v89';
+const _BUILD_VERSION = 'v90';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1584,11 +1594,13 @@ const I18N = {
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
     moreBtn: 'Menu', moreTitle: 'Map, layers, areas, Nearby, Filter, Focus and Table', ctl3d: '3D: tilt the map over the hills (tap again for flat)', ctl2d: 'Flat map, seen from above', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
     censusLoad: 'Count people and homes',
-    rideBtn: '🚲 Ride', rideTitle: 'Ride: add the streets you ride along', rideLive: 'Riding', rideLiveTitle: 'Riding: tap for the ride controls',
+    rideBtn: '🚲 Ride', rideDone: 'Ride done', rideStats: '{time} · {km} km · {kmh} km/h · ↑{up} ft ↓{down} ft', rideProfile: 'Elevation along the ride, {lo} to {hi} ft',
+    rideMarksN: '👍 {up} · 👎 {down} · ✎ {notes}', rideSaveAs: 'Name', rideName: '{a} to {b}', rideCsv: 'Download CSV', rideClose: 'Close',
+    rideUp: 'Thumbs up for this street', rideDown: 'Thumbs down for this street', rideMarked: '{e} on {name}', rideLost: '◎ Not following you · tap to follow', saveTabMarks: 'marks', rideTitle: 'Ride: add the streets you ride along', rideLive: 'Riding', rideLiveTitle: 'Riding: tap for the ride controls',
     rideRiding: 'Riding', ridePaused: 'Paused', rideCount: '{n} streets · {km} km', rideNoStreet: 'Looking for your street…',
     rideAdd: '＋ Add this street', rideDrop: '− Take it off', rideNote: 'Note', rideNotePh: 'A note for this street', rideNoteSave: 'Save',
     rideFollow: 'Follow me', ridePause: 'Pause', rideResume: 'Resume', rideStop: 'Stop',
-    rideAdded: 'Added {name} ({n})', rideStopped: 'Ride stopped: {n} streets. Save it under Copy / Save.', rideNoted: 'Note saved on {name}',
+    rideAdded: 'Added {name} ({n})', rideNoted: 'Note saved on {name}',
     rideNoGeo: 'This browser can’t share your location.', rideDenied: 'Location is off for this page. Allow it in your browser’s settings to ride.', rideNoFix: 'Waiting for a location fix…',
     rideResumeAsk: 'A ride with {n} streets was still going. Carry on?', rideTitleList: 'Your ride', noteRow: 'Note',
     clsRetired: 'Retired', clsPed: 'Pedestrian', clsPaper: 'Paper street', clsPrivate: 'Private', clsNotMaint: 'Not city maintained', clsOther: 'Other',
@@ -2346,7 +2358,7 @@ const Elev = (() => {
     if (!points.has(i.cnn)) points.set(i.cnn, at([i.x, i.y]).catch(() => null).then(v => { pdone.set(i.cnn, v); return v; }));
     return points.get(i.cnn);
   }
-  return { get, peek: cnn => done.get(cnn), has: cnn => done.has(cnn), point, peekPoint: cnn => pdone.get(cnn), hasPoint: cnn => pdone.has(cnn) };
+  return { get, at, peek: cnn => done.get(cnn), has: cnn => done.has(cnn), point, peekPoint: cnn => pdone.get(cnn), hasPoint: cnn => pdone.has(cnn) };
 })();
 
 /* =====================================================================
@@ -2918,13 +2930,13 @@ function describeStreets(segs) {
    shows what was skipped. The ride (points, streets, notes) is kept in this browser (RKEY) so a reload can
    carry on. A web page can't track with the screen off: keep the phone mounted and the page open. */
 const Ride = (() => {
-  const RKEY = 'bp-ride', MATCH_M = 15, HEAD_DEG = 35, COVER = 0.5, SHORT_M = 60, MAX_ACC = 35, MIN_STEP = 4;
+  const RKEY = 'bp-ride', MATCH_M = 15, HEAD_DEG = 35, COVER = 0.5, SHORT_M = 60, MAX_ACC = 35, MIN_STEP = 4, GAP_S = 30;
   const KXm = 111320 * Math.cos(37.76 * Math.PI / 180), KYm = 110540;
-  let on = false, paused = false, watch = null, lock = null, follow = true;
-  let pts = [], last = null, heading = null, cur = null, notes = new Map(), cover = new Map(), added = [];
-  let grid = null;
-  const save = () => { try { localStorage.setItem(RKEY, JSON.stringify({ on, pts: pts.slice(-3000), added, notes: [...notes], at: Date.now() })); } catch (e) { } };
-  // the streets near a point, from a 100 m grid built the first time
+  let on = false, paused = false, done = false, watch = null, lock = null, follow = true;
+  // pts: [lon, lat, unix s, accuracy, elevation m]; marks: { t, lon, lat, cnn, kind: 'up' | 'down' | 'note', text }
+  let pts = [], last = null, heading = null, cur = null, cover = new Map(), added = [], marks = [], seen = new Map(), moving = 0, dist = 0;
+  let grid = null, lastT = null;
+  const save = () => { try { localStorage.setItem(RKEY, JSON.stringify({ on, done, pts: pts.slice(-4000), added, marks, seen: [...seen], moving, dist, at: Date.now() })); } catch (e) { } };
   function near(x, y) {
     if (!grid) {
       grid = new Map();
@@ -2938,7 +2950,6 @@ const Ride = (() => {
     }
     return grid.get(Math.floor(x / 100) + ',' + Math.floor(y / 100)) || [];
   }
-  // where a point falls along a street: distance to it, the fraction along, and the street's heading there
   function onStreet(s, x, y) {
     const c = s.coords.map(([lo, la]) => [lo * KXm, la * KYm]);
     let best = { d: Infinity }, run = 0, total = 0;
@@ -2952,27 +2963,30 @@ const Ride = (() => {
     }
     return best;
   }
-  const angDiff = (a, b) => { const d = Math.abs(a - b) % 180; return Math.min(d, 180 - d); };   // either direction along a street
+  const angDiff = (a, b) => { const d = Math.abs(a - b) % 180; return Math.min(d, 180 - d); };
   function feed(lon, lat, acc = 10, t = Date.now(), gpsHead = null) {
     if (!on || paused || acc > MAX_ACC) return;
-    const x = lon * KXm, y = lat * KYm;
+    const x = lon * KXm, y = lat * KYm, ts = t / 1000;
     if (last) {
       const step = Math.hypot(x - last.x, y - last.y);
       if (step < MIN_STEP) return;
       heading = gpsHead != null && !isNaN(gpsHead) ? gpsHead : (Math.atan2(x - last.x, y - last.y) * 180 / Math.PI + 360) % 360;
+      // ride time counts the time between readings, but not long stops (over GAP_S) or pauses
+      if (lastT != null && ts - lastT > 0 && ts - lastT <= GAP_S) moving += ts - lastT;
+      dist += step;
     }
-    // readings can come seconds apart: check points every 8 m between the last one and this one (up to 120 m)
     const prev = last, steps = [];
     if (prev) { const L = Math.hypot(x - prev.x, y - prev.y); if (L <= 120) for (let d = 8; d < L; d += 8) steps.push([prev.x + (x - prev.x) * d / L, prev.y + (y - prev.y) * d / L]); }
     steps.push([x, y]);
-    last = { x, y };
-    pts.push([+lon.toFixed(6), +lat.toFixed(6), Math.round(t / 1000), Math.round(acc)]);
-    for (const [px, py] of steps) match(px, py, acc);
+    last = { x, y }; lastT = ts;
+    const p = [+lon.toFixed(6), +lat.toFixed(6), Math.round(ts), Math.round(acc), null];
+    pts.push(p);
+    Elev.at([lon, lat]).then(e => { if (e != null) { p[4] = Math.round(e * 10) / 10; if (pts[pts.length - 1] === p) bar(); } }).catch(() => {});
+    for (const [px, py] of steps) match(px, py, acc, ts);
     draw(); bar(); save();
     if (follow && mapReady) map.easeTo({ center: [lon, lat], zoom: Math.max(map.getZoom(), 17), duration: reducedMotion() ? 0 : 500 });
   }
-  // the street you're on: the nearest one within reach whose heading fits the way you're going
-  function match(x, y, acc) {
+  function match(x, y, acc, ts) {
     let best = null;
     for (const s of near(x, y)) {
       const o = onStreet(s, x, y);
@@ -2984,11 +2998,14 @@ const Ride = (() => {
     if (!best) return;
     const c = cover.get(best.s.cnn) || { lo: best.o.f, hi: best.o.f, n: 0 };
     c.lo = Math.min(c.lo, best.o.f); c.hi = Math.max(c.hi, best.o.f); c.n++; cover.set(best.s.cnn, c);
+    // when you were on each street, and which way along it you went
+    const v = seen.get(best.s.cnn) || { t0: ts, f0: best.o.f };
+    v.t1 = ts; v.f1 = best.o.f; seen.set(best.s.cnn, v);
     const need = best.s.len < SHORT_M ? 0.4 : COVER;
     if (c.hi - c.lo >= need && c.n >= 2 && !added.includes(best.s.cnn)) addStreet(best.s);
   }
   function addStreet(s) {
-    added.push(s.cnn);
+    if (!added.includes(s.cnn)) added.push(s.cnn);
     if (!state.results.some(r => r.cnn === s.cnn)) state.results = [...state.results, s];
     state.checked.add(s.cnn);
     if (!state.title) state.title = t('rideTitleList');
@@ -2996,12 +3013,48 @@ const Ride = (() => {
     render(); writeHash();
     toast(t('rideAdded', { name: P(s.street), n: added.length }));
   }
+  // totals for the ride: time, distance, average speed, climb and descent (from the elevation at each reading,
+  // ignoring wiggles under 2 m)
+  function totals() {
+    let up = 0, down = 0, base = null;
+    for (const p of pts) { if (p[4] == null) continue; if (base == null) { base = p[4]; continue; } const d = p[4] - base; if (d >= 2) { up += d; base = p[4]; } else if (d <= -2) { down -= d; base = p[4]; } }
+    return { secs: Math.round(moving), km: dist / 1000, kmh: moving > 0 ? dist / moving * 3.6 : 0, up, down };
+  }
+  // local date and time, YYYY-MM-DD HH:MM:SS
+  const local = ts => { const d = new Date(ts * 1000), z = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`; };
+  const clock = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? `${h}:${String(m).padStart(2, '0')}` : `${m}`) + `:${String(x).padStart(2, '0')}`; };
+  // the elevation along the ride, as a small line
+  function profileSVG(w = 240, h = 40) {
+    const e = pts.map(p => p[4]).filter(v => v != null);
+    if (e.length < 3) return '';
+    const step = Math.max(1, Math.floor(e.length / 80)), s = e.filter((_, i) => i % step === 0), lo = Math.min(...s), hi = Math.max(...s), r = Math.max(hi - lo, 5);
+    const d = s.map((v, i) => `${i ? 'L' : 'M'}${(i / (s.length - 1) * w).toFixed(1)},${(h - 2 - (v - lo) / r * (h - 4)).toFixed(1)}`).join('');
+    return `<svg class="rb-prof" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="${esc(t('rideProfile', { lo: Math.round(lo * M2FT), hi: Math.round(hi * M2FT) }))}"><path d="${d} L${w},${h} L0,${h} Z" class="area"/><path d="${d}" class="line"/></svg>`;
+  }
+  // per street, for exports: when you got there, time on it, speed, and the climb along the way you went
+  function statFor(cnn) {
+    const v = seen.get(cnn), s = Logic.db.byCnn.get(cnn); if (!v || !s) return null;
+    const secs = Math.max(0, (v.t1 || v.t0) - v.t0), pr = Elev.peek(cnn);
+    const rise = pr && pr.elev ? (pr.elev[4] - pr.elev[0]) * ((v.f1 ?? v.f0) >= v.f0 ? 1 : -1) : null;
+    return { ride_at: local(v.t0), ride_seconds: Math.round(secs), ride_kmh: secs > 0 ? +(s.len / secs * 3.6).toFixed(1) : '', ride_rise_ft: rise == null ? '' : Math.round(rise * M2FT) };
+  }
+  function mark(kind, text) {
+    const p = pts[pts.length - 1]; if (!p) { toast(t('rideNoFix')); return; }
+    const s = cur || (added.length ? Logic.db.byCnn.get(added[added.length - 1]) : null);
+    marks.push({ t: p[2], lon: p[0], lat: p[1], cnn: s ? s.cnn : '', kind, text: text || '' });
+    if (s && !state.checked.has(s.cnn)) addStreet(s); else render();
+    draw(); save();
+    toast(kind === 'note' ? t('rideNoted', { name: s ? P(s.street) : '' }) : t('rideMarked', { e: kind === 'up' ? '👍' : '👎', name: s ? P(s.street) : '' }));
+  }
+  const marksOf = cnn => marks.filter(m => m.cnn === cnn);
   function draw() {
     if (!mapReady || !map.getSource('ride')) return;
     const f = [];
     if (pts.length > 1) f.push({ type: 'Feature', properties: { part: 'track' }, geometry: { type: 'LineString', coordinates: pts.map(p => [p[0], p[1]]) } });
-    if (cur) f.push({ type: 'Feature', properties: { part: 'cur' }, geometry: { type: 'LineString', coordinates: cur.coords } });
-    if (pts.length) f.push({ type: 'Feature', properties: { part: 'me' }, geometry: { type: 'Point', coordinates: pts[pts.length - 1].slice(0, 2) } });
+    if (cur && on) f.push({ type: 'Feature', properties: { part: 'cur' }, geometry: { type: 'LineString', coordinates: cur.coords } });
+    marks.forEach(m => f.push({ type: 'Feature', properties: { part: 'mark', kind: m.kind }, geometry: { type: 'Point', coordinates: [m.lon, m.lat] } }));
+    if (pts.length && on) f.push({ type: 'Feature', properties: { part: 'me', follow }, geometry: { type: 'Point', coordinates: pts[pts.length - 1].slice(0, 2) } });
     map.getSource('ride').setData({ type: 'FeatureCollection', features: f });
   }
   function ensureLayers() {
@@ -3009,10 +3062,11 @@ const Ride = (() => {
     map.addSource('ride', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addLayer({ id: 'bp-ride-cur', type: 'line', source: 'ride', filter: ['==', ['get', 'part'], 'cur'], layout: { 'line-cap': 'round' }, paint: { 'line-color': '#FFC53D', 'line-width': 12, 'line-opacity': 0.75 } });
     map.addLayer({ id: 'bp-ride-track', type: 'line', source: 'ride', filter: ['==', ['get', 'part'], 'track'], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#1C7ED6', 'line-width': 2.5, 'line-dasharray': [1, 1.5] } });
-    map.addLayer({ id: 'bp-ride-me', type: 'circle', source: 'ride', filter: ['==', ['get', 'part'], 'me'], paint: { 'circle-radius': 8, 'circle-color': '#1C7ED6', 'circle-stroke-color': '#fff', 'circle-stroke-width': 3 } });
+    map.addLayer({ id: 'bp-ride-mark', type: 'circle', source: 'ride', filter: ['==', ['get', 'part'], 'mark'], paint: { 'circle-radius': 7, 'circle-color': ['match', ['get', 'kind'], 'up', '#2F9E44', 'down', '#E03131', '#FFC53D'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } });
+    // you: solid blue while the map follows you; hollow once you've panned away
+    map.addLayer({ id: 'bp-ride-me', type: 'circle', source: 'ride', filter: ['==', ['get', 'part'], 'me'], paint: { 'circle-radius': 9, 'circle-color': ['case', ['get', 'follow'], '#1C7ED6', '#fff'], 'circle-stroke-color': '#1C7ED6', 'circle-stroke-width': 4 } });
     arrangeLayers();
-    // panning the map by hand stops following you; the bar's ◎ starts it again
-    map.on('dragstart', () => { if (on) { follow = false; bar(); } });
+    map.on('dragstart', () => { if (on && follow) { follow = false; draw(); bar(); } });
   }
   async function wake() {
     try { if ('wakeLock' in navigator && document.visibilityState === 'visible') { lock = await navigator.wakeLock.request('screen'); } } catch (e) { lock = null; }
@@ -3021,41 +3075,68 @@ const Ride = (() => {
   function start(resume) {
     if (!('geolocation' in navigator)) { toast(t('rideNoGeo')); return; }
     ensureLayers();
-    on = true; paused = false; follow = true;
-    if (!resume) { pts = []; added = []; cover = new Map(); last = null; heading = null; }
+    on = true; paused = false; done = false; follow = true;
+    if (!resume) { pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; }
     state.route = true; const rc = $('route-on'); if (rc) rc.checked = true;
     if (watch != null) navigator.geolocation.clearWatch(watch);
     watch = navigator.geolocation.watchPosition(p => feed(p.coords.longitude, p.coords.latitude, p.coords.accuracy, p.timestamp, p.coords.heading),
       err => toast(t(err.code === 1 ? 'rideDenied' : 'rideNoFix')), { enableHighAccuracy: true, maximumAge: 2000, timeout: 30000 });
     wake(); bar(); save(); render(); writeHash();
     if (mapReady && map.getPitch() > 5) map.easeTo({ pitch: 0 });
-    // on a phone the map takes the whole screen while riding
     if (PHONE && !document.body.classList.contains('bp-full')) $('full-btn').click();
   }
-  function pause(p) { paused = p; if (p) { try { lock && lock.release(); } catch (e) { } lock = null; } else wake(); bar(); save(); }
+  function pause(p) { paused = p; if (p) { lastT = null; try { lock && lock.release(); } catch (e) { } lock = null; } else wake(); bar(); save(); }
+  // Stop keeps the bar open, with the ride's totals and a name, to save it
   function stop() {
-    on = false; paused = false;
+    on = false; paused = false; done = true;
     if (watch != null) navigator.geolocation.clearWatch(watch); watch = null;
     try { lock && lock.release(); } catch (e) { } lock = null;
     cur = null; draw(); bar(); save();
-    toast(t('rideStopped', { n: added.length }));
   }
-  // the bar over the map while riding
+  // "Valencia St to 21st St": where the ride started and ended
+  function suggestName() {
+    const a = Logic.db.byCnn.get(added[0]), b = Logic.db.byCnn.get(added[added.length - 1]);
+    if (!a) return t('rideTitleList');
+    return a === b || P(a.street) === P(b.street) ? P(a.street) : t('rideName', { a: P(a.street), b: P(b.street) });
+  }
+  function statsLine() {
+    const s = totals();
+    return t('rideStats', { time: clock(s.secs), km: s.km.toFixed(1), kmh: s.kmh.toFixed(1), up: Math.round(s.up * M2FT), down: Math.round(s.down * M2FT) });
+  }
   function bar() {
     let el = $('ride-bar');
     if (!el) { el = document.createElement('div'); el.id = 'ride-bar'; el.className = 'ride-bar'; document.querySelector('.map-wrap').appendChild(el); el.addEventListener('click', onBar); }
-    $('ride-btn').setAttribute('aria-pressed', on); $('ride-live-wrap').hidden = !on;
-    el.hidden = !on;
-    if (!on) return;
-    const km = added.reduce((a, c) => { const s = Logic.db.byCnn.get(c); return a + (s ? s.len : 0); }, 0) / 1000;
+    const rb = $('ride-btn'); rb.setAttribute('aria-pressed', on); rb.classList.toggle('is-riding', on);
+    rb.innerHTML = on ? `<span class="ride-dot"></span>${esc(t(paused ? 'ridePaused' : 'rideRiding'))}` : esc(t('rideBtn'));
+    const meB = $('ctl-me'); if (meB) meB.classList.toggle('is-following', on && follow);
+    el.hidden = !(on || done) || el.dataset.closed === '1';
+    $('ride-lost').hidden = !(on && !follow);
+    if (el.hidden) return;
+    if (done) {
+      const lp = SaveTo.lastProject && SaveTo.lastProject();
+      el.innerHTML = `<div class="rb-top"><b>${esc(t('rideDone'))}</b> <span>${esc(t('rideCount', { n: added.length, km: totals().km.toFixed(1) }))}</span></div>
+        <div class="rb-stats">${esc(statsLine())}</div>${profileSVG()}
+        <div class="rb-marks">${esc(t('rideMarksN', { up: marks.filter(m => m.kind === 'up').length, down: marks.filter(m => m.kind === 'down').length, notes: marks.filter(m => m.kind === 'note').length }))}</div>
+        <label class="rb-name"><span>${esc(t('rideSaveAs'))}</span><input type="text" id="ride-name" autocomplete="off" value="${esc(suggestName())}"></label>
+        <div class="rb-btns">
+          ${lp ? `<button type="button" class="btn small primary" data-rb="save-last">${esc(t('saveAddTo', { name: lp.name }))}</button>` : ''}
+          <button type="button" class="btn small${lp ? '' : ' primary'}" data-rb="save-new">${esc(t('saveSheetNew'))}</button>
+          <button type="button" class="btn small" data-rb="save-pick">${esc(t('saveSheetAdd'))}</button>
+          <button type="button" class="btn small" data-rb="csv">${esc(t('rideCsv'))}</button>
+          <button type="button" class="btn small" data-rb="close">${esc(t('rideClose'))}</button>
+        </div>`;
+      return;
+    }
     const here = cur ? `${P(cur.street)} · ${betweenText(cur)}` : t('rideNoStreet');
     const has = cur && state.checked.has(cur.cnn);
-    el.innerHTML = `<div class="rb-top"><b>${esc(t(paused ? 'ridePaused' : 'rideRiding'))}</b> <span>${esc(t('rideCount', { n: added.length, km: km.toFixed(1) }))}</span></div>
+    el.innerHTML = `${follow ? '' : `<button type="button" class="rb-follow" data-rb="follow">◎ ${esc(t('rideFollow'))}</button>`}
+      <div class="rb-react"><button type="button" class="rb-emoji" data-rb="up" aria-label="${esc(t('rideUp'))}">👍</button><button type="button" class="rb-emoji" data-rb="down" aria-label="${esc(t('rideDown'))}">👎</button>
+        <div class="rb-info"><div class="rb-top"><b>${esc(t(paused ? 'ridePaused' : 'rideRiding'))}</b> <span>${esc(t('rideCount', { n: added.length, km: totals().km.toFixed(1) }))}</span></div>
+        <div class="rb-stats">${esc(statsLine())}</div></div></div>
       <div class="rb-here">${esc(here)}</div>
       <div class="rb-btns">
-        ${cur ? `<button type="button" class="btn small" data-rb="${has ? 'drop' : 'add'}">${esc(t(has ? 'rideDrop' : 'rideAdd'))}</button>
-        <button type="button" class="btn small" data-rb="note">✎ ${esc(t('rideNote'))}</button>` : ''}
-        ${follow ? '' : `<button type="button" class="btn small" data-rb="follow">◎ ${esc(t('rideFollow'))}</button>`}
+        ${cur ? `<button type="button" class="btn small" data-rb="${has ? 'drop' : 'add'}">${esc(t(has ? 'rideDrop' : 'rideAdd'))}</button>` : ''}
+        <button type="button" class="btn small" data-rb="note">✎ ${esc(t('rideNote'))}</button>
         <button type="button" class="btn small" data-rb="${paused ? 'resume' : 'pause'}">${esc(t(paused ? 'rideResume' : 'ridePause'))}</button>
         <button type="button" class="btn small" data-rb="stop">${esc(t('rideStop'))}</button>
       </div>
@@ -3063,28 +3144,30 @@ const Ride = (() => {
   }
   function onBar(e) {
     const b = e.target.closest('[data-rb]'); if (!b) return;
-    const k = b.dataset.rb;
+    const k = b.dataset.rb, el = $('ride-bar');
     if (k === 'stop') stop(); else if (k === 'pause') pause(true); else if (k === 'resume') pause(false);
-    else if (k === 'follow') { follow = true; bar(); if (last) map.easeTo({ center: pts[pts.length - 1].slice(0, 2) }); }
+    else if (k === 'follow') { follow = true; draw(); bar(); if (pts.length) map.easeTo({ center: pts[pts.length - 1].slice(0, 2), zoom: Math.max(map.getZoom(), 17) }); }
+    else if (k === 'up' || k === 'down') mark(k);
     else if (k === 'add' && cur) addStreet(cur);
     else if (k === 'drop' && cur) { state.checked.delete(cur.cnn); added = added.filter(c => c !== cur.cnn); render(); writeHash(); bar(); save(); }
-    else if (k === 'note' && cur) {
-      const f = $('ride-bar').querySelector('.rb-note'); f.hidden = false; const i = f.elements.n; i.value = notes.get(cur.cnn) || ''; i.focus();
-      const s0 = cur;
-      f.onsubmit = ev => { ev.preventDefault(); const v = i.value.trim(); v ? notes.set(s0.cnn, v) : notes.delete(s0.cnn);
-        if (v && !state.checked.has(s0.cnn)) addStreet(s0); else render(); f.hidden = true; save(); toast(t('rideNoted', { name: P(s0.street) })); };
+    else if (k === 'note') {
+      const f = el.querySelector('.rb-note'); f.hidden = false; const i = f.elements.n; i.focus();
+      f.onsubmit = ev => { ev.preventDefault(); const v = i.value.trim(); if (v) mark('note', v); f.hidden = true; i.value = ''; };
     }
+    else if (k.startsWith('save-')) { $('save-name').value = $('ride-name').value.trim() || suggestName(); SaveTo.sheet(k === 'save-last' ? 'last' : k === 'save-new' ? 'new' : 'add'); }
+    else if (k === 'csv') Downloads.go('csv');
+    else if (k === 'close') { el.dataset.closed = '1'; done = false; bar(); save(); }
   }
-  // a ride left going (reload, crash): offer to carry on
   function restore() {
     let r = null; try { r = JSON.parse(localStorage.getItem(RKEY)); } catch (e) { }
     if (!r) return;
-    notes = new Map(r.notes || []);
-    if (r.on && Date.now() - (r.at || 0) < 6 * 3600e3) {
+    marks = r.marks || []; seen = new Map(r.seen || []); moving = r.moving || 0; dist = r.dist || 0;
+    if ((r.on || r.done) && Date.now() - (r.at || 0) < 6 * 3600e3) {
       pts = r.pts || []; added = r.added || [];
       const missing = added.map(c => Logic.db.byCnn.get(c)).filter(s => s && !state.results.some(x => x.cnn === s.cnn));
-      if (missing.length) { state.results = [...state.results, ...missing]; missing.forEach(s => state.checked.add(s.cnn)); }
-      showNext(t('rideResumeAsk', { n: added.length }), [[t('rideResume'), () => start(true)], [t('rideStop'), () => { on = true; stop(); }]]);
+      if (missing.length) { state.results = [...state.results, ...missing]; missing.forEach(s => state.checked.add(s.cnn)); state.route = true; }
+      if (r.on) showNext(t('rideResumeAsk', { n: added.length }), [[t('rideResume'), () => start(true)], [t('rideStop'), () => { on = true; ensureLayers(); stop(); }]]);
+      else { done = true; ensureLayers(); draw(); bar(); }
       render();
     }
   }
@@ -3096,13 +3179,32 @@ const Ride = (() => {
   }
   return {
     setup() {
-      $('ride-btn').addEventListener('click', () => on ? stop() : start(false));
-      $('ride-live').addEventListener('click', () => { const el = $('ride-bar'); if (el) el.hidden = !el.hidden; });
+      $('ride-lost').addEventListener('click', () => { const b = document.querySelector('#ride-bar [data-rb="follow"]'); if (b) b.click(); });
+      $('ride-btn').addEventListener('click', () => {
+        const el = $('ride-bar');
+        if (on) { if (el) { el.dataset.closed = el.hidden ? '' : '1'; bar(); } return; }   // riding: show or hide the bar
+        if (el) el.dataset.closed = '';
+        start(false);
+      });
       restore();
     },
-    feed, start, stop, get on() { return on; }, get added() { return added.slice(); },
-    note: cnn => notes.get(cnn) || '',
-    noteRow: s => notes.has(s.cnn) ? `<dt>${esc(t('noteRow'))}</dt><dd class="ride-note">${esc(notes.get(s.cnn))}</dd>` : '',
+    feed, start, stop, mark, get on() { return on; }, get added() { return added.slice(); }, totals, statFor, suggestName,
+    note: cnn => marksOf(cnn).filter(m => m.kind === 'note').map(m => m.text).join('; '),
+    // a street's ride details for exports
+    fields: cnn => {
+      const st = statFor(cnn), ms = marksOf(cnn);
+      return st || ms.length ? { ...(st || {}), thumbs_up: ms.filter(m => m.kind === 'up').length || '', thumbs_down: ms.filter(m => m.kind === 'down').length || '',
+        note: ms.filter(m => m.kind === 'note').map(m => m.text).join('; ') } : {};
+    },
+    // every 👍 / 👎 / note with where and when, for a sheet tab or a file
+    marksRows: () => marks.map(m => { const s = Logic.db.byCnn.get(m.cnn);
+      return { time: local(m.t), mark: m.kind === 'up' ? '👍' : m.kind === 'down' ? '👎' : 'note', text: m.text,
+        lat: m.lat, lon: m.lon, cnn: m.cnn, street: s ? P(s.street) : '', from_street: s ? P(s.f) : '', to_street: s ? P(s.t) : '' }; }),
+    noteRow: s => { const ms = marksOf(s.cnn); if (!ms.length) return '';
+      const up = ms.filter(m => m.kind === 'up').length, down = ms.filter(m => m.kind === 'down').length, notes = ms.filter(m => m.kind === 'note').map(m => m.text);
+      return `<dt>${esc(t('noteRow'))}</dt><dd class="ride-note">${up ? `👍 ${up} ` : ''}${down ? `👎 ${down} ` : ''}${notes.map(esc).join('<br>')}</dd>`; },
+    summary: () => ({ ...totals(), name: suggestName() }),
+    hasRide: () => added.length > 0 && (on || done || seen.size > 0),
   };
 })();
 // "601–649": the lowest and highest address on the block, both sides
@@ -3558,7 +3660,7 @@ function record(s) {
   const sides = Logic.addressSides(s);
   const side = p => { const x = sides.find(y => y.parity === p); return x ? x.side : ''; };
   return {
-    type: 'street', cnn: s.cnn, streetname: s.street, from_street: s.f, to_street: s.t, note: Ride.note(s.cnn),
+    type: 'street', cnn: s.cnn, streetname: s.street, from_street: s.f, to_street: s.t, note: Ride.note(s.cnn), ...Ride.fields(s.cnn),
     lf_fadd: s.lf[0], lf_toadd: s.lf[1], rt_fadd: s.rt[0], rt_toadd: s.rt[1],
     odd_side: side('odd'), even_side: side('even'),
     divided_side: s.partners.length ? s.dividedSide : '',
@@ -3635,7 +3737,8 @@ const SaveTo = (() => {
   const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
   const nameOf = () => $('save-name').value.trim() || t(state.route ? 'saveDefaultRoute' : 'saveDefaultSel');
   const q = tab => `'${String(tab).replace(/'/g, "''")}'`;
-  const ROUTE_COLS = ['route', 'kind', 'streets', 'intersections', 'gaps', 'length_km', 'saved', 'tab', 'tab_id', 'tab_link', 'block_party_link', 'made_with'];
+  const ROUTE_COLS = ['route', 'kind', 'streets', 'intersections', 'gaps', 'length_km', 'saved', 'tab', 'tab_id', 'tab_link', 'block_party_link', 'made_with',
+    'ride_time', 'ride_km', 'avg_kmh', 'climb_ft', 'descent_ft', 'thumbs_up', 'thumbs_down', 'notes', 'marks_tab_link'];
   // the last project sheet saved to, for "Add to <name>"
   const PKEY = 'bp-sheet-project';
   const lastProject = () => { try { return JSON.parse(localStorage.getItem(PKEY)); } catch (e) { return null; } };
@@ -3653,6 +3756,7 @@ const SaveTo = (() => {
       streets: streets.length, ints: segs.length - streets.length, gaps: gaps.length, km: (lenM / 1000).toFixed(2), link: linkFor(segs) };
   }
   return {
+    lastProject,
     prepare() { showLast(); if (!GoogleDrive.ready) GoogleDrive.config(SFBlocks.url('matcher/google.json')).catch(() => {}); },
     // A project is one Google Sheet: a "Routes" tab with a row per saved route or list, and a tab for each one.
     // Each row has the tab's name and a link by the tab's id (gid), which still works after a rename; the Routes
@@ -3680,17 +3784,29 @@ const SaveTo = (() => {
         if (!rt) { const id = await GoogleDrive.addTab(proj.id, t('saveTabRoutes'), 200, ROUTE_COLS.length + 2); rt = { title: t('saveTabRoutes'), sheetId: id };
           await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A1`, [ROUTE_COLS]); tabs.push(rt); }
         proj.routesTab = rt.sheetId;
+        await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A1`, [ROUTE_COLS]);
         // this route's own tab
         const have = new Set(tabs.map(x => x.title)); let tab = name.slice(0, 90), k = 2;
         while (have.has(tab)) tab = `${name.slice(0, 85)} (${k++})`;
         const gid = await GoogleDrive.addTab(proj.id, tab, g.rows.length + 10, g.cols.length + 2);
         await GoogleDrive.putValues(proj.id, `${q(tab)}!A1`, g.rows);
+        const base = `https://docs.google.com/spreadsheets/d/${proj.id}/edit`;
+        // a ride's 👍 / 👎 / notes, each with where and when, on a tab of their own
+        let marksGid = null; const mk = Ride.hasRide() ? Ride.marksRows() : [];
+        if (mk.length) {
+          const mcols = Object.keys(mk[0]), mt = `${tab.slice(0, 80)} ${t('saveTabMarks')}`;
+          marksGid = await GoogleDrive.addTab(proj.id, mt, mk.length + 5, mcols.length + 1);
+          await GoogleDrive.putValues(proj.id, `${q(mt)}!A1`, [mcols, ...mk.map(r => mcols.map(c => r[c] == null ? '' : String(r[c])))]);
+        }
+        const rs = Ride.hasRide() ? Ride.summary() : null;
+        const rideCells = rs ? { ride_time: new Date(rs.secs * 1000).toISOString().slice(11, 19), ride_km: rs.km.toFixed(2), avg_kmh: rs.kmh.toFixed(1),
+          climb_ft: Math.round(rs.up * M2FT), descent_ft: Math.round(rs.down * M2FT), thumbs_up: mk.filter(m => m.mark === '👍').length, thumbs_down: mk.filter(m => m.mark === '👎').length,
+          notes: mk.filter(m => m.mark === 'note').length, marks_tab_link: marksGid != null ? `${base}#gid=${marksGid}` : '' } : {};
         // and its row on Routes
         const used = await GoogleDrive.getValues(proj.id, `${q(rt.title)}!A:A`), next = Math.max(2, used.length + 1);
-        const base = `https://docs.google.com/spreadsheets/d/${proj.id}/edit`;
         await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A${next}`, [ROUTE_COLS.map(c => ({ route: name, kind: g.isRoute ? 'route' : 'selection', streets: g.streets, intersections: g.ints,
           gaps: g.isRoute ? g.gaps : '', length_km: g.isRoute ? g.km : '', saved: today(), tab, tab_id: gid, tab_link: `${base}#gid=${gid}`, block_party_link: g.link,
-          made_with: `Block Party ${_BUILD_VERSION}` })[c] ?? '')]);
+          made_with: `Block Party ${_BUILD_VERSION}`, ...rideCells })[c] ?? '')]);
         remember(proj);
         const where = t('saveWhere', { project: proj.name, tab });
         status(`${esc(t('saveDoneN', { n: g.streets, where }))} <a href="${esc(`${base}#gid=${gid}`)}" target="_blank" rel="noopener">${esc(t('saveOpen'))}</a>`, true);
@@ -4252,7 +4368,7 @@ const LAYER_ORDER = [
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-me', 'bp-gaps', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
+  ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-me', 'bp-gaps', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
@@ -9830,7 +9946,7 @@ function setupMapMenus() {
   $('more-btn').addEventListener('click', () => { close(); setMore(!ui.classList.contains('more-open')); });
   ui.addEventListener('click', e => {
     if (!PHONE || !ui.classList.contains('more-open')) return;
-    if (e.target.closest('#layers-btn, #areas-btn, #quiet-btn, #focus-btn, #table-btn, #nearby-btn')) setTimeout(() => setMore(false));
+    if (e.target.closest('#layers-btn, #areas-btn, #quiet-btn, #focus-btn, #table-btn')) setTimeout(() => setMore(false));
   });
   // the badge on Settings: how many Filter boxes are on
   const syncMoreBadge = () => { const n = quietOn().length, b = $('more-badge'); b.hidden = !n; b.textContent = n; };
