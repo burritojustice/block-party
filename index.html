@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v93 -->
+<!-- build: v94 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -760,6 +760,9 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
 .ride-lost[hidden] { display: none; }
 .seg.piece .piece-tag { border-style: dashed; }
 .seg.piece { border-left: 4px dashed #FF3D7F; }
+.gap-connect { font: 700 12px/1 system-ui, sans-serif; color: #fff; background: #E03131; border: 2px solid #fff; border-radius: 10px; padding: 5px 8px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.25); white-space: nowrap; }
+.gap-connect:hover { background: #C92A2A; }
+.gap-bar { display: flex; gap: 10px; align-items: center; margin: 4px 0 8px; } .gap-bar[hidden] { display: none; } .gap-bar small { color: var(--ink-soft); }
 #ride-btn.is-riding { display: inline-flex; align-items: center; gap: 6px; background: #1C7ED6; color: #fff; border-color: #1C7ED6; }
 .bp-ctl #ctl-me.is-following { background: #1C7ED6; } .bp-ctl #ctl-me.is-following svg { stroke: #fff; }
 .ride-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; animation: ride-blink 1.2s infinite; }
@@ -1121,6 +1124,7 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
     </div>
     <p class="results-sub" id="results-sub"></p>
     <label class="route-wrap" id="route-wrap" hidden data-i18n-title="routeTitle" title=""><input autocomplete="off" type="checkbox" id="route-on"> <span data-i18n="routeOn">This is a route</span><small data-i18n="routeHint">shows its length and any gaps under 150 m</small></label>
+    <div class="gap-bar" id="gap-bar" hidden><button type="button" class="btn small" id="gap-connect-all">Connect the gap</button><small data-i18n="connectHint">Connectors are straight lines between the loose ends, saved with the route. Remove one like any card.</small></div>
     <ul class="seg-list feat-list" id="feat-list"></ul>
     <ul class="seg-list" id="seg-list"></ul>
     <button type="button" class="btn small list-clear" id="clear-sel-bottom" data-i18n="clearSel">Clear selections</button>
@@ -1360,7 +1364,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v93';
+const _BUILD_VERSION = 'v94';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1603,6 +1607,10 @@ const I18N = {
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
     moreBtn: 'Menu', moreTitle: 'Map, layers, areas, Nearby, Filter, Focus and Table', ctl3d: '3D: tilt the map over the hills (tap again for flat)', ctl2d: 'Flat map, seen from above', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
     censusLoad: 'Count people and homes',
+    piece_bike: 'Bike path', pieceFromBike: 'SF bike network ({cls}, no CNN)',
+    connectGap: 'Connect · {m} m', connectGapTitle: 'Put a straight connector across this gap', connectOne: 'Connect the gap', connectAll: 'Connect all {n} gaps',
+    connectHint: 'Connectors are straight lines between the loose ends, saved with the route. Remove one like any card.',
+    connected: 'Connected ({ft} ft)', connectedN: 'Connected {n} gaps',
     piece_line: 'Line from a file', piece_ride: 'Off-street stretch', piece_connector: 'Connector', piece_drawn: 'Drawn line', piece_osm: 'OSM path',
     pieceAdded: 'Added {name} ({ft} ft) to the selection', pieceNear: 'near', pieceLoose: 'not at a street', pieceEnd: 'end of a piece',
     pieceFromRide: 'Ride on {date}', rideOffAdded: 'Off-street stretch added ({ft} ft)', pieceKindRow: 'Piece', pieceNotCity: 'not a city street', pieceEnds: 'Ends', pieceFrom: 'From',
@@ -2752,6 +2760,41 @@ function setResults(segs, title, kind, checkedCnns) {
   state.checked = new Set(checkedCnns ?? segs.map(s => s.cnn));
   render(); writeHash();
 }
+/* Encoded polylines (Google's algorithm). Saved routes and links use 6 digits ("polyline6", about 0.1 m), the
+   same as Valhalla and OSRM: decode with precision 6, or the points come out 10× off. Order is lat, lon. */
+function polyEnc(c, prec = 6) {
+  const f = 10 ** prec; let out = '', px = 0, py = 0;
+  const one = v => { v = v < 0 ? ~(v << 1) : v << 1; while (v >= 0x20) { out += String.fromCharCode((0x20 | (v & 0x1f)) + 63); v >>= 5; } out += String.fromCharCode(v + 63); };
+  for (const [x, y] of c) { const X = Math.round(x * f), Y = Math.round(y * f); one(Y - py); one(X - px); px = X; py = Y; }
+  return out;
+}
+function polyDec(str, prec = 6) {
+  const f = 10 ** prec, out = []; let i = 0, x = 0, y = 0;
+  const one = () => { let r = 0, sh = 0, b; do { b = str.charCodeAt(i++) - 63; r |= (b & 0x1f) << sh; sh += 5; } while (b >= 0x20 && i <= str.length); return r & 1 ? ~(r >> 1) : r >> 1; };
+  while (i < str.length) { y += one(); x += one(); out.push([x / f, y / f]); }
+  return out;
+}
+// a route's pieces in travel order: each line turned so it starts where the one before ended
+function orientChain(items) {
+  const d = (a, b) => Math.hypot((a[0] - b[0]) * 88000, (a[1] - b[1]) * 110540);
+  const lines = items.filter(it => it.c && it.c.length > 1);
+  lines.forEach((it, i) => {
+    if (i === 0) { const nx = lines[1]; if (!nx) return; const ends = [nx.c[0], nx.c[nx.c.length - 1]];
+      const first = it.c[0], last = it.c[it.c.length - 1];
+      if (Math.min(...ends.map(e => d(first, e))) < Math.min(...ends.map(e => d(last, e)))) it.c = [...it.c].reverse(); return; }
+    const prev = lines[i - 1].c[lines[i - 1].c.length - 1];
+    if (d(it.c[it.c.length - 1], prev) < d(it.c[0], prev)) it.c = [...it.c].reverse();
+  });
+  return items;
+}
+// the whole route as one line, joining the pieces end to end
+function routeLine(items) {
+  const out = [];
+  for (const it of items) { if (!it.c || it.c.length < 2) continue;
+    const c = out.length && Math.hypot((it.c[0][0] - out[out.length - 1][0]) * 88000, (it.c[0][1] - out[out.length - 1][1]) * 110540) < 0.5 ? it.c.slice(1) : it.c;
+    out.push(...c); }
+  return out;
+}
 const renderWaits = new Set();
 function renderWhen(k, ready, load) {
   if (ready() || renderWaits.has(k)) return;
@@ -2771,7 +2814,7 @@ const isPiece = s => !!(s && s.piece);
 const isStreet = s => !!s && !isInt(s) && !s.piece;
 const Pieces = (() => {
   const SNAP_M = 12, NEAR_M = 40, KXm = 111320 * Math.cos(37.76 * Math.PI / 180), KYm = 110540;
-  const KINDS = ['line', 'ride', 'connector', 'drawn', 'osm'];
+  const KINDS = ['line', 'ride', 'connector', 'bike', 'drawn', 'osm'];
   let next = 0;
   const dm = (a, b) => Math.hypot((a[0] - b[0]) * KXm, (a[1] - b[1]) * KYm);
   const segDist = (x, y, a, b) => { const vx = b[0] - a[0], vy = b[1] - a[1], L = vx * vx + vy * vy, u = L ? Math.max(0, Math.min(1, ((x - a[0]) * vx + (y - a[1]) * vy) / L)) : 0;
@@ -2824,17 +2867,19 @@ const Pieces = (() => {
     const id = -(++next);
     const snap = (p, first) => { let c = cornerAt(p, SNAP_M); if (c == null && o.reach) { c = cornerAt(p, o.reach);
       if (c != null) { const n = Logic.db.nodes.get(c); coords = first ? [[n.x, n.y], ...coords] : [...coords, [n.x, n.y]]; } } return c; };
-    const fn = snap(coords[0], true) ?? `p${-id}a`, tn = snap(coords[coords.length - 1], false) ?? `p${-id}b`;
+    const fn = o.fn ?? snap(coords[0], true) ?? `p${-id}a`, tn = o.tn ?? snap(coords[coords.length - 1], false) ?? `p${-id}b`;
     const a = coords[0], b = coords[coords.length - 1];
     const near = (end, snapped) => cornerName(typeof snapped === 'string' ? cornerAt(end, NEAR_M) : snapped);
     const name = o.name || t('piece_' + o.kind);
     return { piece: true, pk: KINDS.includes(o.kind) ? o.kind : 'line', cnn: id, street: name, name, coords, len: lenOf(coords), fn, tn,
       f: near(a, fn), t: near(b, tn), atF: typeof fn !== 'string', atT: typeof tn !== 'string', src: o.src || '', partners: [], active: true };
   }
-  // add to the selection, checked, at the end (the route's order)
-  function add(o, quiet) {
+  // add to the selection, checked: at the end (the route's order), or right after `after`
+  function add(o, quiet, after) {
     const pc = o.piece ? o : make(o); if (!pc) return null;
-    state.results = [...state.results, pc]; state.checked.add(pc.cnn);
+    const at = after ? state.results.indexOf(after) : -1;
+    state.results = at < 0 ? [...state.results, pc] : [...state.results.slice(0, at + 1), pc, ...state.results.slice(at + 1)];
+    state.checked.add(pc.cnn);
     if (!state.title) state.title = t('linkedBlocks');
     if (!quiet) { render(); writeHash(); toast(t('pieceAdded', { name: pc.name, ft: fmtFt(pc.len) })); }
     return pc;
@@ -2874,19 +2919,61 @@ const Pieces = (() => {
       wkt: wktOf(s), street_view: streetViewUrl(s) };
   }
   const text = s => [`${s.name} (${t('piece_' + s.pk)})`, ends(s), `${t('length')}: ${t('ft', { n: fmtFt(s.len) })}`, ...(s.src ? [`${t('pieceFrom')}: ${s.src}`] : [])].join('\n');
-  // for links: the cnn= tokens in order, and pc= for the pieces among them
+  // a straight connector across a gap: g.from / g.to are the two loose ends ({ n: corner, p: point })
+  const connectorOf = (a, b, pa, pb) => make({ coords: [pa, pb], kind: 'connector', fn: a, tn: b });
+  function connect(g, quiet) {
+    const pc = connectorOf(g.from.n, g.to.n, g.from.p, g.to.p); if (!pc) return null;
+    add(pc, true, g.from.s);
+    if (!quiet) { render(); writeHash(); toast(t('connected', { ft: fmtFt(pc.len) })); }
+    return pc;
+  }
+  function connectAll() {
+    let n = 0, gs;
+    while ((gs = routeGaps()).length && n < 50) { connect(gs[0], true); n++; }   // each one can change the next shortest
+    render(); writeHash(); if (n) toast(t('connectedN', { n }));
+  }
+  // a connector between two street corners from a link (x:<corner>-<corner>)
+  function connectorFromHash(tok) {
+    const [a, b] = tok.slice(2).split('-').map(Number), A = Logic.db.nodes.get(a), B = Logic.db.nodes.get(b);
+    return A && B ? connectorOf(a, b, [A.x, A.y], [B.x, B.y]) : null;
+  }
+  // for links: the cnn= tokens in order; a straight connector between two corners is x:<a>-<b>, other pieces
+  // p0, p1… with their lines in pc6= (6-digit polylines; older links have pc= at 5 digits)
   function hashOf(list) {
     const pcs = [], toks = list.map(o => { if (!isPiece(o)) return String(o.cnn);
-      pcs.push([o.pk, o.name === t('piece_' + o.pk) ? '' : encodeURIComponent(o.name).replace(/!/g, '%21'), enc(simplify(o.coords, 1))].join('!')); return 'p' + (pcs.length - 1); });
+      if (o.pk === 'connector' && o.coords.length === 2 && typeof o.fn === 'number' && typeof o.tn === 'number') return `x:${o.fn}-${o.tn}`;
+      pcs.push([o.pk, o.name === t('piece_' + o.pk) ? '' : encodeURIComponent(o.name).replace(/!/g, '%21'), polyEnc(simplify(o.coords, 0.5), 6)].join('!')); return 'p' + (pcs.length - 1); });
     return { cnn: toks.join(','), pc: pcs.length ? encodeURIComponent(pcs.join(';')) : '' };
   }
-  function fromHash(pc) {
+  function fromHash(pc, prec = 6) {
     return (pc || '').split(';').filter(Boolean).map(x => { const [k, n, l] = x.split('!');
-      try { return make({ kind: k, name: decodeURIComponent(n || ''), coords: dec(l || '') }); } catch (e) { return null; } });
+      try { return make({ kind: k, name: decodeURIComponent(n || ''), coords: polyDec(l || '', prec) }); } catch (e) { return null; } });
+  }
+  // the bike network's paths that have no CNN (park paths and the like) go in as pieces
+  const bikeKey = f => 'bike:' + f.geometry.coordinates.slice(0, 2).flat().map(v => v.toFixed(5)).join(',');
+  async function bikeAt(ll) {
+    const d = await fetchLayer('bike'); if (!d) return null;
+    let best = null, bd = 25;
+    for (const f of d.features) { if (f.properties.cnn) continue;
+      const parts = f.geometry.type === 'LineString' ? [f.geometry.coordinates] : f.geometry.coordinates;
+      for (const c of parts) for (let i = 1; i < c.length; i++) {
+        const m = segDist(ll[0] * KXm, ll[1] * KYm, [c[i - 1][0] * KXm, c[i - 1][1] * KYm], [c[i][0] * KXm, c[i][1] * KYm]);
+        if (m < bd) { bd = m; best = f; } } }
+    return best;
+  }
+  async function toggleBike(ll) {
+    const f = await bikeAt(ll); if (!f) return false;
+    const k = bikeKey(f), have = state.results.filter(r => r.fkey === k);
+    if (have.length) { state.results = state.results.filter(r => r.fkey !== k); have.forEach(r => state.checked.delete(r.cnn)); render(); writeHash(); return true; }
+    const parts = f.geometry.type === 'LineString' ? [f.geometry.coordinates] : f.geometry.coordinates;
+    const made = parts.map(c => make({ coords: c.map(p => [p[0], p[1]]), kind: 'bike', src: t('pieceFromBike', { cls: f.properties.cls || '' }) })).filter(Boolean);
+    made.forEach(pc => { pc.fkey = k; add(pc, true); });
+    render(); writeHash(); if (made[0]) toast(t('pieceAdded', { name: made[0].name, ft: fmtFt(made.reduce((a, p) => a + p.len, 0)) }));
+    return true;
   }
   function draw() {
     if (!mapReady || !map.getSource('pieces')) return;
-    map.getSource('pieces').setData(fc(state.results.filter(isPiece).map(s => ({ type: 'Feature', properties: { cnn: s.cnn, on: state.checked.has(s.cnn) },
+    map.getSource('pieces').setData(fc(state.results.filter(isPiece).map(s => ({ type: 'Feature', properties: { cnn: s.cnn, on: state.checked.has(s.cnn), kind: s.pk, label: s.pk === 'connector' ? `${Math.round(s.len)} m` : '' },
       geometry: { type: 'LineString', coordinates: s.coords } }))));
   }
   function addLayers() {
@@ -2896,13 +2983,23 @@ const Pieces = (() => {
       paint: { 'line-color': '#FFC53D', 'line-width': w(8, 20) } });
     map.addLayer({ id: 'bp-piece', type: 'line', source: 'pieces', layout: { 'line-cap': 'butt', 'line-join': 'round' },
       paint: { 'line-color': ['case', ['get', 'on'], '#FF3D7F', '#6D4AF5'], 'line-width': w(3.5, 9), 'line-dasharray': [1.6, 1] } });
+    map.addLayer({ id: 'bp-piece-label', type: 'symbol', source: 'pieces', filter: ['==', ['get', 'kind'], 'connector'],
+      layout: { 'symbol-placement': 'line-center', 'text-field': ['get', 'label'], 'text-size': 12, 'text-font': LABEL_FONT, 'text-allow-overlap': true },
+      paint: { 'text-color': '#C2255C', 'text-halo-color': '#fff', 'text-halo-width': 2 } });
     map.addLayer({ id: 'bp-piece-hit', type: 'line', source: 'pieces', paint: { 'line-color': '#000', 'line-opacity': 0, 'line-width': 18 } });
+    // a bike path with no CNN: click to add it as a piece (a street under the click wins)
+    for (const id of ['bp-lyr-bike', 'bp-lyr-bike-dash']) {
+      map.on('click', id, e => { const f = e.features[0]; if (!f || f.properties.cnn) return;
+        if (map.queryRenderedFeatures(e.point, { layers: ['bp-all-hit'].filter(l => map.getLayer(l)) }).length) return;
+        toggleBike([e.lngLat.lng, e.lngLat.lat]); });
+      map.on('mousemove', id, e => { const f = e.features[0]; if (f && !f.properties.cnn) map.getCanvas().style.cursor = 'pointer'; });
+    }
     map.on('click', 'bp-piece-hit', e => { const c = e.features[0] && e.features[0].properties.cnn, s = state.results.find(r => r.cnn === c); if (!s) return;
       CardView.setOpen(c); goToCard(s); requestAnimationFrame(() => jumpToCard(c)); });
     map.on('mouseenter', 'bp-piece-hit', () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'bp-piece-hit', () => { map.getCanvas().style.cursor = ''; });
   }
-  return { make, add, cardHTML, record, text, hashOf, fromHash, draw, addLayers, simplify, cornerAt, enc, dec, ends };
+  return { make, add, cardHTML, record, text, hashOf, fromHash, draw, addLayers, simplify, cornerAt, ends, connect, connectAll, connectorFromHash, toggleBike, bikeAt };
 })();
 
 /* ---------- results rendering ---------- */
@@ -2978,10 +3075,19 @@ function routeGaps() {
   }
   return out;
 }
+let gapMarkers = [];
 function drawGaps(gaps) {
   if (typeof map === 'undefined' || !mapReady || !map.getSource('gaps')) return;
-  map.getSource('gaps').setData(fc(gaps.map(g => ({ type: 'Feature', properties: { m: g.m, label: `${g.m} m` },
+  map.getSource('gaps').setData(fc(gaps.map(g => ({ type: 'Feature', properties: { m: g.m, label: '' },
     geometry: { type: 'LineString', coordinates: [g.from.p, g.to.p] } }))));
+  // a Connect button in the middle of each gap: one click puts a connector there
+  gapMarkers.forEach(m => m.remove());
+  gapMarkers = gaps.map(g => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'gap-connect';
+    b.innerHTML = `<b>＋</b> ${esc(t('connectGap', { m: g.m }))}`; b.title = t('connectGapTitle');
+    b.addEventListener('click', e => { e.stopPropagation(); Pieces.connect(g); });
+    return new maplibregl.Marker({ element: b }).setLngLat([(g.from.p[0] + g.to.p[0]) / 2, (g.from.p[1] + g.to.p[1]) / 2]).addTo(map);
+  });
 }
 // Reads the parcel and map tiles for cards as they come near the screen (and the first few right away),
 // then redraws once per batch. A long route no longer reads every card's tiles before you scroll to it.
@@ -3039,6 +3145,8 @@ function render() {
   $('results-sub').textContent = (state.kind === 'pick' ? t('subPick', { what }) : t('subAll', { what }))
     + (state.route && routeSegs.length ? ' · ' + t('routeKm', { km: routeKm.toFixed(routeKm < 10 ? 2 : 1) }) : '')
     + (gaps.length ? ' · ' + t(gaps.length === 1 ? 'gaps1' : 'gapsN', { n: gaps.length, list: gaps.map(g => `${g.m} m`).join(', ') }) : '');
+  $('gap-bar').hidden = !gaps.length;
+  $('gap-connect-all').textContent = t(gaps.length === 1 ? 'connectOne' : 'connectAll', { n: gaps.length });
   if (!state.title && nBlk) $('results-title').textContent = t('linkedBlocks');
   ['apply', 'add-cross', 'add-around', 'area-save', 'pick-along'].forEach(id => $(id).disabled = !n);
   ['copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson', 'save-sheet-new', 'save-sheet-add', 'save-sheet-last', 'save-airtable'].forEach(id => $(id).disabled = !n && !nBlk);
@@ -3390,6 +3498,7 @@ const Ride = (() => {
   }
   return {
     setup() {
+      $('gap-connect-all').addEventListener('click', () => Pieces.connectAll());
       $('ride-lost').addEventListener('click', () => { const b = document.querySelector('#ride-bar [data-rb="follow"]'); if (b) b.click(); });
       $('ride-btn').addEventListener('click', () => {
         const el = $('ride-bar');
@@ -3908,11 +4017,17 @@ function gapRecord(g) {
     to_street: t('gapFrom', { street: g.to.s.street, corner: corner(g.to.n) }), length_ft: fmtFt(g.m), gap_from_corner: g.from.n, gap_to_corner: g.to.n,
     wkt: `LINESTRING (${[g.from.p, g.to.p].map(c => `${c[0].toFixed(5)} ${c[1].toFixed(5)}`).join(', ')})` };
 }
-function withGaps(segs, recs) {
-  const gaps = state.route ? routeGaps() : []; if (!gaps.length) return recs;
-  const after = new Map(); gaps.forEach(g => { const k = g.from.s.cnn; if (!after.has(k)) after.set(k, []); after.get(k).push(gapRecord(g)); });
-  return recs.flatMap((r, i) => [r, ...(segs[i] && after.get(segs[i].cnn) || [])]);
+// rows in order, with each gap after the street it leaves from; every row with a line gets its polyline
+// (6 digits), turned the way the route goes when it's a route
+function routeItems(segs, recs) {
+  const gaps = state.route ? routeGaps() : [];
+  const after = new Map(); gaps.forEach(g => { const k = g.from.s.cnn; if (!after.has(k)) after.set(k, []); after.get(k).push({ r: gapRecord(g), c: [g.from.p, g.to.p] }); });
+  const items = recs.flatMap((r, i) => { const s = segs[i]; return [{ r, c: s && !isInt(s) && s.coords ? s.coords : null }, ...(s && after.get(s.cnn) || [])]; });
+  if (state.route) orientChain(items);
+  items.forEach(it => { it.r.polyline = it.c && it.c.length > 1 ? polyEnc(it.c) : ''; });
+  return items;
 }
+function withGaps(segs, recs) { return routeItems(segs, recs).map(it => it.r); }
 function copyRecords(segs) {
   const rows = withGaps(segs, segs.map(record).map(r => ({ kind: r.type || 'street', ...r })));
   let picked = []; try { picked = SelAreas.exportRows().map(r => r.props); } catch (e) { }
@@ -3940,7 +4055,7 @@ const baseUrl = () => location.origin + location.pathname;
 function linkFor(segs) {
   let pk = ''; try { pk = SelAreas.pickHash(); } catch (e) { }
   const ph = Pieces.hashOf(segs);
-  const parts = [segs.length ? 'cnn=' + ph.cnn : '', ph.pc ? 'pc=' + ph.pc : '', pk ? 'pick=' + pk : '', state.route && segs.length > 1 ? 'route=1' : ''].filter(Boolean);
+  const parts = [segs.length ? 'cnn=' + ph.cnn : '', ph.pc ? 'pc6=' + ph.pc : '', pk ? 'pick=' + pk : '', state.route && segs.length > 1 ? 'route=1' : ''].filter(Boolean);
   return baseUrl() + (parts.length ? '#' + parts.join('&') : '');
 }
 
@@ -3953,7 +4068,7 @@ const SaveTo = (() => {
   const nameOf = () => $('save-name').value.trim() || t(state.route ? 'saveDefaultRoute' : 'saveDefaultSel');
   const q = tab => `'${String(tab).replace(/'/g, "''")}'`;
   const ROUTE_COLS = ['route', 'kind', 'streets', 'intersections', 'gaps', 'length_km', 'saved', 'tab', 'tab_id', 'tab_link', 'block_party_link', 'made_with',
-    'pieces', 'ride_time', 'ride_km', 'avg_kmh', 'climb_ft', 'descent_ft', 'thumbs_up', 'thumbs_down', 'notes', 'marks_tab_link'];
+    'pieces', 'route_polyline', 'ride_time', 'ride_km', 'avg_kmh', 'climb_ft', 'descent_ft', 'thumbs_up', 'thumbs_down', 'notes', 'marks_tab_link'];
   // the last project sheet saved to, for "Add to <name>"
   const PKEY = 'bp-sheet-project';
   const lastProject = () => { try { return JSON.parse(localStorage.getItem(PKEY)); } catch (e) { return null; } };
@@ -3968,6 +4083,7 @@ const SaveTo = (() => {
     const streets = segs.filter(s => !isInt(s)), gaps = isRoute ? routeGaps() : [], pieces = segs.filter(isPiece).length;
     const lenM = streets.reduce((a, s) => a + (s.len || 0), 0) + gaps.reduce((a, g) => a + (g.m || 0), 0);
     return { isRoute, cols, rows: [cols, ...recs.map(r => cols.map(c => r[c] == null ? '' : String(r[c])))], recs,
+      line: isRoute ? polyEnc(routeLine(recs.filter(r => r.polyline).map(r => ({ c: polyDec(r.polyline) })))) : '',
       streets: streets.length - pieces, pieces, ints: segs.length - streets.length, gaps: gaps.length, km: (lenM / 1000).toFixed(2), link: linkFor(segs) };
   }
   return {
@@ -4020,7 +4136,7 @@ const SaveTo = (() => {
         // and its row on Routes
         const used = await GoogleDrive.getValues(proj.id, `${q(rt.title)}!A:A`), next = Math.max(2, used.length + 1);
         await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A${next}`, [ROUTE_COLS.map(c => ({ route: name, kind: g.isRoute ? 'route' : 'selection', streets: g.streets, intersections: g.ints,
-          gaps: g.isRoute ? g.gaps : '', pieces: g.pieces || '', length_km: g.isRoute ? g.km : '', saved: today(), tab, tab_id: gid, tab_link: `${base}#gid=${gid}`, block_party_link: g.link,
+          gaps: g.isRoute ? g.gaps : '', pieces: g.pieces || '', route_polyline: g.line || '', length_km: g.isRoute ? g.km : '', saved: today(), tab, tab_id: gid, tab_link: `${base}#gid=${gid}`, block_party_link: g.link,
           made_with: `Block Party ${_BUILD_VERSION}`, ...rideCells })[c] ?? '')]);
         remember(proj);
         const where = t('saveWhere', { project: proj.name, tab });
@@ -4057,8 +4173,9 @@ let writingHash = false;
 function writeHash() {
   const parts = [];
   const cnns = [...state.checked];
-  if (cnns.length) { const ck = cnns.map(c => state.results.find(r => r.cnn === c) || { cnn: c }), h = Pieces.hashOf(ck);
-    parts.push('cnn=' + h.cnn); if (h.pc) parts.push('pc=' + h.pc); }
+  // in the list's order (the route's), then anything checked that isn't in the list
+  if (cnns.length) { const ck = [...state.results.filter(r => state.checked.has(r.cnn)), ...cnns.filter(c => !state.results.some(r => r.cnn === c)).map(c => ({ cnn: c }))], h = Pieces.hashOf(ck);
+    parts.push('cnn=' + h.cnn); if (h.pc) parts.push('pc6=' + h.pc); }
   if (cnns.length && state.route) parts.push('route=1');
   else if (state.street) parts.push('street=' + encodeURIComponent(P(state.street).toLowerCase()).replace(/%20/g, '+'));
   if (Logic.db && Logic.db.searchAll) parts.push('all=1');
@@ -4080,7 +4197,7 @@ function writeHash() {
 function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   const list = k => (p.get(k) || '').split(',').map(s => s.trim()).filter(Boolean);
-  return { cnn: list('cnn').filter(x => /^p\d+$/.test(x) || Number(x)), pc: p.get('pc'), street: list('street'), all: p.get('all') === '1', minor: p.get('minor') !== '0', lang: p.get('lang'), quiet: list('quiet'),
+  return { cnn: list('cnn').filter(x => /^p\d+$/.test(x) || /^x:\d+-\d+$/.test(x) || Number(x)), pc: p.get('pc6') || p.get('pc'), pcPrec: p.get('pc6') ? 6 : 5, street: list('street'), all: p.get('all') === '1', minor: p.get('minor') !== '0', lang: p.get('lang'), quiet: list('quiet'),
     layers: Object.fromEntries(list('layers').map(x => x.split(':')).filter(x => x.length === 2)), lands: p.get('lands'),
     areas: Object.fromEntries(list('areas').map(x => x.split(':')).filter(x => x.length === 2)), urls: p.getAll('url'), pick: p.get('pick'), route: p.get('route') === '1' };
 }
@@ -4099,8 +4216,8 @@ function applyHash() {
   if (h.minor !== Logic.db.includeMinor) { $('include-minor').checked = h.minor; Logic.setIncludeMinor(h.minor); refreshMapFilter(); }
   if (h.all !== Logic.db.searchAll) { $('search-all').checked = h.all; Logic.setSearchAll(h.all); refreshMapFilter(); }
   if (h.cnn.length) {
-    const pcs = Pieces.fromHash(h.pc);
-    const items = h.cnn.map(c => c[0] === 'p' ? pcs[+c.slice(1)] : Logic.item(+c)).filter(Boolean);
+    const pcs = Pieces.fromHash(h.pc, h.pcPrec);
+    const items = h.cnn.map(c => c[0] === 'p' ? pcs[+c.slice(1)] : c[0] === 'x' ? Pieces.connectorFromHash(c) : Logic.item(+c)).filter(Boolean);
     if (!items.length) return;
     const ints = items.filter(isInt);
     // an intersection link (a corner and maybe its blocks); a long list that happens to hold corners opens as a list
@@ -4586,7 +4703,7 @@ const LAYER_ORDER = [
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-note', 'bp-ride-me', 'bp-gaps', 'bp-piece-hit', 'bp-piece', 'bp-piece-case', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
+  ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-note', 'bp-ride-me', 'bp-gaps', 'bp-piece-hit', 'bp-piece', 'bp-piece-case', 'bp-piece-label', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
