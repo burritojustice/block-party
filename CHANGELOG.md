@@ -2,6 +2,15 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v94
+
+Steps 1 and 2 of the plan (#70), and route lines saved as polylines.
+
+- **Connect a gap with one click:** each dashed red gap on the map has a red "Connect · 67 m" button. It puts a connector there: a straight line between the two loose ends, in the route right after the street it leaves from. A "Connect all gaps" button sits above the cards. A connector is a piece like any other: dashed on the map with its length, its own card, counted in the route's length, and removed with its ✕.
+- **Bike paths with no CNN:** click one of the bike network's 166 paths that has no city street (park paths and the like) to add it to the selection as a "Bike path" piece. Click it again to take it off. A street under the click still wins.
+- **Polylines (6 digits):** every row in CSV, downloads and Sheets now has a `polyline` column: its line as an encoded polyline at 6 digits (polyline6, as Valhalla and OSRM use). For a route, each row's line runs the way the route goes and starts where the row before ended, so the rows join up end to end. The Routes tab in Sheets gets `route_polyline`, the whole route as one line.
+- **Links:** a connector between two corners goes in the link as `x:<corner>-<corner>`, in its place along the route. Other pieces go in `pc6=` at 6 digits; links from v91–v93 (`pc=`, 5 digits) still open. Links now follow the order of the cards.
+
 ## v93
 
 - **Layers works again during and after a ride:** the Ride bar was drawn over the open Layers menu, so clicks on most of its buttons went to the bar instead. It stays up after Stop until you press Close. An open menu (Layers, Areas, Filter) now sits above the Ride bar, Nearby and the tips.
