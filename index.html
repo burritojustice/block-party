@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v97 -->
+<!-- build: v98 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -55,13 +55,14 @@ button, input { font: inherit; color: inherit; }
 .app {
   display: grid;
   grid-template-columns: minmax(360px, 500px) 1fr;
-  grid-template-rows: auto auto 1fr;
-  grid-template-areas: "head map" "lookup map" "results map";
+  grid-template-rows: auto auto auto 1fr;
+  grid-template-areas: "head map" "lookup map" "tools map" "results map";
   min-height: 100vh;
 }
 .head { grid-area: head; }
 .lookup { grid-area: lookup; }
 .results { grid-area: results; }
+.tools { grid-area: tools; }
 .map-wrap {
   grid-area: map;
   position: sticky; top: 0;
@@ -69,15 +70,15 @@ button, input { font: inherit; color: inherit; }
   align-self: start;
   border-left: 2px solid var(--line);
 }
-.head, .lookup, .results { padding-inline: 28px; }
+.head, .lookup, .tools, .results { padding-inline: 28px; }
 @media (max-width: 860px) {
   .app {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
-    grid-template-areas: "head" "lookup" "map" "results";
+    grid-template-areas: "head" "lookup" "map" "tools" "results";
   }
   .map-wrap { position: relative; height: 58vh; border-left: 0; border-block: 2px solid var(--line); }
-  .head, .lookup, .results { padding-inline: 18px; }
+  .head, .lookup, .tools, .results { padding-inline: 18px; }
 }
 
 /* ---------- header with bunting ---------- */
@@ -270,6 +271,11 @@ h1 {
 /* ---------- results ---------- */
 .results { padding-bottom: 40px; }
 .results[hidden] { display: none; }
+/* nothing selected yet: Copy / Save and Select blocks are greyed, Import / show layers isn't */
+.tools.no-sel #save-panel > summary, .tools.no-sel #sel-panel > summary { opacity: .5; }
+.tools.no-sel #save-panel button, .tools.no-sel #save-panel input { pointer-events: none; opacity: .5; }
+.tools .nosel-note { display: none; font-weight: 500; font-size: 12.5px; color: var(--ink-soft); margin-left: 6px; }
+.tools.no-sel .nosel-note { display: inline; }
 .results-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 h2 { font-family: var(--display); font-weight: 800; font-size: 28px; line-height: 1.1; margin: 8px 0 4px; letter-spacing: -0.01em; }
 .results-sub { margin: 0 0 14px; color: var(--ink-soft); font-size: 15px; }
@@ -1048,11 +1054,11 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
   </div>
 
   <div class="place-card" id="place-card" hidden aria-live="polite"></div>
-  <section class="results" id="results" hidden aria-live="polite">
+  <section class="tools no-sel" id="tools" aria-label="Layers, copy and save">
     <div class="actions">
       <button type="button" class="btn primary apply" id="apply" data-i18n="apply">Apply for a Block Party</button>
       <details class="sel-panel save-panel" id="save-panel">
-        <summary data-i18n="saveTitle">Copy / Save</summary>
+        <summary><span data-i18n="saveTitle">Copy / Save</span><span class="nosel-note" data-i18n="noSelNote">pick streets first</span></summary>
         <div class="sel-row"><span class="sel-step" data-i18n="copyStep">Copy</span>
           <button type="button" class="btn small" id="copy-csv" data-i18n="copyCsvShort" title="Copy as CSV">CSV</button>
           <button type="button" class="btn small" id="copy-json" data-i18n="copyJsonShort" title="Copy as JSON">JSON</button>
@@ -1083,7 +1089,7 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
         <div id="import-side"></div>
       </details>
       <details class="sel-panel" id="sel-panel">
-        <summary data-i18n="selTitle">Select blocks</summary>
+        <summary><span data-i18n="selTitle">Select blocks</span><span class="nosel-note" data-i18n="noSelNoteBlocks">pick streets or click blocks</span></summary>
         <div class="sel-row"><span class="sel-step" data-i18n="selPick">Pick</span>
           <div class="lseg" role="group" id="pick-mode" aria-label="Pick blocks on the map">
             <button type="button" data-v="" aria-pressed="true" data-i18n="pickOff">Off</button>
@@ -1122,6 +1128,9 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
         <p class="sel-hint" id="area-status"></p>
       </details>
     </div>
+  </section>
+  <section class="results" id="results" hidden aria-live="polite">
+
     <div class="results-head">
       <h2 id="results-title"></h2>
       <div class="card-view" id="card-view" hidden>
@@ -1374,7 +1383,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v97';
+const _BUILD_VERSION = 'v98';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1690,7 +1699,7 @@ const I18N = {
     areaOpened: 'Opened {file}: {n} areas. Pick one to edit its streets.', areaPick: 'Pick an area ({n})…',
     areaEditing: 'Editing {name}: {n} streets. Grow or trim, then Save area.', areaNoCnns: 'That area has no CNNs to select',
     crossBtn: '＋ Cross streets', crossAdded: 'Added {n} cross streets', crossNone: 'No more cross streets to add',
-    importTitle: 'Import', importHint: 'A file, a link, Google Drive', fmtName: 'Name',
+    bmShields: 'Highway shields', importTitle: 'Import / show layers', importHint: 'Files, links, Google Drive, Airtable', noSelNote: 'pick streets first', noSelNoteBlocks: 'pick streets or click blocks', fmtName: 'Name',
     driveBtn: 'Google', driveTitle: 'Open a sheet or file from Google Drive', driveNotSetUp: 'Google Drive isn’t set up for this site yet', driveFail: 'Couldn’t open that from Google Drive: {err}',
     driveNoPlaces: 'No places found in {name}: it needs lat/lon columns, WKT, a CNN column, or intersections like "Mission St & 16th St"',
     tabTitle: 'Tabs in {name}', tabHint: 'Each tab you add becomes its own file. The biggest one with places is checked.', tabAll: 'Select all', tabNone: 'Select none', tabRows: '{n} rows', tabNoPlaces: 'no places found',
@@ -3243,6 +3252,8 @@ function render() {
   const segs = state.results;
   let picking = false; try { picking = SelAreas.active(); } catch (e) { }
   box.hidden = !segs.length && !state.title && !$('feat-list').children.length && !picking;
+  // nothing selected: Copy / Save and Select blocks show greyed (Import / show layers is always there)
+  $('tools').classList.toggle('no-sel', !state.checked.size && !picking);
   Drops.cards.prune(new Set(state.results.map(r => r.cnn)));
   $('results-title').textContent = state.title;
   const n = state.checked.size;
@@ -5220,6 +5231,8 @@ function applyBasemap() {
     const addr = sl === 'buildings' && l.type === 'symbol';
     const hide = (quiet && QUIET_BASE(l)) || (basemapHide.pois && sl === 'pois') || (basemapHide.buildings && sl === 'buildings' && !addr) || (basemapHide.addresses && addr);
     if (QUIET_BASE(l) || sl === 'pois' || sl === 'buildings') map.setLayoutProperty(l.id, 'visibility', hide ? 'none' : 'visible');
+    // highway shields: hidden unless the box is checked (Selecter and Joiner hide them too)
+    if (/shield/.test(l.id)) map.setLayoutProperty(l.id, 'visibility', basemapHide.shields !== false ? 'none' : 'visible');
   }
 }
 let overHover = false;   // the pointer is on a point or building (their popups win over areas)
@@ -10557,9 +10570,11 @@ function setupMapMenus() {
     curbs: '<svg viewBox="0 0 26 16"><path d="M1 12 H16 Q22 12 22 6 V1" fill="none" stroke="#9CA2AD" stroke-width="1.4"/><path d="M5 6 H12" stroke="#B4B9C3" stroke-width="1.2"/></svg>',
     buildings: '<svg viewBox="0 0 26 16"><rect x="3" y="3" width="9" height="11" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/><rect x="14" y="6" width="9" height="8" fill="#B9B4AC" fill-opacity=".5" stroke="#8A8478" stroke-width=".8"/></svg>' };
   Object.assign(SW, SWT);
-  const BM_LABEL = { pois: 'bmPois', buildings: 'bmBuildings', addresses: 'bmAddresses' };
-  const basemapRow = () => `<div class="lyr-row lyr-checks">${['pois', 'buildings', 'addresses'].map(k =>
-    `<label class="opt-check"><input type="checkbox" data-bmhide="${k}" ${basemapHide[k] ? '' : 'checked'}> ${esc(t(BM_LABEL[k]))}</label>`).join('')}</div>`
+  const BM_LABEL = { pois: 'bmPois', buildings: 'bmBuildings', addresses: 'bmAddresses', shields: 'bmShields' };
+  // shields start hidden: their box is checked only once you've turned them on (basemapHide.shields === false)
+  const bmOff = k => k === 'shields' ? basemapHide.shields !== false : !!basemapHide[k];
+  const basemapRow = () => `<div class="lyr-row lyr-checks">${['pois', 'buildings', 'addresses', 'shields'].map(k =>
+    `<label class="opt-check"><input type="checkbox" data-bmhide="${k}" ${bmOff(k) ? '' : 'checked'}> ${esc(t(BM_LABEL[k]))}</label>`).join('')}</div>`
     + `<div class="lyr-row lyr-flavor"><span class="sw"></span><b>${esc(t('bmStyle'))}<small>${esc(t('bmStyleHint'))}</small></b></div>
     <div class="lyr-row lyr-sub"><span></span><div class="lseg flavor-seg" role="group" aria-label="${esc(t('bmStyle'))}">${FLAVORS.map(v =>
       `<button type="button" data-flavor="${v}" aria-pressed="${basemapFlavor === v}">${esc(t('flavor_' + v))}</button>`).join('')}</div></div>`
