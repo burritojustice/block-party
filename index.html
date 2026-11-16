@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v98 -->
+<!-- build: v99 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1383,7 +1383,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v98';
+const _BUILD_VERSION = 'v99';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -2198,11 +2198,15 @@ const Logic = (() => {
     let D = Infinity;
     for (const n of B) if (dA.has(n)) D = Math.min(D, dA.get(n));
     if (!isFinite(D)) return [];
-    const tol = D * 1.3 + 25;
+    // slack for the other half of a divided street or a block split by an alley; a fixed
+    // amount, not a share of D, or long ranges pick up blocks past both ends (v99)
+    const tol = D + Math.min(D * 0.1, 40) + 25;
+    const END_M = 20;   // no corner of a counted block is further than this past either end
     const g = (m, n) => (m.has(n) ? m.get(n) : Infinity);
     return segs.filter(s => {
       const via = Math.min(g(dA, s.fn) + s.len + g(dB, s.tn), g(dA, s.tn) + s.len + g(dB, s.fn));
-      return via <= tol;
+      if (via > tol) return false;
+      return Math.max(g(dA, s.fn), g(dA, s.tn)) <= D + END_M && Math.max(g(dB, s.fn), g(dB, s.tn)) <= D + END_M;
     });
   }
 
@@ -9770,7 +9774,7 @@ const BORDER_GROUPS = { elected: 'el', special: 'sp', hood: 'hd' };
 const BORDER_COLORS = { own: null, dark: '#1E2340', gray: '#6B7080', orange: '#E8590C' };
 const BORDER_WIDTH = { thin: 0.6, medium: 1, thick: 1.7 };
 const BORDER_STYLE_KEYS = ['el', 'sp', 'hd'].flatMap(g => [g + 'Width', g + 'Color', g + 'Dash', g + 'Labels']).concat(['adminDash']);
-const AREA_DEFAULT = { sup: 'borders', special: 'off', specialMode: 'shade', hood: 'off', hoodSet: 'analysis', admin: 'cblk', adminMode: 'off',
+const AREA_DEFAULT = { sup: 'off', special: 'off', specialMode: 'shade', hood: 'off', hoodSet: 'analysis', admin: 'cblk', adminMode: 'off',
   densPal: 'magma', densFlip: 'on', adminLine: 'grey', adminWidth: 'thin', quietBase: 'on', adminDash: 'solid',
   ...Object.fromEntries(['el', 'sp', 'hd'].flatMap(g => [[g + 'Width', 'medium'], [g + 'Color', 'own'], [g + 'Dash', 'solid'], [g + 'Labels', 'on']])) };
 // settings shared by a group of sets (the rest of areaMode is one entry per elected set)

@@ -2,6 +2,11 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v99
+
+- **Between two cross streets stops at them:** picking a street "between" two cross streets added blocks past both ends on long runs. Divisadero between Haight and Clay gave Duboce to Pacific; Fillmore between Eddy and Broadway gave Golden Gate to Green; Mission between 16th and 24th gave 15th to 25th. The room left for divided streets and alley-split blocks grew with the length of the run; it's now a fixed amount, and no counted block may reach past either end. Both halves of divided streets (Dolores, Van Ness, Park Presidio, 19th Ave) still come in.
+- **Supervisor districts start off.** Turn them on in Areas ▾. Links that turn them on (`areas=sup:borders`) still do.
+
 ## v98
 
 - **Import / show layers is always there:** the panel (renamed from Import, since what you bring in is now a layer) sits right under the search, whether or not anything is selected. Before, it only showed after you picked something, even with files loaded.
