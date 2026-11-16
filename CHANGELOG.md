@@ -2,6 +2,17 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v97
+
+OpenStreetMap paths (#69).
+
+- **OSM paths layer:** in Layers ▾, with Muni, bike lanes and Slow Streets. It's from sf-blocks' OSM run of 2026-11-10 and shows from zoom 15.
+  - It shows only paths that run along no city street: footpaths, bike paths, alleys, service roads and the like. Steps show as short dashes.
+  - **Paths** (the default) leaves out sidewalks and crosswalks; **All** includes them.
+  - Credited "© OpenStreetMap contributors".
+- **Click an OSM path** to add it to the selection as an **OSM path** piece. It gets its name, or its kind ("Footpath"), its whole line (not just the part on screen) and its OSM id. Exports get an `osm_id` column, and Show source draws it with a teal edge and long dashes.
+- **Ride uses OSM paths:** when you're on no street and no bike path, Ride matches the OSM paths around you (sidewalks, crosswalks and steps aren't used). A covered path goes in the route where you rode it. An off-street stretch is now only for places with no street, bike path or OSM path.
+
 ## v96
 
 Ride follows the SF bike network (#64).

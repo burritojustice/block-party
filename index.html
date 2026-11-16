@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v96 -->
+<!-- build: v97 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1029,6 +1029,7 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
         <li id="lg-oneway" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/><path d="M15 6 l-6 -4 v8z" fill="#545B7F"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOneway">One-way</span></li>
         <li id="lg-lyr-muni" hidden><label class="lg-toggle" data-i18n-title="lgMuniNumsTitle" title="Show the route numbers on the map (there are a lot downtown)"><span class="sw"><svg viewBox="0 0 24 12"><line x1="2" y1="6" x2="22" y2="6" stroke="#D9480F" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/><line x1="2" y1="6" x2="22" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span><span data-i18n="lgMuni">Muni routes</span>, <svg class="lg-shield" viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="1" width="16" height="10" rx="3" fill="#D9480F"/><text x="8" y="9" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg> <span data-i18n="lgMuniNums">numbers</span></span><input autocomplete="off" type="checkbox" id="lg-muni-nums-check" checked></label></li>
         <li id="lg-lyr-bike" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3" x2="23" y2="3" stroke="#1A7F37" stroke-width="3"/><line x1="1" y1="9.5" x2="23" y2="9.5" stroke="#1A7F37" stroke-width="1.6" stroke-dasharray="3 2.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBike">Bike lanes (dashed: shared routes)</span></li>
+        <li id="lg-lyr-osm" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3.5" x2="23" y2="3.5" stroke="#0CA678" stroke-width="2.4" stroke-linecap="round"/><line x1="1" y1="9" x2="23" y2="9" stroke="#0B7285" stroke-width="3" stroke-dasharray="1.5 1.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOsm">OSM paths (click to add)</span></li>
         <li id="lg-lyr-landuse" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12"><rect width="6" height="12" fill="#E9C845" fill-opacity=".6"/><rect x="6" width="6" height="12" fill="#F0A04B" fill-opacity=".6"/><rect x="12" width="6" height="12" fill="#9C6FB6" fill-opacity=".6"/><rect x="18" width="6" height="12" fill="#4C9A3F" fill-opacity=".6"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span id="lg-landuse-title">Land use (2023)</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-landuse-table"></table></details></li>
         <li id="lg-lyr-lands" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12" id="lg-lands-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLands">City-owned land</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-lands-table"></table></details></li>
         <li id="lg-lyr-slow" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#2457D6" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0.1 7"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlow">Slow Streets</span></li>
@@ -1373,7 +1374,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v96';
+const _BUILD_VERSION = 'v97';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1616,6 +1617,10 @@ const I18N = {
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
     moreBtn: 'Menu', moreTitle: 'Map, layers, areas, Nearby, Filter, Focus and Table', ctl3d: '3D: tilt the map over the hills (tap again for flat)', ctl2d: 'Flat map, seen from above', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
     censusLoad: 'Count people and homes',
+    lyr_osm: 'OSM paths', lyr_osmHint: 'OpenStreetMap paths off the street grid, from zoom 15. Click one to add it.', osmPaths: 'Paths', osmAll: 'All',
+    lgOsm: 'OSM paths (click to add)', osm_foot: 'Footpath', osm_bike: 'Bike path (OSM)', osm_alley: 'Alley (OSM)', osm_service: 'Service road', osm_road: 'Road (OSM)', osm_other: 'Path (OSM)',
+    osm_sidewalk: 'Sidewalk', osm_crossing: 'Crosswalk', osm_steps: 'Steps', pieceFromOsm: 'OpenStreetMap ({hw}) · © OpenStreetMap contributors',
+    rideOsmAdded: '{name} added from OSM ({ft} ft)',
     rideBikeAdded: 'Bike path added ({ft} ft)', rideReplayed: 'Replayed {n} readings: {k} streets and pieces',
     rideFileTitle: 'This file has {n} timed readings, like a ride', rideFileReplay: 'Replay it as a ride',
     srcShow: 'Show source', srcNone: 'None', srcColor: 'By color', srcPattern: 'By pattern', srcBoth: 'Color & pattern',
@@ -2887,7 +2892,7 @@ const isPiece = s => !!(s && s.piece);
 const isStreet = s => !!s && !isInt(s) && !s.piece;
 const Pieces = (() => {
   const SNAP_M = 12, NEAR_M = 40, KXm = 111320 * Math.cos(37.76 * Math.PI / 180), KYm = 110540;
-  const KINDS = ['line', 'ride', 'connector', 'bike', 'drawn', 'osm'];
+  const KINDS = ['line', 'ride', 'connector', 'bike', 'drawn', 'osm'];   // osm pieces keep their OSM id in .osm
   let next = 0;
   const dm = (a, b) => Math.hypot((a[0] - b[0]) * KXm, (a[1] - b[1]) * KYm);
   const segDist = (x, y, a, b) => { const vx = b[0] - a[0], vy = b[1] - a[1], L = vx * vx + vy * vy, u = L ? Math.max(0, Math.min(1, ((x - a[0]) * vx + (y - a[1]) * vy) / L)) : 0;
@@ -2986,7 +2991,7 @@ const Pieces = (() => {
   }
   function record(s) {
     const p = Elev.peek(s.cnn);
-    return { type: 'piece', cnn: '', piece_kind: s.pk, route_source: SrcStyle.srcOf(s), streetname: s.name, from_street: s.f, to_street: s.t,
+    return { type: 'piece', cnn: '', piece_kind: s.pk, route_source: SrcStyle.srcOf(s), osm_id: s.osm || '', streetname: s.name, from_street: s.f, to_street: s.t,
       from_corner: s.atF ? s.fn : '', to_corner: s.atT ? s.tn : '', piece_source: s.src, length_ft: fmtFt(s.len),
       ...(p ? { elev_from_ft: Math.round(p.elev[0] * M2FT), elev_to_ft: Math.round(p.elev[4] * M2FT), slope_pct: Math.round(p.net * 10) / 10 } : {}),
       wkt: wktOf(s), street_view: streetViewUrl(s) };
@@ -3021,6 +3026,34 @@ const Pieces = (() => {
   function fromHash(pc, prec = 6) {
     return (pc || '').split(';').filter(Boolean).map(x => { const [k, n, l] = x.split('!');
       try { return make({ kind: k, name: decodeURIComponent(n || ''), coords: polyDec(l || '', prec) }); } catch (e) { return null; } });
+  }
+  // OpenStreetMap: a piece's whole line from sf-blocks' gap files (keyed by way id % 16), since a tile's copy is
+  // cut at the tile's edge. coords are ×1e6, the first point then differences.
+  const osmFiles = new Map();
+  function osmLine(id) {
+    const way = +String(id).match(/^w(\d+)/)?.[1]; if (!way) return Promise.resolve(null);
+    const k = way % 16;
+    if (!osmFiles.has(k)) osmFiles.set(k, SFBlocks.json(`data/osm/gaps/${k}.json`).catch(() => { osmFiles.delete(k); return null; }));
+    // each piece is [kind, highway, name, tags, coords], coords flat: x0, y0, then dx, dy pairs
+    return osmFiles.get(k).then(d => { const r = d && d[id]; if (!r) return null;
+      const [kind, highway, name, , flat] = Array.isArray(r) ? r : [r.kind, r.highway, r.name, r.tags, r.coords];
+      if (!flat || flat.length < 4) return null;
+      const out = []; let x = 0, y = 0; for (let i = 0; i + 1 < flat.length; i += 2) { x += flat[i]; y += flat[i + 1]; out.push([x / 1e6, y / 1e6]); }
+      return { coords: out, name: name || '', kind, highway }; });
+  }
+  async function osmPiece(id, props = {}, fallback = null) {
+    const g = await osmLine(id).catch(() => null), coords = g ? g.coords : fallback;
+    if (!coords || coords.length < 2) return null;
+    const kind = (g && g.kind) || props.kind || 'foot', name = (g && g.name) || props.name || t('osm_' + kind);
+    const pc = make({ coords, kind: 'osm', name, src: t('pieceFromOsm', { hw: (g && g.highway) || props.highway || kind }) });
+    if (pc) { pc.fkey = 'osm:' + id; pc.osm = id; }
+    return pc;
+  }
+  async function toggleOsm(id, props, fallback) {
+    const k = 'osm:' + id, have = state.results.filter(r => r.fkey === k);
+    if (have.length) { state.results = state.results.filter(r => r.fkey !== k); have.forEach(r => state.checked.delete(r.cnn)); render(); writeHash(); return; }
+    const pc = await osmPiece(id, props, fallback); if (!pc) return;
+    add(pc, true); render(); writeHash(); toast(t('pieceAdded', { name: pc.name, ft: fmtFt(pc.len) }));
   }
   // the bike network's paths that have no CNN (park paths and the like) go in as pieces
   const bikeKey = f => 'bike:' + f.geometry.coordinates.slice(0, 2).flat().map(v => v.toFixed(5)).join(',');
@@ -3082,7 +3115,7 @@ const Pieces = (() => {
     map.on('mouseenter', 'bp-piece-hit', () => { map.getCanvas().style.cursor = 'pointer'; });
     map.on('mouseleave', 'bp-piece-hit', () => { map.getCanvas().style.cursor = ''; });
   }
-  return { make, add, cardHTML, record, text, hashOf, fromHash, draw, addLayers, simplify, cornerAt, ends, connect, connectAll, connectorFromHash, toggleBike, bikeAt };
+  return { make, add, cardHTML, record, text, hashOf, fromHash, draw, addLayers, simplify, cornerAt, ends, connect, connectAll, connectorFromHash, toggleBike, bikeAt, toggleOsm, osmPiece };
 })();
 
 /* ---------- results rendering ---------- */
@@ -3358,6 +3391,7 @@ const Ride = (() => {
     if (prev) { const L = Math.hypot(x - prev.x, y - prev.y); if (L <= 120) for (let d = 8; d < L; d += 8) steps.push([prev.x + (x - prev.x) * d / L, prev.y + (y - prev.y) * d / L]); }
     steps.push([x, y]);
     last = { x, y }; lastT = ts;
+    osmTile(lon, lat);
     const p = [+lon.toFixed(6), +lat.toFixed(6), Math.round(ts), Math.round(acc), null];
     pts.push(p);
     Elev.at([lon, lat]).then(e => { if (e != null) { p[4] = Math.round(e * 10) / 10; if (pts[pts.length - 1] === p) bar(); } }).catch(() => {});
@@ -3399,6 +3433,39 @@ const Ride = (() => {
     }).catch(() => { bikes = []; bgrid = new Map(); return []; });
     return bikeLoad;
   }
+  /* OpenStreetMap paths off the street grid, read from sf-blocks' tiles around each reading (all of a replay's
+     tiles first): the last choice before an off-street stretch. Sidewalks, crosswalks and steps aren't used. */
+  const OSM_Z = 16, OSM_RIDE = new Set(['foot', 'bike', 'alley', 'service', 'road', 'other']);
+  let osmPm = null; const osmTiles = new Map(), osmDone = new Map(), osmAdded = new Set();
+  const tX = lo => (lo + 180) / 360 * 2 ** OSM_Z, tY = la => (1 - Math.log(Math.tan(la * Math.PI / 180) + 1 / Math.cos(la * Math.PI / 180)) / Math.PI) / 2 * 2 ** OSM_Z;
+  const tLon = x => x / 2 ** OSM_Z * 360 - 180, tLat = y => Math.atan(Math.sinh(Math.PI * (1 - 2 * y / 2 ** OSM_Z))) * 180 / Math.PI;
+  function osmTile(lo, la) {
+    if (!window.pmtiles) return Promise.resolve([]);
+    const x = Math.floor(tX(lo)), y = Math.floor(tY(la)), key = x + '/' + y;
+    if (!osmTiles.has(key)) {
+      osmPm ||= new pmtiles.PMTiles(SFBlocks.url(OVERLAYS.osm.pmtiles));
+      osmTiles.set(key, osmPm.getZxy(OSM_Z, x, y).then(r => !r ? [] : decodeMVT(new Uint8Array(r.data), 'ways')
+        .filter(f => !f.props.cnns && OSM_RIDE.has(f.props.kind))
+        .flatMap(f => f.rings.filter(rg => rg.length > 1).map(rg => {
+          const coords = rg.map(([px, py]) => [tLon(x + px / f.extent), tLat(y + py / f.extent)]);
+          const len = coords.slice(1).reduce((a, q, i) => a + Math.hypot((q[0] - coords[i][0]) * KXm, (q[1] - coords[i][1]) * KYm), 0);
+          return { osm: true, id: f.props.id, cnn: 'o' + f.props.id + '@' + key, props: f.props, coords, len, street: '' };
+        })))
+        .then(list => { osmDone.set(key, list); return list; })
+        .catch(() => { osmTiles.delete(key); return []; }));
+    }
+    return osmTiles.get(key);
+  }
+  const osmNear = (x, y) => osmDone.get(Math.floor(tX(x / KXm)) + '/' + Math.floor(tY(y / KYm))) || [];
+  function addOsm(o) {
+    if (osmAdded.has(o.id) || o.len < 20) return;   // scraps under 20 m (a driveway's end) aren't worth a card
+    osmAdded.add(o.id);
+    const after = state.results[state.results.length - 1];   // in the route where it was ridden, even though its line loads later
+    Pieces.osmPiece(o.id, o.props, o.coords).then(pc => {
+      if (!pc || state.results.some(r => r.fkey === pc.fkey)) return;
+      Pieces.add(pc, true, after); render(); writeHash(); toast(t('rideOsmAdded', { name: pc.name, ft: fmtFt(pc.len) }));
+    });
+  }
   function best(list, x, y, acc) {
     let b = null;
     for (const s of list) {
@@ -3412,14 +3479,13 @@ const Ride = (() => {
   function match(x, y, acc, ts) {
     // the nearer of the bike line and the street wins, the bike line by up to 2 m: beside a street, the one
     // you're on is nearer most of the time, so it builds up the coverage
+    // an OSM path wins only when it's at least a metre nearer than any street or bike line
     const bk = bgrid ? best(bgrid.get(Math.floor(x / 100) + ',' + Math.floor(y / 100)) || [], x, y, acc) : null;
-    const sb = best(near(x, y), x, y, acc);
-    if (bk && (!sb || bk.o.d <= sb.o.d + 2)) {
-      if (!bk.s.far) { const st = Logic.db.byCnn.get(bk.s.streetCnn); if (st) return hit(st, onStreet(st, x, y), ts); }
-      return hit(bk.s, bk.o, ts);
-    }
-    if (!sb) { cur = null; return; }
-    hit(sb.s, sb.o, ts);
+    const sb = best(near(x, y), x, y, acc), ob = best(osmNear(x, y), x, y, acc);
+    const pick = [bk && { k: 'bike', m: bk, d: bk.o.d - 2 }, sb && { k: 'street', m: sb, d: sb.o.d }, ob && { k: 'osm', m: ob, d: ob.o.d + 1 }].filter(Boolean).sort((a, b) => a.d - b.d)[0];
+    if (!pick) { cur = null; return; }
+    if (pick.k === 'bike' && !bk.s.far) { const st = Logic.db.byCnn.get(bk.s.streetCnn); if (st) return hit(st, onStreet(st, x, y), ts); }
+    hit(pick.m.s, pick.m.o, ts);
   }
   // a reading on a street or a bike line: how much of it is covered, when, and which way; added at COVER
   function hit(s, o, ts) {
@@ -3431,6 +3497,7 @@ const Ride = (() => {
     const need = s.len < SHORT_M ? 0.4 : COVER;
     if (c.hi - c.lo < need || c.n < 2) return;
     if (s.bike) { if (!bikeAdded.has(s.key)) addBike(s); }
+    else if (s.osm) addOsm(s);
     else if (!added.includes(s.cnn)) addStreet(s);
   }
   function addBike(b) {
@@ -3479,7 +3546,7 @@ const Ride = (() => {
   }
   function mark(kind, text) {
     const p = pts[pts.length - 1]; if (!p) { toast(t('rideNoFix')); return; }
-    const s = cur && !cur.bike ? cur : (added.length ? Logic.db.byCnn.get(added[added.length - 1]) : null);
+    const s = cur && !cur.bike && !cur.osm ? cur : (added.length ? Logic.db.byCnn.get(added[added.length - 1]) : null);
     marks.push({ t: p[2], lon: p[0], lat: p[1], cnn: s ? s.cnn : '', kind, text: text || '' });
     if (s && !state.checked.has(s.cnn)) addStreet(s); else render();
     draw(); save();
@@ -3493,7 +3560,7 @@ const Ride = (() => {
     if (cur && on) f.push({ type: 'Feature', properties: { part: 'cur' }, geometry: { type: 'LineString', coordinates: cur.coords } });
     // how much of the street you're on has been covered (it's added at half)
     const cv = cur && on && cover.get(cur.cnn);
-    if (cv && cv.hi > cv.lo && !added.includes(cur.cnn) && !(cur.bike && bikeAdded.has(cur.key))) { const sub = slice(cur.coords, cv.lo, cv.hi); if (sub.length > 1) f.push({ type: 'Feature', properties: { part: 'covered' }, geometry: { type: 'LineString', coordinates: sub } }); }
+    if (cv && cv.hi > cv.lo && !added.includes(cur.cnn) && !(cur.bike && bikeAdded.has(cur.key)) && !(cur.osm && osmAdded.has(cur.id))) { const sub = slice(cur.coords, cv.lo, cv.hi); if (sub.length > 1) f.push({ type: 'Feature', properties: { part: 'covered' }, geometry: { type: 'LineString', coordinates: sub } }); }
     marks.forEach(m => f.push({ type: 'Feature', properties: { part: 'mark', kind: m.kind }, geometry: { type: 'Point', coordinates: [m.lon, m.lat] } }));
     if (pts.length && on) f.push({ type: 'Feature', properties: { part: 'me', follow }, geometry: { type: 'Point', coordinates: pts[pts.length - 1].slice(0, 2) } });
     map.getSource('ride').setData({ type: 'FeatureCollection', features: f });
@@ -3538,7 +3605,7 @@ const Ride = (() => {
     ensureLayers(); loadBikes();
     on = true; paused = false; done = false; follow = true;
     off = []; lastOn = null;
-    if (!resume) { pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear(); }
+    if (!resume) { pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear(); osmAdded.clear(); }
     state.route = true; const rc = $('route-on'); if (rc) rc.checked = true;
     if (watch != null) navigator.geolocation.clearWatch(watch);
     watch = navigator.geolocation.watchPosition(p => feed(p.coords.longitude, p.coords.latitude, p.coords.accuracy, p.timestamp, p.coords.heading),
@@ -3550,9 +3617,10 @@ const Ride = (() => {
   // play saved readings ({ lon, lat, t (ms), acc }) through the same matching, as a ride, without location
   async function replay(list, name) {
     ensureLayers(); await loadBikes();
+    await Promise.all([...new Set(list.map(p => Math.floor(tX(p.lon)) + '/' + Math.floor(tY(p.lat))))].map(k => { const [x, y] = k.split('/').map(Number); return osmTile(tLon(x + 0.5), tLat(y + 0.5)); }));
     if (watch != null) navigator.geolocation.clearWatch(watch); watch = null;
     on = true; paused = false; done = false; follow = false; off = []; lastOn = null;
-    pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear();
+    pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear(); osmAdded.clear();
     state.results = []; state.checked = new Set(); state.title = name || t('rideTitleList');
     state.route = true; const rc = $('route-on'); if (rc) rc.checked = true;
     const el = $('ride-bar'); if (el) el.dataset.closed = '';
@@ -3605,7 +3673,7 @@ const Ride = (() => {
         </div>`;
       return;
     }
-    const here = cur ? (cur.bike ? `${t('piece_bike')} · ${fmtFt(cur.len)} ft` : `${P(cur.street)} · ${betweenText(cur)}`) : t('rideNoStreet');
+    const here = cur ? (cur.bike ? `${t('piece_bike')} · ${fmtFt(cur.len)} ft` : cur.osm ? `${cur.props.name || t('osm_' + cur.props.kind)} · OSM` : `${P(cur.street)} · ${betweenText(cur)}`) : t('rideNoStreet');
     // typing a note: keep the box (and what's typed), update only the numbers
     const nf = el.querySelector('.rb-note');
     if (nf && !nf.hidden) {
@@ -3621,7 +3689,7 @@ const Ride = (() => {
         <div class="rb-stats">${esc(statsLine())}</div></div></div>
       <div class="rb-here">${esc(here)}</div>
       <div class="rb-btns">
-        ${cur && !cur.bike ? `<button type="button" class="btn small" data-rb="${has ? 'drop' : 'add'}">${esc(t(has ? 'rideDrop' : 'rideAdd'))}</button>` : ''}
+        ${cur && !cur.bike && !cur.osm ? `<button type="button" class="btn small" data-rb="${has ? 'drop' : 'add'}">${esc(t(has ? 'rideDrop' : 'rideAdd'))}</button>` : ''}
         <button type="button" class="btn small" data-rb="note">✎ ${esc(t('rideNote'))}</button>
         <button type="button" class="btn small" data-rb="${paused ? 'resume' : 'pause'}">${esc(t(paused ? 'rideResume' : 'ridePause'))}</button>
         <button type="button" class="btn small" data-rb="stop">${esc(t('rideStop'))}</button>
@@ -4877,7 +4945,7 @@ const LAYER_ORDER = [
   ['shading', id => id === 'bp-place-lot-fill' || id === 'bp-pick-fill' || id === 'bp-near-fill' || id === 'bp-pick-hover-fill' || /^bp-drop-\d+-fill$/.test(id) || /^bp-area-.*-fill$/.test(id) || /^bp-water-over-/.test(id) || ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill', 'bp-lyr-buildings-fill'].includes(id)],
   ['edges', id => id === CONTOUR_LINE || ['bp-lyr-curbs', 'bp-lyr-landuse-line', 'bp-adj-lots-casing', 'bp-adj-lots', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-buildings-line'].includes(id)
     || /^bp-area-.*-(case|line)$/.test(id)],
-  ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
+  ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-osm', 'bp-lyr-osm-steps', 'bp-lyr-osm-hit', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
   ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-note', 'bp-ride-me', 'bp-gaps', 'bp-piece-hit', 'bp-piece-gps', 'bp-piece-hand', 'bp-piece-id', 'bp-piece-solid', 'bp-piece', 'bp-piece-white', 'bp-piece-case', 'bp-piece-label', 'bp-ride-covered', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
@@ -5005,6 +5073,11 @@ const LANDUSE = [
   ['CIE', '#3B6FB6'], ['MED', '#C92A2A'], ['VISITOR', '#E5683C'], ['PDR', '#7A6A8E'], ['OPENSPACE', '#4C9A3F'], ['VACANT', '#B8B4AA'],
 ];
 const landuseColor = ['match', ['get', 'landuse'], ...LANDUSE.flat(), '#D8D5CE'];
+// OpenStreetMap pieces off the street grid (cnns empty); Paths leaves out sidewalks, crosswalks and steps (drawn on their own)
+const OSM_KINDS_PATHS = ['foot', 'bike', 'alley', 'service', 'road', 'other'];
+const OSM_FILTER = { paths: ['all', ['==', ['get', 'cnns'], ''], ['in', ['get', 'kind'], ['literal', OSM_KINDS_PATHS]]],
+  all: ['all', ['==', ['get', 'cnns'], ''], ['!=', ['get', 'kind'], 'steps']] };
+const OSM_COLOR = ['match', ['get', 'kind'], 'foot', '#0CA678', 'bike', '#2F9E44', 'sidewalk', '#8CC9B8', 'crossing', '#8CC9B8', 'service', '#A3A8B5', 'road', '#868E96', 'alley', '#868E96', '#0CA678'];
 // Zoning colors: SF Planning's own, from the Zoning Map's Zoning Districts layer
 // (sfplanninggis.org/arcgiswa/rest/services/PlanningData/MapServer/3, renderer on zoning_sim), by
 // zoning code. A lot with several codes ("C-2|M-1") takes the first one's color.
@@ -5045,12 +5118,17 @@ const OVERLAYS = {
   landuse:  { pmtiles: 'data/Land_Use_with_Active_Parcel_Information.pmtiles', minzoom: 15,
               modes: [['off', 'lyrOff'], ['borders', 'lyrBorders'], ['landuse', 'lyrLanduse'], ['zoning', 'lyrZoning']],
               layers: ['bp-lyr-landuse-fill', 'bp-lyr-landuse-line', 'bp-lyr-landuse-label'] },
+  // OpenStreetMap paths that run along no city street (sf-blocks data/osm): Paths (foot, bike, alleys, service
+  // roads and the rest) or All (with sidewalks and crosswalks); click one to add it to the selection
+  osm:      { pmtiles: 'data/osm/ways.pmtiles', minzoom: 15,
+              modes: [['off', 'lyrOff'], ['paths', 'osmPaths'], ['all', 'osmAll']],
+              layers: ['bp-lyr-osm', 'bp-lyr-osm-steps', 'bp-lyr-osm-hit'] },
   lands:    { url: 'lands.geojson',    layers: ['bp-lyr-lands-fill', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-lands-label'] },
   schools:  { url: 'schools.geojson',  layers: ['bp-lyr-schools'] },
   stations: { url: 'stations.geojson', layers: ['bp-lyr-stations'] },
   health:   { url: 'health.geojson',   layers: ['bp-lyr-health'] },
 };
-const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', slow: 'close', landuse: 'off', lands: 'close', schools: 'close', stations: 'close', health: 'close', contours: 'off', hillshade: 'on' };
+const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', slow: 'close', osm: 'paths', landuse: 'off', lands: 'close', schools: 'close', stations: 'close', health: 'close', contours: 'off', hillshade: 'on' };
 const overlayMode = { ...OVERLAY_DEFAULT };
 const overlayLoaded = new Set();
 const POI_LAYERS = ['bp-lyr-schools', 'bp-lyr-stations', 'bp-lyr-health'];
@@ -5065,7 +5143,7 @@ function syncChipCounts() {
 }
 // the Layers menu, in sections
 const LAYER_SECTIONS = [
-  ['grpAround', ['muni', 'bike', 'slow']],
+  ['grpAround', ['muni', 'bike', 'slow', 'osm']],
   ['grpStreet', ['businesses', 'schools', 'stations', 'health', 'trees']],
   ['grpLand', ['landuse', 'lands', 'buildings', 'curbs']],
   ['grpTerrain', ['contours', 'hillshade']],
@@ -5234,6 +5312,8 @@ function addOverlayLayers(popup) {
     maplibregl.addProtocol('pmtiles', new pmtiles.Protocol().tile);
     map.addSource('lyr-landuse', { type: 'vector', url: 'pmtiles://' + SFBlocks.url(OVERLAYS.landuse.pmtiles),
       attribution: 'Land use 2023: <a href="https://data.sf.gov/d/h5vv-2u24">SF Planning / DataSF</a>' });
+    map.addSource('lyr-osm', { type: 'vector', url: 'pmtiles://' + SFBlocks.url(OVERLAYS.osm.pmtiles),
+      attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>' });
   }
   for (const k of Object.keys(OVERLAYS)) if (!OVERLAYS[k].pmtiles) map.addSource('lyr-' + k, { type: 'geojson', data: EMPTY, attribution: 'Layers: <a href="https://data.sf.gov">DataSF</a>' });
   const zw = (a, b, c) => ['interpolate', ['linear'], ['zoom'], 12, a, 16, b, 18, c];
@@ -5246,6 +5326,22 @@ function addOverlayLayers(popup) {
   // a dashed outline and no tint, since the basemap already shades them green.
   const landBelow = firstBasemapLabel ? firstBasemapLabel.id : 'bp-sat';
   // Land use: parcels tinted by use, faint outlines, under city-owned land and the basemap labels
+  if (map.getSource('lyr-osm')) {
+    const osmW = ['interpolate', ['linear'], ['zoom'], 15, 1.4, 18, 4];
+    map.addLayer({ id: 'bp-lyr-osm', type: 'line', source: 'lyr-osm', 'source-layer': 'ways', filter: OSM_FILTER.paths, layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
+      paint: { 'line-color': OSM_COLOR, 'line-width': osmW, 'line-opacity': 0.85 } });
+    map.addLayer({ id: 'bp-lyr-osm-steps', type: 'line', source: 'lyr-osm', 'source-layer': 'ways', filter: ['all', ['==', ['get', 'cnns'], ''], ['==', ['get', 'kind'], 'steps']], layout: { visibility: 'none' },
+      paint: { 'line-color': '#0B7285', 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 3, 18, 8], 'line-dasharray': [0.25, 0.25] } });
+    map.addLayer({ id: 'bp-lyr-osm-hit', type: 'line', source: 'lyr-osm', 'source-layer': 'ways', filter: OSM_FILTER.paths, layout: { visibility: 'none' },
+      paint: { 'line-color': '#000', 'line-opacity': 0, 'line-width': 14 } });
+    map.on('mousemove', 'bp-lyr-osm-hit', () => { map.getCanvas().style.cursor = 'pointer'; });
+    map.on('click', 'bp-lyr-osm-hit', e => {
+      const f = e.features[0]; if (!f || !f.properties.id) return;
+      if (map.queryRenderedFeatures(e.point, { layers: ['bp-all-hit', 'bp-piece-hit'].filter(l => map.getLayer(l)) }).length) return;
+      const g = f.geometry, c = g.type === 'LineString' ? g.coordinates : g.type === 'MultiLineString' ? g.coordinates.flat() : null;
+      Pieces.toggleOsm(f.properties.id, f.properties, c);
+    });
+  }
   if (map.getSource('lyr-landuse')) {
     map.addLayer({ id: 'bp-lyr-landuse-fill', type: 'fill', source: 'lyr-landuse', 'source-layer': 'parcels',
       paint: { 'fill-color': landuseColor, 'fill-opacity': 0.32 } }, landBelow);
@@ -5414,6 +5510,10 @@ const overlayMinZoomStd = k => overlayMode[k] === 'always' ? 0 : CLOSE_ZOOM + ((
 const overlayLabelZoom = k => OVERLAYS[k] && OVERLAYS[k].zooms ? OVERLAYS[k].zooms.label
   : (overlayMode[k] === 'always' ? 14 : CLOSE_ZOOM) + ((OVERLAYS[k] || {}).shift?.label || 0);
 function applyOverlay(k) {
+  if (k === 'osm' && map.getLayer('bp-lyr-osm')) {
+    const f = OSM_FILTER[overlayMode.osm === 'all' ? 'all' : 'paths'];
+    map.setFilter('bp-lyr-osm', f); map.setFilter('bp-lyr-osm-hit', f);
+  }
   if (k === 'landuse' && map.getLayer('bp-lyr-landuse-fill')) {
     map.setPaintProperty('bp-lyr-landuse-fill', 'fill-color', overlayMode.landuse === 'zoning' ? zoningColor : landuseColor);
     updateParcelLabels(); updateAdjLots(); applyParcelStyle();
