@@ -2,6 +2,18 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v96
+
+Ride follows the SF bike network (#64).
+
+- **No more freeway ramps:** Ride never matches a freeway or a ramp. At Cesar Chavez and 101, the bike path under the freeway used to land on "Hwy 101 S On Ramp".
+- **Bike lines first:** Ride matches the bike network's own lines as well as streets, and the nearer one wins (a bike line by up to 2 m).
+  - A bike lane on a street (its CNN, running along it) credits that street, as before.
+  - A path with no CNN, or one whose CNN street is somewhere else (the path under 101 is 96 m from its Bay Shore Blvd line), is added as a **Bike path** piece. It uses the bike network's line, not your GPS trace, so it's clean and joins the streets at its corners.
+  - Off-street stretches are left for places with no street and no bike path.
+- **Replay a ride:** open a GPX file, or a CSV with lat, lon and time columns, and Block Party offers **Replay it as a ride**. It plays the readings through the same matching and turns the file's own markers off so you can see the result. Three sample rides are in `tests/rides/`.
+- **GPX files** open like any other file: their track points become rows with lat, lon, time and elevation.
+
 ## v95
 
 - **Show source:** a switch under "This is a route" (None, By color, By pattern, Color & pattern) shows how each part of the selection got there.
