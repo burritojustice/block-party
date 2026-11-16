@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v95 -->
+<!-- build: v96 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1373,7 +1373,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v95';
+const _BUILD_VERSION = 'v96';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1616,6 +1616,8 @@ const I18N = {
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
     moreBtn: 'Menu', moreTitle: 'Map, layers, areas, Nearby, Filter, Focus and Table', ctl3d: '3D: tilt the map over the hills (tap again for flat)', ctl2d: 'Flat map, seen from above', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
     censusLoad: 'Count people and homes',
+    rideBikeAdded: 'Bike path added ({ft} ft)', rideReplayed: 'Replayed {n} readings: {k} streets and pieces',
+    rideFileTitle: 'This file has {n} timed readings, like a ride', rideFileReplay: 'Replay it as a ride',
     srcShow: 'Show source', srcNone: 'None', srcColor: 'By color', srcPattern: 'By pattern', srcBoth: 'Color & pattern',
     src_pick: 'Streets you picked', src_ride: 'Streets from a ride', src_bike: 'Bike paths (bike network)', src_osm: 'OSM paths', src_trace: 'Off-street stretches (GPS)',
     src_hand: 'Connectors (by hand)', src_file: 'Lines from your files',
@@ -3317,7 +3319,8 @@ const Ride = (() => {
     if (!grid) {
       grid = new Map();
       for (const s of Logic.db.segs) {
-        if (!s.active || !s.coords || s.coords.length < 2) continue;
+        // nobody rides a freeway or a ramp: the bike path beside one shouldn't land on it
+        if (!s.active || !s.coords || s.coords.length < 2 || s.layer === 'FREEWAYS' || s.classcode === 1 || s.classcode === 6) continue;
         let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
         for (const [lo, la] of s.coords) { const mx = lo * KXm, my = la * KYm; x0 = Math.min(x0, mx); x1 = Math.max(x1, mx); y0 = Math.min(y0, my); y1 = Math.max(y1, my); }
         for (let i = Math.floor((x0 - 20) / 100); i <= Math.floor((x1 + 20) / 100); i++) for (let j = Math.floor((y0 - 20) / 100); j <= Math.floor((y1 + 20) / 100); j++) {
@@ -3363,23 +3366,80 @@ const Ride = (() => {
     draw(); bar(); save();
     if (follow && mapReady) map.easeTo({ center: [lon, lat], zoom: Math.max(map.getZoom(), 17), duration: reducedMotion() ? 0 : 500 });
   }
-  function match(x, y, acc, ts) {
-    let best = null;
-    for (const s of near(x, y)) {
+  /* The bike network's own lines come first. A line with a CNN whose street runs along it (within BIKE_FAR_M)
+     credits that street; a line with no CNN, or whose street is elsewhere (the path under 101 at Cesar Chavez,
+     Kezar Dr's path), is covered as itself and added as a bike-path piece with its own geometry. */
+  const BIKE_FAR_M = 15;
+  let bikes = null, bgrid = null, bikeLoad = null;
+  const bikeAdded = new Set();
+  function loadBikes() {
+    if (bikeLoad) return bikeLoad;
+    bikeLoad = fetchLayer('bike').then(d => {
+      const list = [], gridB = new Map();
+      (d && d.features || []).forEach((f, fi) => {
+        const parts = f.geometry.type === 'LineString' ? [f.geometry.coordinates] : f.geometry.type === 'MultiLineString' ? f.geometry.coordinates : [];
+        parts.forEach((c, pi) => {
+          if (c.length < 2) return;
+          const coords = c.map(q => [q[0], q[1]]), cnn = f.properties.cnn || 0, st = cnn ? Logic.db.byCnn.get(cnn) : null;
+          // how far the line strays from its street: its farthest point from the street's line
+          let far = true;
+          if (st && st.coords && !(st.layer === 'FREEWAYS' || st.classcode === 1 || st.classcode === 6)) {
+            let m = 0; for (const [lo, la] of coords) m = Math.max(m, onStreet(st, lo * KXm, la * KYm).d); far = m > BIKE_FAR_M; }
+          const len = coords.slice(1).reduce((a, q, i) => a + Math.hypot((q[0] - coords[i][0]) * KXm, (q[1] - coords[i][1]) * KYm), 0);
+          const b = { bike: true, i: list.length, cnn: 'b' + list.length, street: '', coords, len, far, streetCnn: st ? cnn : 0, cls: f.properties.cls || '', kind: f.properties.kind || '',
+            key: 'bike:' + c.slice(0, 2).flat().map(v => (+v).toFixed(5)).join(',') + (parts.length > 1 ? ':' + pi : '') };
+          list.push(b);
+          let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+          for (const [lo, la] of coords) { const mx = lo * KXm, my = la * KYm; x0 = Math.min(x0, mx); x1 = Math.max(x1, mx); y0 = Math.min(y0, my); y1 = Math.max(y1, my); }
+          for (let i = Math.floor((x0 - 20) / 100); i <= Math.floor((x1 + 20) / 100); i++) for (let j = Math.floor((y0 - 20) / 100); j <= Math.floor((y1 + 20) / 100); j++) {
+            const k = i + ',' + j; if (!gridB.has(k)) gridB.set(k, []); gridB.get(k).push(b); }
+        });
+      });
+      bikes = list; bgrid = gridB; return list;
+    }).catch(() => { bikes = []; bgrid = new Map(); return []; });
+    return bikeLoad;
+  }
+  function best(list, x, y, acc) {
+    let b = null;
+    for (const s of list) {
       const o = onStreet(s, x, y);
       if (o.d > MATCH_M + Math.min(acc, 15) / 2) continue;
       if (heading != null && angDiff(o.head, heading) > HEAD_DEG) continue;
-      if (!best || o.d < best.o.d) best = { s, o };
+      if (!b || o.d < b.o.d) b = { s, o };
     }
-    cur = best ? best.s : null;
-    if (!best) return;
-    const c = cover.get(best.s.cnn) || { lo: best.o.f, hi: best.o.f, n: 0 };
-    c.lo = Math.min(c.lo, best.o.f); c.hi = Math.max(c.hi, best.o.f); c.n++; cover.set(best.s.cnn, c);
-    // when you were on each street, and which way along it you went
-    const v = seen.get(best.s.cnn) || { t0: ts, f0: best.o.f };
-    v.t1 = ts; v.f1 = best.o.f; seen.set(best.s.cnn, v);
-    const need = best.s.len < SHORT_M ? 0.4 : COVER;
-    if (c.hi - c.lo >= need && c.n >= 2 && !added.includes(best.s.cnn)) addStreet(best.s);
+    return b;
+  }
+  function match(x, y, acc, ts) {
+    // the nearer of the bike line and the street wins, the bike line by up to 2 m: beside a street, the one
+    // you're on is nearer most of the time, so it builds up the coverage
+    const bk = bgrid ? best(bgrid.get(Math.floor(x / 100) + ',' + Math.floor(y / 100)) || [], x, y, acc) : null;
+    const sb = best(near(x, y), x, y, acc);
+    if (bk && (!sb || bk.o.d <= sb.o.d + 2)) {
+      if (!bk.s.far) { const st = Logic.db.byCnn.get(bk.s.streetCnn); if (st) return hit(st, onStreet(st, x, y), ts); }
+      return hit(bk.s, bk.o, ts);
+    }
+    if (!sb) { cur = null; return; }
+    hit(sb.s, sb.o, ts);
+  }
+  // a reading on a street or a bike line: how much of it is covered, when, and which way; added at COVER
+  function hit(s, o, ts) {
+    cur = s;
+    const c = cover.get(s.cnn) || { lo: o.f, hi: o.f, n: 0 };
+    c.lo = Math.min(c.lo, o.f); c.hi = Math.max(c.hi, o.f); c.n++; cover.set(s.cnn, c);
+    const v = seen.get(s.cnn) || { t0: ts, f0: o.f };
+    v.t1 = ts; v.f1 = o.f; seen.set(s.cnn, v);
+    const need = s.len < SHORT_M ? 0.4 : COVER;
+    if (c.hi - c.lo < need || c.n < 2) return;
+    if (s.bike) { if (!bikeAdded.has(s.key)) addBike(s); }
+    else if (!added.includes(s.cnn)) addStreet(s);
+  }
+  function addBike(b) {
+    bikeAdded.add(b.key);
+    if (state.results.some(r => r.fkey === b.key)) return;
+    const pc = Pieces.make({ coords: b.coords, kind: 'bike', src: t('pieceFromBike', { cls: b.cls }) }); if (!pc) return;
+    pc.fkey = b.key; Pieces.add(pc, true);
+    render(); writeHash();
+    toast(t('rideBikeAdded', { ft: fmtFt(pc.len) }));
   }
   function addStreet(s) {
     if (!added.includes(s.cnn)) added.push(s.cnn);
@@ -3419,7 +3479,7 @@ const Ride = (() => {
   }
   function mark(kind, text) {
     const p = pts[pts.length - 1]; if (!p) { toast(t('rideNoFix')); return; }
-    const s = cur || (added.length ? Logic.db.byCnn.get(added[added.length - 1]) : null);
+    const s = cur && !cur.bike ? cur : (added.length ? Logic.db.byCnn.get(added[added.length - 1]) : null);
     marks.push({ t: p[2], lon: p[0], lat: p[1], cnn: s ? s.cnn : '', kind, text: text || '' });
     if (s && !state.checked.has(s.cnn)) addStreet(s); else render();
     draw(); save();
@@ -3433,7 +3493,7 @@ const Ride = (() => {
     if (cur && on) f.push({ type: 'Feature', properties: { part: 'cur' }, geometry: { type: 'LineString', coordinates: cur.coords } });
     // how much of the street you're on has been covered (it's added at half)
     const cv = cur && on && cover.get(cur.cnn);
-    if (cv && cv.hi > cv.lo && !added.includes(cur.cnn)) { const sub = slice(cur.coords, cv.lo, cv.hi); if (sub.length > 1) f.push({ type: 'Feature', properties: { part: 'covered' }, geometry: { type: 'LineString', coordinates: sub } }); }
+    if (cv && cv.hi > cv.lo && !added.includes(cur.cnn) && !(cur.bike && bikeAdded.has(cur.key))) { const sub = slice(cur.coords, cv.lo, cv.hi); if (sub.length > 1) f.push({ type: 'Feature', properties: { part: 'covered' }, geometry: { type: 'LineString', coordinates: sub } }); }
     marks.forEach(m => f.push({ type: 'Feature', properties: { part: 'mark', kind: m.kind }, geometry: { type: 'Point', coordinates: [m.lon, m.lat] } }));
     if (pts.length && on) f.push({ type: 'Feature', properties: { part: 'me', follow }, geometry: { type: 'Point', coordinates: pts[pts.length - 1].slice(0, 2) } });
     map.getSource('ride').setData({ type: 'FeatureCollection', features: f });
@@ -3475,10 +3535,10 @@ const Ride = (() => {
   document.addEventListener('visibilitychange', () => { if (on && !paused && document.visibilityState === 'visible') wake(); });
   function start(resume) {
     if (!('geolocation' in navigator)) { toast(t('rideNoGeo')); return; }
-    ensureLayers();
+    ensureLayers(); loadBikes();
     on = true; paused = false; done = false; follow = true;
     off = []; lastOn = null;
-    if (!resume) { pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; }
+    if (!resume) { pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear(); }
     state.route = true; const rc = $('route-on'); if (rc) rc.checked = true;
     if (watch != null) navigator.geolocation.clearWatch(watch);
     watch = navigator.geolocation.watchPosition(p => feed(p.coords.longitude, p.coords.latitude, p.coords.accuracy, p.timestamp, p.coords.heading),
@@ -3486,6 +3546,21 @@ const Ride = (() => {
     wake(); bar(); save(); render(); writeHash();
     if (mapReady && map.getPitch() > 5) map.easeTo({ pitch: 0 });
     if (PHONE && !document.body.classList.contains('bp-full')) $('full-btn').click();
+  }
+  // play saved readings ({ lon, lat, t (ms), acc }) through the same matching, as a ride, without location
+  async function replay(list, name) {
+    ensureLayers(); await loadBikes();
+    if (watch != null) navigator.geolocation.clearWatch(watch); watch = null;
+    on = true; paused = false; done = false; follow = false; off = []; lastOn = null;
+    pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear();
+    state.results = []; state.checked = new Set(); state.title = name || t('rideTitleList');
+    state.route = true; const rc = $('route-on'); if (rc) rc.checked = true;
+    const el = $('ride-bar'); if (el) el.dataset.closed = '';
+    for (const p of list) feed(p.lon, p.lat, p.acc ?? 8, p.t, null);
+    stop();
+    if (!state.title || state.title === t('rideTitleList')) state.title = name || t('rideTitleList');
+    render(); writeHash(); if (checkedSegs().length) fitSegs(checkedSegs());
+    toast(t('rideReplayed', { n: list.length, k: checkedSegs().length }));
   }
   function pause(p) { paused = p; if (p) { lastT = null; try { lock && lock.release(); } catch (e) { } lock = null; } else wake(); bar(); save(); }
   // Stop keeps the bar open, with the ride's totals and a name, to save it
@@ -3530,7 +3605,7 @@ const Ride = (() => {
         </div>`;
       return;
     }
-    const here = cur ? `${P(cur.street)} · ${betweenText(cur)}` : t('rideNoStreet');
+    const here = cur ? (cur.bike ? `${t('piece_bike')} · ${fmtFt(cur.len)} ft` : `${P(cur.street)} · ${betweenText(cur)}`) : t('rideNoStreet');
     // typing a note: keep the box (and what's typed), update only the numbers
     const nf = el.querySelector('.rb-note');
     if (nf && !nf.hidden) {
@@ -3546,7 +3621,7 @@ const Ride = (() => {
         <div class="rb-stats">${esc(statsLine())}</div></div></div>
       <div class="rb-here">${esc(here)}</div>
       <div class="rb-btns">
-        ${cur ? `<button type="button" class="btn small" data-rb="${has ? 'drop' : 'add'}">${esc(t(has ? 'rideDrop' : 'rideAdd'))}</button>` : ''}
+        ${cur && !cur.bike ? `<button type="button" class="btn small" data-rb="${has ? 'drop' : 'add'}">${esc(t(has ? 'rideDrop' : 'rideAdd'))}</button>` : ''}
         <button type="button" class="btn small" data-rb="note">✎ ${esc(t('rideNote'))}</button>
         <button type="button" class="btn small" data-rb="${paused ? 'resume' : 'pause'}">${esc(t(paused ? 'rideResume' : 'ridePause'))}</button>
         <button type="button" class="btn small" data-rb="stop">${esc(t('rideStop'))}</button>
@@ -3603,7 +3678,7 @@ const Ride = (() => {
       });
       restore();
     },
-    feed, start, stop, mark, get on() { return on; }, get added() { return added.slice(); }, totals, statFor, suggestName,
+    feed, start, stop, mark, replay, loadBikes, get on() { return on; }, get added() { return added.slice(); }, totals, statFor, suggestName,
     note: cnn => marksOf(cnn).filter(m => m.kind === 'note').map(m => m.text).join('; '),
     // a street's ride details for exports
     fields: cnn => {
@@ -6802,8 +6877,30 @@ const Drops = (() => {
     render(); writeHash(); fitSegs(checkedSegs());
     toast(t('routeOpened', { name: shown(f), n: out.length }));
   }
+  const timeOf = v => { if (v == null || v === '') return NaN; const n = +v; return isFinite(n) ? (n > 1e11 ? n : n * 1000) : Date.parse(v); };
+  function readingsOf(f) {
+    const pick = (o, ks) => { for (const k of Object.keys(o)) if (ks.includes(k.toLowerCase())) return o[k]; return undefined; };
+    const out = [];
+    for (const x of f.feats) { const p = x.properties || {}, g = x.geometry;
+      if (!g || g.type !== 'Point') continue;
+      const tm = timeOf(pick(p, ['time', 'timestamp', 'datetime', 't']));
+      if (!isFinite(tm)) continue;
+      const acc = +pick(p, ['accuracy_m', 'accuracy', 'acc']) || (+pick(p, ['hdop']) ? +pick(p, ['hdop']) * 5 : 8);
+      out.push({ lon: g.coordinates[0], lat: g.coordinates[1], t: tm, acc }); }
+    return out.sort((a, b) => a.t - b.t);
+  }
   function nextSteps(f) {
     const el = $('next-toast'); if (!el) return;
+    const reads = !isRouteFile(f) && f.feats.length >= 10 ? readingsOf(f) : [];
+    if (reads.length >= 10) {
+      el.innerHTML = `<b>${esc(t('rideFileTitle', { n: reads.length.toLocaleString() }))}</b><div class="next-btns"><button type="button" class="btn small primary" data-next="replay">${esc(t('rideFileReplay'))}</button>
+        <button type="button" class="btn small next-x" data-next="x">${esc(t('dismiss'))}</button></div>`;
+      el.hidden = false;
+      el.onclick = e => { const b = e.target.closest('[data-next]'); if (!b) return; el.hidden = true;
+        // the readings' own markers would cover the result: their layer goes off (a box in the map key brings it back)
+        if (b.dataset.next === 'replay') { try { LgKey.dropsOff.add(f.id); } catch (e) { } show(f.id, false); Ride.replay(reads, shown(f)); } };
+      return;
+    }
     if (isRouteFile(f)) {
       el.innerHTML = `<b>${esc(t('routeFileTitle'))}</b><div class="next-btns"><button type="button" class="btn small primary" data-next="route">${esc(t('routeFileOpen'))}</button>
         <button type="button" class="btn small next-x" data-next="x">${esc(t('dismiss'))}</button></div>`;
@@ -6975,7 +7072,16 @@ const Drops = (() => {
     map.fitBounds([[b[0], b[1]], [b[2], b[3]]], { padding: 60, maxZoom: 17, duration: reducedMotion() ? 0 : 700 });
   }
   async function add(file) {
-    addText(await file.text(), file.name, null, null, 'file');
+    const text = await file.text();
+    if (/\.gpx$/i.test(file.name) || /^\s*<\?xml[\s\S]{0,400}<gpx/i.test(text)) {
+      const doc = new DOMParser().parseFromString(text, 'application/xml');
+      const rows = [...doc.querySelectorAll('trkpt, rtept')].map(p => ({ lat: +p.getAttribute('lat'), lon: +p.getAttribute('lon'),
+        time: (p.querySelector('time') || {}).textContent || '', elevation_m: (p.querySelector('ele') || {}).textContent || '', hdop: (p.querySelector('hdop') || {}).textContent || '' }));
+      if (!rows.length) { toast(t('dropNone', { name: file.name })); return; }
+      addText('', file.name.replace(/\.gpx$/i, ''), null, rows, 'file');
+      return;
+    }
+    addText(text, file.name, null, null, 'file');
   }
   // a file's text (or parsed JSON rows) to a layer; url when it came from a link
   // several WKT values (linked records) as one GeoJSON shape
@@ -7159,7 +7265,7 @@ const Drops = (() => {
     legend();
   }
   function importControls() {
-    return `<div class="drop-box"><div class="drop-btns"><label class="btn small"><input type="file" accept=".csv,.tsv,.txt,.geojson,.json" multiple hidden data-drop-pick>${esc(t('dropPick'))}</label>
+    return `<div class="drop-box"><div class="drop-btns"><label class="btn small"><input type="file" accept=".csv,.tsv,.txt,.geojson,.json,.gpx" multiple hidden data-drop-pick>${esc(t('dropPick'))}</label>
         <button type="button" class="btn small" data-drive title="${esc(t('driveTitle'))}">${esc(t('driveBtn'))}</button>
         <button type="button" class="btn small" data-airtable title="${esc(t('airtableTitle'))}">${esc(t('airtableBtn'))}</button></div>
         <small>${esc(t('dropHint'))}</small></div>
