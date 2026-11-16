@@ -2,6 +2,19 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v95
+
+- **Show source:** a switch under "This is a route" (None, By color, By pattern, Color & pattern) shows how each part of the selection got there.
+  - **Color** is a thin edge saying whose data it is: yellow for streets you picked, blue for streets from a ride and GPS stretches, green for bike paths, purple for connectors, orange for lines from your files.
+  - **Pattern** is the line itself, saying how it matched: solid for a city street with a CNN, long dashes for a path with its own id, short dashes for something placed by hand, dots for GPS only.
+  - A white line under each part keeps it off the map's own colors.
+  - With nothing chosen, a selection with more than one source shows color and pattern, and a plain list of picked streets looks as before. Your choice is remembered.
+  - The map key lists each source in the selection, with how many parts and how far.
+- **While riding:** the street you're on fills in pink as you cover it, so you can see when it's about to be added (at half).
+- **Saved routes keep their sources:** export rows get a `route_source` column (ride, picked, bike, hand, trace, file), and links keep which streets came from a ride (`rs=`).
+- **Open a saved route as your route:** opening a CSV or sheet saved from Block Party now offers "Open it as your route". It brings back the streets and pieces in order, with their sources, and turns on "This is a route" when the rows join end to end.
+- **A spinner while Google is slow:** opening a sheet from Google Drive shows each step (signing in, opening Drive, reading the file, finding places) with a spinner, and so does loading a link.
+
 ## v94
 
 Steps 1 and 2 of the plan (#70), and route lines saved as polylines.

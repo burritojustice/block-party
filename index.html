@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v94 -->
+<!-- build: v95 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -760,6 +760,12 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
 .ride-lost[hidden] { display: none; }
 .seg.piece .piece-tag { border-style: dashed; }
 .seg.piece { border-left: 4px dashed #FF3D7F; }
+.src-wrap { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 8px; } .src-wrap[hidden] { display: none; }
+.src-lab { font-weight: 700; font-size: 13px; }
+.src-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: 100%; } .src-seg button { white-space: normal; line-height: 1.15; padding: 6px 4px; font-size: 12.5px; }
+.lg-src-li:has(> ul[hidden]) { display: none; } .lg-src { list-style: none; margin: 2px 0 4px; padding: 0 0 0 4px; border-left: 2px solid var(--line); }
+#toast.working { display: flex; align-items: center; gap: 10px; } #toast .spin { width: 16px; height: 16px; border-radius: 50%; border: 3px solid rgba(255,255,255,.35); border-top-color: #fff; animation: bp-spin .8s linear infinite; flex: none; }
+@keyframes bp-spin { to { transform: rotate(360deg); } }
 .gap-connect { font: 700 12px/1 system-ui, sans-serif; color: #fff; background: #E03131; border: 2px solid #fff; border-radius: 10px; padding: 5px 8px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.25); white-space: nowrap; }
 .gap-connect:hover { background: #C92A2A; }
 .gap-bar { display: flex; gap: 10px; align-items: center; margin: 4px 0 8px; } .gap-bar[hidden] { display: none; } .gap-bar small { color: var(--ink-soft); }
@@ -1012,6 +1018,7 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
       <summary data-i18n="legend">Map key</summary>
       <ul>
         <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#FFC53D" stroke-width="10" stroke-linecap="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="#FF3D7F" stroke-width="5" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="7.5" fill="#FFC53D"/><circle cx="8" cy="8" r="4.5" fill="#FF3D7F"/><circle cx="8" cy="8" r="1.8" fill="#fff"/></svg></span><span data-i18n="lgChecked">Your blocks / intersections</span></li>
+        <li class="lg-src-li"><ul id="lg-src" class="lg-src" hidden></ul></li>
         <li><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#6D4AF5" stroke-width="4" stroke-dasharray="6 4"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="6" fill="#fff" stroke="#6D4AF5" stroke-width="2" stroke-dasharray="3 2.5"/><circle cx="8" cy="8" r="2" fill="#6D4AF5"/></svg></span><span data-i18n="lgUnchecked">Matches</span></li>
         <li><span class="sw lg-halo"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#fff" stroke-width="10" stroke-linecap="round"/><line x1="3" y1="6" x2="21" y2="6" stroke="#6D4AF5" stroke-width="5" stroke-linecap="round"/></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="7" fill="#fff"/><circle cx="8" cy="8" r="5" fill="#6D4AF5"/></svg></span><span data-i18n="lgPreview">Preview</span></li>
         <li><label class="lg-toggle" data-i18n-title="lgCrossTitle" title="Show cross streets after you choose a block"><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#0EA5C6" stroke-width="4"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgCross">Cross streets</span><input autocomplete="off" type="checkbox" id="lg-cross" checked></label></li>
@@ -1124,6 +1131,8 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
     </div>
     <p class="results-sub" id="results-sub"></p>
     <label class="route-wrap" id="route-wrap" hidden data-i18n-title="routeTitle" title=""><input autocomplete="off" type="checkbox" id="route-on"> <span data-i18n="routeOn">This is a route</span><small data-i18n="routeHint">shows its length and any gaps under 150 m</small></label>
+    <div class="src-wrap" id="src-wrap" hidden><span class="src-lab" data-i18n="srcShow">Show source</span>
+      <div class="lseg src-seg" id="src-mode" role="group" data-i18n-aria-label="srcShow" aria-label="Show source"><button type="button" data-v="none" data-i18n="srcNone">None</button><button type="button" data-v="color" data-i18n="srcColor">By color</button><button type="button" data-v="pattern" data-i18n="srcPattern">By pattern</button><button type="button" data-v="both" data-i18n="srcBoth">Color &amp; pattern</button></div></div>
     <div class="gap-bar" id="gap-bar" hidden><button type="button" class="btn small" id="gap-connect-all">Connect the gap</button><small data-i18n="connectHint">Connectors are straight lines between the loose ends, saved with the route. Remove one like any card.</small></div>
     <ul class="seg-list feat-list" id="feat-list"></ul>
     <ul class="seg-list" id="seg-list"></ul>
@@ -1364,7 +1373,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v94';
+const _BUILD_VERSION = 'v95';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1607,6 +1616,11 @@ const I18N = {
     dlWorking: 'Getting it ready…', dlNone: 'Nothing to download for these blocks yet', dlDone: 'Downloaded {n}: {what}',
     moreBtn: 'Menu', moreTitle: 'Map, layers, areas, Nearby, Filter, Focus and Table', ctl3d: '3D: tilt the map over the hills (tap again for flat)', ctl2d: 'Flat map, seen from above', fullTitle: 'Map full screen', fullOff: 'Leave full screen (Esc)',
     censusLoad: 'Count people and homes',
+    srcShow: 'Show source', srcNone: 'None', srcColor: 'By color', srcPattern: 'By pattern', srcBoth: 'Color & pattern',
+    src_pick: 'Streets you picked', src_ride: 'Streets from a ride', src_bike: 'Bike paths (bike network)', src_osm: 'OSM paths', src_trace: 'Off-street stretches (GPS)',
+    src_hand: 'Connectors (by hand)', src_file: 'Lines from your files',
+    wkSignIn: 'Signing in to Google…', wkDrive: 'Opening Google Drive…', wkRead: 'Reading {name}…', wkPlaces: 'Finding places in {n} rows…', wkLink: 'Loading the link…',
+    routeFileTitle: 'This is a route saved from Block Party', routeFileOpen: 'Open it as your route', routeOpened: 'Opened {name}: {n} parts',
     piece_bike: 'Bike path', pieceFromBike: 'SF bike network ({cls}, no CNN)',
     connectGap: 'Connect · {m} m', connectGapTitle: 'Put a straight connector across this gap', connectOne: 'Connect the gap', connectAll: 'Connect all {n} gaps',
     connectHint: 'Connectors are straight lines between the loose ends, saved with the route. Remove one like any card.',
@@ -2400,9 +2414,16 @@ const state = {
 /* ---------- toast & clipboard ---------- */
 let toastTimer;
 function toast(msg) {
-  const el = $('toast'); el.textContent = msg; el.classList.add('show');
+  const el = $('toast'); el.classList.remove('working'); el.textContent = msg; el.classList.add('show');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
 }
+// a toast with a spinner that stays up through slow steps, until done() or another toast
+const Working = {
+  show(msg) { const el = $('toast'); clearTimeout(toastTimer); el.classList.add('show', 'working'); el.innerHTML = `<span class="spin" aria-hidden="true"></span><span>${esc(msg)}</span>`; },
+  done() { const el = $('toast'); if (el.classList.contains('working')) el.classList.remove('show', 'working'); },
+  // let the message paint before a long stretch of work
+  paint: () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0))),
+};
 async function copyText(text, msg) {
   try { await navigator.clipboard.writeText(text); }
   catch {
@@ -2795,6 +2816,56 @@ function routeLine(items) {
     out.push(...c); }
   return out;
 }
+/* ---------- Show source: how each part of a selection got there ----------
+   Color is a thin edge for whose data it is (picked, ride, bike network, OSM, placed by hand, a file); pattern
+   is the line itself for how it matched (solid = a city street with a CNN, long dashes = a path with its own id,
+   short dashes = placed by hand, dots = GPS only). A white line under it keeps it off the map's colors. Modes:
+   none (the plain look), color, pattern, both. With no choice saved, a selection with more than one source
+   shows both. */
+const SrcStyle = (() => {
+  const KEY = 'bp-src-mode', MODES = ['none', 'color', 'pattern', 'both'];
+  const EDGE = { pick: '#FFC53D', ride: '#378ADD', trace: '#378ADD', bike: '#2F9E44', osm: '#0CA678', hand: '#7F77DD', file: '#E8590C' };
+  const HOW = { pick: 'cnn', ride: 'cnn', bike: 'id', osm: 'id', hand: 'hand', file: 'hand', trace: 'gps' };
+  const ORDER = ['pick', 'ride', 'bike', 'osm', 'trace', 'hand', 'file'];
+  const rideSet = new Set();
+  let pref = null, last = null; try { pref = localStorage.getItem(KEY); } catch (e) { }
+  const srcOf = s => isPiece(s) ? ({ ride: 'trace', connector: 'hand', drawn: 'hand', bike: 'bike', osm: 'osm', line: 'file' })[s.pk] || 'file'
+    : rideSet.has(s.cnn) ? 'ride' : 'pick';
+  const used = () => state.results.filter(s => !isInt(s) && state.checked.has(s.cnn));
+  function mode() { if (MODES.includes(pref)) return pref; return new Set(used().map(srcOf)).size > 1 ? 'both' : 'none'; }
+  function set(m) { pref = m; try { localStorage.setItem(KEY, m); } catch (e) { } last = null; render(); }
+  const edgeExpr = () => ['match', ['get', 'src'], ...ORDER.flatMap(k => [k, EDGE[k]]), EDGE.pick];
+  const vis = (id, on) => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none'); };
+  // the map's layers for the current mode (only when it changes)
+  function apply() {
+    const m = mode();
+    document.querySelectorAll('#src-mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === m));
+    if (typeof map === 'undefined' || !mapReady || !map.getLayer('bp-sel-white') || m === last) return;
+    last = m;
+    const colour = m === 'color' || m === 'both', pat = m === 'pattern' || m === 'both';
+    map.setPaintProperty('bp-sel-casing', 'line-color', colour ? edgeExpr() : '#FFC53D'); vis('bp-sel-casing', m !== 'pattern');
+    map.setPaintProperty('bp-piece-case', 'line-color', colour ? edgeExpr() : '#FFC53D'); vis('bp-piece-case', m !== 'pattern');
+    vis('bp-sel-white', m !== 'none'); vis('bp-piece-white', m !== 'none');
+    map.setFilter('bp-piece', m === 'none' ? null : ['!=', ['get', 'on'], true]);
+    vis('bp-piece-solid', m === 'color');
+    ['id', 'hand', 'gps'].forEach(h => vis('bp-piece-' + h, pat));
+  }
+  // map key rows: each source in the selection, with how many and how far
+  function swatch(k) {
+    const m = mode(), colour = m === 'color' || m === 'both', pat = m === 'pattern' || m === 'both';
+    const edge = m === 'none' ? EDGE.pick : colour ? EDGE[k] : null, how = HOW[k];
+    const dash = !pat || how === 'cnn' ? '' : how === 'id' ? '5 2' : how === 'hand' ? '2 2' : '0.1 3';
+    return `<svg viewBox="0 0 24 12">${edge ? `<line x1="3" y1="6" x2="21" y2="6" stroke="${edge}" stroke-width="10" stroke-linecap="round"/>` : ''}${m !== 'none' ? '<line x1="3" y1="6" x2="21" y2="6" stroke="#fff" stroke-width="7" stroke-linecap="round"/>' : ''}<line x1="4" y1="6" x2="20" y2="6" stroke="#FF3D7F" stroke-width="${how === 'gps' && pat ? 4 : 3.5}" stroke-linecap="${how === 'gps' && pat ? 'round' : 'butt'}" ${dash ? `stroke-dasharray="${dash}"` : ''}/></svg>`;
+  }
+  function keyHTML() {
+    if (mode() === 'none') return '';
+    const by = new Map();
+    for (const s of used()) { const k = srcOf(s), e = by.get(k) || { n: 0, m: 0 }; e.n++; e.m += s.len || 0; by.set(k, e); }
+    return ORDER.filter(k => by.has(k)).map(k => { const e = by.get(k);
+      return `<li class="lg-src-row"><span class="sw">${swatch(k)}<svg viewBox="0 0 16 16" class="dot"></svg></span><span>${esc(t('src_' + k))} <small class="muted">${e.n} · ${e.m >= 1000 ? (e.m / 1000).toFixed(1) + ' km' : Math.round(e.m) + ' m'}</small></span></li>`; }).join('');
+  }
+  return { srcOf, mode, set, apply, keyHTML, EDGE, HOW, markRide: c => rideSet.add(c), isRide: c => rideSet.has(c) };
+})();
 const renderWaits = new Set();
 function renderWhen(k, ready, load) {
   if (ready() || renderWaits.has(k)) return;
@@ -2913,7 +2984,7 @@ const Pieces = (() => {
   }
   function record(s) {
     const p = Elev.peek(s.cnn);
-    return { type: 'piece', cnn: '', piece_kind: s.pk, streetname: s.name, from_street: s.f, to_street: s.t,
+    return { type: 'piece', cnn: '', piece_kind: s.pk, route_source: SrcStyle.srcOf(s), streetname: s.name, from_street: s.f, to_street: s.t,
       from_corner: s.atF ? s.fn : '', to_corner: s.atT ? s.tn : '', piece_source: s.src, length_ft: fmtFt(s.len),
       ...(p ? { elev_from_ft: Math.round(p.elev[0] * M2FT), elev_to_ft: Math.round(p.elev[4] * M2FT), slope_pct: Math.round(p.net * 10) / 10 } : {}),
       wkt: wktOf(s), street_view: streetViewUrl(s) };
@@ -2973,7 +3044,8 @@ const Pieces = (() => {
   }
   function draw() {
     if (!mapReady || !map.getSource('pieces')) return;
-    map.getSource('pieces').setData(fc(state.results.filter(isPiece).map(s => ({ type: 'Feature', properties: { cnn: s.cnn, on: state.checked.has(s.cnn), kind: s.pk, label: s.pk === 'connector' ? `${Math.round(s.len)} m` : '' },
+    map.getSource('pieces').setData(fc(state.results.filter(isPiece).map(s => ({ type: 'Feature', properties: { cnn: s.cnn, on: state.checked.has(s.cnn), kind: s.pk,
+      src: SrcStyle.srcOf(s), how: SrcStyle.HOW[SrcStyle.srcOf(s)], label: s.pk === 'connector' ? `${Math.round(s.len)} m` : '' },
       geometry: { type: 'LineString', coordinates: s.coords } }))));
   }
   function addLayers() {
@@ -2981,8 +3053,17 @@ const Pieces = (() => {
     const w = (a, b) => ['interpolate', ['linear'], ['zoom'], 13, a, 18, b];
     map.addLayer({ id: 'bp-piece-case', type: 'line', source: 'pieces', filter: ['==', ['get', 'on'], true], layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: { 'line-color': '#FFC53D', 'line-width': w(8, 20) } });
+    map.addLayer({ id: 'bp-piece-white', type: 'line', source: 'pieces', filter: ['==', ['get', 'on'], true], layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
+      paint: { 'line-color': '#fff', 'line-width': w(6, 15) } });
     map.addLayer({ id: 'bp-piece', type: 'line', source: 'pieces', layout: { 'line-cap': 'butt', 'line-join': 'round' },
       paint: { 'line-color': ['case', ['get', 'on'], '#FF3D7F', '#6D4AF5'], 'line-width': w(3.5, 9), 'line-dasharray': [1.6, 1] } });
+    // Show source: solid (color only), or the pattern for how it matched
+    const pink = { 'line-color': '#FF3D7F', 'line-width': w(3.5, 9) }, onH = h => ['all', ['==', ['get', 'on'], true], ['==', ['get', 'how'], h]];
+    map.addLayer({ id: 'bp-piece-solid', type: 'line', source: 'pieces', filter: ['==', ['get', 'on'], true], layout: { 'line-cap': 'butt', 'line-join': 'round', visibility: 'none' }, paint: pink });
+    map.addLayer({ id: 'bp-piece-id', type: 'line', source: 'pieces', filter: onH('id'), layout: { 'line-join': 'round', visibility: 'none' }, paint: { ...pink, 'line-dasharray': [3, 1.2] } });
+    map.addLayer({ id: 'bp-piece-hand', type: 'line', source: 'pieces', filter: onH('hand'), layout: { 'line-join': 'round', visibility: 'none' }, paint: { ...pink, 'line-dasharray': [1.2, 1.2] } });
+    map.addLayer({ id: 'bp-piece-gps', type: 'line', source: 'pieces', filter: onH('gps'), layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
+      paint: { 'line-color': '#FF3D7F', 'line-width': w(4.5, 11), 'line-dasharray': [0.05, 1.8] } });
     map.addLayer({ id: 'bp-piece-label', type: 'symbol', source: 'pieces', filter: ['==', ['get', 'kind'], 'connector'],
       layout: { 'symbol-placement': 'line-center', 'text-field': ['get', 'label'], 'text-size': 12, 'text-font': LABEL_FONT, 'text-allow-overlap': true },
       paint: { 'text-color': '#C2255C', 'text-halo-color': '#fff', 'text-halo-width': 2 } });
@@ -3142,6 +3223,7 @@ function render() {
   const routeKm = (routeSegs.reduce((a, o) => a + (o.len || 0), 0) + gaps.reduce((a, g) => a + g.m, 0)) / 1000;
   $('route-on').checked = !!state.route;
   $('route-wrap').hidden = !segs.some(o => !isInt(o));
+  $('src-wrap').hidden = $('route-wrap').hidden;
   $('results-sub').textContent = (state.kind === 'pick' ? t('subPick', { what }) : t('subAll', { what }))
     + (state.route && routeSegs.length ? ' · ' + t('routeKm', { km: routeKm.toFixed(routeKm < 10 ? 2 : 1) }) : '')
     + (gaps.length ? ' · ' + t(gaps.length === 1 ? 'gaps1' : 'gapsN', { n: gaps.length, list: gaps.map(g => `${g.m} m`).join(', ') }) : '');
@@ -3301,6 +3383,7 @@ const Ride = (() => {
   }
   function addStreet(s) {
     if (!added.includes(s.cnn)) added.push(s.cnn);
+    SrcStyle.markRide(s.cnn);
     if (!state.results.some(r => r.cnn === s.cnn)) state.results = [...state.results, s];
     state.checked.add(s.cnn);
     if (!state.title) state.title = t('rideTitleList');
@@ -3348,14 +3431,24 @@ const Ride = (() => {
     const f = [];
     if (pts.length > 1) f.push({ type: 'Feature', properties: { part: 'track' }, geometry: { type: 'LineString', coordinates: pts.map(p => [p[0], p[1]]) } });
     if (cur && on) f.push({ type: 'Feature', properties: { part: 'cur' }, geometry: { type: 'LineString', coordinates: cur.coords } });
+    // how much of the street you're on has been covered (it's added at half)
+    const cv = cur && on && cover.get(cur.cnn);
+    if (cv && cv.hi > cv.lo && !added.includes(cur.cnn)) { const sub = slice(cur.coords, cv.lo, cv.hi); if (sub.length > 1) f.push({ type: 'Feature', properties: { part: 'covered' }, geometry: { type: 'LineString', coordinates: sub } }); }
     marks.forEach(m => f.push({ type: 'Feature', properties: { part: 'mark', kind: m.kind }, geometry: { type: 'Point', coordinates: [m.lon, m.lat] } }));
     if (pts.length && on) f.push({ type: 'Feature', properties: { part: 'me', follow }, geometry: { type: 'Point', coordinates: pts[pts.length - 1].slice(0, 2) } });
     map.getSource('ride').setData({ type: 'FeatureCollection', features: f });
+  }
+  // the part of a line between two fractions of its length
+  function slice(c, a, b) {
+    const L = [0]; for (let i = 1; i < c.length; i++) L.push(L[i - 1] + Math.hypot((c[i][0] - c[i - 1][0]) * KXm, (c[i][1] - c[i - 1][1]) * KYm));
+    const T = L[L.length - 1] || 1, at = d => { for (let i = 1; i < c.length; i++) if (L[i] >= d) { const u = (d - L[i - 1]) / ((L[i] - L[i - 1]) || 1); return [c[i - 1][0] + u * (c[i][0] - c[i - 1][0]), c[i - 1][1] + u * (c[i][1] - c[i - 1][1])]; } return c[c.length - 1]; };
+    const d0 = a * T, d1 = b * T; return [at(d0), ...c.filter((_, i) => L[i] > d0 && L[i] < d1), at(d1)];
   }
   function ensureLayers() {
     if (!mapReady || map.getSource('ride')) return;
     map.addSource('ride', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addLayer({ id: 'bp-ride-cur', type: 'line', source: 'ride', filter: ['==', ['get', 'part'], 'cur'], layout: { 'line-cap': 'round' }, paint: { 'line-color': '#FFC53D', 'line-width': 12, 'line-opacity': 0.75 } });
+    map.addLayer({ id: 'bp-ride-covered', type: 'line', source: 'ride', filter: ['==', ['get', 'part'], 'covered'], layout: { 'line-cap': 'round' }, paint: { 'line-color': '#FF3D7F', 'line-width': 6 } });
     map.addLayer({ id: 'bp-ride-track', type: 'line', source: 'ride', filter: ['==', ['get', 'part'], 'track'], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#1C7ED6', 'line-width': 2.5, 'line-dasharray': [1, 1.5] } });
     if (!map.hasImage('bp-note-flag')) map.addImage('bp-note-flag', flagImage(), { pixelRatio: 1.5 });
     map.addLayer({ id: 'bp-ride-note', type: 'symbol', source: 'ride', filter: ['all', ['==', ['get', 'part'], 'mark'], ['==', ['get', 'kind'], 'note']],
@@ -3481,6 +3574,7 @@ const Ride = (() => {
     let r = null; try { r = JSON.parse(localStorage.getItem(RKEY)); } catch (e) { }
     if (!r) return;
     marks = r.marks || []; seen = new Map(r.seen || []); moving = r.moving || 0; dist = r.dist || 0;
+    (r.added || []).forEach(c => SrcStyle.markRide(c));
     if ((r.on || r.done) && Date.now() - (r.at || 0) < 6 * 3600e3) {
       pts = r.pts || []; added = r.added || [];
       const missing = added.map(c => Logic.db.byCnn.get(c)).filter(s => s && !state.results.some(x => x.cnn === s.cnn));
@@ -3499,6 +3593,7 @@ const Ride = (() => {
   return {
     setup() {
       $('gap-connect-all').addEventListener('click', () => Pieces.connectAll());
+      $('src-mode').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) SrcStyle.set(b.dataset.v); });
       $('ride-lost').addEventListener('click', () => { const b = document.querySelector('#ride-bar [data-rb="follow"]'); if (b) b.click(); });
       $('ride-btn').addEventListener('click', () => {
         const el = $('ride-bar');
@@ -3983,7 +4078,7 @@ function record(s) {
   const sides = Logic.addressSides(s);
   const side = p => { const x = sides.find(y => y.parity === p); return x ? x.side : ''; };
   return {
-    type: 'street', cnn: s.cnn, streetname: s.street, from_street: s.f, to_street: s.t, note: Ride.note(s.cnn), ...Ride.fields(s.cnn),
+    type: 'street', cnn: s.cnn, streetname: s.street, from_street: s.f, to_street: s.t, route_source: SrcStyle.srcOf(s) === 'ride' ? 'ride' : 'picked', note: Ride.note(s.cnn), ...Ride.fields(s.cnn),
     lf_fadd: s.lf[0], lf_toadd: s.lf[1], rt_fadd: s.rt[0], rt_toadd: s.rt[1],
     odd_side: side('odd'), even_side: side('even'),
     divided_side: s.partners.length ? s.dividedSide : '',
@@ -4055,7 +4150,8 @@ const baseUrl = () => location.origin + location.pathname;
 function linkFor(segs) {
   let pk = ''; try { pk = SelAreas.pickHash(); } catch (e) { }
   const ph = Pieces.hashOf(segs);
-  const parts = [segs.length ? 'cnn=' + ph.cnn : '', ph.pc ? 'pc6=' + ph.pc : '', pk ? 'pick=' + pk : '', state.route && segs.length > 1 ? 'route=1' : ''].filter(Boolean);
+  const rsl = segs.filter(o => !isPiece(o) && SrcStyle.isRide(o.cnn)).map(o => o.cnn);
+  const parts = [segs.length ? 'cnn=' + ph.cnn : '', ph.pc ? 'pc6=' + ph.pc : '', rsl.length ? 'rs=' + rsl.join(',') : '', pk ? 'pick=' + pk : '', state.route && segs.length > 1 ? 'route=1' : ''].filter(Boolean);
   return baseUrl() + (parts.length ? '#' + parts.join('&') : '');
 }
 
@@ -4175,7 +4271,8 @@ function writeHash() {
   const cnns = [...state.checked];
   // in the list's order (the route's), then anything checked that isn't in the list
   if (cnns.length) { const ck = [...state.results.filter(r => state.checked.has(r.cnn)), ...cnns.filter(c => !state.results.some(r => r.cnn === c)).map(c => ({ cnn: c }))], h = Pieces.hashOf(ck);
-    parts.push('cnn=' + h.cnn); if (h.pc) parts.push('pc6=' + h.pc); }
+    parts.push('cnn=' + h.cnn); if (h.pc) parts.push('pc6=' + h.pc);
+    const rs = ck.filter(o => !isPiece(o) && SrcStyle.isRide(o.cnn)).map(o => o.cnn); if (rs.length) parts.push('rs=' + rs.join(',')); }
   if (cnns.length && state.route) parts.push('route=1');
   else if (state.street) parts.push('street=' + encodeURIComponent(P(state.street).toLowerCase()).replace(/%20/g, '+'));
   if (Logic.db && Logic.db.searchAll) parts.push('all=1');
@@ -4197,6 +4294,7 @@ function writeHash() {
 function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   const list = k => (p.get(k) || '').split(',').map(s => s.trim()).filter(Boolean);
+  list('rs').map(Number).filter(Boolean).forEach(c => SrcStyle.markRide(c));
   return { cnn: list('cnn').filter(x => /^p\d+$/.test(x) || /^x:\d+-\d+$/.test(x) || Number(x)), pc: p.get('pc6') || p.get('pc'), pcPrec: p.get('pc6') ? 6 : 5, street: list('street'), all: p.get('all') === '1', minor: p.get('minor') !== '0', lang: p.get('lang'), quiet: list('quiet'),
     layers: Object.fromEntries(list('layers').map(x => x.split(':')).filter(x => x.length === 2)), lands: p.get('lands'),
     areas: Object.fromEntries(list('areas').map(x => x.split(':')).filter(x => x.length === 2)), urls: p.getAll('url'), pick: p.get('pick'), route: p.get('route') === '1' };
@@ -4448,6 +4546,9 @@ function addMapLayers() {
   map.addLayer({ id: 'bp-sel-casing', type: 'line', source: 'results', filter: ['==', ['get', 'on'], true],
     layout: { 'line-cap': 'round' },
     paint: { 'line-color': '#FFC53D', 'line-width': ['interpolate', ['linear'], ['zoom'], 13, 10, 18, 24] } });
+  // Show source: a white line between the edge and the line (hidden when it's off)
+  map.addLayer({ id: 'bp-sel-white', type: 'line', source: 'results', filter: ['==', ['get', 'on'], true], layout: { 'line-cap': 'round', visibility: 'none' },
+    paint: { 'line-color': '#fff', 'line-width': ['interpolate', ['linear'], ['zoom'], 13, 8, 18, 19] } });
   map.addLayer({ id: 'bp-sel', type: 'line', source: 'results', filter: ['==', ['get', 'on'], true],
     layout: { 'line-cap': 'round' },
     paint: { 'line-color': '#FF3D7F', 'line-width': ['interpolate', ['linear'], ['zoom'], 13, 5, 18, 13] } });
@@ -4703,7 +4804,7 @@ const LAYER_ORDER = [
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-note', 'bp-ride-me', 'bp-gaps', 'bp-piece-hit', 'bp-piece', 'bp-piece-case', 'bp-piece-label', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
+  ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-note', 'bp-ride-me', 'bp-gaps', 'bp-piece-hit', 'bp-piece-gps', 'bp-piece-hand', 'bp-piece-id', 'bp-piece-solid', 'bp-piece', 'bp-piece-white', 'bp-piece-case', 'bp-piece-label', 'bp-ride-covered', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
@@ -6682,8 +6783,34 @@ const Drops = (() => {
     renderMenu();
   }
   // after a file loads: what to do next (stays until dismissed)
+  // a CSV / sheet saved from Block Party (kind, polyline, and cnn columns)
+  const isRouteFile = f => f.feats.length && f.feats.some(x => x.properties && 'polyline' in x.properties && 'kind' in x.properties && 'cnn' in x.properties);
+  function openRoute(f) {
+    const rows = f.feats.map(x => x.properties), out = [];
+    for (const r of rows) {
+      const k = String(r.kind || r.type || '').toLowerCase(), cnn = +r.cnn;
+      if (k === 'street' || k === 'intersection') { const it = cnn && Logic.item(cnn); if (it) { out.push(it); if (r.route_source === 'ride') SrcStyle.markRide(cnn); } }
+      else if (k === 'piece') { const c = r.polyline ? polyDec(String(r.polyline)) : null;
+        const pc = c && c.length > 1 && Pieces.make({ coords: c, kind: r.piece_kind || 'line', name: r.streetname || '', src: r.piece_source || shown(f) }); if (pc) out.push(pc); }
+    }
+    if (!out.length) return;
+    setResults(out, shown(f));
+    // a route's rows run end to end (each polyline starts where the one before ended)
+    const lines = rows.map(r => r.polyline ? polyDec(String(r.polyline)) : null).filter(c => c && c.length > 1);
+    const joins = lines.slice(1).filter((c, i) => { const a = lines[i][lines[i].length - 1]; return Math.hypot((a[0] - c[0][0]) * 88000, (a[1] - c[0][1]) * 110540) < 3; }).length;
+    state.route = rows.some(r => String(r.order ?? '') !== '' || String(r.kind) === 'gap') || (lines.length > 2 && joins >= (lines.length - 1) * 0.8);
+    render(); writeHash(); fitSegs(checkedSegs());
+    toast(t('routeOpened', { name: shown(f), n: out.length }));
+  }
   function nextSteps(f) {
     const el = $('next-toast'); if (!el) return;
+    if (isRouteFile(f)) {
+      el.innerHTML = `<b>${esc(t('routeFileTitle'))}</b><div class="next-btns"><button type="button" class="btn small primary" data-next="route">${esc(t('routeFileOpen'))}</button>
+        <button type="button" class="btn small next-x" data-next="x">${esc(t('dismiss'))}</button></div>`;
+      el.hidden = false;
+      el.onclick = e => { const b = e.target.closest('[data-next]'); if (!b) return; el.hidden = true; if (b.dataset.next === 'route') openRoute(f); };
+      return;
+    }
     el.innerHTML = `<b>${esc(t('nextTitle', { name: shown(f), n: f.feats.length.toLocaleString() }))}</b><span>${esc(t('nextText'))}</span>
       <div class="next-btns"><button type="button" class="btn small" data-next="focus">${esc(t('focusThis'))}</button><button type="button" class="btn small" data-next="nearby">${esc(t('nearbyBtn'))}</button>
       <button type="button" class="btn small next-x" data-next="x">${esc(t('dismiss'))}</button></div>`;
@@ -6919,12 +7046,16 @@ const Drops = (() => {
   const DRIVE_TYPES = ['application/vnd.google-apps.spreadsheet', 'text/csv', 'text/tab-separated-values', 'application/json', 'application/geo+json', 'application/vnd.geo+json'];
   async function fromDrive() {
     try {
+      Working.show(t('wkSignIn'));
       if (!GoogleDrive.ready && !(await GoogleDrive.config(SFBlocks.url('matcher/google.json')))) { toast(t('driveNotSetUp')); return; }
+      await GoogleDrive.signIn();
+      Working.show(t('wkDrive'));
       const doc = await GoogleDrive.pick(DRIVE_TYPES);
-      if (!doc) return;
-      toast(t('urlLoading'));
+      if (!doc) { Working.done(); return; }
+      Working.show(t('wkRead', { name: doc.name || '' }));
       const got = await GoogleDrive.read(doc);
-      if (got.kind === 'file') { add(got.file); return; }
+      if (got.kind === 'file') { Working.done(); add(got.file); return; }
+      Working.show(t('wkPlaces', { n: got.tabs.reduce((a, x) => a + Math.max(0, x.values.length - 1), 0).toLocaleString() })); await Working.paint();
       // each tab: its column names (wherever they start) and whether its rows have places
       const tabs = got.tabs.filter(x => x.values.length > 1).map(tab => {
         const h = headerRow(tab.values), head = tab.values[h].map((x, i) => String(x ?? '').trim() || 'column ' + (i + 1));
@@ -6932,6 +7063,7 @@ const Drops = (() => {
         const r = objs.length ? fromObjects(objs) : { feats: [] };
         return { title: tab.title, objs, n: objs.length, found: r.feats.length, how: r.how };
       });
+      Working.done();
       if (!tabs.length) { toast(t('dropNone', { name: got.name })); return; }
       const nameOfTab = tab => got.tabs.length > 1 ? `${got.name} (${tab.title})` : got.name;
       const addTab = tab => addText('', nameOfTab(tab), null, tab.objs, 'drive');
@@ -6961,7 +7093,7 @@ const Drops = (() => {
     if (/^https?:\/\/([\w-]+\.)?airtable\.com\//.test(input) && BPAirtable.parseLink(input)) { BPAirtable.open(input); return; }
     let link; try { link = resolveLink(input); } catch (e) { toast(t('urlBad')); return; }
     if (/(^|\.)airtable\.com$/.test(new URL(input).hostname)) { toast(t('urlAirtable')); return; }
-    if (!quiet) toast(t('urlLoading'));
+    if (!quiet) Working.show(t('wkLink'));
     let text = null, err;
     for (const u of link.urls) { try { const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status); text = await r.text(); break; } catch (e) { err = e; } }
     if (text == null || (link.kind === 'sheet' && /^\s*<(!doctype|html)/i.test(text))) {
@@ -10513,12 +10645,14 @@ function drawResults() {
   else drawStreet([]);
   const anyChecked = state.results.some(s => !isInt(s) && state.checked.has(s.cnn)) || ints.some(i => state.checked.has(i.cnn));
   const props = s => ({
-    on: state.checked.has(s.cnn),
+    on: state.checked.has(s.cnn), src: SrcStyle.srcOf(s),
     // once something is checked, only checked blocks get the big stacked label
     label: anyChecked && !state.checked.has(s.cnn) ? '' : `${addrSpan(s)}${P(s.street)}${s.partners.length ? ` (${t(s.dividedSide)})` : ''}\nCNN ${s.cnn}`,
     angle: labelAngle(s),
   });
   map.getSource('results').setData(fc(segs.map(s => segFeature(s, props(s)))));
+  SrcStyle.apply();
+  { const el = $('lg-src'); if (el) { const h = SrcStyle.keyHTML(); el.innerHTML = h; el.hidden = !h; } }
   map.getSource('results-mid').setData(fc(segs.map(s => midFeature(s, props(s)))));
   const shown = segs.filter(s => state.checked.has(s.cnn));
   // around an intersection the blocks leading in are already drawn, so cross streets only follow checked blocks
