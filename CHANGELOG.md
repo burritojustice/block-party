@@ -2,6 +2,12 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v98
+
+- **Import / show layers is always there:** the panel (renamed from Import, since what you bring in is now a layer) sits right under the search, whether or not anything is selected. Before, it only showed after you picked something, even with files loaded.
+- **Copy / Save and Select blocks show greyed** when nothing is selected, with a note ("pick streets first"), so you can see they're there. They come alive once you pick a street.
+- **Highway shields are hidden** (#76), as in Selecter and Joiner. A new "Highway shields" box among the basemap checkboxes in Layers ▾ brings them back. Reset the map hides them again.
+
 ## v97
 
 OpenStreetMap paths (#69).
