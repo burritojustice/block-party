@@ -1,6 +1,6 @@
 # Routes
 
-How routes work in Block Party so far (v100). A route is an ordered selection: streets and other pieces, in the order you travel them, with the gaps between them measured and shown. Plans and open work: #70 (tracking), #81 (routes as their own layer / panel).
+How routes work in Block Party so far (v101). A route is an ordered selection: streets and other pieces, in the order you travel them, with the gaps between them measured and shown. Plans and open work: #70 (tracking), #81 (routes as their own layer / panel).
 
 ## Selection vs. route
 
@@ -53,6 +53,13 @@ Streets are always drawn solid; only pieces get a pattern.
 
 The same styles apply to a saved route opened from a file. Exports carry the source as `route_source`.
 
+The Route panel shows a key under Show source, like the map key's: each source, how many parts and how far. On the map:
+- each piece is labelled along its line in its source's color ("SFMTA bike path", "OSM · Page Street", "GPS stretch");
+- hovering a piece shows its source, name, cross streets and length;
+- each **Connect** button says what it joins ("OSM · Footpath → Ridden street").
+
+**Focus → Route / ride** lets only the route's parts take clicks and hovers, so you can look around without changing it.
+
 ## Ride
 
 **Ride** (its own button on phones) follows you as you go:
@@ -75,6 +82,7 @@ The same styles apply to a saved route opened from a file. Exports carry the sou
 **Off the grid:** readings that match nothing become a `ride` piece once you've gone 40 m away from every street.
 
 **During the ride:**
+- The bar says what you're on, in a colored chip: City street; Bike lane, bike route or separated bikeway, when an SFMTA line along a street matched; SFMTA bike path, for one with no street; or OSM footpath, alley or service road.
 - A bar shows time, distance, speed, climb and an elevation profile. Time leaves out pauses and gaps of more than 30 s.
 - Big 👍 / 👎 buttons and notes are saved with the time, lat/lon and CNN. They show as dots and flags.
 - Panning stops "follow me". A pill and the ◎ button bring it back.
@@ -149,3 +157,5 @@ When you open a route:
 | #68 | Drawn lines, and a Connect tool that follows streets instead of a straight line |
 | #69 | Offer an OSM path when connecting a gap |
 | #63 | Better bike lane lines, where SFMTA's don't follow the street |
+| #86 | Ride marks: emoji on the map, smileys, car and missing-post buttons, direction |
+| #87 | Ride matching: check against the GPS trace, offer alternatives, ride a street twice |
