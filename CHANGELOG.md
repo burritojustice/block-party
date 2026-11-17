@@ -2,6 +2,16 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v100
+
+- **Save again updates the same route.** After a save, Copy / Save and the Ride bar show **Update “<tab>”**. It writes over that route's tab, its marks and trace tabs, and its row on Routes, instead of adding new ones. That covers connecting gaps after a ride, on the phone or later on a computer: a route opened from a Google Sheet updates the tab it came from. Its ride columns (time, km, climb, thumbs) are kept when the computer has no ride of its own.
+- **The GPS trace is saved.** A ride's save adds a "<route> trace" tab: every reading, with time, lat/lon, accuracy and elevation (a file Block Party can replay), and `trace_tab_link` on Routes. Opening the route from that sheet draws the trace (dotted blue) and the 👍 / 👎 / notes under the route.
+- **A ride's marks go only with its own streets.** Before, any save made while a ride was still kept in the browser got that ride's marks and totals, even with nothing selected ("Blank route test"). A save with nothing selected now says so and saves nothing.
+- **Close clears the ride from the map.** The trace stayed drawn after Close.
+- **Opening a route from a file turns the file's own drawing off,** so it no longer covers the route. Its box in the map key brings it back. A saved route's trace and marks tabs aren't offered on their own in the tab picker; they come along with the route.
+- **OSM paths are brown,** so they don't look like SFMTA's green bike lanes, on the map and in Show source.
+- **Streets with no corner ids:** 781 streets in the data (Presidio, Treasure Island, a few downtown, like McAllister between Laguna and Webster) have 0 at both ends. They were all treated as meeting at one corner, which made a 0 m gap with hundreds of streets in your ride and could upset between-streets lookups and dead ends. Each such end now takes the real corner within 15 m, or one of its own.
+
 ## v99
 
 - **Between two cross streets stops at them:** picking a street "between" two cross streets added blocks past both ends on long runs. Divisadero between Haight and Clay gave Duboce to Pacific; Fillmore between Eddy and Broadway gave Golden Gate to Green; Mission between 16th and 24th gave 15th to 25th. The room left for divided streets and alley-split blocks grew with the length of the run; it's now a fixed amount, and no counted block may reach past either end. Both halves of divided streets (Dolores, Van Ness, Park Presidio, 19th Ave) still come in.

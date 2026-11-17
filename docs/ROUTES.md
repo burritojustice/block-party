@@ -1,6 +1,6 @@
 # Routes
 
-How routes work in Block Party so far (v99). A route is an ordered selection: streets and other pieces, in the order you travel them, with the gaps between them measured and shown. Plans and open work: #70 (tracking), #81 (routes as their own layer / panel).
+How routes work in Block Party so far (v100). A route is an ordered selection: streets and other pieces, in the order you travel them, with the gaps between them measured and shown. Plans and open work: #70 (tracking), #81 (routes as their own layer / panel).
 
 ## Selection vs. route
 
@@ -45,7 +45,7 @@ How each part got there, set in the Route panel:
 | Ridden street | blue | solid (by CNN) |
 | Ride stretch off the grid (`ride` piece) | blue | dots (GPS) |
 | Bike line | green | long dashes (by id) |
-| OSM path | teal | long dashes (by id) |
+| OSM path | brown | long dashes (by id) |
 | Connector | purple | short dashes (by hand) |
 | Line from your file | orange | short dashes |
 
@@ -81,6 +81,7 @@ The same styles apply to a saved route opened from a file. Exports carry the sou
 
 **Stopping:**
 - **Stop** leaves a done bar with a suggested name (first and last streets) and save buttons.
+- **Close** hides the bar and clears the ride's line from the map. The ride stays in the browser for a day, so it can still be saved.
 - A ride in progress is kept in the browser. On reload it offers to carry on, within 6 hours.
 
 **Replays:**
@@ -94,11 +95,18 @@ The same styles apply to a saved route opened from a file. Exports carry the sou
   - `route`, `kind`, `streets`, `intersections`, `gaps`, `length_km`, `saved`;
   - `tab`, `tab_id`, `tab_link` (to the route's own tab), `block_party_link`, `made_with`, `pieces`;
   - `route_polyline`: the whole route as one line;
-  - for rides, `ride_time`, `ride_km`, `avg_kmh`, `climb_ft`, `descent_ft`, `thumbs_up`, `thumbs_down`, `notes` and `marks_tab_link`.
+  - for rides, `ride_time`, `ride_km`, `avg_kmh`, `climb_ft`, `descent_ft`, `thumbs_up`, `thumbs_down`, `notes`, `marks_tab_link` and `trace_tab_link`.
 - **One tab per route:** one row per part in route order, with gap rows after the street they leave from.
   - Each row has its own `polyline`, turned to run end to end.
   - Ride rows also have `ride_at`, `ride_seconds`, `ride_kmh`, `ride_rise_ft`, the thumbs and the note.
 - **A marks tab** for each ride: every 👍, 👎 and note.
+- **A trace tab** for each ride: every GPS reading (`time`, `lat`, `lon`, `accuracy_m`, `elevation_m`). It's linked from `trace_tab_link`, and it can be replayed as a ride.
+
+**Saving again:** once a route is saved, or opened from a project sheet, Copy / Save and the Ride bar offer **Update “<tab>”**.
+- It writes over that route's tab, its marks and trace tabs, and its row on Routes (found by `tab_id`).
+- So you can save a ride on the phone, then connect its gaps later on a computer and update the same route.
+- When the computer has no ride of its own, the row keeps its ride columns.
+- A ride's marks and trace go with a save only while some of the ride's streets are still selected. A save with nothing selected saves nothing.
 
 **Polylines** use Google's encoded polyline at 6 digits ("polyline6", about 0.1 m), lat then lon, as Valhalla and OSRM do. Decoding at the usual 5 digits puts the points 10× off. Decoding notes: <https://github.com/valhalla/valhalla/blob/master/docs/docs/api/decoding.md>.
 
@@ -125,6 +133,11 @@ Open a route's tab, CSV or JSON from Sheets, Drive or a file, and Block Party of
 - order from the rows.
 
 A CSV with no order column is still recognized as a route when its rows join end to end.
+
+When you open a route:
+- The file's own drawing is turned off, so it doesn't cover the route. Its box in the map key brings it back.
+- If the route came from a project sheet that has its trace and marks tabs, the trace is drawn dotted blue under the route, with the 👍 / 👎 / notes.
+- The trace stays until Start over or another ride.
 
 ## Still to do
 
