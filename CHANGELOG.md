@@ -2,6 +2,18 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v101
+
+- **Connect all works again.** On a route with one of the streets missing corner ids (fixed in v100), it tried the same gap 50 times, said "Connected 50 gaps" and added nothing. Now it skips a gap it can't join and counts only the ones it connects.
+- **Where each part came from, on the map:**
+  - Pieces are labelled along the line in their source's color: "SFMTA bike path", "OSM · Page Street", "GPS stretch", or the connector's length.
+  - Hovering a piece shows its source, name, cross streets and length.
+  - Each Connect button says what it joins ("OSM · Footpath → Ridden street").
+- **A key in the Route panel:** under Show source, the same rows as the map key (each source, how many, how far), so SFMTA bike paths and OSM paths can be told apart without opening the map key. They're named "SFMTA bike paths" and "OpenStreetMap paths".
+- **Focus → Route / ride:** only the route's own parts take clicks and hovers. Streets, corners and the OSM and bike layers pause, so you can look around without adding or dropping streets.
+- **The Ride bar says what you're on**, in a colored chip: City street, a bike lane along it (SFMTA's class in words: bike path, bike lane, bike route, separated bikeway), an SFMTA bike path with no street, or an OSM footpath, alley or service road.
+- The map key's OSM row is brown, to match the map.
+
 ## v100
 
 - **Save again updates the same route.** After a save, Copy / Save and the Ride bar show **Update “<tab>”**. It writes over that route's tab, its marks and trace tabs, and its row on Routes, instead of adding new ones. That covers connecting gaps after a ride, on the phone or later on a computer: a route opened from a Google Sheet updates the tab it came from. Its ride columns (time, km, climb, thumbs) are kept when the computer has no ride of its own.

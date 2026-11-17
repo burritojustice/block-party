@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v100 -->
+<!-- build: v101 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -772,6 +772,11 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
 .lg-src-li:has(> ul[hidden]) { display: none; } .lg-src { list-style: none; margin: 2px 0 4px; padding: 0 0 0 4px; border-left: 2px solid var(--line); }
 #toast.working { display: flex; align-items: center; gap: 10px; } #toast .spin { width: 16px; height: 16px; border-radius: 50%; border: 3px solid rgba(255,255,255,.35); border-top-color: #fff; animation: bp-spin .8s linear infinite; flex: none; }
 @keyframes bp-spin { to { transform: rotate(360deg); } }
+.gap-connect small { display: block; font-weight: 600; font-size: 10.5px; opacity: .9; margin-top: 2px; }
+.src-key { margin: 2px 0 0; padding: 4px 0 0 4px; } .src-key[hidden] { display: none; }
+.bp-src-tip .maplibregl-popup-content { padding: 6px 9px; font-size: 12.5px; line-height: 1.35; } .src-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.rb-kind::first-letter { text-transform: uppercase; }
+.rb-kind { display: inline-block; color: #fff; font-weight: 700; font-size: 11.5px; border-radius: 6px; padding: 1px 6px; margin-right: 6px; }
 .gap-connect { font: 700 12px/1 system-ui, sans-serif; color: #fff; background: #E03131; border: 2px solid #fff; border-radius: 10px; padding: 5px 8px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.25); white-space: nowrap; }
 .gap-connect:hover { background: #C92A2A; }
 .gap-bar { display: flex; gap: 10px; align-items: center; margin: 4px 0 8px; } .gap-bar[hidden] { display: none; } .gap-bar small { color: var(--ink-soft); }
@@ -1035,7 +1040,7 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
         <li id="lg-oneway" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/><path d="M15 6 l-6 -4 v8z" fill="#545B7F"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOneway">One-way</span></li>
         <li id="lg-lyr-muni" hidden><label class="lg-toggle" data-i18n-title="lgMuniNumsTitle" title="Show the route numbers on the map (there are a lot downtown)"><span class="sw"><svg viewBox="0 0 24 12"><line x1="2" y1="6" x2="22" y2="6" stroke="#D9480F" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/><line x1="2" y1="6" x2="22" y2="6" stroke="#7D86B5" stroke-opacity=".6" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span><span data-i18n="lgMuni">Muni routes</span>, <svg class="lg-shield" viewBox="0 0 16 12" aria-hidden="true"><rect x="0" y="1" width="16" height="10" rx="3" fill="#D9480F"/><text x="8" y="9" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">14</text></svg> <span data-i18n="lgMuniNums">numbers</span></span><input autocomplete="off" type="checkbox" id="lg-muni-nums-check" checked></label></li>
         <li id="lg-lyr-bike" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3" x2="23" y2="3" stroke="#1A7F37" stroke-width="3"/><line x1="1" y1="9.5" x2="23" y2="9.5" stroke="#1A7F37" stroke-width="1.6" stroke-dasharray="3 2.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgBike">Bike lanes (dashed: shared routes)</span></li>
-        <li id="lg-lyr-osm" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3.5" x2="23" y2="3.5" stroke="#0CA678" stroke-width="2.4" stroke-linecap="round"/><line x1="1" y1="9" x2="23" y2="9" stroke="#0B7285" stroke-width="3" stroke-dasharray="1.5 1.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOsm">OSM paths (click to add)</span></li>
+        <li id="lg-lyr-osm" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3.5" x2="23" y2="3.5" stroke="#8B5A2B" stroke-width="2.4" stroke-linecap="round"/><line x1="1" y1="9" x2="23" y2="9" stroke="#6B4423" stroke-width="3" stroke-dasharray="1.5 1.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgOsm">OSM paths (click to add)</span></li>
         <li id="lg-lyr-landuse" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12"><rect width="6" height="12" fill="#E9C845" fill-opacity=".6"/><rect x="6" width="6" height="12" fill="#F0A04B" fill-opacity=".6"/><rect x="12" width="6" height="12" fill="#9C6FB6" fill-opacity=".6"/><rect x="18" width="6" height="12" fill="#4C9A3F" fill-opacity=".6"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span id="lg-landuse-title">Land use (2023)</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-landuse-table"></table></details></li>
         <li id="lg-lyr-lands" hidden class="lg-expand"><details><summary><span class="sw"><svg viewBox="0 0 24 12" id="lg-lands-sw"></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgLands">City-owned land</span> <small class="lg-more">▾</small></summary><table class="lg-table" id="lg-lands-table"></table></details></li>
         <li id="lg-lyr-slow" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="3" y1="6" x2="21" y2="6" stroke="#2457D6" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="0.1 7"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlow">Slow Streets</span></li>
@@ -1143,7 +1148,8 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
     <p class="results-sub" id="results-sub"></p>
     <label class="route-wrap" id="route-wrap" hidden data-i18n-title="routeTitle" title=""><input autocomplete="off" type="checkbox" id="route-on"> <span data-i18n="routeOn">This is a route</span><small data-i18n="routeHint">shows its length and any gaps under 150 m</small></label>
     <div class="src-wrap" id="src-wrap" hidden><span class="src-lab" data-i18n="srcShow">Show source</span>
-      <div class="lseg src-seg" id="src-mode" role="group" data-i18n-aria-label="srcShow" aria-label="Show source"><button type="button" data-v="none" data-i18n="srcNone">None</button><button type="button" data-v="color" data-i18n="srcColor">By color</button><button type="button" data-v="pattern" data-i18n="srcPattern">By pattern</button><button type="button" data-v="both" data-i18n="srcBoth">Color &amp; pattern</button></div></div>
+      <div class="lseg src-seg" id="src-mode" role="group" data-i18n-aria-label="srcShow" aria-label="Show source"><button type="button" data-v="none" data-i18n="srcNone">None</button><button type="button" data-v="color" data-i18n="srcColor">By color</button><button type="button" data-v="pattern" data-i18n="srcPattern">By pattern</button><button type="button" data-v="both" data-i18n="srcBoth">Color &amp; pattern</button></div>
+      <ul class="lg-src src-key" id="src-key" hidden></ul></div>
     <div class="gap-bar" id="gap-bar" hidden><button type="button" class="btn small" id="gap-connect-all">Connect the gap</button><small data-i18n="connectHint">Connectors are straight lines between the loose ends, saved with the route. Remove one like any card.</small></div>
     <ul class="seg-list feat-list" id="feat-list"></ul>
     <ul class="seg-list" id="seg-list"></ul>
@@ -1384,7 +1390,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v100';
+const _BUILD_VERSION = 'v101';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1586,7 +1592,7 @@ const I18N = {
     nearAdjHood: 'Same or touching neighborhood', nbInside: 'inside', nbThisOne: 'Just this one:', bizMoreN: '…and {n} more',
     focusToast: 'Focus: clicks and hover now go only to {name}. Press Esc or ✕ to go back.', focusToastInts: 'Focus: clicks and hover now go only to intersections (zoom in to see the corners). Press Esc or ✕ to go back.',
     focusBtnTitle: 'Choose what clicks on the map go to', focusOffTitle: 'Stop focusing (Esc)', focusPopTitle: 'Clicks go to', focusFiles: 'Your files',
-    focus_all: 'Everything', focus_streets: 'Streets', focus_ints: 'Intersections', focus_biz: 'Businesses', focus_trees: 'Street trees', focus_places: 'Schools, clinics, stations', focus_lots: 'Lots (parcels)', flavorTitle: 'Basemap',
+    focus_all: 'Everything', focus_route: 'Route / ride', focus_streets: 'Streets', focus_ints: 'Intersections', focus_biz: 'Businesses', focus_trees: 'Street trees', focus_places: 'Schools, clinics, stations', focus_lots: 'Lots (parcels)', flavorTitle: 'Basemap',
     nbCopy: 'Copy', nbGeojson: 'GeoJSON view', nbCopied: 'Copied {n} rows', nbTableSrc: 'Nearby: {name} ({n})', nbLocating: 'Finding where you are…', nbNoGeo: "Couldn't get your location",
     focusBtn: 'Focus', focusOn: 'Focused', focusTitle: 'Make only this file clickable', focusThis: 'Focus on this file', focusOff: 'Back to streets', focusBar1: 'Clicks go to', focusBar2: '· streets are paused',
     nextTitle: '{name}: {n} places on the map', nextText: 'Click one to see what’s around it, or use Nearby to match it against your other lists.', dismiss: 'Dismiss',
@@ -1634,12 +1640,12 @@ const I18N = {
     rideBikeAdded: 'Bike path added ({ft} ft)', rideReplayed: 'Replayed {n} readings: {k} streets and pieces',
     rideFileTitle: 'This file has {n} timed readings, like a ride', rideFileReplay: 'Replay it as a ride',
     srcShow: 'Show source', srcNone: 'None', srcColor: 'By color', srcPattern: 'By pattern', srcBoth: 'Color & pattern',
-    src_pick: 'Streets you picked', src_ride: 'Streets from a ride', src_bike: 'Bike paths (bike network)', src_osm: 'OSM paths', src_trace: 'Off-street stretches (GPS)',
+    src_pick: 'Streets you picked', src_ride: 'Streets from a ride', src_bike: 'SFMTA bike paths (bike network)', src_osm: 'OpenStreetMap paths', src_trace: 'Off-street stretches (GPS)',
     src_hand: 'Connectors (by hand)', src_file: 'Lines from your files',
     wkSignIn: 'Signing in to Google…', wkDrive: 'Opening Google Drive…', wkRead: 'Reading {name}…', wkPlaces: 'Finding places in {n} rows…', wkLink: 'Loading the link…',
     routeFileTitle: 'This is a route saved from Block Party', routeFileOpen: 'Open it as your route', routeOpened: 'Opened {name}: {n} parts',
-    piece_bike: 'Bike path', pieceFromBike: 'SF bike network ({cls}, no CNN)',
-    connectGap: 'Connect · {m} m', connectGapTitle: 'Put a straight connector across this gap', connectOne: 'Connect the gap', connectAll: 'Connect all {n} gaps',
+    piece_bike: 'Bike path', tag_pick: 'Picked', tag_ride: 'Ridden street', tag_bike: 'SFMTA bike path', tag_osm: 'OSM · {name}', tag_ride_piece: 'GPS stretch', tag_connector: 'Connector', tag_line: 'Your file', tag_drawn: 'Drawn', pieceFromBike: 'SF bike network ({cls}, no CNN)',
+    connectGap: 'Connect · {m} m', connectedNone: 'No gaps could be connected', connectFromTo: '{a} → {b}', connectGapTitle: 'Put a straight connector across this gap', connectOne: 'Connect the gap', connectAll: 'Connect all {n} gaps',
     connectHint: 'Connectors are straight lines between the loose ends, saved with the route. Remove one like any card.',
     connected: 'Connected ({ft} ft)', connectedN: 'Connected {n} gaps',
     piece_line: 'Line from a file', piece_ride: 'Off-street stretch', piece_connector: 'Connector', piece_drawn: 'Drawn line', piece_osm: 'OSM path',
@@ -1648,7 +1654,7 @@ const I18N = {
     subPiece1: '1 piece', subPieces: '{n} pieces', subPiecesOf: '{n} of {total} pieces checked', featAddedPiece: '{name} is in the selection as a piece',
     rideBtn: '🚲 Ride', rideDone: 'Ride done', rideStats: '{time} · {km} km · {kmh} km/h · ↑{up} ft ↓{down} ft', rideProfile: 'Elevation along the ride, {lo} to {hi} ft',
     rideMarksN: '👍 {up} · 👎 {down} · ✎ {notes}', rideSaveAs: 'Name', rideName: '{a} to {b}', rideCsv: 'Download CSV', rideClose: 'Close',
-    rideUp: 'Thumbs up for this street', rideDown: 'Thumbs down for this street', rideMarked: '{e} on {name}', rideLost: '◎ Not following you · tap to follow', saveTabMarks: 'marks', rideTitle: 'Ride: add the streets you ride along', rideLive: 'Riding', rideLiveTitle: 'Riding: tap for the ride controls',
+    rideOn_street: 'City street', rideOn_lane: 'Bike lane', rideOnSfmta: 'SFMTA {kind}', bk_1: 'bike path', bk_2: 'bike lane', bk_3: 'bike route', bk_4: 'separated bikeway', rideOn_bike: 'SFMTA bike path', rideOnOsm: 'OSM {kind}', rideUp: 'Thumbs up for this street', rideDown: 'Thumbs down for this street', rideMarked: '{e} on {name}', rideLost: '◎ Not following you · tap to follow', saveTabMarks: 'marks', rideTitle: 'Ride: add the streets you ride along', rideLive: 'Riding', rideLiveTitle: 'Riding: tap for the ride controls',
     rideRiding: 'Riding', ridePaused: 'Paused', rideCount: '{n} streets · {km} km', rideNoStreet: 'Looking for your street…',
     rideAdd: '＋ Add this street', rideDrop: '− Take it off', rideNote: 'Note', rideNotePh: 'A note for this street', rideNoteSave: 'Save',
     rideFollow: 'Follow me', ridePause: 'Pause', rideResume: 'Resume', rideStop: 'Stop',
@@ -2927,6 +2933,20 @@ function checkedSegs() { return state.results.filter(s => state.checked.has(s.cn
    riding); connectors, drawn lines and OSM paths come next. */
 const isPiece = s => !!(s && s.piece);
 const isStreet = s => !!s && !isInt(s) && !s.piece;
+// a part's source in a few words, for its label on the map, the hover and the Connect buttons (v101)
+// SFMTA's facility classes in words: CLASS I path, II lane, III route (shared), IV separated
+function bikeKind(cls) { const m = /CLASS\s*(IV|III|II|I)\b/i.exec(cls || ''); return m ? t('bk_' + ({ I: 1, II: 2, III: 3, IV: 4 })[m[1].toUpperCase()]) : ''; }
+function srcTag(s) {
+  if (!s) return '';
+  if (!isPiece(s)) return SrcStyle.srcOf(s) === 'ride' ? t('tag_ride') : t('tag_pick');
+  if (s.pk === 'osm') return t('tag_osm', { name: s.name && s.name !== t('piece_osm') ? s.name : t('piece_osm') });
+  return t(s.pk === 'ride' ? 'tag_ride_piece' : 'tag_' + s.pk);
+}
+function srcTipHTML(s) {
+  const k = SrcStyle.srcOf(s), sw = `<i class="src-dot" style="background:${SrcStyle.EDGE[k] || '#888'}"></i>`;
+  const name = isPiece(s) ? (s.name || t('piece_' + s.pk)) : P(s.street), ends = [s.f, s.t].filter(Boolean).map(P).join(' – ');
+  return `<div class="src-tip">${sw}<b>${esc(srcTag(s))}</b><br>${esc(name)}${ends ? `<br><small>${esc(ends)}</small>` : ''}<br><small>${esc(fmtFt(s.len || 0))} ft · ${esc(t('src_' + k))}</small></div>`;
+}
 const Pieces = (() => {
   const SNAP_M = 12, NEAR_M = 40, KXm = 111320 * Math.cos(37.76 * Math.PI / 180), KYm = 110540;
   const KINDS = ['line', 'ride', 'connector', 'bike', 'drawn', 'osm'];   // osm pieces keep their OSM id in .osm
@@ -3043,9 +3063,10 @@ const Pieces = (() => {
     return pc;
   }
   function connectAll() {
-    let n = 0, gs;
-    while ((gs = routeGaps()).length && n < 50) { connect(gs[0], true); n++; }   // each one can change the next shortest
-    render(); writeHash(); if (n) toast(t('connectedN', { n }));
+    // each one can change the next shortest; a gap that can't take a connector is skipped, not tried forever (v101)
+    let n = 0, tries = 0, gs; const skip = new Set(), key = g => g.from.n + '|' + g.to.n;
+    while ((gs = routeGaps().filter(g => !skip.has(key(g)))).length && tries++ < 200) { if (connect(gs[0], true)) n++; else skip.add(key(gs[0])); }
+    render(); writeHash(); toast(n ? t('connectedN', { n }) : t('connectedNone'));
   }
   // a connector between two street corners from a link (x:<corner>-<corner>)
   function connectorFromHash(tok) {
@@ -3117,7 +3138,7 @@ const Pieces = (() => {
   function draw() {
     if (!mapReady || !map.getSource('pieces')) return;
     map.getSource('pieces').setData(fc(state.results.filter(isPiece).map(s => ({ type: 'Feature', properties: { cnn: s.cnn, on: state.checked.has(s.cnn), kind: s.pk,
-      src: SrcStyle.srcOf(s), how: SrcStyle.HOW[SrcStyle.srcOf(s)], label: s.pk === 'connector' ? `${Math.round(s.len)} m` : '' },
+      src: SrcStyle.srcOf(s), how: SrcStyle.HOW[SrcStyle.srcOf(s)], label: s.pk === 'connector' ? `${Math.round(s.len)} m` : srcTag(s) },
       geometry: { type: 'LineString', coordinates: s.coords } }))));
   }
   function addLayers() {
@@ -3136,9 +3157,10 @@ const Pieces = (() => {
     map.addLayer({ id: 'bp-piece-hand', type: 'line', source: 'pieces', filter: onH('hand'), layout: { 'line-join': 'round', visibility: 'none' }, paint: { ...pink, 'line-dasharray': [1.2, 1.2] } });
     map.addLayer({ id: 'bp-piece-gps', type: 'line', source: 'pieces', filter: onH('gps'), layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
       paint: { 'line-color': '#FF3D7F', 'line-width': w(4.5, 11), 'line-dasharray': [0.05, 1.8] } });
-    map.addLayer({ id: 'bp-piece-label', type: 'symbol', source: 'pieces', filter: ['==', ['get', 'kind'], 'connector'],
-      layout: { 'symbol-placement': 'line-center', 'text-field': ['get', 'label'], 'text-size': 12, 'text-font': LABEL_FONT, 'text-allow-overlap': true },
-      paint: { 'text-color': '#C2255C', 'text-halo-color': '#fff', 'text-halo-width': 2 } });
+    // each piece says where it came from (SFMTA, OSM, GPS…), in its source's color; connectors their length (v101)
+    map.addLayer({ id: 'bp-piece-label', type: 'symbol', source: 'pieces', filter: ['any', ['==', ['get', 'kind'], 'connector'], ['==', ['get', 'on'], true]], minzoom: 14,
+      layout: { 'symbol-placement': 'line-center', 'text-field': ['get', 'label'], 'text-size': 11.5, 'text-font': LABEL_FONT, 'text-allow-overlap': false, 'text-offset': [0, -1.1] },
+      paint: { 'text-color': ['match', ['get', 'src'], ...Object.entries(SrcStyle.EDGE).flat(), '#C2255C'], 'text-halo-color': '#fff', 'text-halo-width': 2 } });
     map.addLayer({ id: 'bp-piece-hit', type: 'line', source: 'pieces', paint: { 'line-color': '#000', 'line-opacity': 0, 'line-width': 18 } });
     // a bike path with no CNN: click to add it as a piece (a street under the click wins)
     for (const id of ['bp-lyr-bike', 'bp-lyr-bike-dash']) {
@@ -3149,8 +3171,12 @@ const Pieces = (() => {
     }
     map.on('click', 'bp-piece-hit', e => { const c = e.features[0] && e.features[0].properties.cnn, s = state.results.find(r => r.cnn === c); if (!s) return;
       CardView.setOpen(c); goToCard(s); requestAnimationFrame(() => jumpToCard(c)); });
-    map.on('mouseenter', 'bp-piece-hit', () => { map.getCanvas().style.cursor = 'pointer'; });
-    map.on('mouseleave', 'bp-piece-hit', () => { map.getCanvas().style.cursor = ''; });
+    let tip = null;
+    map.on('mousemove', 'bp-piece-hit', e => { map.getCanvas().style.cursor = 'pointer';
+      const c = e.features[0] && e.features[0].properties.cnn, s = state.results.find(r => r.cnn === c); if (!s) return;
+      if (!tip) tip = new maplibregl.Popup({ closeButton: false, closeOnClick: false, className: 'bp-src-tip', offset: 12 });
+      tip.setLngLat(e.lngLat).setHTML(srcTipHTML(s)).addTo(map); });
+    map.on('mouseleave', 'bp-piece-hit', () => { map.getCanvas().style.cursor = ''; if (tip) tip.remove(); });
   }
   return { make, add, cardHTML, record, text, hashOf, fromHash, draw, addLayers, simplify, cornerAt, ends, connect, connectAll, connectorFromHash, toggleBike, bikeAt, toggleOsm, osmPiece };
 })();
@@ -3237,7 +3263,9 @@ function drawGaps(gaps) {
   gapMarkers.forEach(m => m.remove());
   gapMarkers = gaps.map(g => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'gap-connect';
-    b.innerHTML = `<b>＋</b> ${esc(t('connectGap', { m: g.m }))}`; b.title = t('connectGapTitle');
+    const ft = t('connectFromTo', { a: srcTag(g.from.s), b: srcTag(g.to.s) });
+    b.innerHTML = `<b>＋</b> ${esc(t('connectGap', { m: g.m }))}<small>${esc(ft)}</small>`;
+    b.title = `${t('connectGapTitle')}\n${isPiece(g.from.s) ? g.from.s.name : P(g.from.s.street)} (${srcTag(g.from.s)}) → ${isPiece(g.to.s) ? g.to.s.name : P(g.to.s.street)} (${srcTag(g.to.s)})`;
     b.addEventListener('click', e => { e.stopPropagation(); Pieces.connect(g); });
     return new maplibregl.Marker({ element: b }).setLngLat([(g.from.p[0] + g.to.p[0]) / 2, (g.from.p[1] + g.to.p[1]) / 2]).addTo(map);
   });
@@ -3366,7 +3394,7 @@ function describeStreets(segs) {
    shows what was skipped. The ride (points, streets, notes) is kept in this browser (RKEY) so a reload can
    carry on. A web page can't track with the screen off: keep the phone mounted and the page open. */
 const Ride = (() => {
-  let shownTrace = null;   // { pts, marks } from a saved route, shown when there's no ride
+  let shownTrace = null, curVia = null;   // { pts, marks } from a saved route, shown when there's no ride
   const RKEY = 'bp-ride', MATCH_M = 15, HEAD_DEG = 35, COVER = 0.5, SHORT_M = 60, MAX_ACC = 35, MIN_STEP = 4, GAP_S = 30;
   const KXm = 111320 * Math.cos(37.76 * Math.PI / 180), KYm = 110540;
   let on = false, paused = false, done = false, watch = null, lock = null, follow = true;
@@ -3523,8 +3551,10 @@ const Ride = (() => {
     const bk = bgrid ? best(bgrid.get(Math.floor(x / 100) + ',' + Math.floor(y / 100)) || [], x, y, acc) : null;
     const sb = best(near(x, y), x, y, acc), ob = best(osmNear(x, y), x, y, acc);
     const pick = [bk && { k: 'bike', m: bk, d: bk.o.d - 2 }, sb && { k: 'street', m: sb, d: sb.o.d }, ob && { k: 'osm', m: ob, d: ob.o.d + 1 }].filter(Boolean).sort((a, b) => a.d - b.d)[0];
-    if (!pick) { cur = null; return; }
-    if (pick.k === 'bike' && !bk.s.far) { const st = Logic.db.byCnn.get(bk.s.streetCnn); if (st) return hit(st, onStreet(st, x, y), ts); }
+    if (!pick) { cur = null; curVia = null; return; }
+    // what the Ride bar says you're on (v101): a street, a bike lane along it, an SFMTA bike path, an OSM path
+    if (pick.k === 'bike' && !bk.s.far) { const st = Logic.db.byCnn.get(bk.s.streetCnn); if (st) { curVia = { k: 'lane', cls: bk.s.cls }; return hit(st, onStreet(st, x, y), ts); } }
+    curVia = { k: pick.k, cls: pick.k === 'bike' ? pick.m.s.cls : '' };
     hit(pick.m.s, pick.m.o, ts);
   }
   // a reading on a street or a bike line: how much of it is covered, when, and which way; added at COVER
@@ -3716,13 +3746,16 @@ const Ride = (() => {
         </div>`;
       return;
     }
-    const here = cur ? (cur.bike ? `${t('piece_bike')} · ${fmtFt(cur.len)} ft` : cur.osm ? `${cur.props.name || t('osm_' + cur.props.kind)} · OSM` : `${P(cur.street)} · ${betweenText(cur)}`) : t('rideNoStreet');
+    const here = cur ? (cur.bike ? `${fmtFt(cur.len)} ft` : cur.osm ? `${cur.props.name || t('osm_' + cur.props.kind)}` : `${P(cur.street)} · ${betweenText(cur)}`) : t('rideNoStreet');
+    // a chip in the source's color: City street / Bike lane / SFMTA bike path / OSM <kind>
+    const vk = !cur ? '' : cur.bike ? 'bike' : cur.osm ? 'osm' : curVia && curVia.k === 'lane' ? 'lane' : 'street';
+    const chip = vk ? `<span class="rb-kind" style="background:${{ street: SrcStyle.EDGE.ride, lane: SrcStyle.EDGE.bike, bike: SrcStyle.EDGE.bike, osm: SrcStyle.EDGE.osm }[vk]}">${esc(vk === 'osm' ? t('rideOnOsm', { kind: t('osm_' + cur.props.kind).replace(/\s*\(OSM\)$/, '').toLowerCase() }) : vk === 'lane' && bikeKind(curVia.cls) ? bikeKind(curVia.cls) : vk === 'bike' && bikeKind(cur.cls) ? t('rideOnSfmta', { kind: bikeKind(cur.cls) }) : t('rideOn_' + vk))}</span>` : '';
     // typing a note: keep the box (and what's typed), update only the numbers
     const nf = el.querySelector('.rb-note');
     if (nf && !nf.hidden) {
       const top = el.querySelector('.rb-top span'), st = el.querySelector('.rb-stats'), hr = el.querySelector('.rb-here');
       if (top) top.textContent = t('rideCount', { n: added.length, km: totals().km.toFixed(1) });
-      if (st) st.textContent = statsLine(); if (hr) hr.textContent = here;
+      if (st) st.textContent = statsLine(); if (hr) hr.innerHTML = chip + esc(here);
       return;
     }
     const has = cur && state.checked.has(cur.cnn);
@@ -3730,7 +3763,7 @@ const Ride = (() => {
       <div class="rb-react"><button type="button" class="rb-emoji" data-rb="up" aria-label="${esc(t('rideUp'))}">👍</button><button type="button" class="rb-emoji" data-rb="down" aria-label="${esc(t('rideDown'))}">👎</button>
         <div class="rb-info"><div class="rb-top"><b>${esc(t(paused ? 'ridePaused' : 'rideRiding'))}</b> <span>${esc(t('rideCount', { n: added.length, km: totals().km.toFixed(1) }))}</span></div>
         <div class="rb-stats">${esc(statsLine())}</div></div></div>
-      <div class="rb-here">${esc(here)}</div>
+      <div class="rb-here">${chip}${esc(here)}</div>
       <div class="rb-btns">
         ${cur && !cur.bike && !cur.osm ? `<button type="button" class="btn small" data-rb="${has ? 'drop' : 'add'}">${esc(t(has ? 'rideDrop' : 'rideAdd'))}</button>` : ''}
         <button type="button" class="btn small" data-rb="note">✎ ${esc(t('rideNote'))}</button>
@@ -5305,12 +5338,13 @@ const BIKE_SOLID = ['separated', 'lane', 'path'];
 /* ---------- Focus: which things on the map take clicks and hover ---------- */
 const Focus = (() => {
   let kind = null, autoLots = false;
-  const KINDS = ['streets', 'ints', 'biz', 'trees', 'places', 'lots'];
-  const HIT = { streets: ['bp-all-hit'], ints: ['bp-corners-hit', 'bp-ints', 'bp-quiet-int'], biz: ['bp-lyr-businesses', 'bp-card-hl', 'bp-card-hl-dot', 'bp-card-hl-label'],
+  const KINDS = ['route', 'streets', 'ints', 'biz', 'trees', 'places', 'lots'];
+  // route: only the route's own parts take clicks and hovers; streets, corners and the OSM / bike layers pause (v101)
+  const HIT = { route: ['bp-piece-hit', 'bp-ride-mark', 'bp-ride-note'], streets: ['bp-all-hit'], ints: ['bp-corners-hit', 'bp-ints', 'bp-quiet-int'], biz: ['bp-lyr-businesses', 'bp-card-hl', 'bp-card-hl-dot', 'bp-card-hl-label'],
     trees: ['bp-lyr-trees'], places: () => POI_LAYERS, lots: ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill'] };
   const hitOf = k => { const v = HIT[k]; return typeof v === 'function' ? v() : v || []; };
   // layers with hover or click handlers: these pause while something else is focused
-  const interactive = id => /^bp-drop-\d+-/.test(id) || /^bp-feat-hl/.test(id) || KINDS.some(k => hitOf(k).includes(id));
+  const interactive = id => /^bp-drop-\d+-/.test(id) || /^bp-feat-hl/.test(id) || ['bp-lyr-osm-hit', 'bp-lyr-bike', 'bp-lyr-bike-dash'].includes(id) || KINDS.some(k => hitOf(k).includes(id));
   function allows(id) {
     if (!kind || !interactive(id)) return true;
     if (kind[0] === 'f') return id.startsWith('bp-drop-' + kind.slice(1) + '-') || /^bp-feat-hl/.test(id);
@@ -5339,7 +5373,7 @@ const Focus = (() => {
     const m = $('focus-pop');
     const files = Drops.files().filter(f => f.on);
     const b = (k, l) => `<button type="button" data-focus="${k}" aria-pressed="${kind === k}">${esc(l)}</button>`;
-    m.innerHTML = `<p>${esc(t('focusPopTitle'))}</p>${b('', t('focus_all'))}${KINDS.filter(k => k !== 'places' || POI_LAYERS.some(id => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none')).map(k => b(k, t('focus_' + k))).join('')}`
+    m.innerHTML = `<p>${esc(t('focusPopTitle'))}</p>${b('', t('focus_all'))}${KINDS.filter(k => k !== 'route' || state.route || Ride.on).filter(k => k !== 'places' || POI_LAYERS.some(id => map.getLayer(id) && map.getLayoutProperty(id, 'visibility') !== 'none')).map(k => b(k, t('focus_' + k))).join('')}`
       + (files.length ? `<p>${esc(t('focusFiles'))}</p>` + files.map(f => b('f' + f.id, Drops.fileName(f.id))).join('') : '');
   }
   function setup() {
@@ -10950,7 +10984,7 @@ function drawResults() {
   });
   map.getSource('results').setData(fc(segs.map(s => segFeature(s, props(s)))));
   SrcStyle.apply();
-  { const el = $('lg-src'); if (el) { const h = SrcStyle.keyHTML(); el.innerHTML = h; el.hidden = !h; } }
+  { const h = SrcStyle.keyHTML(); for (const id of ['lg-src', 'src-key']) { const el = $(id); if (el) { el.innerHTML = h; el.hidden = !h; } } }
   map.getSource('results-mid').setData(fc(segs.map(s => midFeature(s, props(s)))));
   const shown = segs.filter(s => state.checked.has(s.cnn));
   // around an intersection the blocks leading in are already drawn, so cross streets only follow checked blocks
