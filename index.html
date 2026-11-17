@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v99 -->
+<!-- build: v100 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1077,6 +1077,7 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
           <button type="button" class="btn small" id="dl-geojson">GeoJSON</button></div>
         <div class="sel-row"><span class="sel-step" data-i18n="saveToStep">Save to</span>
           <input autocomplete="off" type="text" id="save-name" class="save-name" data-i18n-placeholder="saveNamePh" placeholder="Route or list name">
+          <button type="button" class="btn small primary" id="save-sheet-update" hidden></button>
           <button type="button" class="btn small" id="save-sheet-last" hidden></button>
           <span class="save-new"><input autocomplete="off" type="text" id="save-project" class="save-name" data-i18n-placeholder="saveProjectPh" placeholder="New project's name">
           <button type="button" class="btn small" id="save-sheet-new" data-i18n="saveSheetNew" title="A new project sheet in your Google Drive">New project sheet</button></span>
@@ -1383,7 +1384,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v99';
+const _BUILD_VERSION = 'v100';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1665,7 +1666,7 @@ const I18N = {
     meTitle: 'Where am I? (then ◎ Nearby → Near me)', meFound: 'Found you. Open Nearby and pick “Near me” to see what’s around.',
     saveToStep: 'Save to', saveNamePh: 'Route or list name', saveProjectPh: 'New project’s name', saveSheetNew: 'New project sheet', saveSheetAdd: 'Add to a project…', saveAirtable: 'Airtable',
     saveDefaultRoute: 'Block Party route', saveDefaultSel: 'Block Party streets', saveTabStreets: 'Streets', saveTabAbout: 'About', saveTabRoutes: 'Routes',
-    saveProject: 'project', saveProjectDefault: 'Block Party project', saveAddTo: 'Add to “{name}”', saveWhere: '“{project}”, tab “{tab}”', saveDoneN: 'Saved {n} streets to {where}.',
+    saveProject: 'project', saveProjectDefault: 'Block Party project', saveAddTo: 'Add to “{name}”', saveUpdate: 'Update “{tab}”', saveUpdateTitle: 'Save over the tab this route came from, and its row on Routes', saveNothing: 'Nothing selected to save.', saveUpdated: 'Updated {n} streets in {where}.', saveTabTrace: 'trace', saveWhere: '“{project}”, tab “{tab}”', saveDoneN: 'Saved {n} streets to {where}.',
     saveWorking: 'Reading the streets’ details and saving…', saveDone: 'Saved {n} rows.', saveDoneRoute: 'Saved the route ({n} rows, in order).', saveOpen: 'Open the sheet',
     saveFailed: 'Couldn’t save: {why}', saveAtStep: 'Saving to Airtable: {i} of {n}', saveAtDone: 'Saved {n} records to Airtable.', atSaveNoTable: 'Pick a table to save to.',
     censusShowBlocks: 'Show the census blocks and corners',
@@ -1949,6 +1950,28 @@ const Logic = (() => {
     const nodes = new Map(raw.nodes.map(n => [n[NF.cnn], {
       cnn: n[NF.cnn], x: n[NF.x] / SCALE, y: n[NF.y] / SCALE, streets: n[NF.streets].map(i => S[i])
     }]));
+    // Some streets come with no corner ids (0 at both ends: new Presidio and Treasure Island streets, a few
+    // others). 0 isn't a corner: left alone it joins all of them at one point. Each such end takes the real
+    // corner within 15 m, else one made here at that point, shared by ends within 2 m of it (v100).
+    nodes.delete(0);
+    {
+      const KXn = 111320 * COS_LAT, KYn = 110540, cell = 0.0005, real = new Map(), made = new Map();
+      const key = (x, y) => Math.floor(x / cell) + ',' + Math.floor(y / cell);
+      const put = (g, n) => { const k = key(n.x, n.y); if (!g.has(k)) g.set(k, []); g.get(k).push(n); };
+      for (const n of nodes.values()) put(real, n);
+      let next = 900000000;
+      const near = (g, [x, y], m, not) => { let best = null, bd = m; const gx = Math.floor(x / cell), gy = Math.floor(y / cell);
+        for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (const n of g.get((gx + i) + ',' + (gy + j)) || []) {
+          if (n.cnn === not) continue;
+          const d = Math.hypot((n.x - x) * KXn, (n.y - y) * KYn); if (d < bd) { bd = d; best = n; } }
+        return best; };
+      for (const s of segs) for (const [end, i, other] of [['fn', 0, 'tn'], ['tn', s.coords.length - 1, 'fn']]) {
+        if (s[end]) continue;
+        const p = s.coords[i]; let n = near(real, p, 15, s[other]) || near(made, p, 2, s[other]);
+        if (!n) { n = { cnn: next++, x: p[0], y: p[1], streets: [] }; nodes.set(n.cnn, n); put(made, n); }
+        s[end] = n.cnn; if (!n.streets.includes(s.street)) n.streets.push(s.street);
+      }
+    }
     const segsAtNode = new Map();
     for (const s of segs) for (const n of [s.fn, s.tn]) {
       if (!segsAtNode.has(n)) segsAtNode.set(n, []);
@@ -2648,6 +2671,7 @@ function setupForm() {
   $('dl-csv').addEventListener('click', () => Downloads.go('csv'));
   $('save-sheet-new').addEventListener('click', () => SaveTo.sheet('new'));
   $('save-sheet-last').addEventListener('click', () => SaveTo.sheet('last'));
+  $('save-sheet-update').addEventListener('click', () => SaveTo.sheet('update'));
   $('save-sheet-add').addEventListener('click', () => SaveTo.sheet('add'));
   $('save-airtable').hidden = !(CONFIG.AIRTABLE_SAVE && CONFIG.AIRTABLE_SAVE.table);
   $('save-airtable').addEventListener('click', () => SaveTo.airtable());
@@ -2701,7 +2725,7 @@ function startOver({ keepView = false } = {}) {
   try { SelAreas.reset(); } catch (e) { }   // not there yet while the page starts
   clearPicked();
   state.route = false;
-  try { Focus.set(null); clearQuiet(); } catch (e) { }
+  try { Focus.set(null); clearQuiet(); SaveTo.setCurrent(null); Ride.clearTrace(); } catch (e) { }
   render(); writeHash();
   if (!keepView) resetView();
 }
@@ -2844,7 +2868,7 @@ function routeLine(items) {
    shows both. */
 const SrcStyle = (() => {
   const KEY = 'bp-src-mode', MODES = ['none', 'color', 'pattern', 'both'];
-  const EDGE = { pick: '#FFC53D', ride: '#378ADD', trace: '#378ADD', bike: '#2F9E44', osm: '#0CA678', hand: '#7F77DD', file: '#E8590C' };
+  const EDGE = { pick: '#FFC53D', ride: '#378ADD', trace: '#378ADD', bike: '#2F9E44', osm: '#8B5A2B', hand: '#7F77DD', file: '#E8590C' };
   const HOW = { pick: 'cnn', ride: 'cnn', bike: 'id', osm: 'id', hand: 'hand', file: 'hand', trace: 'gps' };
   const ORDER = ['pick', 'ride', 'bike', 'osm', 'trace', 'hand', 'file'];
   const rideSet = new Set();
@@ -3281,7 +3305,7 @@ function render() {
   $('gap-connect-all').textContent = t(gaps.length === 1 ? 'connectOne' : 'connectAll', { n: gaps.length });
   if (!state.title && nBlk) $('results-title').textContent = t('linkedBlocks');
   ['apply', 'add-cross', 'add-around', 'area-save', 'pick-along'].forEach(id => $(id).disabled = !n);
-  ['copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson', 'save-sheet-new', 'save-sheet-add', 'save-sheet-last', 'save-airtable'].forEach(id => $(id).disabled = !n && !nBlk);
+  ['copy-csv', 'copy-json', 'copy-link', 'dl-csv', 'dl-geojson', 'save-sheet-new', 'save-sheet-add', 'save-sheet-last', 'save-sheet-update', 'save-airtable'].forEach(id => $(id).disabled = !n && !nBlk);
   if (picking && SelAreas.picks().names.length) $('area-save').disabled = false;
   // Intersection results: intersection cards, then checked blocks as full cards, then the unchecked
   // blocks leading into the intersection as compact rows.
@@ -3342,6 +3366,7 @@ function describeStreets(segs) {
    shows what was skipped. The ride (points, streets, notes) is kept in this browser (RKEY) so a reload can
    carry on. A web page can't track with the screen off: keep the phone mounted and the page open. */
 const Ride = (() => {
+  let shownTrace = null;   // { pts, marks } from a saved route, shown when there's no ride
   const RKEY = 'bp-ride', MATCH_M = 15, HEAD_DEG = 35, COVER = 0.5, SHORT_M = 60, MAX_ACC = 35, MIN_STEP = 4, GAP_S = 30;
   const KXm = 111320 * Math.cos(37.76 * Math.PI / 180), KYm = 110540;
   let on = false, paused = false, done = false, watch = null, lock = null, follow = true;
@@ -3362,7 +3387,7 @@ const Ride = (() => {
     const pc = Pieces.add({ coords: Pieces.simplify(coords, 2), kind: 'ride', reach: 40, src: t('pieceFromRide', { date: new Date().toISOString().slice(0, 10) }) }, true);
     if (pc) { render(); writeHash(); toast(t('rideOffAdded', { ft: fmtFt(pc.len) })); }
   }
-  const save = () => { try { localStorage.setItem(RKEY, JSON.stringify({ on, done, pts: pts.slice(-4000), added, marks, seen: [...seen], moving, dist, at: Date.now() })); } catch (e) { } };
+  const save = () => { try { localStorage.setItem(RKEY, JSON.stringify({ on, done, pts: pts.slice(-20000), added, marks, seen: [...seen], moving, dist, at: Date.now() })); } catch (e) { } };
   function near(x, y) {
     if (!grid) {
       grid = new Map();
@@ -3571,12 +3596,14 @@ const Ride = (() => {
   function draw() {
     if (!mapReady || !map.getSource('ride')) return;
     const f = [];
-    if (pts.length > 1) f.push({ type: 'Feature', properties: { part: 'track' }, geometry: { type: 'LineString', coordinates: pts.map(p => [p[0], p[1]]) } });
+    // the ride's own readings while riding or just stopped; once closed, only a trace opened with a saved route (v100)
+    const live = on || done, tp = live ? pts : shownTrace ? shownTrace.pts : [], tm = live ? marks : shownTrace ? shownTrace.marks : [];
+    if (tp.length > 1) f.push({ type: 'Feature', properties: { part: 'track' }, geometry: { type: 'LineString', coordinates: tp.map(p => [p[0], p[1]]) } });
     if (cur && on) f.push({ type: 'Feature', properties: { part: 'cur' }, geometry: { type: 'LineString', coordinates: cur.coords } });
     // how much of the street you're on has been covered (it's added at half)
     const cv = cur && on && cover.get(cur.cnn);
     if (cv && cv.hi > cv.lo && !added.includes(cur.cnn) && !(cur.bike && bikeAdded.has(cur.key)) && !(cur.osm && osmAdded.has(cur.id))) { const sub = slice(cur.coords, cv.lo, cv.hi); if (sub.length > 1) f.push({ type: 'Feature', properties: { part: 'covered' }, geometry: { type: 'LineString', coordinates: sub } }); }
-    marks.forEach(m => f.push({ type: 'Feature', properties: { part: 'mark', kind: m.kind }, geometry: { type: 'Point', coordinates: [m.lon, m.lat] } }));
+    tm.forEach(m => f.push({ type: 'Feature', properties: { part: 'mark', kind: m.kind }, geometry: { type: 'Point', coordinates: [m.lon, m.lat] } }));
     if (pts.length && on) f.push({ type: 'Feature', properties: { part: 'me', follow }, geometry: { type: 'Point', coordinates: pts[pts.length - 1].slice(0, 2) } });
     map.getSource('ride').setData({ type: 'FeatureCollection', features: f });
   }
@@ -3620,7 +3647,7 @@ const Ride = (() => {
     ensureLayers(); loadBikes();
     on = true; paused = false; done = false; follow = true;
     off = []; lastOn = null;
-    if (!resume) { pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear(); osmAdded.clear(); }
+    if (!resume) { SaveTo.setCurrent(null); shownTrace = null; pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear(); osmAdded.clear(); }
     state.route = true; const rc = $('route-on'); if (rc) rc.checked = true;
     if (watch != null) navigator.geolocation.clearWatch(watch);
     watch = navigator.geolocation.watchPosition(p => feed(p.coords.longitude, p.coords.latitude, p.coords.accuracy, p.timestamp, p.coords.heading),
@@ -3634,7 +3661,7 @@ const Ride = (() => {
     ensureLayers(); await loadBikes();
     await Promise.all([...new Set(list.map(p => Math.floor(tX(p.lon)) + '/' + Math.floor(tY(p.lat))))].map(k => { const [x, y] = k.split('/').map(Number); return osmTile(tLon(x + 0.5), tLat(y + 0.5)); }));
     if (watch != null) navigator.geolocation.clearWatch(watch); watch = null;
-    on = true; paused = false; done = false; follow = false; off = []; lastOn = null;
+    on = true; paused = false; done = false; follow = false; off = []; lastOn = null; SaveTo.setCurrent(null); shownTrace = null;
     pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear(); osmAdded.clear();
     state.results = []; state.checked = new Set(); state.title = name || t('rideTitleList');
     state.route = true; const rc = $('route-on'); if (rc) rc.checked = true;
@@ -3674,13 +3701,14 @@ const Ride = (() => {
     $('ride-lost').hidden = !(on && !follow);
     if (el.hidden) return;
     if (done) {
-      const lp = SaveTo.lastProject && SaveTo.lastProject();
+      const lp = SaveTo.lastProject && SaveTo.lastProject(), cs = SaveTo.current;
       el.innerHTML = `<div class="rb-top"><b>${esc(t('rideDone'))}</b> <span>${esc(t('rideCount', { n: added.length, km: totals().km.toFixed(1) }))}</span></div>
         <div class="rb-stats">${esc(statsLine())}</div>${profileSVG()}
         <div class="rb-marks">${esc(t('rideMarksN', { up: marks.filter(m => m.kind === 'up').length, down: marks.filter(m => m.kind === 'down').length, notes: marks.filter(m => m.kind === 'note').length }))}</div>
         <label class="rb-name"><span>${esc(t('rideSaveAs'))}</span><input type="text" id="ride-name" autocomplete="off" value="${esc(suggestName())}"></label>
         <div class="rb-btns">
-          ${lp ? `<button type="button" class="btn small primary" data-rb="save-last">${esc(t('saveAddTo', { name: lp.name }))}</button>` : ''}
+          ${cs ? `<button type="button" class="btn small primary" data-rb="save-update">${esc(t('saveUpdate', { tab: cs.tab }))}</button>` : ''}
+          ${lp ? `<button type="button" class="btn small${cs ? '' : ' primary'}" data-rb="save-last">${esc(t('saveAddTo', { name: lp.name }))}</button>` : ''}
           <button type="button" class="btn small${lp ? '' : ' primary'}" data-rb="save-new">${esc(t('saveSheetNew'))}</button>
           <button type="button" class="btn small" data-rb="save-pick">${esc(t('saveSheetAdd'))}</button>
           <button type="button" class="btn small" data-rb="csv">${esc(t('rideCsv'))}</button>
@@ -3724,15 +3752,16 @@ const Ride = (() => {
       f.onsubmit = ev => { ev.preventDefault(); const v = i.value.trim(); f.hidden = true; i.value = ''; if (v) mark('note', v); bar(); };
       i.onkeydown = ev => { if (ev.key === 'Escape') { f.hidden = true; bar(); } };
     }
-    else if (k.startsWith('save-')) { $('save-name').value = $('ride-name').value.trim() || suggestName(); SaveTo.sheet(k === 'save-last' ? 'last' : k === 'save-new' ? 'new' : 'add'); }
+    else if (k.startsWith('save-')) { $('save-name').value = $('ride-name').value.trim() || suggestName(); SaveTo.sheet(k === 'save-update' ? 'update' : k === 'save-last' ? 'last' : k === 'save-new' ? 'new' : 'add'); }
     else if (k === 'csv') Downloads.go('csv');
-    else if (k === 'close') { el.dataset.closed = '1'; done = false; bar(); save(); }
+    else if (k === 'close') { el.dataset.closed = '1'; done = false; draw(); bar(); save(); }
   }
   function restore() {
     let r = null; try { r = JSON.parse(localStorage.getItem(RKEY)); } catch (e) { }
     if (!r) return;
     marks = r.marks || []; seen = new Map(r.seen || []); moving = r.moving || 0; dist = r.dist || 0;
     (r.added || []).forEach(c => SrcStyle.markRide(c));
+    if (!r.on && !r.done && Date.now() - (r.at || 0) < 24 * 3600e3) { pts = r.pts || []; added = r.added || []; }
     if ((r.on || r.done) && Date.now() - (r.at || 0) < 6 * 3600e3) {
       pts = r.pts || []; added = r.added || [];
       const missing = added.map(c => Logic.db.byCnn.get(c)).filter(s => s && !state.results.some(x => x.cnn === s.cnn));
@@ -3777,7 +3806,14 @@ const Ride = (() => {
       const up = ms.filter(m => m.kind === 'up').length, down = ms.filter(m => m.kind === 'down').length, notes = ms.filter(m => m.kind === 'note').map(m => m.text);
       return `<dt>${esc(t('noteRow'))}</dt><dd class="ride-note">${up ? `👍 ${up} ` : ''}${down ? `👎 ${down} ` : ''}${notes.map(esc).join('<br>')}</dd>`; },
     summary: () => ({ ...totals(), name: suggestName() }),
-    hasRide: () => added.length > 0 && (on || done || seen.size > 0),
+    // the ride goes with a save only while some of its streets are still in the selection (v100)
+    hasRide: () => added.length > 0 && added.some(c => state.checked.has(c)),
+    // the GPS readings, for a "trace" tab: the same columns a file of readings is read with (readingsOf)
+    readingsRows: () => pts.map(p => ({ time: new Date(p[2]).toISOString(), lat: p[1], lon: p[0], accuracy_m: p[3], elevation_m: p[4] ?? '' })),
+    // a saved route's trace and marks, drawn under it (dotted), until Start over or another ride
+    showTrace(list, mk) { ensureLayers(); shownTrace = { pts: list.map(p => [p.lon, p.lat]), marks: mk || [] }; draw(); },
+    clearTrace() { shownTrace = null; draw(); },
+    refreshBar: () => { if (done) bar(); },
   };
 })();
 // "601–649": the lowest and highest address on the block, both sides
@@ -4322,12 +4358,26 @@ const SaveTo = (() => {
   const nameOf = () => $('save-name').value.trim() || t(state.route ? 'saveDefaultRoute' : 'saveDefaultSel');
   const q = tab => `'${String(tab).replace(/'/g, "''")}'`;
   const ROUTE_COLS = ['route', 'kind', 'streets', 'intersections', 'gaps', 'length_km', 'saved', 'tab', 'tab_id', 'tab_link', 'block_party_link', 'made_with',
-    'pieces', 'route_polyline', 'ride_time', 'ride_km', 'avg_kmh', 'climb_ft', 'descent_ft', 'thumbs_up', 'thumbs_down', 'notes', 'marks_tab_link'];
+    'pieces', 'route_polyline', 'ride_time', 'ride_km', 'avg_kmh', 'climb_ft', 'descent_ft', 'thumbs_up', 'thumbs_down', 'notes', 'marks_tab_link', 'trace_tab_link'];
   // the last project sheet saved to, for "Add to <name>"
   const PKEY = 'bp-sheet-project';
   const lastProject = () => { try { return JSON.parse(localStorage.getItem(PKEY)); } catch (e) { return null; } };
   const showLast = () => { const p = lastProject(), b = $('save-sheet-last'); if (!b) return; b.hidden = !p; if (p) { b.textContent = t('saveAddTo', { name: p.name }); b.title = p.url; } };
   const remember = p => { try { localStorage.setItem(PKEY, JSON.stringify({ id: p.id, name: p.name, url: p.url, routesTab: p.routesTab })); } catch (e) { } showLast(); };
+  // where the route on the map was saved (or opened from): its sheet and tab, so the next save can update it (v100)
+  const CKEY = 'bp-route-saved';
+  let current = null; try { current = JSON.parse(localStorage.getItem(CKEY)); } catch (e) { }
+  const setCurrent = c => { current = c && c.proj && c.gid != null ? c : null; try { current ? localStorage.setItem(CKEY, JSON.stringify(current)) : localStorage.removeItem(CKEY); } catch (e) { } showUpdate(); };
+  const showUpdate = () => { const b = $('save-sheet-update'); if (!b) return; b.hidden = !current; if (current) { b.textContent = t('saveUpdate', { tab: current.tab }); b.title = t('saveUpdateTitle'); } };
+  // a tab of rows: written over (cleared first) when it's there, else added
+  async function writeTab(proj, tabs, gid, title, rows) {
+    const had = gid != null && tabs.find(x => x.sheetId === gid);
+    if (had) { await GoogleDrive.clearValues(proj.id, q(had.title)); if (had.rows < rows.length + 2) await GoogleDrive.resizeTab(proj.id, gid, rows.length + 10, Math.max(had.cols, rows[0].length + 2)); await GoogleDrive.putValues(proj.id, `${q(had.title)}!A1`, rows); return { gid, title: had.title }; }
+    const have = new Set(tabs.map(x => x.title)); let tab = title.slice(0, 90), k = 2;
+    while (have.has(tab)) tab = `${title.slice(0, 85)} (${k++})`;
+    const id = await GoogleDrive.addTab(proj.id, tab, rows.length + 10, rows[0].length + 2); tabs.push({ title: tab, sheetId: id, rows: rows.length + 10, cols: rows[0].length + 2 });
+    await GoogleDrive.putValues(proj.id, `${q(tab)}!A1`, rows); return { gid: id, title: tab };
+  }
   function gather(segs) {
     const isRoute = !!state.route;
     const order = new Map(segs.filter(s => !isInt(s)).map((s, i) => [s.cnn, i + 1]));
@@ -4341,8 +4391,8 @@ const SaveTo = (() => {
       streets: streets.length - pieces, pieces, ints: segs.length - streets.length, gaps: gaps.length, km: (lenM / 1000).toFixed(2), link: linkFor(segs) };
   }
   return {
-    lastProject,
-    prepare() { showLast(); if (!GoogleDrive.ready) GoogleDrive.config(SFBlocks.url('matcher/google.json')).catch(() => {}); },
+    lastProject, setCurrent, get current() { return current; },
+    prepare() { showLast(); showUpdate(); if (!GoogleDrive.ready) GoogleDrive.config(SFBlocks.url('matcher/google.json')).catch(() => {}); },
     // A project is one Google Sheet: a "Routes" tab with a row per saved route or list, and a tab for each one.
     // Each row has the tab's name and a link by the tab's id (gid), which still works after a rename; the Routes
     // tab itself is found by its id first (remembered here), then by name.
@@ -4351,11 +4401,14 @@ const SaveTo = (() => {
         if (!GoogleDrive.ready && !(await GoogleDrive.config(SFBlocks.url('matcher/google.json')))) { toast(t('driveNotSetUp')); return; }
         await GoogleDrive.signIn();   // first, while the click still counts, so the browser lets Google's window open
         let proj = null;
-        if (mode === 'last') proj = lastProject();
+        if (mode === 'update' && !current) mode = 'last';
+        if (mode === 'update') proj = { ...current.proj };
+        else if (mode === 'last') proj = lastProject();
         else if (mode === 'add') { const d = await GoogleDrive.pick(['application/vnd.google-apps.spreadsheet']); if (!d) return;
           proj = { id: d.id, name: d.name, url: d.url || `https://docs.google.com/spreadsheets/d/${d.id}/edit` }; if (lastProject() && lastProject().id === d.id) proj.routesTab = lastProject().routesTab; }
         status(t('saveWorking'));
         const segs = await exportSegs(), g = gather(segs), name = nameOf();
+        if (!segs.length) { status(t('saveNothing')); return; }
         let tabs;
         if (mode === 'new') {
           const title = $('save-project').value.trim() || `${t('saveProjectDefault')} ${today()}`;
@@ -4370,32 +4423,35 @@ const SaveTo = (() => {
           await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A1`, [ROUTE_COLS]); tabs.push(rt); }
         proj.routesTab = rt.sheetId;
         await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A1`, [ROUTE_COLS]);
-        // this route's own tab
-        const have = new Set(tabs.map(x => x.title)); let tab = name.slice(0, 90), k = 2;
-        while (have.has(tab)) tab = `${name.slice(0, 85)} (${k++})`;
-        const gid = await GoogleDrive.addTab(proj.id, tab, g.rows.length + 10, g.cols.length + 2);
-        await GoogleDrive.putValues(proj.id, `${q(tab)}!A1`, g.rows);
+        // this route's own tab (written over when updating)
+        const upd = mode === 'update' ? current : null;
+        const own = await writeTab(proj, tabs, upd ? upd.gid : null, name, g.rows), gid = own.gid, tab = own.title;
         const base = `https://docs.google.com/spreadsheets/d/${proj.id}/edit`;
-        // a ride's 👍 / 👎 / notes, each with where and when, on a tab of their own
-        let marksGid = null; const mk = Ride.hasRide() ? Ride.marksRows() : [];
-        if (mk.length) {
-          const mcols = Object.keys(mk[0]), mt = `${tab.slice(0, 80)} ${t('saveTabMarks')}`;
-          marksGid = await GoogleDrive.addTab(proj.id, mt, mk.length + 5, mcols.length + 1);
-          await GoogleDrive.putValues(proj.id, `${q(mt)}!A1`, [mcols, ...mk.map(r => mcols.map(c => r[c] == null ? '' : String(r[c])))]);
-        }
+        const table = list => { const cols = Object.keys(list[0]); return [cols, ...list.map(r => cols.map(c => r[c] == null ? '' : String(r[c])))]; };
+        // a ride's 👍 / 👎 / notes, each with where and when, and its GPS readings, on tabs of their own
+        let marksGid = upd ? upd.marksGid ?? null : null, traceGid = upd ? upd.traceGid ?? null : null;
+        const mk = Ride.hasRide() ? Ride.marksRows() : [], tr = Ride.hasRide() ? Ride.readingsRows() : [];
+        if (mk.length) marksGid = (await writeTab(proj, tabs, marksGid, `${tab.slice(0, 80)} ${t('saveTabMarks')}`, table(mk))).gid;
+        if (tr.length) traceGid = (await writeTab(proj, tabs, traceGid, `${tab.slice(0, 80)} ${t('saveTabTrace')}`, table(tr))).gid;
         const rs = Ride.hasRide() ? Ride.summary() : null;
         const rideCells = rs ? { ride_time: new Date(rs.secs * 1000).toISOString().slice(11, 19), ride_km: rs.km.toFixed(2), avg_kmh: rs.kmh.toFixed(1),
           climb_ft: Math.round(rs.up * M2FT), descent_ft: Math.round(rs.down * M2FT), thumbs_up: mk.filter(m => m.mark === '👍').length, thumbs_down: mk.filter(m => m.mark === '👎').length,
-          notes: mk.filter(m => m.mark === 'note').length, marks_tab_link: marksGid != null ? `${base}#gid=${marksGid}` : '' } : {};
-        // and its row on Routes
-        const used = await GoogleDrive.getValues(proj.id, `${q(rt.title)}!A:A`), next = Math.max(2, used.length + 1);
+          notes: mk.filter(m => m.mark === 'note').length, marks_tab_link: marksGid != null ? `${base}#gid=${marksGid}` : '', trace_tab_link: traceGid != null ? `${base}#gid=${traceGid}` : '' } : {};
+        // and its row on Routes: the row with this tab's id when updating, else a new one at the end
+        const used = await GoogleDrive.getValues(proj.id, `${q(rt.title)}!A:Z`), idCol = (used[0] || []).indexOf('tab_id');
+        const at = upd && idCol >= 0 ? used.findIndex((r, i) => i > 0 && String(r[idCol]) === String(gid)) : -1;
+        const next = at > 0 ? at + 1 : Math.max(2, used.length + 1);
+        // updating with no ride here (on another device, say): the row keeps its ride columns
+        const RIDE_COLS = ['ride_time', 'ride_km', 'avg_kmh', 'climb_ft', 'descent_ft', 'thumbs_up', 'thumbs_down', 'notes', 'marks_tab_link', 'trace_tab_link'];
+        if (!rs && at > 0) for (const c of RIDE_COLS) { const i = used[0].indexOf(c); if (i >= 0 && used[at][i] != null && used[at][i] !== '') rideCells[c] = used[at][i]; }
         await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A${next}`, [ROUTE_COLS.map(c => ({ route: name, kind: g.isRoute ? 'route' : 'selection', streets: g.streets, intersections: g.ints,
           gaps: g.isRoute ? g.gaps : '', pieces: g.pieces || '', route_polyline: g.line || '', length_km: g.isRoute ? g.km : '', saved: today(), tab, tab_id: gid, tab_link: `${base}#gid=${gid}`, block_party_link: g.link,
           made_with: `Block Party ${_BUILD_VERSION}`, ...rideCells })[c] ?? '')]);
         remember(proj);
-        const where = t('saveWhere', { project: proj.name, tab });
-        status(`${esc(t('saveDoneN', { n: g.streets, where }))} <a href="${esc(`${base}#gid=${gid}`)}" target="_blank" rel="noopener">${esc(t('saveOpen'))}</a>`, true);
-        toast(t('saveDoneN', { n: g.streets, where }));
+        setCurrent({ proj: { id: proj.id, name: proj.name, url: proj.url, routesTab: proj.routesTab }, tab, gid, marksGid, traceGid });
+        const where = t('saveWhere', { project: proj.name, tab }), done = t(upd ? 'saveUpdated' : 'saveDoneN', { n: g.streets, where });
+        status(`${esc(done)} <a href="${esc(`${base}#gid=${gid}`)}" target="_blank" rel="noopener">${esc(t('saveOpen'))}</a>`, true);
+        toast(done); Ride.refreshBar();
       } catch (err) { console.warn('[block-party] save to sheet', err); status(t('saveFailed', { why: err.message || String(err) })); }
     },
     // one record per street (order and route included); CONFIG.AIRTABLE_SAVE says where and which columns
@@ -5092,7 +5148,8 @@ const landuseColor = ['match', ['get', 'landuse'], ...LANDUSE.flat(), '#D8D5CE']
 const OSM_KINDS_PATHS = ['foot', 'bike', 'alley', 'service', 'road', 'other'];
 const OSM_FILTER = { paths: ['all', ['==', ['get', 'cnns'], ''], ['in', ['get', 'kind'], ['literal', OSM_KINDS_PATHS]]],
   all: ['all', ['==', ['get', 'cnns'], ''], ['!=', ['get', 'kind'], 'steps']] };
-const OSM_COLOR = ['match', ['get', 'kind'], 'foot', '#0CA678', 'bike', '#2F9E44', 'sidewalk', '#8CC9B8', 'crossing', '#8CC9B8', 'service', '#A3A8B5', 'road', '#868E96', 'alley', '#868E96', '#0CA678'];
+// browns, like trails on most maps, so they don't read as SFMTA's bike lanes (green) (v100)
+const OSM_COLOR = ['match', ['get', 'kind'], 'foot', '#8B5A2B', 'bike', '#A0522D', 'sidewalk', '#CBB59B', 'crossing', '#CBB59B', 'service', '#A3A8B5', 'road', '#868E96', 'alley', '#868E96', '#8B5A2B'];
 // Zoning colors: SF Planning's own, from the Zoning Map's Zoning Districts layer
 // (sfplanninggis.org/arcgiswa/rest/services/PlanningData/MapServer/3, renderer on zoning_sim), by
 // zoning code. A lot with several codes ("C-2|M-1") takes the first one's color.
@@ -5348,7 +5405,7 @@ function addOverlayLayers(popup) {
     map.addLayer({ id: 'bp-lyr-osm', type: 'line', source: 'lyr-osm', 'source-layer': 'ways', filter: OSM_FILTER.paths, layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
       paint: { 'line-color': OSM_COLOR, 'line-width': osmW, 'line-opacity': 0.85 } });
     map.addLayer({ id: 'bp-lyr-osm-steps', type: 'line', source: 'lyr-osm', 'source-layer': 'ways', filter: ['all', ['==', ['get', 'cnns'], ''], ['==', ['get', 'kind'], 'steps']], layout: { visibility: 'none' },
-      paint: { 'line-color': '#0B7285', 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 3, 18, 8], 'line-dasharray': [0.25, 0.25] } });
+      paint: { 'line-color': '#6B4423', 'line-width': ['interpolate', ['linear'], ['zoom'], 15, 3, 18, 8], 'line-dasharray': [0.25, 0.25] } });
     map.addLayer({ id: 'bp-lyr-osm-hit', type: 'line', source: 'lyr-osm', 'source-layer': 'ways', filter: OSM_FILTER.paths, layout: { visibility: 'none' },
       paint: { 'line-color': '#000', 'line-opacity': 0, 'line-width': 14 } });
     map.on('mousemove', 'bp-lyr-osm-hit', () => { map.getCanvas().style.cursor = 'pointer'; });
@@ -6987,6 +7044,10 @@ const Drops = (() => {
     }
     if (!out.length) return;
     setResults(out, shown(f));
+    // the file's own lines would cover the route: off (its box in the map key brings them back) (v100)
+    try { LgKey.dropsOff.add(f.id); } catch (e) { } show(f.id, false);
+    if (f.trace && f.trace.length > 1) Ride.showTrace(f.trace, f.marks); else Ride.clearTrace();
+    SaveTo.setCurrent(f.sheet || null);
     // a route's rows run end to end (each polyline starts where the one before ended)
     const lines = rows.map(r => r.polyline ? polyDec(String(r.polyline)) : null).filter(c => c && c.length > 1);
     const joins = lines.slice(1).filter((c, i) => { const a = lines[i][lines[i].length - 1]; return Math.hypot((a[0] - c[0][0]) * 88000, (a[1] - c[0][1]) * 110540) < 3; }).length;
@@ -7280,7 +7341,9 @@ const Drops = (() => {
       if (got.kind === 'file') { Working.done(); add(got.file); return; }
       Working.show(t('wkPlaces', { n: got.tabs.reduce((a, x) => a + Math.max(0, x.values.length - 1), 0).toLocaleString() })); await Working.paint();
       // each tab: its column names (wherever they start) and whether its rows have places
-      const tabs = got.tabs.filter(x => x.values.length > 1).map(tab => {
+      // a route's "… trace" and "… marks" tabs come along with it (below), so they aren't offered on their own
+      const companion = x => [t('saveTabTrace'), t('saveTabMarks')].some(k => x.title.endsWith(' ' + k) && got.tabs.some(y => y.title === x.title.slice(0, -(k.length + 1))));
+      const tabs = got.tabs.filter(x => x.values.length > 1 && !companion(x)).map(tab => {
         const h = headerRow(tab.values), head = tab.values[h].map((x, i) => String(x ?? '').trim() || 'column ' + (i + 1));
         const objs = tab.values.slice(h + 1).filter(r => r.some(v => String(v ?? '').trim())).map(r => Object.fromEntries(head.map((k, i) => [k, r[i] ?? ''])));
         const r = objs.length ? fromObjects(objs) : { feats: [] };
@@ -7289,7 +7352,17 @@ const Drops = (() => {
       Working.done();
       if (!tabs.length) { toast(t('dropNone', { name: got.name })); return; }
       const nameOfTab = tab => got.tabs.length > 1 ? `${got.name} (${tab.title})` : got.name;
-      const addTab = tab => addText('', nameOfTab(tab), null, tab.objs, 'drive');
+      // a saved route's tab knows its sheet (so Save can update it) and brings its "… trace" / "… marks" tabs along
+      const rowsOf = title => { const x = got.tabs.find(y => y.title === title); if (!x || x.values.length < 2) return [];
+        const h = x.values[0].map(String); return x.values.slice(1).map(r => Object.fromEntries(h.map((k, i) => [k, r[i] ?? '']))); };
+      const addTab = tab => { const f = addText('', nameOfTab(tab), null, tab.objs, 'drive'); if (!f) return;
+        const src = got.tabs.find(y => y.title === tab.title);
+        f.sheet = { proj: { id: got.id, name: got.name, url: `https://docs.google.com/spreadsheets/d/${got.id}/edit` }, tab: tab.title, gid: src ? src.sheetId : null };
+        const tr = rowsOf(`${tab.title} ${t('saveTabTrace')}`), mk = rowsOf(`${tab.title} ${t('saveTabMarks')}`);
+        const trId = got.tabs.find(y => y.title === `${tab.title} ${t('saveTabTrace')}`), mkId = got.tabs.find(y => y.title === `${tab.title} ${t('saveTabMarks')}`);
+        if (trId) f.sheet.traceGid = trId.sheetId; if (mkId) f.sheet.marksGid = mkId.sheetId;
+        if (tr.length) f.trace = tr.map(r => ({ lon: +r.lon, lat: +r.lat, t: Date.parse(r.time), acc: +r.accuracy_m || 8 })).filter(p => isFinite(p.lon) && isFinite(p.lat));
+        if (mk.length) f.marks = mk.map(r => ({ lon: +r.lon, lat: +r.lat, kind: r.mark === '👍' ? 'up' : r.mark === '👎' ? 'down' : 'note' })).filter(m => isFinite(m.lon) && isFinite(m.lat)); };
       if (tabs.length === 1) { if (!tabs[0].found) toast(t('driveNoPlaces', { name: got.name })); else addTab(tabs[0]); return; }
       pickTabs(got.name, tabs, chosen => chosen.forEach(addTab));
     } catch (e) { toast(t('driveFail', { err: e.message || e })); }

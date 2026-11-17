@@ -40,7 +40,7 @@ Only pieces that run along no city street are drawn: a road piece matched to a C
   - **Paths:** foot, bike, alley, service, road and other (`OSM_KINDS_PATHS`).
   - **All:** every kind, adding sidewalks and crossings.
   - **Steps** are drawn in both modes on their own dashed layer (`bp-lyr-osm-steps`), and can't be clicked.
-  - Colors (`OSM_COLOR`): foot green, bike darker green, sidewalks and crossings pale green, service, road and alley grey.
+  - Colors (`OSM_COLOR`): browns, so they don't read as SFMTA's green bike lanes. Foot paths are brown, bike paths a redder brown, sidewalks and crossings pale tan, and service, road and alley grey.
 - **Clicking** a piece (`bp-lyr-osm-hit`) adds it to the selection as an `osm` piece, drawn whole from the gap file (`Pieces.toggleOsm`, `osmPiece`). Exports carry its `osm_id`.
 - **Ride** reads the zoom-16 tiles around you and matches the kinds in `OSM_RIDE` (the same six as Paths: no sidewalks, crossings or steps). See [Routes](ROUTES.md).
 
