@@ -18,6 +18,8 @@ Streets, boundaries, map layers, parcels and the neighborhood groups list all co
 | Path | What it is |
 |---|---|
 | `index.html` | The whole app (HTML, CSS, JS) |
+| `docs/ROUTES.md` | How routes, Ride, saving and route links work |
+| `docs/OSM.md` | The OpenStreetMap paths: how they're built, their kinds, and how Block Party uses them |
 | `img/burritojustice.jpg` | Avatar shown next to the title |
 | `region.json` | Copy of sf-blocks' region file: paths, home view and basemap keys |
 | `data/sf-blocks.json` | Which sf-blocks files are copied here, and their version |
