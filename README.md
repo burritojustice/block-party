@@ -19,6 +19,8 @@ Streets, boundaries, map layers, parcels and the neighborhood groups list all co
 |---|---|
 | `index.html` | The whole app (HTML, CSS, JS) |
 | `docs/ROUTES.md` | How routes, Ride, saving and route links work |
+| `docs/FILES.md` | Bringing in your own files, sheets, datasets and Airtable views, and how rows are placed |
+| `docs/EXPORTS.md` | Every copy, download and save, and what each column means |
 | `docs/OSM.md` | The OpenStreetMap paths: how they're built, their kinds, and how Block Party uses them |
 | `img/burritojustice.jpg` | Avatar shown next to the title |
 | `region.json` | Copy of sf-blocks' region file: paths, home view and basemap keys |
@@ -125,21 +127,51 @@ python3 -m http.server 8000   # then open http://localhost:8000
 
 ## Link format (URL hash)
 
+Everything after `#` is the state of the page, so a link reopens what you were looking at. Parts are joined with `&`; only what differs from the defaults is written.
+
+**What's selected**
+
 | Hash | Result |
 |---|---|
-| `#cnn=13060000` (e.g. https://burritojustice.github.io/block-party/#cnn=13060000) | One block, checked, map zoomed to it |
-| `#cnn=4883101,4883201` | Several blocks (both sides of a divided street, or a run of blocks) |
+| `#cnn=13060000` (e.g. https://burritojustice.github.io/block-party/#cnn=13060000) | One street, checked, map zoomed to it |
+| `#cnn=4883101,4883201` | Several streets, in order (both halves of a divided street, a run of blocks, a route) |
+| `#cnn=21900000` | An intersection by its CNN (intersection and street CNNs never overlap) |
 | `#street=dolores` | Street filled in, whole street shown |
 | `#street=dolores,27th` | That intersection, in intersection mode |
-| `#cnn=21900000` | An intersection by its CNN (intersection and block CNNs never overlap) |
-| `&all=1` | Include retired, freeway, and paper streets |
-| `&minor=0` | Hide pedestrian paths and streets the city doesn't maintain |
-| `&quiet=dead,ped,unmaint,res,flat` | Find quiet streets: any of dead ends, pedestrian, not city-maintained; narrowed to residential and flat to moderate |
-| `&layers=muni:always,bike:off,contours:on` | Map layer settings that differ from the defaults (each layer `off`, `close`, or `always`; contours `off` or `on`) |
+| `&pick=ablk:0587;0588` | Blocks picked with Select blocks: `ablk` (assessor), `cblk` (census blocks), `ctract` (tracts) or `parcel:<lot>;<lot>` |
+
+**Routes** (see [docs/ROUTES.md](docs/ROUTES.md))
+
+| Hash | Result |
+|---|---|
+| `&route=1` | The selection is a route: numbered, with gaps and a length |
+| `p0`, `p1`… in `cnn=` | Pieces (bike paths, OSM paths, ride stretches, lines from files), in route order |
+| `x:<a>-<b>` in `cnn=` | A straight connector between corners `a` and `b` |
+| `&pc6=kind!name!polyline;…` | The pieces' lines, as 6-digit encoded polylines. Older links (v91–v93) have `pc=` at 5 digits |
+| `&rs=13067000,…` | Streets that came from a ride, so they're marked as ridden |
+
+**Your files** (see [docs/FILES.md](docs/FILES.md))
+
+| Hash | Result |
+|---|---|
+| `&url=<link>` | A file opened from a link: a Google Sheet, a DataSF / Socrata dataset, or any readable CSV, GeoJSON or JSON. One `url=` per file |
+| `&url=airtable:<base>/<table>/<view>` | An Airtable view, with `\|<field>` for each contact field added back. The token is never in the link; you're asked for it |
+
+Files from your computer or Google Drive aren't in the link.
+
+**Map and filters**
+
+| Hash | Result |
+|---|---|
+| `&layers=muni:always,bike:off,osm:all,contours:on` | Map layers that differ from the defaults: `off`, `close` or `always`; OSM `off`, `paths` or `all`; contours and hillshade `off` or `on`; land use `off`, `borders`, `landuse` or `zoning` |
+| `&areas=sup:borders,asm:borders,cult:shade` | Areas ▾ settings that differ from the defaults. Districts: `sup`, `asm`, `sen`, `house`, `bart`; special: `cbd`, `cult`, `hist`; plus neighborhoods (`hood`, `hoodSet`), census and assessor blocks (`admin`, `adminMode`) and border styles |
 | `&lands=school,park,port` | City-owned land categories shown, when different from the default (`none` for none) |
+| `&quiet=dead,ped,unmaint,alley,res,flat,tee,skew` | Filter: dead ends, pedestrian, not city-maintained, alleys; narrowed to residential and flat to moderate; T intersections and sharp corners |
+| `&all=1` | Include retired, freeway and paper streets |
+| `&minor=0` | Hide pedestrian paths and streets the city doesn't maintain |
 | `&lang=es` | Interface language, once a translation exists |
 
-Street names in the hash are matched the same way as the search box (case-insensitive, "27th" or "twenty seventh").
+Street names in the hash are matched the same way as the search box (case-insensitive, "27th" or "twenty seventh"). How near, the basemap checkboxes, 3D and Show source are saved in the browser, not the link.
 
 ## Settings (top of the script in `index.html`)
 
