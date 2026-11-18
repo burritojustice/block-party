@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v101 -->
+<!-- build: v102 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -515,9 +515,10 @@ body.bp-full .map-wrap { position: fixed !important; inset: 0; height: 100vh; he
 .legend .lg-shield { width: 16px; height: 12px; vertical-align: -1px; }
 .legend .lg-toggle input:disabled { opacity: .45; }
 .legend .lg-toggle input { width: 14px; height: 14px; margin: 0 0 0 auto; accent-color: var(--pool); flex: none; }
-.legend .sw { display: inline-flex; align-items: center; gap: 3px; flex: none; }
-.legend .sw svg { width: 24px; height: 12px; overflow: visible; }
-.legend .sw svg.dot { width: 16px; height: 16px; }
+.legend .sw, .src-key .sw { display: inline-flex; align-items: center; gap: 3px; flex: none; }
+.legend .sw svg, .src-key .sw svg { width: 24px; height: 12px; overflow: visible; }
+.legend .sw svg.dot, .src-key .sw svg.dot { width: 16px; height: 16px; }
+.src-key li { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.5; }
 .legend .lg-halo svg { filter: drop-shadow(0 0 1px rgba(30,35,64,.5)); }
 .legend li.lg-expand { display: block; }
 .legend li.lg-expand summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; }
@@ -1390,7 +1391,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v101';
+const _BUILD_VERSION = 'v102';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
