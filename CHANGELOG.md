@@ -2,6 +2,10 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v104
+
+- **OSM paths have a pattern of their own:** a trail's dash-dot (— · — ·), on the map and in the map key and Route panel. SFMTA bike paths keep their long dashes, so the two no longer look alike with only the outline color to tell them apart.
+
 ## v103
 
 - **A ride is one row on Routes.** Saving a ride no longer makes a route tab, a marks tab or a trace tab. The Routes row has everything:

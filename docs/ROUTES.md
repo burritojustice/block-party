@@ -45,7 +45,7 @@ How each part got there, set in the Route panel:
 | Ridden street | blue | solid (by CNN) |
 | Ride stretch off the grid (`ride` piece) | blue | dots (GPS) |
 | Bike line | green | long dashes (by id) |
-| OSM path | brown | long dashes (by id) |
+| OSM path | brown | dash-dot, like a trail |
 | Connector | purple | short dashes (by hand) |
 | Line from your file | orange | short dashes |
 
