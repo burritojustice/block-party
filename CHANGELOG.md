@@ -2,6 +2,19 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v103
+
+- **A ride is one row on Routes.** Saving a ride no longer makes a route tab, a marks tab or a trace tab. The Routes row has everything:
+  - the link (every street and piece, in order) and `route_polyline` (the matched route);
+  - `trace_polyline`: the GPS trace, as a 6-digit polyline with the seconds since `trace_start` as a third value for each point. That's about 4.5 characters a reading, ~22 KB for an 82-minute ride, in one cell. A ride over about 3 hours carries on into `trace_polyline_2` and `_3`.
+  - `marks`: every 👍 / 👎 / note with its time, lat/lon and CNN, as JSON;
+  - `route_id`, so **Update** finds the row again.
+  A selection or a drawn route still gets a tab with one row per street.
+- **Open a saved ride from the sheet.** Picking the project sheet in Google Drive lists its saved routes and rides, newest first. Opening one brings back its streets and pieces, draws its trace and marks under them, and makes Save → Update write that row again, keeping the ride's columns when there's no ride on that device.
+- **Each street's own GPS:** exports (Copy CSV / JSON, downloads) get `gps_polyline` on every ridden street: the readings taken while on it.
+- **Bigger keys in the Route panel:** the line samples are twice the size and longer.
+- v100's trace and marks tabs wrote their times as dates in January 1970 (seconds read as milliseconds); fixed where they're still read.
+
 ## v102
 
 - **The source key in the Route panel is the right size.** Its line samples took the panel's full width; they're now the same small swatches as in the map key.

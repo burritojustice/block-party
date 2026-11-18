@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v102 -->
+<!-- build: v103 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -516,9 +516,12 @@ body.bp-full .map-wrap { position: fixed !important; inset: 0; height: 100vh; he
 .legend .lg-toggle input:disabled { opacity: .45; }
 .legend .lg-toggle input { width: 14px; height: 14px; margin: 0 0 0 auto; accent-color: var(--pool); flex: none; }
 .legend .sw, .src-key .sw { display: inline-flex; align-items: center; gap: 3px; flex: none; }
-.legend .sw svg, .src-key .sw svg { width: 24px; height: 12px; overflow: visible; }
-.legend .sw svg.dot, .src-key .sw svg.dot { width: 16px; height: 16px; }
-.src-key li { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.5; }
+.legend .sw svg { width: 24px; height: 12px; overflow: visible; }
+.legend .sw svg.dot { width: 16px; height: 16px; }
+/* the Route panel's key: twice the map key's size and longer, so the patterns read (v103) */
+.src-key .sw svg { width: 64px; height: 24px; overflow: visible; }
+.src-key .sw svg.dot { width: 28px; height: 28px; }
+.src-key li { display: flex; align-items: center; gap: 10px; font-size: 14px; line-height: 1.4; margin: 6px 0; }
 .legend .lg-halo svg { filter: drop-shadow(0 0 1px rgba(30,35,64,.5)); }
 .legend li.lg-expand { display: block; }
 .legend li.lg-expand summary { display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none; }
@@ -1391,7 +1394,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v102';
+const _BUILD_VERSION = 'v103';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1673,7 +1676,7 @@ const I18N = {
     meTitle: 'Where am I? (then ◎ Nearby → Near me)', meFound: 'Found you. Open Nearby and pick “Near me” to see what’s around.',
     saveToStep: 'Save to', saveNamePh: 'Route or list name', saveProjectPh: 'New project’s name', saveSheetNew: 'New project sheet', saveSheetAdd: 'Add to a project…', saveAirtable: 'Airtable',
     saveDefaultRoute: 'Block Party route', saveDefaultSel: 'Block Party streets', saveTabStreets: 'Streets', saveTabAbout: 'About', saveTabRoutes: 'Routes',
-    saveProject: 'project', saveProjectDefault: 'Block Party project', saveAddTo: 'Add to “{name}”', saveUpdate: 'Update “{tab}”', saveUpdateTitle: 'Save over the tab this route came from, and its row on Routes', saveNothing: 'Nothing selected to save.', saveUpdated: 'Updated {n} streets in {where}.', saveTabTrace: 'trace', saveWhere: '“{project}”, tab “{tab}”', saveDoneN: 'Saved {n} streets to {where}.',
+    saveProject: 'project', saveProjectDefault: 'Block Party project', saveAddTo: 'Add to “{name}”', saveUpdate: 'Update “{tab}”', saveUpdateTitle: 'Save over the tab this route came from, and its row on Routes', saveNothing: 'Nothing selected to save.', saveUpdated: 'Updated {n} streets in {where}.', saveTabTrace: 'trace', saveTraceLong: 'This ride is very long: only its first 3 hours or so of GPS fit on the Routes row.', tabRoutes: 'Saved routes and rides', tabTabs: 'Tabs to add as layers', tabNoRoute: 'None: only add tabs', openedRoute: 'Opened “{name}”', tabRouteRow: '{saved} · {km} km', tabOpenRoute: 'Open this one', saveWhere: '“{project}”, tab “{tab}”', saveDoneN: 'Saved {n} streets to {where}.',
     saveWorking: 'Reading the streets’ details and saving…', saveDone: 'Saved {n} rows.', saveDoneRoute: 'Saved the route ({n} rows, in order).', saveOpen: 'Open the sheet',
     saveFailed: 'Couldn’t save: {why}', saveAtStep: 'Saving to Airtable: {i} of {n}', saveAtDone: 'Saved {n} records to Airtable.', atSaveNoTable: 'Pick a table to save to.',
     censusShowBlocks: 'Show the census blocks and corners',
@@ -2834,6 +2837,30 @@ function setResults(segs, title, kind, checkedCnns) {
 }
 /* Encoded polylines (Google's algorithm). Saved routes and links use 6 digits ("polyline6", about 0.1 m), the
    same as Valhalla and OSRM: decode with precision 6, or the points come out 10× off. Order is lat, lon. */
+// A GPS trace as one string: Google's polyline at 6 digits, lat then lon, with the seconds since the
+// first reading as a third value for each point (each value a difference from the one before, like lat and lon).
+// About 4.5 characters a reading: an 82-minute ride is ~22 KB. Cut at whole points every TRACE_CELL
+// characters, so each piece fits in a Google Sheets cell (50,000 at most) (v103).
+const TRACE_CELL = 49000;
+function traceEnc(list, t0) {   // list of { lon, lat, t } (t in ms); returns pieces
+  const v = n => { let x = n < 0 ? ~(n << 1) : n << 1, o = ''; while (x >= 0x20) { o += String.fromCharCode((0x20 | (x & 0x1f)) + 63); x >>= 5; } return o + String.fromCharCode(x + 63); };
+  const out = []; let cur = '', la = 0, lo = 0, ts = 0;
+  for (const p of list) {
+    const L = Math.round(p.lat * 1e6), N = Math.round(p.lon * 1e6), T = Math.round((p.t - t0) / 1000);
+    const piece = v(L - la) + v(N - lo) + v(T - ts); la = L; lo = N; ts = T;
+    if (cur.length + piece.length > TRACE_CELL) { out.push(cur); cur = ''; }
+    cur += piece;
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+function traceDec(str, t0) {   // the pieces joined back together; returns [{ lon, lat, t }]
+  const out = []; let i = 0, la = 0, lo = 0, ts = 0;
+  const v = () => { let r = 0, sh = 0, b; do { b = str.charCodeAt(i++) - 63; r |= (b & 0x1f) << sh; sh += 5; } while (b >= 0x20); return r & 1 ? ~(r >> 1) : r >> 1; };
+  // t in seconds, as Ride and replay use them
+  while (i < str.length) { la += v(); lo += v(); ts += v(); out.push({ lat: la / 1e6, lon: lo / 1e6, t: (t0 + ts * 1000) / 1000, acc: 8 }); }
+  return out;
+}
 function polyEnc(c, prec = 6) {
   const f = 10 ** prec; let out = '', px = 0, py = 0;
   const one = v => { v = v < 0 ? ~(v << 1) : v << 1; while (v >= 0x20) { out += String.fromCharCode((0x20 | (v & 0x1f)) + 63); v >>= 5; } out += String.fromCharCode(v + 63); };
@@ -3828,10 +3855,21 @@ const Ride = (() => {
     note: cnn => marksOf(cnn).filter(m => m.kind === 'note').map(m => m.text).join('; '),
     // a street's ride details for exports
     fields: cnn => {
-      const st = statFor(cnn), ms = marksOf(cnn);
+      const st = statFor(cnn), ms = marksOf(cnn), v = seen.get(cnn);
+      // the readings taken while on this street, as a 6-digit polyline (v103)
+      const on = v ? pts.filter(p => p[2] >= v.t0 - 1 && p[2] <= (v.t1 || v.t0) + 1) : [];
+      if (st && on.length > 1) st.gps_polyline = polyEnc(on.map(p => [p[0], p[1]]), 6);
       return st || ms.length ? { ...(st || {}), thumbs_up: ms.filter(m => m.kind === 'up').length || '', thumbs_down: ms.filter(m => m.kind === 'down').length || '',
         note: ms.filter(m => m.kind === 'note').map(m => m.text).join('; ') } : {};
     },
+    // for the Routes row (v103): the trace as polyline pieces with its start time, and the marks as JSON
+    traceCells: () => {
+      if (pts.length < 2) return null;
+      // Ride's times are seconds; the trace works in ms
+      const t0 = pts[0][2] * 1000, parts = traceEnc(pts.map(p => ({ lon: p[0], lat: p[1], t: p[2] * 1000 })), t0);
+      return { trace_start: new Date(t0).toISOString(), parts };
+    },
+    marksCell: () => marks.length ? JSON.stringify(marks.map(m => [new Date(m.t * 1000).toISOString(), +m.lat.toFixed(6), +m.lon.toFixed(6), m.kind, m.text || '', m.cnn || ''])) : '',
     // every 👍 / 👎 / note with where and when, for a sheet tab or a file
     marksRows: () => marks.map(m => { const s = Logic.db.byCnn.get(m.cnn);
       return { time: local(m.t), mark: m.kind === 'up' ? '👍' : m.kind === 'down' ? '👎' : 'note', text: m.text,
@@ -3843,7 +3881,7 @@ const Ride = (() => {
     // the ride goes with a save only while some of its streets are still in the selection (v100)
     hasRide: () => added.length > 0 && added.some(c => state.checked.has(c)),
     // the GPS readings, for a "trace" tab: the same columns a file of readings is read with (readingsOf)
-    readingsRows: () => pts.map(p => ({ time: new Date(p[2]).toISOString(), lat: p[1], lon: p[0], accuracy_m: p[3], elevation_m: p[4] ?? '' })),
+    readingsRows: () => pts.map(p => ({ time: new Date(p[2] * 1000).toISOString(), lat: p[1], lon: p[0], accuracy_m: p[3], elevation_m: p[4] ?? '' })),
     // a saved route's trace and marks, drawn under it (dotted), until Start over or another ride
     showTrace(list, mk) { ensureLayers(); shownTrace = { pts: list.map(p => [p.lon, p.lat]), marks: mk || [] }; draw(); },
     clearTrace() { shownTrace = null; draw(); },
@@ -4392,7 +4430,10 @@ const SaveTo = (() => {
   const nameOf = () => $('save-name').value.trim() || t(state.route ? 'saveDefaultRoute' : 'saveDefaultSel');
   const q = tab => `'${String(tab).replace(/'/g, "''")}'`;
   const ROUTE_COLS = ['route', 'kind', 'streets', 'intersections', 'gaps', 'length_km', 'saved', 'tab', 'tab_id', 'tab_link', 'block_party_link', 'made_with',
-    'pieces', 'route_polyline', 'ride_time', 'ride_km', 'avg_kmh', 'climb_ft', 'descent_ft', 'thumbs_up', 'thumbs_down', 'notes', 'marks_tab_link', 'trace_tab_link'];
+    'pieces', 'route_polyline', 'ride_time', 'ride_km', 'avg_kmh', 'climb_ft', 'descent_ft', 'thumbs_up', 'thumbs_down', 'notes', 'marks_tab_link', 'trace_tab_link',
+    'route_id', 'marks', 'trace_start', 'trace_polyline', 'trace_polyline_2', 'trace_polyline_3'];
+  // a ride's own columns, kept as they are when the route is updated somewhere with no ride
+  const RIDE_COLS = ['ride_time', 'ride_km', 'avg_kmh', 'climb_ft', 'descent_ft', 'thumbs_up', 'thumbs_down', 'notes', 'marks_tab_link', 'trace_tab_link', 'marks', 'trace_start', 'trace_polyline', 'trace_polyline_2', 'trace_polyline_3'];
   // the last project sheet saved to, for "Add to <name>"
   const PKEY = 'bp-sheet-project';
   const lastProject = () => { try { return JSON.parse(localStorage.getItem(PKEY)); } catch (e) { return null; } };
@@ -4401,8 +4442,8 @@ const SaveTo = (() => {
   // where the route on the map was saved (or opened from): its sheet and tab, so the next save can update it (v100)
   const CKEY = 'bp-route-saved';
   let current = null; try { current = JSON.parse(localStorage.getItem(CKEY)); } catch (e) { }
-  const setCurrent = c => { current = c && c.proj && c.gid != null ? c : null; try { current ? localStorage.setItem(CKEY, JSON.stringify(current)) : localStorage.removeItem(CKEY); } catch (e) { } showUpdate(); };
-  const showUpdate = () => { const b = $('save-sheet-update'); if (!b) return; b.hidden = !current; if (current) { b.textContent = t('saveUpdate', { tab: current.tab }); b.title = t('saveUpdateTitle'); } };
+  const setCurrent = c => { current = c && c.proj && (c.gid != null || c.route_id) ? c : null; try { current ? localStorage.setItem(CKEY, JSON.stringify(current)) : localStorage.removeItem(CKEY); } catch (e) { } showUpdate(); };
+  const showUpdate = () => { const b = $('save-sheet-update'); if (!b) return; b.hidden = !current; if (current) { b.textContent = t('saveUpdate', { tab: current.tab || current.name || '' }); b.title = t('saveUpdateTitle'); } };
   // a tab of rows: written over (cleared first) when it's there, else added
   async function writeTab(proj, tabs, gid, title, rows) {
     const had = gid != null && tabs.find(x => x.sheetId === gid);
@@ -4457,34 +4498,35 @@ const SaveTo = (() => {
           await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A1`, [ROUTE_COLS]); tabs.push(rt); }
         proj.routesTab = rt.sheetId;
         await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A1`, [ROUTE_COLS]);
-        // this route's own tab (written over when updating)
-        const upd = mode === 'update' ? current : null;
-        const own = await writeTab(proj, tabs, upd ? upd.gid : null, name, g.rows), gid = own.gid, tab = own.title;
+        // a ride is one row on Routes, with its trace and marks in columns; a selection or a drawn route also gets
+        // a tab of its own, one row per street (v103). Updating keeps whatever the route had.
+        const upd = mode === 'update' ? current : null, ride = Ride.hasRide();
+        const makeTab = upd ? upd.gid != null : !ride;
+        let gid = null, tab = '';
+        if (makeTab) { const own = await writeTab(proj, tabs, upd ? upd.gid : null, name, g.rows); gid = own.gid; tab = own.title; }
+        const routeId = (upd && upd.route_id) || 'r' + Date.now().toString(36);
         const base = `https://docs.google.com/spreadsheets/d/${proj.id}/edit`;
-        const table = list => { const cols = Object.keys(list[0]); return [cols, ...list.map(r => cols.map(c => r[c] == null ? '' : String(r[c])))]; };
-        // a ride's 👍 / 👎 / notes, each with where and when, and its GPS readings, on tabs of their own
-        let marksGid = upd ? upd.marksGid ?? null : null, traceGid = upd ? upd.traceGid ?? null : null;
-        const mk = Ride.hasRide() ? Ride.marksRows() : [], tr = Ride.hasRide() ? Ride.readingsRows() : [];
-        if (mk.length) marksGid = (await writeTab(proj, tabs, marksGid, `${tab.slice(0, 80)} ${t('saveTabMarks')}`, table(mk))).gid;
-        if (tr.length) traceGid = (await writeTab(proj, tabs, traceGid, `${tab.slice(0, 80)} ${t('saveTabTrace')}`, table(tr))).gid;
-        const rs = Ride.hasRide() ? Ride.summary() : null;
+        const mk = ride ? Ride.marksRows() : [], rs = ride ? Ride.summary() : null, tc = ride ? Ride.traceCells() : null;
+        if (tc && tc.parts.length > 3) toast(t('saveTraceLong'));
         const rideCells = rs ? { ride_time: new Date(rs.secs * 1000).toISOString().slice(11, 19), ride_km: rs.km.toFixed(2), avg_kmh: rs.kmh.toFixed(1),
           climb_ft: Math.round(rs.up * M2FT), descent_ft: Math.round(rs.down * M2FT), thumbs_up: mk.filter(m => m.mark === '👍').length, thumbs_down: mk.filter(m => m.mark === '👎').length,
-          notes: mk.filter(m => m.mark === 'note').length, marks_tab_link: marksGid != null ? `${base}#gid=${marksGid}` : '', trace_tab_link: traceGid != null ? `${base}#gid=${traceGid}` : '' } : {};
-        // and its row on Routes: the row with this tab's id when updating, else a new one at the end
-        const used = await GoogleDrive.getValues(proj.id, `${q(rt.title)}!A:Z`), idCol = (used[0] || []).indexOf('tab_id');
-        const at = upd && idCol >= 0 ? used.findIndex((r, i) => i > 0 && String(r[idCol]) === String(gid)) : -1;
+          notes: mk.filter(m => m.mark === 'note').length, marks: Ride.marksCell(),
+          trace_start: tc ? tc.trace_start : '', trace_polyline: tc ? tc.parts[0] || '' : '', trace_polyline_2: tc ? tc.parts[1] || '' : '', trace_polyline_3: tc ? tc.parts[2] || '' : '' } : {};
+        // its row on Routes: found by route id, else (routes saved before v103) by its tab's id; else a new row at the end
+        const used = await GoogleDrive.getValues(proj.id, `${q(rt.title)}!A:AZ`), hd = used[0] || [], idCol = hd.indexOf('route_id'), tabCol = hd.indexOf('tab_id');
+        let at = -1;
+        if (upd && upd.route_id && idCol >= 0) at = used.findIndex((r, i) => i > 0 && String(r[idCol]) === String(upd.route_id));
+        if (at < 0 && upd && upd.gid != null && tabCol >= 0) at = used.findIndex((r, i) => i > 0 && String(r[tabCol]) === String(upd.gid));
         const next = at > 0 ? at + 1 : Math.max(2, used.length + 1);
         // updating with no ride here (on another device, say): the row keeps its ride columns
-        const RIDE_COLS = ['ride_time', 'ride_km', 'avg_kmh', 'climb_ft', 'descent_ft', 'thumbs_up', 'thumbs_down', 'notes', 'marks_tab_link', 'trace_tab_link'];
-        if (!rs && at > 0) for (const c of RIDE_COLS) { const i = used[0].indexOf(c); if (i >= 0 && used[at][i] != null && used[at][i] !== '') rideCells[c] = used[at][i]; }
-        await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A${next}`, [ROUTE_COLS.map(c => ({ route: name, kind: g.isRoute ? 'route' : 'selection', streets: g.streets, intersections: g.ints,
-          gaps: g.isRoute ? g.gaps : '', pieces: g.pieces || '', route_polyline: g.line || '', length_km: g.isRoute ? g.km : '', saved: today(), tab, tab_id: gid, tab_link: `${base}#gid=${gid}`, block_party_link: g.link,
-          made_with: `Block Party ${_BUILD_VERSION}`, ...rideCells })[c] ?? '')]);
+        if (!rs && at > 0) for (const c of RIDE_COLS) { const i = hd.indexOf(c); if (i >= 0 && used[at][i] != null && used[at][i] !== '') rideCells[c] = used[at][i]; }
+        await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A${next}`, [ROUTE_COLS.map(c => ({ route: name, kind: ride || rideCells.trace_start ? 'ride' : g.isRoute ? 'route' : 'selection', streets: g.streets, intersections: g.ints,
+          gaps: g.isRoute ? g.gaps : '', pieces: g.pieces || '', route_polyline: g.line || '', length_km: g.isRoute ? g.km : '', saved: today(), tab, tab_id: gid ?? '', tab_link: gid != null ? `${base}#gid=${gid}` : '', block_party_link: g.link,
+          made_with: `Block Party ${_BUILD_VERSION}`, route_id: routeId, ...rideCells })[c] ?? '')]);
         remember(proj);
-        setCurrent({ proj: { id: proj.id, name: proj.name, url: proj.url, routesTab: proj.routesTab }, tab, gid, marksGid, traceGid });
-        const where = t('saveWhere', { project: proj.name, tab }), done = t(upd ? 'saveUpdated' : 'saveDoneN', { n: g.streets, where });
-        status(`${esc(done)} <a href="${esc(`${base}#gid=${gid}`)}" target="_blank" rel="noopener">${esc(t('saveOpen'))}</a>`, true);
+        setCurrent({ proj: { id: proj.id, name: proj.name, url: proj.url, routesTab: proj.routesTab }, tab, gid, route_id: routeId, name });
+        const where = t('saveWhere', { project: proj.name, tab: tab || t('saveTabRoutes') }), done = t(upd ? 'saveUpdated' : 'saveDoneN', { n: g.streets, where });
+        status(`${esc(done)} <a href="${esc(`${base}#gid=${gid ?? rt.sheetId}`)}" target="_blank" rel="noopener">${esc(t('saveOpen'))}</a>`, true);
         toast(done); Ride.refreshBar();
       } catch (err) { console.warn('[block-party] save to sheet', err); status(t('saveFailed', { why: err.message || String(err) })); }
     },
@@ -7396,25 +7438,45 @@ const Drops = (() => {
         const tr = rowsOf(`${tab.title} ${t('saveTabTrace')}`), mk = rowsOf(`${tab.title} ${t('saveTabMarks')}`);
         const trId = got.tabs.find(y => y.title === `${tab.title} ${t('saveTabTrace')}`), mkId = got.tabs.find(y => y.title === `${tab.title} ${t('saveTabMarks')}`);
         if (trId) f.sheet.traceGid = trId.sheetId; if (mkId) f.sheet.marksGid = mkId.sheetId;
-        if (tr.length) f.trace = tr.map(r => ({ lon: +r.lon, lat: +r.lat, t: Date.parse(r.time), acc: +r.accuracy_m || 8 })).filter(p => isFinite(p.lon) && isFinite(p.lat));
+        if (tr.length) f.trace = tr.map(r => ({ lon: +r.lon, lat: +r.lat, t: Date.parse(r.time) / 1000, acc: +r.accuracy_m || 8 })).filter(p => isFinite(p.lon) && isFinite(p.lat));
         if (mk.length) f.marks = mk.map(r => ({ lon: +r.lon, lat: +r.lat, kind: r.mark === '👍' ? 'up' : r.mark === '👎' ? 'down' : 'note' })).filter(m => isFinite(m.lon) && isFinite(m.lat)); };
+      // a project sheet: its Routes rows can be opened as routes, with their trace and marks (v103)
+      const rtab = got.tabs.find(y => y.title === t('saveTabRoutes')), routes = rtab ? rowsOf(rtab.title).filter(r => /#/.test(r.block_party_link || '')) : [];
+      if (routes.length) { pickTabs(got.name, tabs, chosen => chosen.forEach(addTab), routes, r => openSaved(r, got)); return; }
       if (tabs.length === 1) { if (!tabs[0].found) toast(t('driveNoPlaces', { name: got.name })); else addTab(tabs[0]); return; }
       pickTabs(got.name, tabs, chosen => chosen.forEach(addTab));
     } catch (e) { toast(t('driveFail', { err: e.message || e })); }
   }
-  // a sheet with several tabs: which to add (the ones with places are checked)
-  function pickTabs(name, tabs, done) {
+  // a saved row from Routes: its link, then its trace and marks drawn under it; Save → Update writes that row again
+  async function openSaved(r, got) {
+    const h = String(r.block_party_link).split('#')[1]; if (!h) return;
+    writingHash = true; history.replaceState(null, '', '#' + h); writingHash = false;
+    await applyHash();
+    const tr = [r.trace_polyline, r.trace_polyline_2, r.trace_polyline_3].filter(Boolean).join(''), t0 = Date.parse(r.trace_start);
+    let mk = []; try { mk = JSON.parse(r.marks || '[]').map(m => ({ t: Date.parse(m[0]) / 1000, lat: +m[1], lon: +m[2], kind: m[3], text: m[4] })); } catch (e) { }
+    if (tr && isFinite(t0)) Ride.showTrace(traceDec(tr, t0), mk); else Ride.clearTrace();
+    const gid = r.tab_id !== '' && r.tab_id != null ? +r.tab_id : null;
+    SaveTo.setCurrent({ proj: { id: got.id, name: got.name, url: `https://docs.google.com/spreadsheets/d/${got.id}/edit` }, route_id: r.route_id || null, gid, tab: r.tab || '', name: r.route });
+    toast(t('openedRoute', { name: r.route || '' }));
+  }
+  // a sheet with several tabs: which to add (the ones with places are checked); a project sheet also lists its saved routes
+  function pickTabs(name, tabs, done, routes, openRoute) {
     let dlg = $('tab-pick');
     if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'tab-pick'; dlg.className = 'tab-pick'; document.body.appendChild(dlg); }
     // only the tab with the most rows (that has places) starts checked
-    const top = tabs.reduce((b, tb, i) => tb.found && (b < 0 || tb.n > tabs[b].n) ? i : b, -1);
+    const top = routes && routes.length ? -1 : tabs.reduce((b, tb, i) => tb.found && (b < 0 || tb.n > tabs[b].n) ? i : b, -1);
+    // saved routes, newest first, the newest picked; "none" to only add tabs
+    const rl = (routes || []).map((r, i) => ({ r, i })).reverse();
+    const routesHTML = rl.length ? `<h4>${esc(t('tabRoutes'))}</h4><ul class="tab-pick-routes">${rl.map(({ r, i }, k) => `<li><label><input type="radio" name="route" value="${i}" ${k === 0 ? 'checked' : ''}> <b>${esc(r.route || '—')}</b> <span class="muted">${esc(r.kind || '')} · ${esc(t('tabRouteRow', { saved: r.saved || '', km: r.ride_km || r.length_km || '?' }))}</span></label></li>`).join('')}<li><label><input type="radio" name="route" value=""> <span class="muted">${esc(t('tabNoRoute'))}</span></label></li></ul><h4>${esc(t('tabTabs'))}</h4>` : '';
     const how = tb => !tb.found ? t('tabNoPlaces') : t(tb.how === 'corner' ? 'tabCorners' : tb.how === 'cnn' ? 'tabCnns' : 'tabPoints', { n: tb.found.toLocaleString() });
-    dlg.innerHTML = `<form method="dialog"><h3>${esc(t('tabTitle', { name }))}</h3><p class="muted">${esc(t('tabHint'))}</p>
+    dlg.innerHTML = `<form method="dialog"><h3>${esc(t('tabTitle', { name }))}</h3><p class="muted">${esc(t('tabHint'))}</p>${routesHTML}
       <div class="tab-pick-all"><button type="button" class="btn small" data-tabs="all">${esc(t('tabAll'))}</button><button type="button" class="btn small" data-tabs="none">${esc(t('tabNone'))}</button></div>
       <ul>${tabs.map((tb, i) => `<li><label><input type="checkbox" value="${i}" ${i === top ? 'checked' : ''} ${tb.found ? '' : 'disabled'}> <b>${esc(tb.title)}</b> <span class="muted">${esc(t('tabRows', { n: tb.n.toLocaleString() }))} · ${esc(how(tb))}</span></label></li>`).join('')}</ul>
       <div class="tab-pick-btns"><button value="cancel" class="btn small">${esc(t('tabCancel'))}</button><button value="ok" class="btn small primary">${esc(t('tabAdd'))}</button></div></form>`;
     dlg.querySelectorAll('[data-tabs]').forEach(b => b.onclick = () => dlg.querySelectorAll('li input:not(:disabled)').forEach(i => i.checked = b.dataset.tabs === 'all'));
-    dlg.onclose = () => { if (dlg.returnValue === 'ok') done([...dlg.querySelectorAll('input:checked')].map(i => tabs[+i.value])); };
+    dlg.onclose = () => { if (dlg.returnValue !== 'ok') return;
+      const rr = dlg.querySelector('input[name=route]:checked'); if (rr && rr.value !== '' && openRoute) openRoute(routes[+rr.value]);
+      done([...dlg.querySelectorAll('input[type=checkbox]:checked')].map(i => tabs[+i.value])); };
     dlg.showModal();
   }
   async function addURL(input, quiet) {
@@ -10985,7 +11047,7 @@ function drawResults() {
   });
   map.getSource('results').setData(fc(segs.map(s => segFeature(s, props(s)))));
   SrcStyle.apply();
-  { const h = SrcStyle.keyHTML(); for (const id of ['lg-src', 'src-key']) { const el = $(id); if (el) { el.innerHTML = h; el.hidden = !h; } } }
+  { const h = SrcStyle.keyHTML(); for (const id of ['lg-src', 'src-key']) { const el = $(id); if (el) { el.innerHTML = id === 'src-key' ? h.replace(/<svg (?![^>]*class="dot")/g, '<svg preserveAspectRatio="none" ') : h; el.hidden = !h; } } }
   map.getSource('results-mid').setData(fc(segs.map(s => midFeature(s, props(s)))));
   const shown = segs.filter(s => state.checked.has(s.cnn));
   // around an intersection the blocks leading in are already drawn, so cross streets only follow checked blocks
