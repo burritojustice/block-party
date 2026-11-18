@@ -2,6 +2,10 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v102
+
+- **The source key in the Route panel is the right size.** Its line samples took the panel's full width; they're now the same small swatches as in the map key.
+
 ## v101
 
 - **Connect all works again.** On a route with one of the streets missing corner ids (fixed in v100), it tried the same gap 50 times, said "Connected 50 gaps" and added nothing. Now it skips a gap it can't join and counts only the ones it connects.
