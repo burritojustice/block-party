@@ -1,6 +1,6 @@
 # Routes
 
-How routes work in Block Party so far (v101). A route is an ordered selection: streets and other pieces, in the order you travel them, with the gaps between them measured and shown. Plans and open work: #70 (tracking), #81 (routes as their own layer / panel).
+How routes work in Block Party so far (v103). A route is an ordered selection: streets and other pieces, in the order you travel them, with the gaps between them measured and shown. Plans and open work: #70 (tracking), #81 (routes as their own layer / panel).
 
 ## Selection vs. route
 
@@ -98,28 +98,36 @@ The Route panel shows a key under Show source, like the map key's: each source, 
 
 ## Saving
 
-**Google Sheets** (Save to → new project, add to the last one): a project is one spreadsheet.
-- **Routes tab:** one row per saved route.
-  - `route`, `kind`, `streets`, `intersections`, `gaps`, `length_km`, `saved`;
-  - `tab`, `tab_id`, `tab_link` (to the route's own tab), `block_party_link`, `made_with`, `pieces`;
-  - `route_polyline`: the whole route as one line;
-  - for rides, `ride_time`, `ride_km`, `avg_kmh`, `climb_ft`, `descent_ft`, `thumbs_up`, `thumbs_down`, `notes`, `marks_tab_link` and `trace_tab_link`.
-- **One tab per route:** one row per part in route order, with gap rows after the street they leave from.
-  - Each row has its own `polyline`, turned to run end to end.
-  - Ride rows also have `ride_at`, `ride_seconds`, `ride_kmh`, `ride_rise_ft`, the thumbs and the note.
-- **A marks tab** for each ride: every 👍, 👎 and note.
-- **A trace tab** for each ride: every GPS reading (`time`, `lat`, `lon`, `accuracy_m`, `elevation_m`). It's linked from `trace_tab_link`, and it can be replayed as a ride.
+**Google Sheets** (Save to → new project, add to the last one): a project is one spreadsheet with a **Routes** tab, one row per saved route or ride.
 
-**Saving again:** once a route is saved, or opened from a project sheet, Copy / Save and the Ride bar offer **Update “<tab>”**.
-- It writes over that route's tab, its marks and trace tabs, and its row on Routes (found by `tab_id`).
-- So you can save a ride on the phone, then connect its gaps later on a computer and update the same route.
-- When the computer has no ride of its own, the row keeps its ride columns.
-- A ride's marks and trace go with a save only while some of the ride's streets are still selected. A save with nothing selected saves nothing.
+Every row has:
+- `route`, `kind` (ride, route or selection), `streets`, `intersections`, `gaps`, `pieces`, `length_km`, `saved`, `made_with`;
+- `block_party_link`: opens the route again (every street and piece, in order);
+- `route_polyline`: the matched route as one line;
+- `route_id`, which **Update** uses to find the row again.
+
+**A ride is just its row** (from v103; earlier rides also made a route tab and marks and trace tabs):
+- `ride_time`, `ride_km`, `avg_kmh`, `climb_ft`, `descent_ft`, `thumbs_up`, `thumbs_down`, `notes`;
+- `marks`: every 👍, 👎 and note as JSON, `[time, lat, lon, kind, text, cnn]` each;
+- `trace_start` and `trace_polyline`: the GPS trace (below). Rides over about 3 hours carry on into `trace_polyline_2` and `trace_polyline_3`.
+
+**A selection or a drawn route** also gets a tab of its own, linked from `tab_link`: one row per street in route order, with gap rows after the street they leave from. Each row has its own `polyline`, turned to run end to end.
+
+**The GPS trace.** While you ride, each reading is kept on your phone: lat, lon, time, accuracy and elevation, skipping readings under 4 m apart. That's what draws the dotted line, and it survives a reload. Saved, it's a polyline:
+- Google's encoded polyline at 6 digits, lat then lon, with the seconds since `trace_start` as a third value for each point. Each value is a difference from the one before.
+- About 4.5 characters a reading: 30 minutes is ~8 KB, an 82-minute ride ~22 KB, 3 hours ~49 KB. A Google Sheets cell holds 50,000 characters, so the trace is cut at whole points every 49,000.
+- In exports, each ridden street also has `gps_polyline`: the readings taken while on it (lat, lon only).
 
 **Polylines** use Google's encoded polyline at 6 digits ("polyline6", about 0.1 m), lat then lon, as Valhalla and OSRM do. Decoding at the usual 5 digits puts the points 10× off. Decoding notes: <https://github.com/valhalla/valhalla/blob/master/docs/docs/api/decoding.md>.
 
+**Saving again:** once a route is saved, or opened from a project sheet, Copy / Save and the Ride bar offer **Update**.
+- It writes that route's row on Routes again (and its tab, if it has one).
+- So you can save a ride on the phone, then connect its gaps later on a computer and update it.
+- When the computer has no ride of its own, the row keeps its ride columns (trace, marks, totals).
+- A ride's trace and marks go with a save only while some of the ride's streets are still selected. A save with nothing selected saves nothing.
+
 **Other ways out:**
-- **Copy / downloads** (CSV, JSON, GeoJSON) have the same rows.
+- **Copy / downloads** (CSV, JSON, GeoJSON) have the same rows as a route tab, plus `gps_polyline` on ridden streets.
 - **Airtable** saving is built but off until a table is set up (`CONFIG.AIRTABLE_SAVE`).
 
 ## Links
@@ -134,6 +142,13 @@ A route link keeps its order in `cnn=`:
 | `route=1` | Treat it as a route |
 
 ## Opening a saved route
+
+**From the project sheet:** pick the sheet in Google Drive (Import / show layers → Google Drive). The picker lists its saved routes and rides, newest first, above its tabs. Opening one:
+- brings back its streets and pieces from `block_party_link`;
+- draws its trace (dotted blue) and its 👍 / 👎 / notes under the route;
+- makes Save → Update write that row again.
+
+**From a file or a tab:**
 
 Open a route's tab, CSV or JSON from Sheets, Drive or a file, and Block Party offers **Open it as your route**. That rebuilds it:
 - streets by CNN, pieces from their polylines;
