@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v103 -->
+<!-- build: v104 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1394,7 +1394,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v103';
+const _BUILD_VERSION = 'v104';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -2903,7 +2903,8 @@ function routeLine(items) {
 const SrcStyle = (() => {
   const KEY = 'bp-src-mode', MODES = ['none', 'color', 'pattern', 'both'];
   const EDGE = { pick: '#FFC53D', ride: '#378ADD', trace: '#378ADD', bike: '#2F9E44', osm: '#8B5A2B', hand: '#7F77DD', file: '#E8590C' };
-  const HOW = { pick: 'cnn', ride: 'cnn', bike: 'id', osm: 'id', hand: 'hand', file: 'hand', trace: 'gps' };
+  // how each source was matched → its pattern; OSM paths get a trail's dash-dot of their own, so they don't read as SFMTA's long dashes (v104)
+  const HOW = { pick: 'cnn', ride: 'cnn', bike: 'id', osm: 'trail', hand: 'hand', file: 'hand', trace: 'gps' };
   const ORDER = ['pick', 'ride', 'bike', 'osm', 'trace', 'hand', 'file'];
   const rideSet = new Set();
   let pref = null, last = null; try { pref = localStorage.getItem(KEY); } catch (e) { }
@@ -2926,13 +2927,13 @@ const SrcStyle = (() => {
     vis('bp-sel-white', m !== 'none'); vis('bp-piece-white', m !== 'none');
     map.setFilter('bp-piece', m === 'none' ? null : ['!=', ['get', 'on'], true]);
     vis('bp-piece-solid', m === 'color');
-    ['id', 'hand', 'gps'].forEach(h => vis('bp-piece-' + h, pat));
+    ['id', 'hand', 'gps', 'trail'].forEach(h => vis('bp-piece-' + h, pat));
   }
   // map key rows: each source in the selection, with how many and how far
   function swatch(k) {
     const m = mode(), colour = m === 'color' || m === 'both', pat = m === 'pattern' || m === 'both';
     const edge = m === 'none' ? EDGE.pick : colour ? EDGE[k] : null, how = HOW[k];
-    const dash = !pat || how === 'cnn' ? '' : how === 'id' ? '5 2' : how === 'hand' ? '2 2' : '0.1 3';
+    const dash = !pat || how === 'cnn' ? '' : how === 'id' ? '5 2' : how === 'trail' ? '4 1.6 0.8 1.6' : how === 'hand' ? '2 2' : '0.1 3';
     return `<svg viewBox="0 0 24 12">${edge ? `<line x1="3" y1="6" x2="21" y2="6" stroke="${edge}" stroke-width="10" stroke-linecap="round"/>` : ''}${m !== 'none' ? '<line x1="3" y1="6" x2="21" y2="6" stroke="#fff" stroke-width="7" stroke-linecap="round"/>' : ''}<line x1="4" y1="6" x2="20" y2="6" stroke="#FF3D7F" stroke-width="${how === 'gps' && pat ? 4 : 3.5}" stroke-linecap="${how === 'gps' && pat ? 'round' : 'butt'}" ${dash ? `stroke-dasharray="${dash}"` : ''}/></svg>`;
   }
   function keyHTML() {
@@ -3182,6 +3183,7 @@ const Pieces = (() => {
     const pink = { 'line-color': '#FF3D7F', 'line-width': w(3.5, 9) }, onH = h => ['all', ['==', ['get', 'on'], true], ['==', ['get', 'how'], h]];
     map.addLayer({ id: 'bp-piece-solid', type: 'line', source: 'pieces', filter: ['==', ['get', 'on'], true], layout: { 'line-cap': 'butt', 'line-join': 'round', visibility: 'none' }, paint: pink });
     map.addLayer({ id: 'bp-piece-id', type: 'line', source: 'pieces', filter: onH('id'), layout: { 'line-join': 'round', visibility: 'none' }, paint: { ...pink, 'line-dasharray': [3, 1.2] } });
+    map.addLayer({ id: 'bp-piece-trail', type: 'line', source: 'pieces', filter: onH('trail'), layout: { 'line-join': 'round', visibility: 'none' }, paint: { ...pink, 'line-dasharray': [3, 1.2, 0.6, 1.2] } });
     map.addLayer({ id: 'bp-piece-hand', type: 'line', source: 'pieces', filter: onH('hand'), layout: { 'line-join': 'round', visibility: 'none' }, paint: { ...pink, 'line-dasharray': [1.2, 1.2] } });
     map.addLayer({ id: 'bp-piece-gps', type: 'line', source: 'pieces', filter: onH('gps'), layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
       paint: { 'line-color': '#FF3D7F', 'line-width': w(4.5, 11), 'line-dasharray': [0.05, 1.8] } });
@@ -5094,7 +5096,7 @@ const LAYER_ORDER = [
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-osm', 'bp-lyr-osm-steps', 'bp-lyr-osm-hit', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
-  ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-note', 'bp-ride-me', 'bp-gaps', 'bp-piece-hit', 'bp-piece-gps', 'bp-piece-hand', 'bp-piece-id', 'bp-piece-solid', 'bp-piece', 'bp-piece-white', 'bp-piece-case', 'bp-piece-label', 'bp-ride-covered', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
+  ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-note', 'bp-ride-me', 'bp-gaps', 'bp-piece-hit', 'bp-piece-gps', 'bp-piece-hand', 'bp-piece-trail', 'bp-piece-id', 'bp-piece-solid', 'bp-piece', 'bp-piece-white', 'bp-piece-case', 'bp-piece-label', 'bp-ride-covered', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
   ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
