@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v104 -->
+<!-- build: v105 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1394,7 +1394,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v104';
+const _BUILD_VERSION = 'v105';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -4500,10 +4500,11 @@ const SaveTo = (() => {
           await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A1`, [ROUTE_COLS]); tabs.push(rt); }
         proj.routesTab = rt.sheetId;
         await GoogleDrive.putValues(proj.id, `${q(rt.title)}!A1`, [ROUTE_COLS]);
-        // a ride is one row on Routes, with its trace and marks in columns; a selection or a drawn route also gets
-        // a tab of its own, one row per street (v103). Updating keeps whatever the route had.
+        // every save gets a tab of its own, one row per street (a ride's streets carry gps_polyline); a ride's
+        // trace and marks go in columns on its Routes row, not tabs of their own (v105). Updating a route without
+        // a tab (rides saved with v103–v104) makes one when there's a ride or a tab to write.
         const upd = mode === 'update' ? current : null, ride = Ride.hasRide();
-        const makeTab = upd ? upd.gid != null : !ride;
+        const makeTab = upd ? (upd.gid != null || ride) : true;
         let gid = null, tab = '';
         if (makeTab) { const own = await writeTab(proj, tabs, upd ? upd.gid : null, name, g.rows); gid = own.gid; tab = own.title; }
         const routeId = (upd && upd.route_id) || 'r' + Date.now().toString(36);
