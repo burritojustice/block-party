@@ -2,6 +2,11 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v105
+
+- **A saved ride gets its list of streets again:** its own tab, one row per street, each with the `gps_polyline` of the stretch you rode on it, as well as its row on Routes with the whole trace and the marks. v103 dropped the tab along with the separate trace and marks tabs; only those two stay gone.
+- Updating a ride saved with v103 or v104 (which have no tab) adds its tab.
+
 ## v104
 
 - **OSM paths have a pattern of their own:** a trail's dash-dot (— · — ·), on the map and in the map key and Route panel. SFMTA bike paths keep their long dashes, so the two no longer look alike with only the outline color to tell them apart.
