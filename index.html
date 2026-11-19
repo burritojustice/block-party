@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v105 -->
+<!-- build: v106 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1394,7 +1394,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v105';
+const _BUILD_VERSION = 'v106';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -3432,6 +3432,21 @@ const Ride = (() => {
   let pts = [], last = null, heading = null, cur = null, cover = new Map(), added = [], marks = [], seen = new Map(), moving = 0, dist = 0;
   let grid = null, lastT = null, off = [], lastOn = null;
   const OFF_MIN_M = 40;
+  // Long paths (v106): a bike path or OSM path longer than LONG_M (the Panhandle's is one 754 m line) can't wait
+  // for half of it to be ridden. The stretch you rode goes in as a piece once it's STRETCH_M long and you've
+  // been off the path for LEFT_M (so a moment's wobble onto the street beside it doesn't cut it short).
+  const LONG_M = 150, STRETCH_M = 40, LEFT_M = 30;
+  const pending = new Map();   // line key → { s, at: dist when last on it, after: the result it follows }
+  const isLong = s => (s.bike || s.osm) && s.len > LONG_M;
+  // where a piece added late goes: after `after` (what was last when it was first ridden) and past anything
+  // added since that was ridden before it, so pieces that load or finish later keep the order ridden
+  const timeOf = r => r.rideT ?? (seen.get(r.cnn) || {}).t0;
+  function placeAfter(after, rt) {
+    const L = state.results; let i = after ? L.indexOf(after) : -1;
+    if (after && i < 0) return null;
+    while (i + 1 < L.length) { const tt = timeOf(L[i + 1]); if (tt != null && tt < rt) i++; else break; }
+    return i >= 0 ? L[i] : null;
+  }
   // readings that matched no street, between two that did: a stretch ridden off the grid (a park path, a
   // plaza) becomes a piece once it's OFF_MIN_M long and mostly away from every street line
   function flushOff(end) {
@@ -3494,6 +3509,7 @@ const Ride = (() => {
     pts.push(p);
     Elev.at([lon, lat]).then(e => { if (e != null) { p[4] = Math.round(e * 10) / 10; if (pts[pts.length - 1] === p) bar(); } }).catch(() => {});
     for (const [px, py] of steps) match(px, py, acc, ts);
+    if (pending.size) flushLong(false);
     if (cur) { if (off.length) flushOff([lon, lat]); lastOn = [lon, lat]; } else off.push([lon, lat]);
     draw(); bar(); save();
     if (follow && mapReady) map.easeTo({ center: [lon, lat], zoom: Math.max(map.getZoom(), 17), duration: reducedMotion() ? 0 : 500 });
@@ -3558,10 +3574,10 @@ const Ride = (() => {
   function addOsm(o) {
     if (osmAdded.has(o.id) || o.len < 20) return;   // scraps under 20 m (a driveway's end) aren't worth a card
     osmAdded.add(o.id);
-    const after = state.results[state.results.length - 1];   // in the route where it was ridden, even though its line loads later
+    const after = state.results[state.results.length - 1], rt = (seen.get(o.cnn) || {}).t0;   // in the route where it was ridden, even though its line loads later
     Pieces.osmPiece(o.id, o.props, o.coords).then(pc => {
       if (!pc || state.results.some(r => r.fkey === pc.fkey)) return;
-      Pieces.add(pc, true, after); render(); writeHash(); toast(t('rideOsmAdded', { name: pc.name, ft: fmtFt(pc.len) }));
+      pc.rideT = rt; Pieces.add(pc, true, rt != null ? placeAfter(after, rt) : after); render(); writeHash(); toast(t('rideOsmAdded', { name: pc.name, ft: fmtFt(pc.len) }));
     });
   }
   function best(list, x, y, acc) {
@@ -3594,17 +3610,43 @@ const Ride = (() => {
     c.lo = Math.min(c.lo, o.f); c.hi = Math.max(c.hi, o.f); c.n++; cover.set(s.cnn, c);
     const v = seen.get(s.cnn) || { t0: ts, f0: o.f };
     v.t1 = ts; v.f1 = o.f; seen.set(s.cnn, v);
+    if (isLong(s)) {
+      const pd = pending.get(s.cnn);
+      if (pd) pd.at = dist; else pending.set(s.cnn, { s, at: dist, rt: ts, after: state.results[state.results.length - 1] || null });
+      return;
+    }
     const need = s.len < SHORT_M ? 0.4 : COVER;
     if (c.hi - c.lo < need || c.n < 2) return;
     if (s.bike) { if (!bikeAdded.has(s.key)) addBike(s); }
     else if (s.osm) addOsm(s);
     else if (!added.includes(s.cnn)) addStreet(s);
   }
+  // stretches of long paths you've left (all of them when the ride stops)
+  function flushLong(all) {
+    for (const [k, pd] of [...pending]) {
+      if (!all && dist - pd.at < LEFT_M) continue;
+      pending.delete(k);
+      const s = pd.s, c = cover.get(s.cnn); cover.delete(s.cnn);
+      if (!c || c.n < 2 || (c.hi - c.lo) * s.len < STRETCH_M) continue;
+      const coords = slice(s.coords, c.lo, c.hi), fkey = (s.bike ? s.key : 'osm:' + s.id) + '@' + Math.round(c.lo * 1000) + '-' + Math.round(c.hi * 1000);
+      if (state.results.some(r => r.fkey === fkey)) continue;
+      if (s.bike) {
+        const pc = Pieces.make({ coords, kind: 'bike', src: t('pieceFromBike', { cls: s.cls }) }); if (!pc) continue;
+        pc.fkey = fkey; pc.rideT = pd.rt; Pieces.add(pc, true, placeAfter(pd.after, pd.rt)); render(); writeHash(); toast(t('rideBikeAdded', { ft: fmtFt(pc.len) }));
+      } else {
+        // the OSM path's name and kind from its full line; the geometry is the stretch ridden
+        Pieces.osmPiece(s.id, s.props, s.coords).then(full => {
+          const pc = Pieces.make({ coords, kind: 'osm', name: full ? full.name : t('osm_' + (s.props.kind || 'foot')), src: full ? full.src : '' }); if (!pc) return;
+          pc.fkey = fkey; pc.osm = s.id; pc.rideT = pd.rt; Pieces.add(pc, true, placeAfter(pd.after, pd.rt)); render(); writeHash(); toast(t('rideOsmAdded', { name: pc.name, ft: fmtFt(pc.len) }));
+        });
+      }
+    }
+  }
   function addBike(b) {
     bikeAdded.add(b.key);
     if (state.results.some(r => r.fkey === b.key)) return;
     const pc = Pieces.make({ coords: b.coords, kind: 'bike', src: t('pieceFromBike', { cls: b.cls }) }); if (!pc) return;
-    pc.fkey = b.key; Pieces.add(pc, true);
+    pc.fkey = b.key; pc.rideT = (seen.get(b.cnn) || {}).t0; Pieces.add(pc, true);
     render(); writeHash();
     toast(t('rideBikeAdded', { ft: fmtFt(pc.len) }));
   }
@@ -3707,7 +3749,7 @@ const Ride = (() => {
     ensureLayers(); loadBikes();
     on = true; paused = false; done = false; follow = true;
     off = []; lastOn = null;
-    if (!resume) { SaveTo.setCurrent(null); shownTrace = null; pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear(); osmAdded.clear(); }
+    if (!resume) { SaveTo.setCurrent(null); shownTrace = null; pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear(); osmAdded.clear(); pending.clear(); }
     state.route = true; const rc = $('route-on'); if (rc) rc.checked = true;
     if (watch != null) navigator.geolocation.clearWatch(watch);
     watch = navigator.geolocation.watchPosition(p => feed(p.coords.longitude, p.coords.latitude, p.coords.accuracy, p.timestamp, p.coords.heading),
@@ -3722,7 +3764,7 @@ const Ride = (() => {
     await Promise.all([...new Set(list.map(p => Math.floor(tX(p.lon)) + '/' + Math.floor(tY(p.lat))))].map(k => { const [x, y] = k.split('/').map(Number); return osmTile(tLon(x + 0.5), tLat(y + 0.5)); }));
     if (watch != null) navigator.geolocation.clearWatch(watch); watch = null;
     on = true; paused = false; done = false; follow = false; off = []; lastOn = null; SaveTo.setCurrent(null); shownTrace = null;
-    pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear(); osmAdded.clear();
+    pts = []; added = []; marks = []; cover = new Map(); seen = new Map(); last = null; lastT = null; heading = null; moving = 0; dist = 0; bikeAdded.clear(); osmAdded.clear(); pending.clear();
     state.results = []; state.checked = new Set(); state.title = name || t('rideTitleList');
     state.route = true; const rc = $('route-on'); if (rc) rc.checked = true;
     const el = $('ride-bar'); if (el) el.dataset.closed = '';
@@ -3736,6 +3778,7 @@ const Ride = (() => {
   // Stop keeps the bar open, with the ride's totals and a name, to save it
   function stop() {
     if (off.length) flushOff(null);
+    flushLong(true);
     on = false; paused = false; done = true;
     if (watch != null) navigator.geolocation.clearWatch(watch); watch = null;
     try { lock && lock.release(); } catch (e) { } lock = null;

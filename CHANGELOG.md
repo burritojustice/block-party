@@ -2,6 +2,12 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v106
+
+- **Rides pick up stretches of long paths.** A bike path or OSM path longer than 150 m used to be added only once you'd ridden half of it, so a block of the Panhandle path (one 754 m line in SFMTA's data) never made it in. Now the stretch you actually rode goes in as a piece once it's 40 m long and you've moved on from the path. Paths you ride most of go in as the part you rode, not the whole line. Streets keep the half rule.
+- **Pieces stay in the order ridden.** A path piece that finished loading or was added after you'd moved on could land before an earlier one; each piece now remembers when it was ridden and goes in its place.
+- Tested by replaying your Castro St to Oak St ride: the Panhandle stretch from Baker St now shows up (Fell St → Panhandle bike path → Lyon St path → Central Ave), in order.
+
 ## v105
 
 - **A saved ride gets its list of streets again:** its own tab, one row per street, each with the `gps_polyline` of the stretch you rode on it, as well as its row on Routes with the whole trace and the marks. v103 dropped the tab along with the separate trace and marks tabs; only those two stay gone.
