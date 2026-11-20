@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v106 -->
+<!-- build: v107 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1394,7 +1394,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v106';
+const _BUILD_VERSION = 'v107';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1649,9 +1649,9 @@ const I18N = {
     wkSignIn: 'Signing in to Google…', wkDrive: 'Opening Google Drive…', wkRead: 'Reading {name}…', wkPlaces: 'Finding places in {n} rows…', wkLink: 'Loading the link…',
     routeFileTitle: 'This is a route saved from Block Party', routeFileOpen: 'Open it as your route', routeOpened: 'Opened {name}: {n} parts',
     piece_bike: 'Bike path', tag_pick: 'Picked', tag_ride: 'Ridden street', tag_bike: 'SFMTA bike path', tag_osm: 'OSM · {name}', tag_ride_piece: 'GPS stretch', tag_connector: 'Connector', tag_line: 'Your file', tag_drawn: 'Drawn', pieceFromBike: 'SF bike network ({cls}, no CNN)',
-    connectGap: 'Connect · {m} m', connectedNone: 'No gaps could be connected', connectFromTo: '{a} → {b}', connectGapTitle: 'Put a straight connector across this gap', connectOne: 'Connect the gap', connectAll: 'Connect all {n} gaps',
+    connectGap: 'Connect · {m} m', connectedNone: 'No gaps could be connected', connectFromTo: '{a} → {b}', connectGapTitle: 'Join this gap: along your GPS trace and the paths it ran along when there is one, else a straight line', connectOne: 'Connect the gap', connectAll: 'Connect all {n} gaps',
     connectHint: 'Connectors are straight lines between the loose ends, saved with the route. Remove one like any card.',
-    connected: 'Connected ({ft} ft)', connectedN: 'Connected {n} gaps',
+    connected: 'Connected ({ft} ft)', connectedAlong: 'Connected along your GPS trace ({ft} ft)', connectedAlongPaths: 'Connected along your trace and {paths} ({ft} ft)', pieceAlongTrace: 'Along your trace', pieceAlongTraceSrc: 'Your GPS trace, joining a gap', connectedN: 'Connected {n} gaps',
     piece_line: 'Line from a file', piece_ride: 'Off-street stretch', piece_connector: 'Connector', piece_drawn: 'Drawn line', piece_osm: 'OSM path',
     pieceAdded: 'Added {name} ({ft} ft) to the selection', pieceNear: 'near', pieceLoose: 'not at a street', pieceEnd: 'end of a piece',
     pieceFromRide: 'Ride on {date}', rideOffAdded: 'Off-street stretch added ({ft} ft)', pieceKindRow: 'Piece', pieceNotCity: 'not a city street', pieceEnds: 'Ends', pieceFrom: 'From',
@@ -3085,16 +3085,38 @@ const Pieces = (() => {
   const text = s => [`${s.name} (${t('piece_' + s.pk)})`, ends(s), `${t('length')}: ${t('ft', { n: fmtFt(s.len) })}`, ...(s.src ? [`${t('pieceFrom')}: ${s.src}`] : [])].join('\n');
   // a straight connector across a gap: g.from / g.to are the two loose ends ({ n: corner, p: point })
   const connectorOf = (a, b, pa, pb) => make({ coords: [pa, pb], kind: 'connector', fn: a, tn: b });
-  function connect(g, quiet) {
-    const pc = connectorOf(g.from.n, g.to.n, g.from.p, g.to.p); if (!pc) return null;
-    add(pc, true, g.from.s);
-    if (!quiet) { render(); writeHash(); toast(t('connected', { ft: fmtFt(pc.len) })); }
-    return pc;
+  // a gap on a ride follows the GPS trace, taking the paths it ran along by name (Ride.alongTrace, v107);
+  // otherwise, or with no trace there, a straight connector
+  let joint = 0;
+  async function connect(g, quiet) {
+    const parts = await Ride.alongTrace(g.from.p, g.to.p).catch(e => { console.warn('[block-party] along trace', e); return null; });
+    if (!parts || !parts.length) {
+      const pc = connectorOf(g.from.n, g.to.n, g.from.p, g.to.p); if (!pc) return null;
+      add(pc, true, g.from.s);
+      if (!quiet) { render(); writeHash(); toast(t('connected', { ft: fmtFt(pc.len) })); }
+      return pc;
+    }
+    let after = g.from.s, fn = g.from.n; const made = [];
+    parts.forEach((p, k) => {
+      const tn = k === parts.length - 1 ? g.to.n : 'j' + (++joint);
+      const o = p.type === 'trace' ? { coords: simplify(p.coords, 1), kind: 'ride', name: t('pieceAlongTrace'), src: t('pieceAlongTraceSrc'), fn, tn }
+        : { coords: p.coords, kind: p.type, name: p.name || t('piece_' + p.type), src: p.src || '', fn, tn };
+      const pc = add(o, true, after); if (!pc) return;
+      if (p.osm) pc.osm = p.osm;
+      after = pc; fn = tn; made.push(pc);
+    });
+    if (!made.length) return null;
+    if (!quiet) {
+      render(); writeHash();
+      const paths = [...new Set(made.filter(m => m.pk !== 'ride').map(m => m.name))];
+      toast(paths.length ? t('connectedAlongPaths', { ft: fmtFt(made.reduce((n, m) => n + m.len, 0)), paths: paths.join(', ') }) : t('connectedAlong', { ft: fmtFt(made.reduce((n, m) => n + m.len, 0)) }));
+    }
+    return made[0];
   }
-  function connectAll() {
+  async function connectAll() {
     // each one can change the next shortest; a gap that can't take a connector is skipped, not tried forever (v101)
     let n = 0, tries = 0, gs; const skip = new Set(), key = g => g.from.n + '|' + g.to.n;
-    while ((gs = routeGaps().filter(g => !skip.has(key(g)))).length && tries++ < 200) { if (connect(gs[0], true)) n++; else skip.add(key(gs[0])); }
+    while ((gs = routeGaps().filter(g => !skip.has(key(g)))).length && tries++ < 200) { if (await connect(gs[0], true)) n++; else skip.add(key(gs[0])); }
     render(); writeHash(); toast(n ? t('connectedN', { n }) : t('connectedNone'));
   }
   // a connector between two street corners from a link (x:<corner>-<corner>)
@@ -3621,6 +3643,73 @@ const Ride = (() => {
     else if (s.osm) addOsm(s);
     else if (!added.includes(s.cnn)) addStreet(s);
   }
+  /* Connecting a gap on a ride (v107): the GPS trace between its two ends, instead of a straight line, and
+     the paths it ran along there. Where the trace keeps within TIGHT_M of an OSM path or an SFMTA bike path,
+     heading its way, for RUN_M or more, that stretch of the path goes in with its name (Page St's path across
+     Kezar Dr, say); the rest is the trace itself. Null when there's no trace near both ends, or it wanders off
+     (more than 3× the gap and 150 m further), and the connector stays straight. */
+  const TIGHT_M = 7, RUN_M = 12, TRACE_NEAR_M = 30;
+  async function alongTrace(a, b) {
+    const tp = (on || done) && pts.length > 1 ? pts : shownTrace ? shownTrace.pts : []; if (tp.length < 2) return null;   // the ride's own, or a saved route's
+    const X = q => [q[0] * KXm, q[1] * KYm], D = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]);
+    const T = tp.map(X), A = X(a), B = X(b), straight = D(A, B);
+    // readings near each end: the closest of each run of near ones (a route can pass an end twice)
+    const nearIdx = Q => { const out = []; let run = null;
+      T.forEach((p, i) => { const d = D(p, Q); if (d <= TRACE_NEAR_M) { if (!run || d < run.d) run = { i, d }; } else if (run) { out.push(run.i); run = null; } });
+      if (run) out.push(run.i); return out; };
+    const ia = nearIdx(A), ib = nearIdx(B); if (!ia.length || !ib.length) return null;
+    let best = null;
+    for (const i of ia) for (const j of ib) { if (i === j) continue; const k = Math.abs(j - i); if (!best || k < best.k) best = { i, j, k }; }
+    if (!best) return null;
+    const lo = Math.min(best.i, best.j), hi = Math.max(best.i, best.j);
+    let along = 0; for (let k = lo + 1; k <= hi; k++) along += D(T[k], T[k - 1]);
+    if (along > Math.max(3 * straight, straight + 150)) return null;
+    let line = tp.slice(lo, hi + 1).map(p => [p[0], p[1]]); if (best.i > best.j) line.reverse();
+    line = [a, ...line, b];
+    // samples every 3 m along the trace, each matched to a path it's on (if any)
+    await loadBikes();
+    await Promise.all(line.map(q => osmTile(q[0], q[1])));
+    const sm = []; const XL = line.map(X);
+    for (let k = 1; k < XL.length; k++) {
+      const p = XL[k - 1], q = XL[k], L = D(p, q), hd = (Math.atan2(q[0] - p[0], q[1] - p[1]) * 180 / Math.PI + 360) % 360;
+      for (let d = 0; d < L || (k === XL.length - 1 && d <= L); d += 3) {
+        const u = L ? Math.min(1, d / L) : 0, x = p[0] + u * (q[0] - p[0]), y = p[1] + u * (q[1] - p[1]);
+        let m = null;
+        for (const s2 of [...osmNear(x, y), ...((bgrid && bgrid.get(Math.floor(x / 100) + ',' + Math.floor(y / 100))) || []).filter(z => z.far)]) {
+          const o = onStreet(s2, x, y); if (o.d > TIGHT_M || angDiff(o.head, hd) > HEAD_DEG) continue;
+          if (!m || o.d < m.o.d) m = { s: s2, o };
+        }
+        sm.push({ x, y, m });
+        if (!L) break;
+      }
+    }
+    // runs on one path (a single sample off doesn't break a run)
+    const runs = []; let r = null;
+    sm.forEach((q, k) => {
+      const key = q.m && (q.m.s.osm ? 'o' + q.m.s.id : q.m.s.key);
+      if (r && key === r.key) { r.k1 = k; r.f.push(q.m.o.f); return; }
+      if (r && !key && sm[k + 1] && sm[k + 1].m && (sm[k + 1].m.s.osm ? 'o' + sm[k + 1].m.s.id : sm[k + 1].m.s.key) === r.key) return;
+      if (r) runs.push(r); r = key ? { key, s: q.m.s, k0: k, k1: k, f: [q.m.o.f] } : null;
+    });
+    if (r) runs.push(r);
+    const keep = runs.filter(x => (x.k1 - x.k0) * 3 >= RUN_M && Math.abs(x.f[x.f.length - 1] - x.f[0]) * x.s.len >= RUN_M * 0.7);
+    // the parts: trace, path, trace, …, each ending where the next starts
+    const parts = [], pt = q => [q.x / KXm, q.y / KYm];
+    let cursor = a, from = 0;
+    for (const x of keep) {
+      const f0 = x.f[0], f1 = x.f[x.f.length - 1], st = slice(x.s.coords, Math.min(f0, f1), Math.max(f0, f1)); if (f0 > f1) st.reverse();
+      const tr = [cursor, ...sm.slice(from, x.k0).map(pt), st[0]];
+      if (lenM(tr) > 2) parts.push({ type: 'trace', coords: tr }); else st[0] = cursor;
+      const nm = x.s.osm ? await Pieces.osmPiece(x.s.id, x.s.props, x.s.coords).catch(() => null) : null;
+      parts.push({ type: x.s.osm ? 'osm' : 'bike', coords: st, osm: x.s.osm ? x.s.id : null, name: nm ? nm.name : '', src: x.s.osm ? (nm ? nm.src : '') : t('pieceFromBike', { cls: x.s.cls }) });
+      cursor = st[st.length - 1]; from = x.k1 + 1;
+    }
+    const tail = [cursor, ...sm.slice(from).map(pt), b];
+    if (lenM(tail) > 2 || !parts.length) parts.push({ type: 'trace', coords: tail });
+    else { const c = parts[parts.length - 1].coords; c[c.length - 1] = b; }
+    return parts;
+  }
+  const lenM = c => c.slice(1).reduce((n, q, i) => n + Math.hypot((q[0] - c[i][0]) * KXm, (q[1] - c[i][1]) * KYm), 0);
   // stretches of long paths you've left (all of them when the ride stops)
   function flushLong(all) {
     for (const [k, pd] of [...pending]) {
@@ -3930,6 +4019,7 @@ const Ride = (() => {
     // a saved route's trace and marks, drawn under it (dotted), until Start over or another ride
     showTrace(list, mk) { ensureLayers(); shownTrace = { pts: list.map(p => [p.lon, p.lat]), marks: mk || [] }; draw(); },
     clearTrace() { shownTrace = null; draw(); },
+    alongTrace,
     refreshBar: () => { if (done) bar(); },
   };
 })();

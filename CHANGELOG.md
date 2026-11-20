@@ -2,6 +2,11 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v107
+
+- **Connect follows your GPS trace.** On a ride (or a saved ride opened with its trace), a gap's Connect button joins it along the trace you rode instead of a straight line. Where the trace runs along an OSM path or an SFMTA bike path for 12 m or more, keeping within 7 m of it and heading its way, that stretch goes in as the path, with its name; the rest goes in as "Along your trace". Short bits like Page St's path across Kezar Dr come in this way, even though they're too short to be added while riding.
+- If there's no trace near both ends of a gap, or the trace wanders far off between them, Connect draws a straight line as before. Connect all does the same for every gap.
+
 ## v106
 
 - **Rides pick up stretches of long paths.** A bike path or OSM path longer than 150 m used to be added only once you'd ridden half of it, so a block of the Panhandle path (one 754 m line in SFMTA's data) never made it in. Now the stretch you actually rode goes in as a piece once it's 40 m long and you've moved on from the path. Paths you ride most of go in as the part you rode, not the whole line. Streets keep the half rule.
