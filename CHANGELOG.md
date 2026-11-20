@@ -2,6 +2,14 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v108
+
+- **Your files draw the way Airmapper does.** Each row now takes its shape column first, then its CNNs, then its latitude and longitude. A row with CNNs and lat/lon but no shape draws as its streets (and corners), not a dot. When there are no CNNs it falls back to the shape or the point. The rule comes from [airmapper-lib](https://github.com/burritojustice/airmapper-lib) (`geometryOf`), the same code Airmapper uses, loaded from jsDelivr with a copy in `vendor/airmapper-lib.js` in case jsDelivr is down.
+- **Points stay points.** City files that have lat/lon and one CNN per row that many rows share (street trees, businesses, 311 calls) still draw as points: that CNN is the block a point is on. CNNs come first only when a row lists several, or nearly every row has its own.
+- **Location from → CNNs (street lines and corners)** is a new choice in a file's Format when it has a CNN column. Pick latitude / longitude to go back to points.
+- **Show as: Auto · Shapes · Dots** in a file's Format, for files with lines or areas. Auto (the default) shows a dot for each line or area when zoomed out past 12, and the shapes from zoom 12 in, like Airmapper. Dots hover and click like the shapes. Points don't change.
+- Intersection CNNs now draw as corners alongside the blocks in the same row (before, a row with both drew only the blocks).
+
 ## v107
 
 - **Connect follows your GPS trace.** On a ride (or a saved ride opened with its trace), a gap's Connect button joins it along the trace you rode instead of a straight line. Where the trace runs along an OSM path or an SFMTA bike path for 12 m or more, keeping within 7 m of it and heading its way, that stretch goes in as the path, with its name; the rest goes in as "Along your trace". Short bits like Page St's path across Kezar Dr come in this way, even though they're too short to be added while riding.
