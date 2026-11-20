@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v107 -->
+<!-- build: v109 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -96,6 +96,7 @@ button, input { font: inherit; color: inherit; }
 .map-toggle button[aria-expanded="true"] { background: var(--ink); color: #fff; }
 .map-toggle .badge { display: inline-block; min-width: 1.6em; margin-left: 4px; padding: 0 6px; border-radius: 999px; background: #B5179E; color: #fff; font-size: 12px; line-height: 1.5; text-align: center; }
 .map-toggle .badge[hidden] { display: none; }
+.map-toggle[hidden] { display: none !important; }
 /* zoom level, under the map's zoom buttons */
 .zoom-read { position: absolute; top: 118px; right: 10px; z-index: 2; min-width: 29px; padding: 2px 4px; text-align: center; font-size: 11px; font-weight: 700;
   font-variant-numeric: tabular-nums; color: var(--ink-soft); background: rgba(255,255,255,.85); border-radius: 4px; box-shadow: 0 0 0 1px rgba(0,0,0,.12); pointer-events: none; }
@@ -629,6 +630,13 @@ summary::marker { font-size: 1.15em; }
 .map-toggle .mt-sep { width: 1px; background: var(--line); margin: 4px 2px; }
 .map-toggle button { padding: 6px 11px; }
 .map-toggle { padding: 2px; }
+/* v108: the map toolbar about a quarter smaller on computers, so it wraps less outside full screen (phones keep finger-sized buttons) */
+@media (min-width: 861px) {
+  .map-ui { gap: 6px; top: 10px; left: 10px; }
+  .map-toggle { border-width: 1.5px; box-shadow: 0 2px 0 var(--ink); }
+  .map-toggle button { padding: 4px 7px; font-size: 11.5px; }
+  .map-toggle .badge { font-size: 10.5px; }
+}
 .nb-panel { position: absolute; top: 108px; left: 12px; z-index: 9; width: min(360px, calc(100% - 24px)); max-height: calc(100% - 130px); overflow: auto; overscroll-behavior: contain;
   background: var(--card); border: 2px solid var(--ink); border-radius: var(--radius-md); padding: 10px 14px 14px; box-shadow: 0 8px 24px rgba(30,35,64,.18); font-size: 14px; }
 .map-wrap.tbl-open .nb-panel { max-height: calc(100% - var(--tbl-h) - 130px); }
@@ -1394,7 +1402,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v107';
+const _BUILD_VERSION = 'v109';
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1452,6 +1460,43 @@ const CONFIG = {
     },
   },
 };
+
+/* =====================================================================
+   SITES (v109): one index.html for every copy. A copy on another origin (civic-joy-fund's Pathfinder) is this
+   same file; what differs is picked here by the page's host, so updating a copy is a plain copy of this repo.
+   ?site=<id> picks one by hand for testing (?site=block-party for this one).
+   - name: replaces "Block Party" in the page's title, heading and strings (not "Apply for a Block Party")
+   - logo, pageTitle, strings: { key: text } for any I18N.en string
+   - features: { <feature>: false } turns one off (see FEATURES); a feature not named stays on
+   - files: [{ url, name }] shown when the page opens, unless its link already names files (url=)
+   - apply: merged into CONFIG.APPLY
+   ===================================================================== */
+// features that can be turned off for a copy; each one's entry points check feat('<key>')
+const FEATURES = {
+  ride: 'Ride: GPS rides that add the streets you ride along (🚲 Ride button, ride links, replaying GPX files)',
+};
+const SITES = {
+  'block-party': { hosts: ['burritojustice.github.io'] },
+  pathfinder: {
+    hosts: ['civic-joy-fund.github.io'],
+    name: 'Pathfinder',
+    pageTitle: 'Pathfinder: find your block',
+    logo: 'sites/pathfinder/civic-joy.png',
+    features: { ride: false },
+    files: [
+      { url: 'sites/pathfinder/block-party-2026.csv', name: 'Block Parties 2026' },
+      { url: 'sites/pathfinder/green-infrastructure.csv', name: 'Green Infrastructure' },
+    ],
+  },
+};
+const SITE = (() => {
+  let id = null;
+  try { id = new URLSearchParams(location.search).get('site'); } catch (e) { }
+  if (!SITES[id]) id = Object.keys(SITES).find(k => (SITES[k].hosts || []).includes(location.hostname)) || 'block-party';
+  return { id, features: {}, files: [], ...SITES[id] };
+})();
+const feat = k => SITE.features[k] !== false;
+if (SITE.apply) Object.assign(CONFIG.APPLY, SITE.apply);
 
 /* =====================================================================
    I18N  (add es / zh by copying the en block)
@@ -1776,6 +1821,10 @@ const I18N = {
     ft: '{n} ft',
   }
 };
+// a copy's own name and strings (SITES); the Apply button still says "Block Party", since that's the event
+if (SITE.name) for (const L of Object.values(I18N)) for (const [k, v] of Object.entries(L))
+  if (typeof v === 'string' && !/^apply/.test(k)) L[k] = v.replace(/Block Party/g, SITE.name);
+if (SITE.strings) Object.assign(I18N.en, SITE.strings);
 let LANG = 'en';
 function t(key, vars = {}) {
   const s = (I18N[LANG] && I18N[LANG][key]) ?? I18N.en[key] ?? key;
@@ -3983,7 +4032,7 @@ const Ride = (() => {
         if (el) el.dataset.closed = '';
         start(false);
       });
-      restore();
+      if (feat('ride')) restore();
     },
     feed, start, stop, mark, replay, loadBikes, get on() { return on; }, get added() { return added.slice(); }, totals, statFor, suggestName,
     note: cnn => marksOf(cnn).filter(m => m.kind === 'note').map(m => m.text).join('; '),
@@ -7153,7 +7202,8 @@ const Drops = (() => {
     const cols = { lat: find(LAT), lon: find(LON), geo: find(GEO), cnn: find(CNN) };
     rows = rows.filter(r => r.some(v => String(v ?? '').trim() !== ''));
     // every column that reads as shapes (outline_wkt, elements_wkt, geometry…), and which kind of shape
-    const kindOf = i => { for (const r of rows.slice(0, 40)) { const v = r[i]; const g = v && typeof v === 'object' ? v : wkt(String(v ?? '').trim()); if (g && g.type) return g.type; } return null; };
+    // (lines or outlines win over points: a column of both, like blocks and intersections, reads as lines; v109)
+    const kindOf = i => { let pt = null; for (const r of rows.slice(0, 200)) { const v = r[i]; const g = v && typeof v === 'object' ? v : wkt(String(v ?? '').trim()); if (g && g.type) { if (!/Point$/.test(g.type)) return g.type; pt = pt || g.type; } } return pt; };
     const shapes = head.map((h, i) => [String(h).trim(), i]).filter(([h, i]) => GEO.test(h) || GEO_ANY.test(h)).map(([h, i]) => ({ h, i, k: kindOf(i) })).filter(x => x.k);
     const best = [...shapes].sort((a, b) => (/Point$/.test(a.k) - /Point$/.test(b.k)) || (/outline/i.test(b.h) - /outline/i.test(a.h)) || (/Polygon/.test(b.k) - /Polygon/.test(a.k)))[0];
     const hasLL = cols.lat != null && cols.lon != null;
@@ -7282,7 +7332,7 @@ const Drops = (() => {
   }
   function nextSteps(f) {
     const el = $('next-toast'); if (!el) return;
-    const reads = !isRouteFile(f) && f.feats.length >= 10 ? readingsOf(f) : [];
+    const reads = feat('ride') && !isRouteFile(f) && f.feats.length >= 10 ? readingsOf(f) : [];
     if (reads.length >= 10) {
       el.innerHTML = `<b>${esc(t('rideFileTitle', { n: reads.length.toLocaleString() }))}</b><div class="next-btns"><button type="button" class="btn small primary" data-next="replay">${esc(t('rideFileReplay'))}</button>
         <button type="button" class="btn small next-x" data-next="x">${esc(t('dismiss'))}</button></div>`;
@@ -7482,7 +7532,7 @@ const Drops = (() => {
     const fam = g => g.type.replace(/^Multi/, ''), parts = g => g.type.startsWith('Multi') ? g.coordinates : [g.coordinates];
     return gs.every(g => fam(g) === fam(gs[0])) ? { type: 'Multi' + fam(gs[0]), coordinates: gs.flatMap(parts) } : gs[0];
   }
-  function addText(text, fileName, url, json, src) {
+  function addText(text, fileName, url, json, src, quiet) {
     const name = fileName.replace(/\.(csv|tsv|txt|geojson|json)$/i, '');
     let r, o;
     try {
@@ -7498,7 +7548,7 @@ const Drops = (() => {
     addLayers(f); fit(f);
     toast(t(f.skipped ? 'dropAddedSkip' : 'dropAdded', { name, n: f.feats.length.toLocaleString(), k: f.skipped.toLocaleString() }));
     renderMenu(); changed();
-    nextSteps(f);
+    if (!quiet) nextSteps(f);   // not for files the link or the site brings back (v109)
     return f;
   }
   function prep(f) {
@@ -7615,7 +7665,7 @@ const Drops = (() => {
       done([...dlg.querySelectorAll('input[type=checkbox]:checked')].map(i => tabs[+i.value])); };
     dlg.showModal();
   }
-  async function addURL(input, quiet) {
+  async function addURL(input, quiet, as) {
     input = String(input || '').trim(); if (!input) return;
     if (files.some(f => f.url === input)) return;
     if (/^airtable:/.test(input)) { BPAirtable.fromHash(input.slice(9)); return; }
@@ -7631,7 +7681,10 @@ const Drops = (() => {
     let name = decodeURIComponent(new URL(link.urls[0]).pathname.split('/').pop() || new URL(input).host);
     if (link.kind === 'sheet') name = t('urlSheetName') + (link.gid !== '0' ? ` (tab ${link.gid})` : '');
     if (link.kind === 'socrata') { name = link.id; try { const m = await (await fetch(link.meta)).json(); if (m && m.name) name = m.name; } catch (e) { } }
-    addText(text, link.kind === 'sheet' ? name + '.csv' : link.kind === 'socrata' ? name + '.json' : name, input, null, link.kind);
+    // a copy's own files keep their names when they come back from the link
+    if (!as) { const sf = SITE.files.find(x => new URL(x.url, location.href).href === input); if (sf) as = sf.name; }
+    if (as) name = as + (/\.\w+$/.exec(name) || [''])[0];
+    addText(text, link.kind === 'sheet' ? name + '.csv' : link.kind === 'socrata' ? name + '.json' : name, input, null, link.kind, quiet);
   }
   const urls = () => files.map(f => f.url).filter(Boolean);
   // after files change: cards, the map's shaded areas, the hash
@@ -9741,7 +9794,7 @@ const SelAreas = (() => {
     const lots = new Set(segs.flatMap(s => (Parcels.peek(s) || {}).lotIds || []));
     const feat = { type: 'Feature', properties: { ...(current ? current.properties : {}), name, cnns: segs.map(s => s.cnn).join(';'), streets: segs.length,
       lots: lots.size, ...(picks.size ? { area_set: setId(pickSet), areas: [...picks].join(';'), outline: $('outline-how').value } : {}),
-      saved: new Date().toISOString().slice(0, 10), source: 'Block Party' }, geometry: geom };
+      saved: new Date().toISOString().slice(0, 10), source: SITE.name || 'Block Party' }, geometry: geom };
     const out = fc ? { ...fc, features: [...fc.features.filter(f => (f.properties || {}).name !== name && f !== current), feat] } : { type: 'FeatureCollection', features: [feat] };
     out.features.sort((a, b) => String(a.properties.name).localeCompare(String(b.properties.name)));
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -11272,8 +11325,13 @@ function drawBunting() {
   applyI18n();
   drawBunting();
   if (window.innerWidth <= 860) $('legend').open = false;
-  $('app-title').title = `Block Party ${_BUILD_VERSION}`;
-  SFBlocks.ready.finally(() => { $('app-title').title = `Block Party ${_BUILD_VERSION} · ${SFBlocks.describe()}`; });
+  const appName = SITE.name || 'Block Party';
+  if (SITE.pageTitle) document.title = SITE.pageTitle;
+  if (SITE.logo) document.querySelector('.brand .logo').src = SITE.logo;
+  // features this copy leaves out (SITES): their buttons go
+  if (!feat('ride')) $('ride-btn').closest('.map-toggle').hidden = true;
+  $('app-title').title = `${appName} ${_BUILD_VERSION}`;
+  SFBlocks.ready.finally(() => { $('app-title').title = `${appName} ${_BUILD_VERSION}${SITE.id !== 'block-party' ? ' (' + SITE.id + ')' : ''} · ${SFBlocks.describe()}`; });
   setupForm();
   setupResultsEvents();
   console.log(`[block-party] ${_BUILD_VERSION} · ${new Date().toLocaleString()}`);
@@ -11311,6 +11369,8 @@ function drawBunting() {
   await Promise.race([factsP, new Promise(r => setTimeout(r, 4000))]);
   factsP.then(() => render());
   applyHash();
+  // a copy's own files (SITES), unless the link already says which files to show
+  if (SITE.files.length && !h.urls.length) for (const f of SITE.files) Drops.addURL(new URL(f.url, location.href).href, true, f.name);
   applyQuiet();
   render();
   // keep the spinner until the map has drawn the link (or a few seconds, whichever comes first)
