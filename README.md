@@ -28,6 +28,7 @@ Streets, boundaries, map layers, parcels and the neighborhood groups list all co
 | `data/README.md` | How the page loads sf-blocks live, falls back to these copies, and how to refresh them |
 | `data/aliases.json` | Copy of sf-blocks' other names for areas (used by `build_neighborhood_groups.py`) |
 | `scripts/copy_sf_blocks.py` | Refreshes the sf-blocks copies |
+| `vendor/airmapper-lib.js` | Copy of [airmapper-lib](https://github.com/burritojustice/airmapper-lib) at the commit in `AML_SHA`, used when jsDelivr can't be reached |
 | `data/streets.json` | Compact lookup data built from the DataSF exports (~2.5 MB, ~650 KB gzipped) |
 | `data/sf_streets.csv` | DataSF "Streets – Active and Retired" export (source) |
 | `data/sf_intersections.csv` | DataSF "Street Intersections" export (source, used for intersection lookups) |

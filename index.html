@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v107 -->
+<!-- build: v108 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1394,7 +1394,16 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v107';
+const _BUILD_VERSION = 'v108';
+// airmapper-lib (burritojustice/airmapper-lib), shared with Airmapper: how a row picks its shape, CNNs or
+// lat / lon (geometryOf), and the switch from dots to shapes by zoom (autoZoom). Pinned to a commit, with
+// the same commit in vendor/airmapper-lib.js for when jsDelivr can't be reached.
+const AML_SHA = 'f4a918ff96cf3547db11dfaf845b88c1a4f3bb5a';
+const AMLib = { m: null };
+AMLib.ready = import(`https://cdn.jsdelivr.net/gh/burritojustice/airmapper-lib@${AML_SHA}/index.js`)
+  .catch(() => import('./vendor/airmapper-lib.js'))
+  .then(m => (AMLib.m = m))
+  .catch(e => console.warn('[block-party] airmapper-lib did not load; files use the older reader', e));
 // a phone-sized screen: census on request, and one ☰ menu on the map
 const PHONE = (() => { try { return matchMedia('(max-width: 860px)').matches; } catch (e) { return false; } })();
 
@@ -1623,7 +1632,8 @@ const I18N = {
     startOverTitle: 'Does that, and also empties the search, turns off Filter and Focus, and zooms back out. Your files and map layers stay.',
     nbColStart: '{name} (starting places)', nbColTotal: 'Total found', nbColTip: 'How many {list} each starting place has ({how})',
     src_file: 'File', src_drive: 'Google Drive', src_sheet: 'Google Sheets link', src_socrata: 'DataSF', src_url: 'Link', src_airtable: 'Airtable', src_search: 'From search',
-    fmtLoc: 'Location from', fmtLatLon: 'latitude / longitude (points)', dropRelocated: '{name}: {n} on the map', fmtLeftOut: 'Fields left out',
+    fmtLoc: 'Location from', fmtLatLon: 'latitude / longitude (points)', fmtCnnLoc: 'CNNs (street lines and corners)',
+    fmtView: 'Show as', fmtViewAuto: 'Auto', fmtViewShapes: 'Shapes', fmtViewDots: 'Dots', dropRelocated: '{name}: {n} on the map', fmtLeftOut: 'Fields left out',
     fmtLeftOutHint: 'Contact fields aren’t loaded unless you add them back. Check the ones you need and reload.', fmtReload: 'Reload with these',
     nbClear: 'Clear', nbCleared: 'Nearby results cleared',
     rmTitle: 'Remove “{name}”?', rmGone: 'It comes off the map, the map key and the table.', rmPicked: '{n} of its rows you picked onto cards will go.', rmNearby: 'Nearby results that use it will be cleared.',
@@ -5232,7 +5242,7 @@ const LAYER_ORDER = [
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
   ['selection', id => ['bp-ride-cur', 'bp-ride-track', 'bp-ride-mark', 'bp-ride-note', 'bp-ride-me', 'bp-gaps', 'bp-piece-hit', 'bp-piece-gps', 'bp-piece-hand', 'bp-piece-trail', 'bp-piece-id', 'bp-piece-solid', 'bp-piece', 'bp-piece-white', 'bp-piece-case', 'bp-piece-label', 'bp-ride-covered', 'bp-place-lot', 'bp-place-pin', 'bp-place-pin-dot', 'bp-near-line', 'bp-nb-hover', 'bp-nb-pin', 'bp-nb-match', 'bp-nb-start', 'bp-nb-me', 'bp-pick-line', 'bp-card-hl-dot', 'bp-card-hl', 'bp-street', 'bp-preview-cross', 'bp-preview-casing', 'bp-preview', 'bp-context', 'bp-cand', 'bp-sel-casing', 'bp-sel', 'bp-hover', 'bp-corners', 'bp-corners-hit', 'bp-ends', 'bp-pick-outline', 'bp-pick-hover'].includes(id)],
   // your files: above the selection and corners, so they stay clickable close in
-  ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym)$/.test(id)],
+  ['files', id => /^bp-feat-hl/.test(id) || /^bp-drop-\d+-(line|pt|sym|dot)$/.test(id)],
   ['3d', id => id === 'bp-lyr-buildings-3d'],
   ['labels', (id, l) => l.type === 'symbol'],
 ];
@@ -6750,7 +6760,9 @@ const DROP_COLORS = ['#F76707', '#1C7ED6', '#D91BB5', '#2B9348', '#00B4C5', '#E0
 const DROP_CATS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6'], DROP_OTHER = '#9AA0A6';
 const DROP_RAMP = ['#FDE68A', '#F9A65A', '#E4572E', '#A3214F', '#4A1757'];
 const DROP_SIZES = { tiny: 0.6, small: 0.85, medium: 1.15, big: 1.6 };
-const DROP_LOOK = { by: '', size: 'medium', sizeBy: '', style: 'fill', shape: 'star', labels: null, labelZoom: 15 };
+const DROP_LOOK = { by: '', size: 'medium', sizeBy: '', style: 'fill', shape: 'star', labels: null, labelZoom: 15, view: 'auto' };
+// Show as Auto: a file's lines and areas are dots below this zoom, shapes from it (the same default as Airmapper)
+const DROP_SHAPE_ZOOM = 12;
 const SHAPE_ORDER = ['star', 'square', 'triangle', 'diamond', 'circle'];   // each new file takes the next
 // point symbols for your files: circle (a circle layer) or a shape drawn as an SDF icon, so it takes any color
 const DROP_SHAPES = [['circle', '●', 'shapeCircle'], ['star', '★', 'shapeStar'], ['square', '■', 'shapeSquare'], ['triangle', '▲', 'shapeTriangle'], ['diamond', '◆', 'shapeDiamond']];
@@ -7075,24 +7087,38 @@ const Drops = (() => {
   }
   const okLL = (x, y) => isFinite(x) && isFinite(y) && Math.abs(x) <= 180 && Math.abs(y) <= 90 && !(x === 0 && y === 0);
   // a row's location: lat/lon, a geometry column, or CNNs
+  // a geometry column's value: a GeoJSON object, WKT, Socrata's "(37.76, -122.42)" or GeoJSON text
+  function geoOf(v) {
+    if (v && typeof v === 'object') {
+      if (v.type && v.coordinates) return v;
+      if (v.latitude != null && okLL(+v.longitude, +v.latitude)) return { type: 'Point', coordinates: [+v.longitude, +v.latitude] };
+      return null;
+    }
+    const s = String(v || '').trim(); if (!s) return null;
+    const g = wkt(s); if (g) return g;
+    const ll = /^\(?\s*(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)\s*\)?$/.exec(s);
+    if (ll && okLL(+ll[2], +ll[1])) return { type: 'Point', coordinates: [+ll[2], +ll[1]] };
+    if (s.startsWith('{')) try { const o = JSON.parse(s); if (o.type && o.coordinates) return o; } catch (e) { }
+    return null;
+  }
+  // the street data as airmapper-lib reads it: blocks by CNN to lines, corners by CNN to points
+  const STREETS = { segs: { get: c => (Logic.db.byCnn.get(+c) || {}).coords }, nodes: { get: c => { const n = Logic.db.nodes.get(+c); return n ? [n.x, n.y] : undefined; } } };
+  // a row's location. With airmapper-lib (the same order as Airmapper): the shape column, else the CNNs, else
+  // lat / lon; "Location from" CNNs puts the CNNs first, lat / lon puts the point first.
   function rowGeom(r, cols) {
+    const L = AMLib.m;
+    if (L && Logic.db) {
+      const lat = cols.lat != null ? r[cols.lat] : null, lon = cols.lon != null ? r[cols.lon] : null;
+      if (cols.loc === 'latlon') { const p = L.pointOf(lat, lon); if (p) return p; }
+      return L.geometryOf({ shape: cols.geo != null ? geoOf(r[cols.geo]) : null, cnns: cols.cnn != null ? String(r[cols.cnn] ?? '') : '', lat, lon },
+        STREETS, cols.loc === 'cnn' ? 'streets' : 'auto');
+    }
     if (cols.geoFirst) { const g = rowGeom(r, { ...cols, geoFirst: false, lat: null, lon: null }); if (g) return g; }
     if (cols.lat != null && cols.lon != null) {
       const y = parseFloat(r[cols.lat]), x = parseFloat(r[cols.lon]);
       if (okLL(x, y)) return { type: 'Point', coordinates: [x, y] };
     }
-    if (cols.geo != null && r[cols.geo] && typeof r[cols.geo] === 'object') {
-      const o = r[cols.geo];
-      if (o.type && o.coordinates) return o;
-      if (o.latitude != null && okLL(+o.longitude, +o.latitude)) return { type: 'Point', coordinates: [+o.longitude, +o.latitude] };
-    }
-    if (cols.geo != null) {
-      const v = String(r[cols.geo] || '').trim();
-      const g = wkt(v); if (g) return g;
-      const ll = /^\(?\s*(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)\s*\)?$/.exec(v);   // Socrata's "(37.76, -122.42)"
-      if (ll && okLL(+ll[2], +ll[1])) return { type: 'Point', coordinates: [+ll[2], +ll[1]] };
-      if (v.startsWith('{')) try { const o = JSON.parse(v); if (o.type && o.coordinates) return o; } catch (e) { }
-    }
+    if (cols.geo != null) { const g = geoOf(r[cols.geo]); if (g) return g; }
     if (cols.cnn != null) {
       const segs = String(r[cols.cnn] || '').split(/[;,\s]+/).map(Number).map(c => Logic.db.byCnn.get(c)).filter(Boolean);
       if (segs.length) return segs.length === 1 ? { type: 'LineString', coordinates: segs[0].coords } : { type: 'MultiLineString', coordinates: segs.map(s => s.coords) };
@@ -7157,13 +7183,25 @@ const Drops = (() => {
     const shapes = head.map((h, i) => [String(h).trim(), i]).filter(([h, i]) => GEO.test(h) || GEO_ANY.test(h)).map(([h, i]) => ({ h, i, k: kindOf(i) })).filter(x => x.k);
     const best = [...shapes].sort((a, b) => (/Point$/.test(a.k) - /Point$/.test(b.k)) || (/outline/i.test(b.h) - /outline/i.test(a.h)) || (/Polygon/.test(b.k) - /Polygon/.test(a.k)))[0];
     const hasLL = cols.lat != null && cols.lon != null;
-    const locs = [...(hasLL ? ['latlon'] : []), ...shapes.map(x => x.h)];
+    const cnnLoc = cols.cnn != null && !!AMLib.m && !!Logic.db;   // CNNs as a "Location from" choice (street lines)
+    // with lat / lon (or a point column) too, the CNNs come first only when they read as the streets
+    // themselves: some row lists several, or nearly every row has its own. One CNN shared by many rows
+    // (trees, businesses, 311 calls) is the block a point is on, so those stay points.
+    const hasPt = hasLL || !!(best && /Point$/.test(best.k)) || (cols.geo != null && rows.slice(0, 40).some(r => /Point$/.test((geoOf(r[cols.geo]) || {}).type || '')));
+    const cnnFirst = cnnLoc && (!hasPt || (() => {
+      const lists = rows.slice(0, 400).map(r => String(r[cols.cnn] ?? '').split(/[;,\s]+/).filter(Boolean)).filter(l => l.length);
+      return lists.some(l => l.length > 1) || new Set(lists.map(l => l[0])).size >= 0.9 * lists.length;
+    })());
+    const locs = [...(hasLL ? ['latlon'] : []), ...(cnnLoc ? ['cnn'] : []), ...shapes.map(x => x.h)];
     let loc = hasLL ? 'latlon' : cols.geo != null ? String(head[cols.geo]).trim() : null;
-    const pick = pref && locs.includes(pref) ? pref : best && (!/Point$/.test(best.k) || !hasLL) ? best.h : loc;
-    if (pick && pick !== 'latlon') { const x = shapes.find(x => x.h === pick); if (x) { cols.geo = x.i; cols.geoFirst = true; loc = pick; } }
+    // the default: a shape that isn't a point, else the CNNs (see cnnFirst), else lat / lon or a point column
+    const pick = pref && locs.includes(pref) ? pref : best && !/Point$/.test(best.k) ? best.h : cnnFirst ? 'cnn' : best && !hasLL ? best.h : loc;
+    if (pick === 'cnn') { cols.geoFirst = false; loc = 'cnn'; if (best) cols.geo = best.i; }
+    else if (pick && pick !== 'latlon') { const x = shapes.find(x => x.h === pick); if (x) { cols.geo = x.i; cols.geoFirst = true; loc = pick; } }
     else if (pick === 'latlon') { cols.geoFirst = false; loc = 'latlon'; }
+    cols.loc = loc;
     // no coordinates that read (a "Location" column of text, say) and no CNNs: try intersections
-    const readable = (cols.lat != null || cols.geo != null) && rows.slice(0, 40).some(r => rowGeom(r, cols));
+    const readable = (cols.lat != null || cols.geo != null || loc === 'cnn') && rows.slice(0, 40).some(r => rowGeom(r, cols));
     const corner = !readable && cols.cnn == null && Logic.db ? textCorners(head, rows) : null;
     const feats = []; let skipped = 0;
     for (const r of rows) {
@@ -7219,11 +7257,11 @@ const Drops = (() => {
   }
 
   const nameOf = (f, p) => { const v = f.nameField ? p[f.nameField] : null; return v != null && v !== '' ? String(v) : null; };
-  const ids = f => [`bp-drop-${f.id}-fill`, `bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`, `bp-drop-${f.id}-sym`, `bp-drop-${f.id}-label`];
+  const ids = f => [`bp-drop-${f.id}-fill`, `bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`, `bp-drop-${f.id}-sym`, `bp-drop-${f.id}-dot`, `bp-drop-${f.id}-label`];
   // Focus: one file's points are the only thing clicks and hovers go to; streets and corners fade and pause
   let focusId = null;
   const live_ = f => f.on && (focusId == null ? !Focus.kind : f.id === focusId);
-  const pointIds = () => files.filter(live_).flatMap(f => [`bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`, `bp-drop-${f.id}-sym`]);
+  const pointIds = () => files.filter(live_).flatMap(f => [`bp-drop-${f.id}-line`, `bp-drop-${f.id}-pt`, `bp-drop-${f.id}-sym`, `bp-drop-${f.id}-dot`]);
   const fillIds = () => files.filter(live_).map(f => `bp-drop-${f.id}-fill`);
   const FADE = ['bp-sel', 'bp-sel-casing', 'bp-context', 'bp-corners', 'bp-ints', 'bp-ends', 'bp-street'], faded = new Map();
   function focus(fid) {
@@ -7363,6 +7401,20 @@ const Drops = (() => {
       return { type: 'Feature', geometry: { type: 'Point', coordinates: [c[0] / KX, c[1] / KY] }, properties: { _lab: x.properties._lab, _c: x.properties._c } };
     });
   }
+  // Show as Auto / Dots: one dot per line or area (airmapper-lib's anchorOf: a line's middle point, an area's
+  // average corner), drawn below DROP_SHAPE_ZOOM instead of the shape
+  const shaped = f => f.feats.some(x => !/Point$/.test(x.geometry.type));
+  function dotData(f, feats) {
+    const L = AMLib.m; if (!L) return [];
+    return feats.filter(x => !/Point$/.test(x.geometry.type)).map(x => {
+      const c = L.anchorOf(x.geometry);
+      return c ? { type: 'Feature', id: x.id, geometry: { type: 'Point', coordinates: c }, properties: x.properties } : null;
+    }).filter(Boolean);
+  }
+  function applyView(f) {
+    const L = AMLib.m; if (!L || !map.getLayer(`bp-drop-${f.id}-dot`)) return;
+    L.autoZoom(map, [`bp-drop-${f.id}-fill`, `bp-drop-${f.id}-line`], [`bp-drop-${f.id}-dot`], shaped(f) ? (f.look.view || 'auto') : 'shapes', DROP_SHAPE_ZOOM);
+  }
   const labelCols = f => f.look.labels == null ? (f.nameField ? [f.nameField] : []) : f.look.labels;
   function paintFor(f) {
     const m = DROP_SIZES[f.look.size] || 1, st = f.look.style, sized = !!f.look.sizeBy;
@@ -7386,6 +7438,7 @@ const Drops = (() => {
     const src = 'drop-' + f.id, feats = data(f);
     map.addSource(src, { type: 'geojson', data: { type: 'FeatureCollection', features: feats } });
     map.addSource(src + '-lab', { type: 'geojson', data: { type: 'FeatureCollection', features: labelData(f, feats) } });
+    map.addSource(src + '-dot', { type: 'geojson', data: { type: 'FeatureCollection', features: dotData(f, feats) } });
     const vis = { visibility: f.on ? 'visible' : 'none' }, pt = paintFor(f);
     map.addLayer({ id: `bp-drop-${f.id}-fill`, type: 'fill', source: src, filter: isA(['Polygon', 'MultiPolygon']), layout: vis, paint: pt.fill });
     map.addLayer({ id: `bp-drop-${f.id}-line`, type: 'line', source: src, filter: isA(['LineString', 'MultiLineString', 'Polygon', 'MultiPolygon']), layout: { ...vis, 'line-cap': 'round', 'line-join': 'round' }, paint: pt.line });
@@ -7395,9 +7448,11 @@ const Drops = (() => {
     map.addLayer({ id: `bp-drop-${f.id}-sym`, type: 'symbol', source: src, filter: round ? isA([]) : isA(['Point', 'MultiPoint']),
       layout: { ...vis, 'icon-image': 'bp-shape-' + (round ? 'star' : f.look.shape), 'icon-size': pt.symSize, 'icon-allow-overlap': true, 'icon-ignore-placement': true },
       paint: pt.sym });
+    map.addLayer({ id: `bp-drop-${f.id}-dot`, type: 'circle', source: src + '-dot', layout: vis, paint: pt.pt });
     map.addLayer({ id: `bp-drop-${f.id}-label`, type: 'symbol', source: src + '-lab', minzoom: f.look.labelZoom, layout: { ...vis,
       'text-field': ['get', '_lab'], 'text-font': LABEL_FONT, 'text-size': 12, 'text-offset': [0, 1], 'text-anchor': 'top', 'text-max-width': 10, 'text-optional': true },
       paint: { 'text-color': '#1E2340', 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.8 } });
+    applyView(f);
     arrangeLayers();
   }
   // after a format change: new data and paint, same layers
@@ -7406,7 +7461,8 @@ const Drops = (() => {
     const feats = data(f), pt = paintFor(f);
     map.getSource('drop-' + f.id).setData({ type: 'FeatureCollection', features: feats });
     map.getSource('drop-' + f.id + '-lab').setData({ type: 'FeatureCollection', features: labelData(f, feats) });
-    for (const [k, p] of [['pt', pt.pt], ['line', pt.line], ['fill', pt.fill], ['sym', pt.sym]]) for (const [n, v] of Object.entries(p)) map.setPaintProperty(`bp-drop-${f.id}-${k}`, n, v);
+    if (map.getSource('drop-' + f.id + '-dot')) map.getSource('drop-' + f.id + '-dot').setData({ type: 'FeatureCollection', features: dotData(f, feats) });
+    for (const [k, p] of [['pt', pt.pt], ['line', pt.line], ['fill', pt.fill], ['sym', pt.sym], ['dot', pt.pt]]) for (const [n, v] of Object.entries(p)) map.setPaintProperty(`bp-drop-${f.id}-${k}`, n, v);
     const round = (f.look.shape || 'circle') === 'circle';
     addShapeImages();
     map.setFilter(`bp-drop-${f.id}-pt`, round ? isA(['Point', 'MultiPoint']) : isA([]));
@@ -7414,6 +7470,7 @@ const Drops = (() => {
     if (!round) map.setLayoutProperty(`bp-drop-${f.id}-sym`, 'icon-image', 'bp-shape-' + f.look.shape);
     map.setLayoutProperty(`bp-drop-${f.id}-sym`, 'icon-size', pt.symSize);
     map.setLayerZoomRange(`bp-drop-${f.id}-label`, f.look.labelZoom, 24);
+    applyView(f);
     legend(); FeatCards.highlight();
   }
   function record(f, p) {
@@ -7655,7 +7712,7 @@ const Drops = (() => {
     FeatCards.dropFile(f.id);
     try { NearbyView.dropFile(f.id); } catch (e) { }
     if (extentFor && !files.some(x => x.on)) showExtent(null);
-    if (ready) { for (const l of ids(f)) if (map.getLayer(l)) map.removeLayer(l); for (const x of ['drop-' + f.id, 'drop-' + f.id + '-lab']) if (map.getSource(x)) map.removeSource(x); }
+    if (ready) { for (const l of ids(f)) if (map.getLayer(l)) map.removeLayer(l); for (const x of ['drop-' + f.id, 'drop-' + f.id + '-lab', 'drop-' + f.id + '-dot']) if (map.getSource(x)) map.removeSource(x); }
     renderMenu(); changed();
   }
   function show(id, on) {
@@ -7718,7 +7775,7 @@ const Drops = (() => {
     const labs = labelCols(f);
     return `<details class="chips-fold drop-fmt" data-fmt="${f.id}" ${openFmt.has(f.id) ? 'open' : ''}><summary>${esc(t('fmtTitle'))}</summary><div class="fmt-grid">
       <span>${esc(t('fmtName'))}</span><input type="text" class="fmt-name" data-fmt-name value="${esc(f.name)}" aria-label="${esc(t('fmtName'))}">
-      ${f._raw && f.locs.length > 1 ? `<span>${esc(t('fmtLoc'))}</span><select data-fmt-loc>${f.locs.map(c => opt(c, c === 'latlon' ? t('fmtLatLon') : c, f.loc)).join('')}</select>` : ''}
+      ${f._raw && f.locs.length > 1 ? `<span>${esc(t('fmtLoc'))}</span><select data-fmt-loc>${f.locs.map(c => opt(c, c === 'latlon' ? t('fmtLatLon') : c === 'cnn' ? t('fmtCnnLoc') : c, f.loc)).join('')}</select>` : ''}
       ${f.at && (f.at.skipped.length || f.at.include.length) ? `<span>${esc(t('fmtLeftOut'))}</span><div class="fmt-addback"><small>${esc(t('fmtLeftOutHint'))}</small>
         <div class="land-chips">${[...f.at.include.map(n => [n, true]), ...f.at.skipped.map(n => [n, false])].map(([n, on]) => `<label class="land-chip"><input type="checkbox" data-fmt-back="${esc(n)}" ${on ? 'checked' : ''}>${esc(n)}</label>`).join('')}</div>
         <button type="button" class="btn small" data-fmt-reload>${esc(t('fmtReload'))}</button></div>` : ''}
@@ -7727,6 +7784,7 @@ const Drops = (() => {
       <span>${esc(t('fmtSize'))}</span>${seg('size', [['tiny', t('fmtTiny')], ['small', t('fmtSmall')], ['medium', t('fmtMedium')], ['big', t('fmtBig')]])}
       ${numCols.length ? `<span>${esc(t('fmtSizeBy'))}</span><select data-fmt-sel="sizeBy">${opt('', t('fmtSame'), L.sizeBy)}${numCols.map(c => opt(c, c, L.sizeBy)).join('')}</select>` : ''}
       <span>${esc(t('fmtShape'))}</span><div class="lseg fmt-shapes" role="group" data-fmt-k="shape">${DROP_SHAPES.map(([v, , l]) => `<button type="button" data-v="${v}" aria-pressed="${(L.shape || 'circle') === v}" title="${esc(t(l))}" aria-label="${esc(t(l))}">${shapeSVG(v, 'currentColor', 14)}</button>`).join('')}</div>
+      ${AMLib.m && shaped(f) ? `<span>${esc(t('fmtView'))}</span>${seg('view', [['auto', t('fmtViewAuto')], ['shapes', t('fmtViewShapes')], ['dots', t('fmtViewDots')]])}` : ''}
       <span>${esc(t('fmtStyle'))}</span>${seg('style', [['fill', t('fmtFill')], ['ring', t('fmtRing')], ['ghost', t('fmtGhost')]])}
       <span>${esc(t('fmtLabels'))}</span><div class="land-chips fmt-labels">${f.fields.map(c => `<label class="land-chip"><input type="checkbox" data-fmt-label="${esc(c)}" ${labs.includes(c) ? 'checked' : ''}>${esc(c)}</label>`).join('')}</div>
       <span></span><label class="fmt-zoom">${esc(t('fmtLabelZoom'))} <select data-fmt-sel="labelZoom">${[13, 15, 17].map(z => opt(String(z), String(z), String(L.labelZoom))).join('')}</select></label>
@@ -11309,6 +11367,7 @@ function drawBunting() {
   Drops.setupUI();
   // the street facts (small) before the first cards, so they don't start reading tiles; at most 4 s
   await Promise.race([factsP, new Promise(r => setTimeout(r, 4000))]);
+  await Promise.race([AMLib.ready, new Promise(r => setTimeout(r, 3000))]);
   factsP.then(() => render());
   applyHash();
   applyQuiet();
