@@ -2,6 +2,11 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v114
+
+- **Water in the 1850s** (was Water in 1850–52) is now a pill: Off · 1850–52 · 1853 · 1857, one at a time. 1853 and 1857 cover the northeast waterfront: piers show as land, and 1857 has its wharves, Crissy Field's marsh and Islais Creek. The map key names the year shown.
+- Links that turned it on before (`water1850:close`) open as 1850–52.
+
 ## v113
 
 - **Fixed: after picking a map style (Light, White, Gray…), no button in Layers ▾ worked** until a reload. Picking a style marked the whole page in a way that made the Layers menu treat every tap as a style pick. Pathfinder had the same bug.
