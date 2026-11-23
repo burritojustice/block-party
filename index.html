@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v112 -->
+<!-- build: v113 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1409,7 +1409,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v112';
+const _BUILD_VERSION = 'v113';
 // airmapper-lib (burritojustice/airmapper-lib), shared with Airmapper: how a row picks its shape, CNNs or
 // lat / lon (geometryOf), and the switch from dots to shapes by zoom (autoZoom). Pinned to a commit, with
 // the same commit in vendor/airmapper-lib.js for when jsDelivr can't be reached.
@@ -5172,7 +5172,7 @@ function addMapLayers() {
     if (!m.hidden && m.childElementCount) { m.hidden = true; return; }
     m.innerHTML = `<p>${esc(t('flavorTitle'))}</p>` + FLAVORS.map(v => `<button type="button" data-flavor="${v}" aria-pressed="${basemapFlavor === v}">${esc(t('flavor_' + v))}</button>`).join('');
     m.hidden = false;
-    m.onclick = ev => { const b = ev.target.closest('[data-flavor]'); if (b) { setFlavor(b.dataset.flavor); m.hidden = true; } };
+    m.onclick = ev => { const b = ev.target.closest('button[data-flavor]'); if (b) { setFlavor(b.dataset.flavor); m.hidden = true; } };
     setTimeout(() => document.addEventListener('click', function off(ev) { if (!m.contains(ev.target) && ev.target !== $('bm-map')) { m.hidden = true; document.removeEventListener('click', off); } }), 0);
   });
   $('bm-sat').addEventListener('click', () => setBasemap(true));
@@ -5191,6 +5191,12 @@ function addMapLayers() {
   Drops.onMap(popup);
   map.on('styleimagemissing', e => { if (String(e.id).startsWith('bp-shape-')) addShapeImages(); });
   map.on('click', e => SelAreas.onMapClick(e));
+  // a tap on the map folds the map key (its toggle can sit under the toolbar): on phones any tap, on
+  // computers a click on empty map, so picking streets doesn't keep closing it (v113)
+  map.on('click', e => {
+    const lg = $('legend'); if (!lg || !lg.open) return;
+    if (PHONE || !map.queryRenderedFeatures(e.point).some(f => f.layer.id.startsWith('bp-'))) lg.open = false;
+  });
   map.on('mousemove', e => SelAreas.onMapMove(e));
   collectLineLabelLayers();
   basemapLabelIds = map.getStyle().layers.filter(l => l.type === 'symbol' && !l.id.startsWith('bp-')).map(l => l.id);
@@ -5527,7 +5533,7 @@ async function setFlavor(v) {
   if (!FLAVORS.includes(v)) return;
   const was = basemapFlavor; basemapFlavor = v;
   try { v === 'light' ? localStorage.removeItem(FLAVOR_KEY) : localStorage.setItem(FLAVOR_KEY, v); } catch (e) { }
-  document.querySelectorAll('[data-flavor]').forEach(b => b.setAttribute('aria-pressed', b.dataset.flavor === v));
+  document.querySelectorAll('button[data-flavor]').forEach(b => b.setAttribute('aria-pressed', b.dataset.flavor === v));
   if (!mapReady || v === was) return;
   let st = flavorStyles.get(v);
   if (!st) {
@@ -5548,7 +5554,7 @@ async function setFlavor(v) {
   if (st.sprite && map.setSprite) try { map.setSprite(st.sprite); } catch (e) { }
   if (map.getLayer('bp-lyr-water1850')) map.setPaintProperty('bp-lyr-water1850', 'fill-color', basemapWater(st));
   document.querySelector('.lg-water1850')?.setAttribute('fill', basemapWater(st));
-  document.documentElement.dataset.flavor = v;
+  document.documentElement.dataset.mapFlavor = v;   // not data-flavor: the menus look for buttons with that (v113)
 }
 const FLAT_KEY = 'bp-flat';
 let flatMap = (() => { try { return localStorage.getItem(FLAT_KEY) === '1'; } catch (e) { return false; } })();
@@ -11138,7 +11144,7 @@ function setupMapMenus() {
     }
   });
   rowsEl.addEventListener('click', e => {
-    const vb = e.target.closest('[data-flavor]');
+    const vb = e.target.closest('button[data-flavor]');
     if (vb) { setFlavor(vb.dataset.flavor); return; }
     const fb = e.target.closest('[data-flat]');
     if (fb) { setFlat(fb.dataset.flat === 'off'); rowsEl.querySelectorAll('[data-flat]').forEach(x => x.setAttribute('aria-pressed', x === fb)); return; }
