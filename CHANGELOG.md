@@ -2,6 +2,10 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v108
+
+- **Smaller map toolbar.** On computers, the buttons along the top of the map (Map · Sat · 3D, Layers, Areas, Filter, Ride, Focus, Nearby, Table) are about a quarter smaller, so they fit on one row at most window widths instead of wrapping onto a second. Phones keep their larger, finger-sized buttons.
+
 ## v107
 
 - **Connect follows your GPS trace.** On a ride (or a saved ride opened with its trace), a gap's Connect button joins it along the trace you rode instead of a straight line. Where the trace runs along an OSM path or an SFMTA bike path for 12 m or more, keeping within 7 m of it and heading its way, that stretch goes in as the path, with its name; the rest goes in as "Along your trace". Short bits like Page St's path across Kezar Dr come in this way, even though they're too short to be added while riding.
