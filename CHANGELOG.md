@@ -11,6 +11,8 @@ All changes are in `index.html` unless noted. `data/streets.json` and `scripts/b
 - Each has a row in the map key, and links keep which ones are on (`layers=`).
 
 
+## v110
+
 - **Your files draw the way Airmapper does.** Each row now takes its shape column first, then its CNNs, then its latitude and longitude. A row with CNNs and lat/lon but no shape draws as its streets (and corners), not a dot. When there are no CNNs it falls back to the shape or the point. The rule comes from [airmapper-lib](https://github.com/burritojustice/airmapper-lib) (`geometryOf`), the same code Airmapper uses, loaded from jsDelivr with a copy in `vendor/airmapper-lib.js` in case jsDelivr is down.
 - **Points stay points.** City files that have lat/lon and one CNN per row that many rows share (street trees, businesses, 311 calls) still draw as points: that CNN is the block a point is on. CNNs come first only when a row lists several, or nearly every row has its own.
 - **Location from → CNNs (street lines and corners)** is a new choice in a file's Format when it has a CNN column. Pick latitude / longitude to go back to points.
