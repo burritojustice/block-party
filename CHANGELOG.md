@@ -2,6 +2,14 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v112
+
+- **Shoreline is a pill:** Off · 1850–52 · 1853 · 1857 · All.
+- **Sea level rise is one row with a pill:** Off · 24″ · 66″ · 108″, one at a time.
+- **The map key lists each one on its own line, with its own box:** each shoreline survey, and each sea level rise layer. Unchecking a survey hides just that one. Checking a second sea level rise layer in the key shows both, and the pill then shows neither pressed.
+- **Turning on the shoreline or Water in 1850–52 turns off Muni, OSM paths and bike lanes**, so the old shore is easier to see. They stay in the map key, unchecked, and checking them brings them back as they were. A note says so. Links that already have a historic layer on don't change anything.
+- Links from v111 (`shoreline:close`) open as All.
+
 ## v111
 
 - **Shoreline and sea level**, a new section in Layers ▾, all off at first:
