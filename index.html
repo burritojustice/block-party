@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v110 -->
+<!-- build: v111 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1063,6 +1063,11 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
         <li id="lg-lyr-schools" hidden><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1.5" y="1.5" width="13" height="13" rx="3.5" fill="#8A5A00" stroke="#fff"/><path d="M4.5 8 L8 5 L11.5 8 V11.5 H4.5Z" fill="#fff"/></svg></span><span data-i18n="lgSchools">Schools</span></li>
         <li id="lg-lyr-stations" hidden><span class="sw"><svg viewBox="0 0 24 12"><circle cx="18" cy="6" r="6" fill="#C92A2A" stroke="#fff"/><text x="18" y="9" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">F</text></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="7" fill="#1E3A8A" stroke="#fff"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">P</text></svg></span><span data-i18n="lgStations">Fire / police stations</span></li>
         <li id="lg-lyr-health" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect x="12" y="0" width="12" height="12" rx="3" fill="#0B7285" stroke="#fff"/><text x="18" y="9.5" font-size="8.5" font-weight="700" text-anchor="middle" fill="#fff">H</text></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="6" fill="#0B7285" stroke="#fff"/><path d="M8 5v6M5 8h6" stroke="#fff" stroke-width="2"/></svg></span><span data-i18n="lgHealth">Hospitals / clinics</span></li>
+        <li id="lg-lyr-shoreline" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3" x2="23" y2="3" stroke="#1C7ED6" stroke-width="1.8"/><line x1="1" y1="6.5" x2="23" y2="6.5" stroke="#E8590C" stroke-width="1.8"/><line x1="1" y1="10" x2="23" y2="10" stroke="#2F9E44" stroke-width="1.8"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgShoreline">Shoreline (1850–52 · 1853 · 1857)</span></li>
+        <li id="lg-lyr-water1850" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect width="24" height="12" rx="2" fill="#A6C8E0" class="lg-water1850"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgWater1850">Water in 1850–52</span></li>
+        <li id="lg-lyr-slr24" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect x="1" y="1" width="22" height="10" rx="2" fill="#1971C2" fill-opacity=".25" stroke="#1971C2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlr24">Sea level rise 24″ + 100-year storm</span></li>
+        <li id="lg-lyr-slr66" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect x="1" y="1" width="22" height="10" rx="2" fill="#7048E8" fill-opacity=".25" stroke="#7048E8"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlr66">Sea level rise 66″ + 100-year storm</span></li>
+        <li id="lg-lyr-slr108" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#0B7285" stroke-width="2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlr108">Sea level rise 108″ zone (edge)</span></li>
         <li id="lg-contours" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect class="lg-contour-bg" width="24" height="12" rx="2" fill="#E2DFDA"/><path class="lg-contour" d="M1 8 C7 2 15 11 23 4" fill="none" stroke="#FFFFFF" stroke-width="1.5"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span id="lg-contours-text"></span></li>
       </ul>
       <ul id="lg-areas" class="lg-areas"></ul>
@@ -1402,7 +1407,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v110';
+const _BUILD_VERSION = 'v111';
 // airmapper-lib (burritojustice/airmapper-lib), shared with Airmapper: how a row picks its shape, CNNs or
 // lat / lon (geometryOf), and the switch from dots to shapes by zoom (autoZoom). Pinned to a commit, with
 // the same commit in vendor/airmapper-lib.js for when jsDelivr can't be reached.
@@ -1629,6 +1634,12 @@ const I18N = {
     land_puc: 'Water and sewer', land_housing: 'Housing Authority', land_realestate: 'Real Estate',
     land_ocii: 'Former Redevelopment', land_other: 'Other',
     lyr_muni: 'Muni routes', lyr_bike: 'Bike network', lyr_slow: 'Slow Streets', lgSlow: 'Slow Streets',
+    grpWater: 'Shoreline and sea level',
+    lyr_shoreline: 'Shoreline 1850–1857', lyr_shorelineHint: 'NOAA surveys: 1850–52, 1853, 1857', lgShoreline: 'Shoreline (1850–52 · 1853 · 1857)',
+    lyr_water1850: 'Water in 1850–52', lyr_water1850Hint: 'Land made since then shows as water', lgWater1850: 'Water in 1850–52',
+    lyr_slr24: 'Sea level rise 24″', lyr_slr24Hint: 'With a 100-year storm (66″ of water)', lgSlr24: 'Sea level rise 24″ + 100-year storm',
+    lyr_slr66: 'Sea level rise 66″', lyr_slr66Hint: 'With a 100-year storm (108″ of water)', lgSlr66: 'Sea level rise 66″ + 100-year storm',
+    lyr_slr108: 'Sea level rise 108″ zone', lyr_slr108Hint: 'SFPUC: its edge, a planning line', lgSlr108: 'Sea level rise 108″ zone (edge)',
     slowStreet: 'Slow Street', slowPlanned: 'Slow Street (planned)', slowRow: 'Slow Street', yesHere: 'Yes', slowOn: 'Slow Street{corridor}{status}', lyr_schools: 'Schools', lyr_stations: 'Fire and police', lyr_health: 'Hospitals and clinics',
     btnAreas: 'Areas', areasElected: 'Elected districts', areasSpecial: 'Special districts', areasSpecialNote: '(not elected)',
     areasAdmin: 'Administrative', areasAdminLater: 'ZIP codes are on the cards; a map layer later.', areasShow: 'Show',
@@ -5284,8 +5295,8 @@ let basemapLabelIds = [], satOn = false;
 //   3D           buildings, when tilted
 //   labels       all of them, the basemap's (street and place names) included, so nothing above covers a name
 const LAYER_ORDER = [
-  ['shading', id => id === 'bp-place-lot-fill' || id === 'bp-pick-fill' || id === 'bp-near-fill' || id === 'bp-pick-hover-fill' || /^bp-drop-\d+-fill$/.test(id) || /^bp-area-.*-fill$/.test(id) || /^bp-water-over-/.test(id) || ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill', 'bp-lyr-buildings-fill'].includes(id)],
-  ['edges', id => id === CONTOUR_LINE || ['bp-lyr-curbs', 'bp-lyr-landuse-line', 'bp-adj-lots-casing', 'bp-adj-lots', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-buildings-line'].includes(id)
+  ['shading', id => id === 'bp-place-lot-fill' || id === 'bp-pick-fill' || id === 'bp-near-fill' || id === 'bp-pick-hover-fill' || /^bp-drop-\d+-fill$/.test(id) || /^bp-area-.*-fill$/.test(id) || /^bp-water-over-/.test(id) || /^bp-lyr-slr\d+-fill$/.test(id) || ['bp-lyr-water1850', 'bp-lyr-landuse-fill', 'bp-lyr-lands-fill', 'bp-lyr-buildings-fill'].includes(id)],
+  ['edges', id => id === CONTOUR_LINE || /^bp-lyr-slr\d+-line$/.test(id) || ['bp-lyr-shoreline', 'bp-lyr-curbs', 'bp-lyr-landuse-line', 'bp-adj-lots-casing', 'bp-adj-lots', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-buildings-line'].includes(id)
     || /^bp-area-.*-(case|line)$/.test(id)],
   ['streets', id => ['bp-lyr-muni', 'bp-all', 'bp-lyr-osm', 'bp-lyr-osm-steps', 'bp-lyr-osm-hit', 'bp-lyr-bike', 'bp-lyr-bike-dash', 'bp-lyr-slow', 'bp-quiet', 'bp-oneway', 'bp-all-hit'].includes(id)],
   ['points', id => ['bp-lyr-trees', 'bp-lyr-businesses', 'bp-quiet-int', 'bp-quiet-angle-fill', 'bp-quiet-angle', 'bp-quiet-angle-90', ...POI_LAYERS].includes(id)],
@@ -5467,11 +5478,15 @@ const OVERLAYS = {
               modes: [['off', 'lyrOff'], ['paths', 'osmPaths'], ['all', 'osmAll']],
               layers: ['bp-lyr-osm', 'bp-lyr-osm-steps', 'bp-lyr-osm-hit'] },
   lands:    { url: 'lands.geojson',    layers: ['bp-lyr-lands-fill', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-lands-label'] },
+  // NOAA's shoreline surveys (sf-blocks data/layers/shoreline), and the water they show in 1850–52, painted in
+  // the basemap's water color so land made since shows as water (v111). On or off, at every zoom.
+  shoreline: { url: 'shoreline.geojson', layers: ['bp-lyr-shoreline'], modes: [['off', 'lyrOff'], ['close', 'lyrOn']], minzoom: 0 },
+  water1850: { url: 'shoreline_water.geojson', layers: ['bp-lyr-water1850'], modes: [['off', 'lyrOff'], ['close', 'lyrOn']], minzoom: 0 },
   schools:  { url: 'schools.geojson',  layers: ['bp-lyr-schools'] },
   stations: { url: 'stations.geojson', layers: ['bp-lyr-stations'] },
   health:   { url: 'health.geojson',   layers: ['bp-lyr-health'] },
 };
-const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', slow: 'close', osm: 'paths', landuse: 'off', lands: 'close', schools: 'close', stations: 'close', health: 'close', contours: 'off', hillshade: 'on' };
+const OVERLAY_DEFAULT = { muni: 'close', bike: 'close', slow: 'close', osm: 'paths', landuse: 'off', lands: 'close', schools: 'close', stations: 'close', health: 'close', shoreline: 'off', water1850: 'off', contours: 'off', hillshade: 'on' };
 const overlayMode = { ...OVERLAY_DEFAULT };
 const overlayLoaded = new Set();
 const POI_LAYERS = ['bp-lyr-schools', 'bp-lyr-stations', 'bp-lyr-health'];
@@ -5489,6 +5504,7 @@ const LAYER_SECTIONS = [
   ['grpAround', ['muni', 'bike', 'slow', 'osm']],
   ['grpStreet', ['businesses', 'schools', 'stations', 'health', 'trees']],
   ['grpLand', ['landuse', 'lands', 'buildings', 'curbs']],
+  ['grpWater', ['shoreline', 'water1850', 'slr24', 'slr66', 'slr108']],
   ['grpTerrain', ['contours', 'hillshade']],
   ['grpBasemap', ['basemap']],
 ];
@@ -5524,6 +5540,8 @@ async function setFlavor(v) {
     }
   }
   if (st.sprite && map.setSprite) try { map.setSprite(st.sprite); } catch (e) { }
+  if (map.getLayer('bp-lyr-water1850')) map.setPaintProperty('bp-lyr-water1850', 'fill-color', basemapWater(st));
+  document.querySelector('.lg-water1850')?.setAttribute('fill', basemapWater(st));
   document.documentElement.dataset.flavor = v;
 }
 const FLAT_KEY = 'bp-flat';
@@ -5651,6 +5669,13 @@ const onPoi = e => hoverHit(e, HOVER.points());
 const onBuilding = e => hoverHit(e, HOVER.buildings());
 const onArea = e => hoverHit(e, HOVER.areas());
 
+const SHORE_COLORS = { '1850–52': '#1C7ED6', '1853': '#E8590C', '1857': '#2F9E44' };
+// the basemap's water color (it changes with the map style)
+function basemapWater(st) {
+  const w = (st || map.getStyle()).layers.find(l => l.type === 'fill' && l['source-layer'] === 'water');
+  const c = w && (st ? (w.paint || {})['fill-color'] : map.getPaintProperty(w.id, 'fill-color'));
+  return typeof c === 'string' ? c : '#A6C8E0';
+}
 function addOverlayLayers(popup) {
   addOverlayIcons();
   map.addSource('lyr-muni-lbl', { type: 'geojson', data: EMPTY });
@@ -5709,6 +5734,15 @@ function addOverlayLayers(popup) {
     paint: { 'line-color': landColor, 'line-width': zw(0.6, 1.2, 1.6), 'line-opacity': 0.75 } }, landBelow);
   map.addLayer({ id: 'bp-lyr-lands-park', type: 'line', source: 'lyr-lands', filter: landFilter(['==', ['get', 'cat'], 'park']),
     paint: { 'line-color': landColor, 'line-width': zw(0.7, 1.4, 1.8), 'line-opacity': 0.8, 'line-dasharray': [3, 2] } }, landBelow);
+  // water in 1850–52: the basemap's water color, opaque, no outline (its edge out in the bay is a made-up
+  // frame); the shoreline surveys as lines in each survey's color
+  map.addLayer({ id: 'bp-lyr-water1850', type: 'fill', source: 'lyr-water1850', layout: { visibility: 'none' },
+    paint: { 'fill-color': basemapWater(), 'fill-opacity': 1, 'fill-antialias': false } },
+    ['bp-lyr-landuse-fill', 'bp-lyr-lands-fill'].find(id => map.getLayer(id)) || landBelow);   // under today's land use and city land
+  map.addLayer({ id: 'bp-lyr-shoreline', type: 'line', source: 'lyr-shoreline', layout: { visibility: 'none', 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': ['match', ['get', 'survey'], ...Object.entries(SHORE_COLORS).flat(), '#868E96'], 'line-opacity': 0.9,
+      'line-width': zw(1, 2, 3) } }, landBelow);
+  document.querySelector('.lg-water1850')?.setAttribute('fill', basemapWater());
   Areas.addLayers('bp-all', 'bp-context-label');
   Tiles.addLayers('bp-all', 'bp-context-label', popup);
   map.addLayer({ id: 'bp-lyr-muni', type: 'line', source: 'lyr-muni', layout: { 'line-cap': 'round', 'line-join': 'round' },
@@ -6295,6 +6329,12 @@ const TILE_SETS = {
   curbs:      { set: 'curbs',        modes: 'three', close: 15, default: 'close' },   // on at first, from zoom 15
   buildings:  { set: 'buildings',    modes: 'onoff' },
 };
+// sea level rise (sf-blocks data/tiles): flood areas, or a line; tiles or a plain GeoJSON file, On or Off (v111)
+const SEA_SETS = {
+  slr24:  { set: 'sea_level_rise_24in', color: '#1971C2' },
+  slr66:  { set: 'sea_level_rise_66in', color: '#7048E8' },
+  slr108: { set: 'sea_level_rise_108in_line', color: '#0B7285', line: true },
+};
 const GENUS_COLORS = ['#1B9E77', '#D95F02', '#7570B3', '#E7298A', '#66A61E', '#E6AB02', '#A6761D', '#1F78B4', '#8DA0CB', '#B15928'];
 const GENUS_OTHER = '#6B8E5A';
 const BIZ_COLOR = { food: '#C2255C', retail: '#E67700', services: '#0C8599', other: '#5F3DC4' };
@@ -6323,7 +6363,7 @@ const BIZ_ALL_KEY = 'bp-biz-all';
 let bizAll = (() => { try { return localStorage.getItem(BIZ_ALL_KEY) === '1'; } catch (e) { return false; } })();
 let treeGenera = null, bizCats = new Set(['food', 'retail', 'services', 'other']);
 const Tiles = (() => {
-  const meta = new Map(), stats = new Map(), readers = new Map(), tiles = new Map(), cache = new Map(), pending = new Map();
+  const meta = new Map(), stats = new Map(), readers = new Map(), tiles = new Map(), cache = new Map(), pending = new Map(), sea = new Map();
   const KX = 111320 * Math.cos(37.76 * Math.PI / 180), KY = 110540;
   let dir = '';
   const tx = (lon, z) => (lon + 180) / 360 * 2 ** z;
@@ -6419,6 +6459,14 @@ const Tiles = (() => {
             zooms: { close, always, label: close + 1 } };
           OVERLAY_DEFAULT[k] = c.default || 'off'; overlayMode[k] = overlayMode[k] || OVERLAY_DEFAULT[k];
         }
+        for (const [k, c] of Object.entries(SEA_SETS)) {
+          const m = index.layers.find(l => l.id === c.set); if (!m) continue;
+          const modes = [['off', 'lyrOff'], ['close', 'lyrOn']];
+          if (m.format === 'pmtiles') { meta.set(k, m); OVERLAYS[k] = { tiled: dir + m.file, layers: [], modes, zooms: { close: m.minzoom ?? 10, always: m.minzoom ?? 10, label: 99 } }; }
+          else OVERLAYS[k] = { path: dir + m.file, layers: [], modes, minzoom: 0 };
+          sea.set(k, m);
+          OVERLAY_DEFAULT[k] = 'off'; overlayMode[k] = overlayMode[k] || 'off';
+        }
         await Promise.all([...meta].map(([k, m]) => SFBlocks.json(dir + m.stats).then(st => stats.set(k, st)).catch(() => {})));
         const g = stats.get('trees') && stats.get('trees').fields.genus;
         TREE_TOP = g ? Object.keys(g.values).slice(0, GENUS_COLORS.length) : [];
@@ -6479,6 +6527,13 @@ const Tiles = (() => {
             'text-anchor': 'top', 'text-offset': [0, 1.1], 'text-max-width': 9, 'text-padding': 2, 'text-optional': true },
           paint: { 'text-color': '#3D2C8D', 'text-halo-color': '#FFFFFF', 'text-halo-width': 1.6 } }, pointBelow);
         OVERLAYS.businesses.layers = ['bp-lyr-businesses', 'bp-lyr-businesses-label', 'bp-lyr-businesses-name-label'];
+      }
+      for (const [k, m] of sea) {
+        const c = SEA_SETS[k], s0 = meta.has(k) ? src(k) : { source: 'lyr-' + k, layout: { visibility: 'none' } };
+        if (!c.line) map.addLayer({ id: `bp-lyr-${k}-fill`, type: 'fill', ...s0, paint: { 'fill-color': c.color, 'fill-opacity': 0.25 } }, polyBelow);
+        map.addLayer({ id: `bp-lyr-${k}-line`, type: 'line', ...s0, layout: { ...s0.layout, 'line-join': 'round' },
+          paint: { 'line-color': c.color, 'line-opacity': 0.85, 'line-width': ['interpolate', ['linear'], ['zoom'], 11, c.line ? 1.2 : 0.6, 16, c.line ? 2.5 : 1.2] } }, polyBelow);
+        OVERLAYS[k].layers = [...(c.line ? [] : [`bp-lyr-${k}-fill`]), `bp-lyr-${k}-line`];
       }
       Tiles.filter();
       // the ring around points from an open card list (yellow: what you picked), with a dot when the layer is off
@@ -10972,6 +11027,11 @@ function setupMapMenus() {
     schools: '<svg viewBox="0 0 26 16"><rect x="6" y="1" width="14" height="14" rx="3.5" fill="#8A5A00"/><path d="M9 8.5 L13 5 L17 8.5 V12.5 H9Z" fill="#fff"/></svg>',
     stations: '<svg viewBox="0 0 26 16"><circle cx="7" cy="8" r="6.5" fill="#C92A2A"/><text x="7" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">F</text><circle cx="19" cy="8" r="6.5" fill="#1E3A8A"/><text x="19" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">P</text></svg>',
     health: '<svg viewBox="0 0 26 16"><rect x="0.5" y="1.5" width="13" height="13" rx="3" fill="#0B7285"/><text x="7" y="11.5" font-size="9" font-weight="700" text-anchor="middle" fill="#fff">H</text><circle cx="20" cy="8" r="5.5" fill="#0B7285"/><path d="M20 5v6M17 8h6" stroke="#fff" stroke-width="1.8"/></svg>',
+    shoreline: '<svg viewBox="0 0 26 16"><path d="M2 4 C8 6 12 2 24 5" fill="none" stroke="#1C7ED6" stroke-width="1.6"/><path d="M2 8 C8 10 12 6 24 9" fill="none" stroke="#E8590C" stroke-width="1.6"/><path d="M2 12 C8 14 12 10 24 13" fill="none" stroke="#2F9E44" stroke-width="1.6"/></svg>',
+    water1850: '<svg viewBox="0 0 26 16"><rect width="26" height="16" rx="3" fill="#EEECE8"/><path d="M0 16 V7 C6 4 10 10 16 6 S24 8 26 5 V16Z" fill="#A6C8E0"/></svg>',
+    slr24: '<svg viewBox="0 0 26 16"><rect x="2" y="2" width="22" height="12" rx="2" fill="#1971C2" fill-opacity=".25" stroke="#1971C2" stroke-width="1.2"/></svg>',
+    slr66: '<svg viewBox="0 0 26 16"><rect x="2" y="2" width="22" height="12" rx="2" fill="#7048E8" fill-opacity=".25" stroke="#7048E8" stroke-width="1.2"/></svg>',
+    slr108: '<svg viewBox="0 0 26 16"><path d="M2 11 C8 4 16 13 24 5" fill="none" stroke="#0B7285" stroke-width="2"/></svg>',
     hillshade: '<svg viewBox="0 0 26 16"><defs><linearGradient id="hs-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#8A8FB8"/></linearGradient></defs><rect width="26" height="16" rx="3" fill="#E2DFDA"/><path d="M0 16 L9 4 L14 10 L18 6 L26 16 Z" fill="url(#hs-g)"/></svg>',
     contours: '<svg viewBox="0 0 26 16"><rect width="26" height="16" rx="3" fill="#E2DFDA"/><path d="M1 11 C8 3 16 14 25 5" fill="none" stroke="#fff" stroke-width="1.5"/><path d="M1 15 C9 8 16 16 25 10" fill="none" stroke="#fff" stroke-width="1.5"/></svg>',
   };
