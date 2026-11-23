@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v114 -->
+<!-- build: v115 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -792,7 +792,11 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
 .gap-connect { font: 700 12px/1 system-ui, sans-serif; color: #fff; background: #E03131; border: 2px solid #fff; border-radius: 10px; padding: 5px 8px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.25); white-space: nowrap; }
 .gap-connect:hover { background: #C92A2A; }
 .gap-bar { display: flex; gap: 10px; align-items: center; margin: 4px 0 8px; } .gap-bar[hidden] { display: none; } .gap-bar small { color: var(--ink-soft); }
-#ride-btn.is-riding { display: inline-flex; align-items: center; gap: 6px; background: #1C7ED6; color: #fff; border-color: #1C7ED6; }
+.bp-ctl #ride-btn { position: relative; } .bp-ctl button[hidden] { display: none; }
+.bp-ctl #ride-btn svg { width: 19px; height: 19px; stroke-width: 1.8; }
+.bp-ctl #ride-btn.is-riding { background: #1C7ED6; } .bp-ctl #ride-btn.is-riding svg { stroke: #fff; }
+.bp-ctl #ride-btn .ride-dot { position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; }
+.bp-ctl #ride-btn.is-paused .ride-dot { animation: none; background: #FFD43B; }
 .bp-ctl #ctl-me.is-following { background: #1C7ED6; } .bp-ctl #ctl-me.is-following svg { stroke: #fff; }
 .ride-dot { width: 9px; height: 9px; border-radius: 50%; background: #fff; animation: ride-blink 1.2s infinite; }
 @keyframes ride-blink { 50% { opacity: .3; } }
@@ -977,9 +981,6 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
       </div>
       <div class="map-toggle single sun">
         <button type="button" id="quiet-btn" aria-expanded="false" aria-controls="quiet-panel">✦ <span data-i18n="quietBtn">Quiet streets</span><span class="badge" id="quiet-badge" hidden></span> ▾</button>
-      </div>
-      <div class="map-toggle single keep">
-        <button type="button" id="ride-btn" aria-pressed="false" data-i18n-title="rideTitle" title="Ride: add the streets you ride along"><span data-i18n="rideBtn">🚲 Ride</span></button>
       </div>
       <div class="map-toggle single" id="focus-wrap">
         <button type="button" id="focus-btn" aria-expanded="false" aria-haspopup="true" data-i18n-title="focusBtnTitle" title="Choose what clicks on the map go to"><span data-i18n="focusBtn">Focus</span><b id="focus-name"></b> ▾</button>
@@ -1409,7 +1410,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v114';
+const _BUILD_VERSION = 'v115';
 // airmapper-lib (burritojustice/airmapper-lib), shared with Airmapper: how a row picks its shape, CNNs or
 // lat / lon (geometryOf), and the switch from dots to shapes by zoom (autoZoom). Pinned to a commit, with
 // the same commit in vendor/airmapper-lib.js for when jsDelivr can't be reached.
@@ -2816,7 +2817,7 @@ function startOver({ keepView = false } = {}) {
 }
 // what both buttons clear besides the list: file rows picked onto cards, Nearby results, the How near area
 function clearPicked() {
-  try { Drops.cards.clear(); NearbyView.clear(true); Drops.showExtent(null); lastCardCnn = null; Places.clear(); } catch (e) { }   // not there yet while the page starts
+  try { Drops.cards.clear(); NearbyView.clear(true); Drops.showExtent(null); lastCardCnn = null; Places.clear(); clearHover(); } catch (e) { }   // not there yet while the page starts
 }
 // Empties the block list (and the cross street / number fields) but keeps the street and the map view
 function clearSelections() {
@@ -3962,7 +3963,9 @@ const Ride = (() => {
     let el = $('ride-bar');
     if (!el) { el = document.createElement('div'); el.id = 'ride-bar'; el.className = 'ride-bar'; document.querySelector('.map-wrap').appendChild(el); el.addEventListener('click', onBar); }
     const rb = $('ride-btn'); rb.setAttribute('aria-pressed', on); rb.classList.toggle('is-riding', on);
-    rb.innerHTML = on ? `<span class="ride-dot"></span>${esc(t(paused ? 'ridePaused' : 'rideRiding'))}` : esc(t('rideBtn'));
+    rb.classList.toggle('is-paused', on && paused);
+    rb.innerHTML = ICO_BIKE + (on ? '<span class="ride-dot"></span>' : '');
+    rb.title = on ? (paused ? t('ridePaused') : t('rideLiveTitle')) : t('rideTitle'); rb.setAttribute('aria-label', rb.title);
     const meB = $('ctl-me'); if (meB) meB.classList.toggle('is-following', on && follow);
     el.hidden = !(on || done) || el.dataset.closed === '1';
     $('ride-lost').hidden = !(on && !follow);
@@ -4491,6 +4494,7 @@ function removeCard(cnn) {
   state.results = state.results.filter(s => s.cnn !== cnn);
   state.checked.delete(cnn);
   if (!state.results.length) state.title = '';
+  clearHover(cnn);
   render(); writeHash();
 }
 function toggleChecked(cnn, on) {
@@ -4911,6 +4915,8 @@ const segFeature = (s, props = {}) => ({
 });
 const LABEL_FONT = ['Noto Sans Medium'];
 
+// Ride's button in the map controls (v115)
+const ICO_BIKE = '<svg viewBox="0 0 24 24"><circle cx="5.5" cy="16" r="3.6"/><circle cx="18.5" cy="16" r="3.6"/><path d="M5.5 16 9 9h7l2.5 7M9 9l3.5 7H5.5M12.5 16 16 9M14.5 5.5H17L16 9M7.5 6.5h3"/></svg>';
 function initMap() {
   map = new maplibregl.Map({
     container: 'map',
@@ -4924,7 +4930,7 @@ function initMap() {
   map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), 'top-right');
   // full screen and 3D, under the zoom buttons (wired up in setupMapMenus)
   map.addControl({ onAdd() { const d = document.createElement('div'); d.className = 'maplibregl-ctrl maplibregl-ctrl-group bp-ctl';
-    d.innerHTML = `<button type="button" id="ctl-me" aria-pressed="false"></button><button type="button" id="full-btn" aria-pressed="false"></button><button type="button" id="ctl-3d" aria-pressed="false">3D</button>`; return d; }, onRemove() {} }, 'top-right');
+    d.innerHTML = `<button type="button" id="ctl-me" aria-pressed="false"></button><button type="button" id="ride-btn" aria-pressed="false"${feat('ride') ? '' : ' hidden'} title="${esc(t('rideTitle'))}" aria-label="${esc(t('rideTitle'))}">${ICO_BIKE}</button><button type="button" id="full-btn" aria-pressed="false"></button><button type="button" id="ctl-3d" aria-pressed="false">3D</button>`; return d; }, onRemove() {} }, 'top-right');
   return new Promise(res => map.on('load', res));
 }
 // Basemap creek fix, ported from Selecter: OSM tags many Bay Area creeks (some of them underground, like
@@ -5101,6 +5107,7 @@ function addMapLayers() {
 
   // hover + click to add/remove
   const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
+  hoverPopup = popup;
   // the Filter intersections' own popup, set beside the corner (placeBeside) so it doesn't hide the angle
   const qpop = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
   const onCorner = e => map.queryRenderedFeatures(e.point, { layers: ['bp-corners-hit', 'bp-ints'] }).length > 0;
@@ -11368,7 +11375,17 @@ function hoverSegFromCard(cnn) {
   // the card's nearby area on the map (your files' extent), while hovering it; else the last card clicked
   Drops.showExtent(s || (lastCardCnn != null && state.results.find(r => r.cnn === lastCardCnn)) || null);
 }
-let lastCardCnn = null;
+let lastCardCnn = null, hoverPopup = null;
+// a street's highlight goes when its card does: on phones a tap leaves the map's or the card's hover on, since no
+// mouseleave follows (v115)
+function clearHover(cnn) {
+  if (!mapReady) return;
+  if (cnn != null && lastCardCnn === cnn) lastCardCnn = null;
+  cardHoverCnn = null;
+  map.getSource('hover').setData(EMPTY); map.getSource('preview-int').setData(EMPTY);
+  if (popOwner === 'street' && hoverPopup) { hoverPopup.remove(); popOwner = null; }
+  Drops.showExtent(lastCardCnn != null && state.results.find(r => r.cnn === lastCardCnn) || null);
+}
 // a click on a card: go to it on the map
 function goToCard(s) {
   if (!s) return;
@@ -11512,7 +11529,6 @@ function drawBunting() {
   if (SITE.pageTitle) document.title = SITE.pageTitle;
   if (SITE.logo) document.querySelector('.brand .logo').src = SITE.logo;
   // features this copy leaves out (SITES): their buttons go
-  if (!feat('ride')) $('ride-btn').closest('.map-toggle').hidden = true;
   $('app-title').title = `${appName} ${_BUILD_VERSION}`;
   SFBlocks.ready.finally(() => { $('app-title').title = `${appName} ${_BUILD_VERSION}${SITE.id !== 'block-party' ? ' (' + SITE.id + ')' : ''} · ${SFBlocks.describe()}`; });
   setupForm();

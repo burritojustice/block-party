@@ -2,6 +2,11 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v115
+
+- **Ride moved to the map controls** on the right, as a bike button under ◎. It turns blue while you ride, with a blinking dot (yellow and still while paused). Tap it to show or hide the ride bar. The toolbar on phones is now just ☰ and Nearby.
+- **Fixed: removing a street with × left it highlighted** on the map, mostly on phones, where a tap leaves the highlight on. Removing a card, Clear and Start over now clear it.
+
 ## v114
 
 - **Water in the 1850s** (was Water in 1850–52) is now a pill: Off · 1850–52 · 1853 · 1857, one at a time. 1853 and 1857 cover the northeast waterfront: piers show as land, and 1857 has its wharves, Crissy Field's marsh and Islais Creek. The map key names the year shown.
