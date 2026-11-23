@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v113 -->
+<!-- build: v114 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1409,7 +1409,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v113';
+const _BUILD_VERSION = 'v114';
 // airmapper-lib (burritojustice/airmapper-lib), shared with Airmapper: how a row picks its shape, CNNs or
 // lat / lon (geometryOf), and the switch from dots to shapes by zoom (autoZoom). Pinned to a commit, with
 // the same commit in vendor/airmapper-lib.js for when jsDelivr can't be reached.
@@ -1641,7 +1641,7 @@ const I18N = {
     shoreY1850: '1850–52', shoreY1853: '1853', shoreY1857: '1857', shoreAll: 'All', lgShoreY: 'Shoreline {y}',
     lyr_slr: 'Sea level rise', lyr_slrHint: '24″ and 66″ with a 100-year storm; SFPUC’s 108″ zone', slrBtn24: '24″', slrBtn66: '66″', slrBtn108: '108″',
     histQuiet: 'Turned off Muni, OSM paths and bike lanes so the shoreline shows. Turn them back on in the map key.',
-    lyr_water1850: 'Water in 1850–52', lyr_water1850Hint: 'Land made since then shows as water', lgWater1850: 'Water in 1850–52',
+    lyr_water1850: 'Water in the 1850s', lyr_water1850Hint: 'Land made since then shows as water', lgWater1850: 'Water in 1850–52', lgWaterY: 'Water in {y}',
     lyr_slr24: 'Sea level rise 24″', lyr_slr24Hint: 'With a 100-year storm (66″ of water)', lgSlr24: 'Sea level rise 24″ + 100-year storm',
     lyr_slr66: 'Sea level rise 66″', lyr_slr66Hint: 'With a 100-year storm (108″ of water)', lgSlr66: 'Sea level rise 66″ + 100-year storm',
     lyr_slr108: 'Sea level rise 108″ zone', lyr_slr108Hint: 'SFPUC: its edge, a planning line', lgSlr108: 'Sea level rise 108″ zone (edge)',
@@ -5493,7 +5493,9 @@ const OVERLAYS = {
   // the basemap's water color so land made since shows as water (v111). On or off, at every zoom.
   shoreline: { url: 'shoreline.geojson', layers: ['bp-lyr-shoreline'], minzoom: 0,
     modes: [['off', 'lyrOff'], ['y1850', 'shoreY1850'], ['y1853', 'shoreY1853'], ['y1857', 'shoreY1857'], ['all', 'shoreAll']] },
-  water1850: { url: 'shoreline_water.geojson', layers: ['bp-lyr-water1850'], modes: [['off', 'lyrOff'], ['close', 'lyrOn']], minzoom: 0 },
+  // one survey at a time (v114): 1853 and 1857 cover only the northeast waterfront
+  water1850: { url: 'shoreline_water.geojson', layers: ['bp-lyr-water1850'], minzoom: 0,
+    modes: [['off', 'lyrOff'], ['y1850', 'shoreY1850'], ['y1853', 'shoreY1853'], ['y1857', 'shoreY1857']] },
   schools:  { url: 'schools.geojson',  layers: ['bp-lyr-schools'] },
   stations: { url: 'stations.geojson', layers: ['bp-lyr-stations'] },
   health:   { url: 'health.geojson',   layers: ['bp-lyr-health'] },
@@ -5929,6 +5931,11 @@ function applyOverlay(k) {
     map.setFilter('bp-lyr-osm', f); map.setFilter('bp-lyr-osm-hit', f);
   }
   if (k === 'shoreline' && map.getLayer('bp-lyr-shoreline')) map.setFilter('bp-lyr-shoreline', ['in', ['get', 'survey'], ['literal', shoreShown()]]);
+  if (k === 'water1850' && map.getLayer('bp-lyr-water1850')) {
+    const y = (SHORE_MODE[overlayMode.water1850] || ['1850–52'])[0];
+    map.setFilter('bp-lyr-water1850', ['==', ['get', 'survey'], y]);
+    const lab = $('lg-lyr-water1850')?.lastElementChild; if (lab) lab.textContent = t('lgWaterY', { y });
+  }
   if (k === 'landuse' && map.getLayer('bp-lyr-landuse-fill')) {
     map.setPaintProperty('bp-lyr-landuse-fill', 'fill-color', overlayMode.landuse === 'zoning' ? zoningColor : landuseColor);
     updateParcelLabels(); updateAdjLots(); applyParcelStyle();
@@ -11043,6 +11050,7 @@ function setOverlay(k, v, write = true) {
     syncSlrPill(); if (write) writeHash(); return;
   }
   if (k === 'shoreline' && (v === 'close' || v === 'on')) v = 'all';   // links from v111
+  if (k === 'water1850' && (v === 'close' || v === 'on')) v = 'y1850';   // links from v111–v113
   const wasOff = overlayMode[k] === 'off' || !overlayMode[k];
   if (write && wasOff && v !== 'off' && (k === 'shoreline' || k === 'water1850')) {
     const quiet = HIST_QUIET.filter(m => OVERLAYS[m] && overlayMode[m] !== 'off');
