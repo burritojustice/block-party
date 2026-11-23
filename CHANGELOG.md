@@ -2,6 +2,16 @@
 
 All changes are in `index.html` unless noted. `data/streets.json` and `scripts/build_data.py` are unchanged since v1.
 
+## v109
+
+Includes v108 (#97).
+
+- **One page, several sites.** Copies of Block Party on other sites now run this same file unchanged; what differs is set in `SITES` at the top of the script and picked by the page's address. `?site=pathfinder` shows any copy as Pathfinder, for checking.
+- **Pathfinder** (Civic Joy Fund's copy, civic-joy-fund.github.io): named Pathfinder with the Civic Joy logo, Ride turned off, and two files on the map when it opens: Block Parties 2026 and Green Infrastructure (`sites/pathfinder/`, people's names left out). Block Party here is unchanged.
+- Features can be turned off per site (`FEATURES`; only Ride so far): the button goes, an unfinished ride isn't offered back, and GPX files aren't offered as rides.
+- **Files with blocks and intersections in one column** (like the Block Party 2026 export, with LINESTRINGs and POINTs in `wkt`) now draw as lines where they have them, instead of falling back to each row's latitude and longitude.
+- Files that come back from a link (or a site) no longer pop up the "what next" note each time the page opens.
+
 ## v108
 
 - **Smaller map toolbar.** On computers, the buttons along the top of the map (Map · Sat · 3D, Layers, Areas, Filter, Ride, Focus, Nearby, Table) are about a quarter smaller, so they fit on one row at most window widths instead of wrapping onto a second. Phones keep their larger, finger-sized buttons.
