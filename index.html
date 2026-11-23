@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- build: v111 -->
+<!-- build: v112 -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -1063,7 +1063,9 @@ li.seg[tabindex]:focus-visible { outline: 3px solid #1C7ED6; outline-offset: 2px
         <li id="lg-lyr-schools" hidden><span class="sw"><svg viewBox="0 0 24 12"></svg><svg viewBox="0 0 16 16" class="dot"><rect x="1.5" y="1.5" width="13" height="13" rx="3.5" fill="#8A5A00" stroke="#fff"/><path d="M4.5 8 L8 5 L11.5 8 V11.5 H4.5Z" fill="#fff"/></svg></span><span data-i18n="lgSchools">Schools</span></li>
         <li id="lg-lyr-stations" hidden><span class="sw"><svg viewBox="0 0 24 12"><circle cx="18" cy="6" r="6" fill="#C92A2A" stroke="#fff"/><text x="18" y="9" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">F</text></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="7" fill="#1E3A8A" stroke="#fff"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">P</text></svg></span><span data-i18n="lgStations">Fire / police stations</span></li>
         <li id="lg-lyr-health" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect x="12" y="0" width="12" height="12" rx="3" fill="#0B7285" stroke="#fff"/><text x="18" y="9.5" font-size="8.5" font-weight="700" text-anchor="middle" fill="#fff">H</text></svg><svg viewBox="0 0 16 16" class="dot"><circle cx="8" cy="8" r="6" fill="#0B7285" stroke="#fff"/><path d="M8 5v6M5 8h6" stroke="#fff" stroke-width="2"/></svg></span><span data-i18n="lgHealth">Hospitals / clinics</span></li>
-        <li id="lg-lyr-shoreline" hidden><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="3" x2="23" y2="3" stroke="#1C7ED6" stroke-width="1.8"/><line x1="1" y1="6.5" x2="23" y2="6.5" stroke="#E8590C" stroke-width="1.8"/><line x1="1" y1="10" x2="23" y2="10" stroke="#2F9E44" stroke-width="1.8"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgShoreline">Shoreline (1850–52 · 1853 · 1857)</span></li>
+        <li class="lg-shore lg-has-box" data-shore="1850–52" hidden><input type="checkbox" class="lg-onoff" data-lg-shore="1850–52" checked><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#1C7ED6" stroke-width="2.2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span></span></li>
+        <li class="lg-shore lg-has-box" data-shore="1853" hidden><input type="checkbox" class="lg-onoff" data-lg-shore="1853" checked><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#E8590C" stroke-width="2.2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span></span></li>
+        <li class="lg-shore lg-has-box" data-shore="1857" hidden><input type="checkbox" class="lg-onoff" data-lg-shore="1857" checked><span class="sw"><svg viewBox="0 0 24 12"><line x1="1" y1="6" x2="23" y2="6" stroke="#2F9E44" stroke-width="2.2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span></span></li>
         <li id="lg-lyr-water1850" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect width="24" height="12" rx="2" fill="#A6C8E0" class="lg-water1850"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgWater1850">Water in 1850–52</span></li>
         <li id="lg-lyr-slr24" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect x="1" y="1" width="22" height="10" rx="2" fill="#1971C2" fill-opacity=".25" stroke="#1971C2"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlr24">Sea level rise 24″ + 100-year storm</span></li>
         <li id="lg-lyr-slr66" hidden><span class="sw"><svg viewBox="0 0 24 12"><rect x="1" y="1" width="22" height="10" rx="2" fill="#7048E8" fill-opacity=".25" stroke="#7048E8"/></svg><svg viewBox="0 0 16 16" class="dot"></svg></span><span data-i18n="lgSlr66">Sea level rise 66″ + 100-year storm</span></li>
@@ -1407,7 +1409,7 @@ window.GoogleDrive = (() => {
 
 </script>
 <script>
-const _BUILD_VERSION = 'v111';
+const _BUILD_VERSION = 'v112';
 // airmapper-lib (burritojustice/airmapper-lib), shared with Airmapper: how a row picks its shape, CNNs or
 // lat / lon (geometryOf), and the switch from dots to shapes by zoom (autoZoom). Pinned to a commit, with
 // the same commit in vendor/airmapper-lib.js for when jsDelivr can't be reached.
@@ -1635,7 +1637,10 @@ const I18N = {
     land_ocii: 'Former Redevelopment', land_other: 'Other',
     lyr_muni: 'Muni routes', lyr_bike: 'Bike network', lyr_slow: 'Slow Streets', lgSlow: 'Slow Streets',
     grpWater: 'Shoreline and sea level',
-    lyr_shoreline: 'Shoreline 1850–1857', lyr_shorelineHint: 'NOAA surveys: 1850–52, 1853, 1857', lgShoreline: 'Shoreline (1850–52 · 1853 · 1857)',
+    lyr_shoreline: 'Shoreline 1850–1857', lyr_shorelineHint: 'NOAA surveys', lgShoreline: 'Shoreline (1850–52 · 1853 · 1857)',
+    shoreY1850: '1850–52', shoreY1853: '1853', shoreY1857: '1857', shoreAll: 'All', lgShoreY: 'Shoreline {y}',
+    lyr_slr: 'Sea level rise', lyr_slrHint: '24″ and 66″ with a 100-year storm; SFPUC’s 108″ zone', slrBtn24: '24″', slrBtn66: '66″', slrBtn108: '108″',
+    histQuiet: 'Turned off Muni, OSM paths and bike lanes so the shoreline shows. Turn them back on in the map key.',
     lyr_water1850: 'Water in 1850–52', lyr_water1850Hint: 'Land made since then shows as water', lgWater1850: 'Water in 1850–52',
     lyr_slr24: 'Sea level rise 24″', lyr_slr24Hint: 'With a 100-year storm (66″ of water)', lgSlr24: 'Sea level rise 24″ + 100-year storm',
     lyr_slr66: 'Sea level rise 66″', lyr_slr66Hint: 'With a 100-year storm (108″ of water)', lgSlr66: 'Sea level rise 66″ + 100-year storm',
@@ -5480,7 +5485,8 @@ const OVERLAYS = {
   lands:    { url: 'lands.geojson',    layers: ['bp-lyr-lands-fill', 'bp-lyr-lands-line', 'bp-lyr-lands-park', 'bp-lyr-lands-label'] },
   // NOAA's shoreline surveys (sf-blocks data/layers/shoreline), and the water they show in 1850–52, painted in
   // the basemap's water color so land made since shows as water (v111). On or off, at every zoom.
-  shoreline: { url: 'shoreline.geojson', layers: ['bp-lyr-shoreline'], modes: [['off', 'lyrOff'], ['close', 'lyrOn']], minzoom: 0 },
+  shoreline: { url: 'shoreline.geojson', layers: ['bp-lyr-shoreline'], minzoom: 0,
+    modes: [['off', 'lyrOff'], ['y1850', 'shoreY1850'], ['y1853', 'shoreY1853'], ['y1857', 'shoreY1857'], ['all', 'shoreAll']] },
   water1850: { url: 'shoreline_water.geojson', layers: ['bp-lyr-water1850'], modes: [['off', 'lyrOff'], ['close', 'lyrOn']], minzoom: 0 },
   schools:  { url: 'schools.geojson',  layers: ['bp-lyr-schools'] },
   stations: { url: 'stations.geojson', layers: ['bp-lyr-stations'] },
@@ -5504,7 +5510,7 @@ const LAYER_SECTIONS = [
   ['grpAround', ['muni', 'bike', 'slow', 'osm']],
   ['grpStreet', ['businesses', 'schools', 'stations', 'health', 'trees']],
   ['grpLand', ['landuse', 'lands', 'buildings', 'curbs']],
-  ['grpWater', ['shoreline', 'water1850', 'slr24', 'slr66', 'slr108']],
+  ['grpWater', ['shoreline', 'water1850', 'slr']],   // slr: one pill for slr24 / slr66 / slr108 (v112)
   ['grpTerrain', ['contours', 'hillshade']],
   ['grpBasemap', ['basemap']],
 ];
@@ -5670,6 +5676,28 @@ const onBuilding = e => hoverHit(e, HOVER.buildings());
 const onArea = e => hoverHit(e, HOVER.areas());
 
 const SHORE_COLORS = { '1850–52': '#1C7ED6', '1853': '#E8590C', '1857': '#2F9E44' };
+// the shoreline pill picks one survey or all; the map key's boxes turn single surveys off (v112)
+const SHORE_MODE = { y1850: ['1850–52'], y1853: ['1853'], y1857: ['1857'], all: ['1850–52', '1853', '1857'] };
+const shoreOff = new Set();
+const shorePicked = () => SHORE_MODE[overlayMode.shoreline] || [];
+const shoreShown = () => shorePicked().filter(y => !shoreOff.has(y));
+function syncShoreKey() {
+  const on = new Set(shorePicked());
+  document.querySelectorAll('#legend li.lg-shore').forEach(li => {
+    const y = li.dataset.shore, box = li.querySelector('.lg-onoff');
+    li.hidden = !on.has(y); box.checked = !shoreOff.has(y); li.classList.toggle('lg-off', shoreOff.has(y));
+    li.lastElementChild.textContent = t('lgShoreY', { y }); box.title = t('lgToggle');
+  });
+}
+// one pill for the sea level rise layers: shows the one that's on (none pressed when the key turned on more)
+const SEA_KEYS = ['slr24', 'slr66', 'slr108'];
+function syncSlrPill() {
+  const on = SEA_KEYS.filter(k => overlayMode[k] && overlayMode[k] !== 'off');
+  const v = on.length === 0 ? 'off' : on.length === 1 ? on[0] : null;
+  document.querySelectorAll('[data-lyr="slr"] .lseg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
+}
+// the historic layers turn off Muni, OSM paths and bike lanes, the way their map-key boxes do, so they stay listed
+const HIST_QUIET = ['muni', 'osm', 'bike'];
 // the basemap's water color (it changes with the map style)
 function basemapWater(st) {
   const w = (st || map.getStyle()).layers.find(l => l.type === 'fill' && l['source-layer'] === 'water');
@@ -5894,6 +5922,7 @@ function applyOverlay(k) {
     const f = OSM_FILTER[overlayMode.osm === 'all' ? 'all' : 'paths'];
     map.setFilter('bp-lyr-osm', f); map.setFilter('bp-lyr-osm-hit', f);
   }
+  if (k === 'shoreline' && map.getLayer('bp-lyr-shoreline')) map.setFilter('bp-lyr-shoreline', ['in', ['get', 'survey'], ['literal', shoreShown()]]);
   if (k === 'landuse' && map.getLayer('bp-lyr-landuse-fill')) {
     map.setPaintProperty('bp-lyr-landuse-fill', 'fill-color', overlayMode.landuse === 'zoning' ? zoningColor : landuseColor);
     updateParcelLabels(); updateAdjLots(); applyParcelStyle();
@@ -5922,7 +5951,10 @@ function updateOverlays() {
     }
     const showing = on && z >= overlayMinZoom(k);
     if (overlayMode[k] !== 'off' && z >= overlayMinZoom(k) - 1) loadOverlay(k);
-    const li = $('lg-lyr-' + k); if (li) { li.hidden = !showing && !LgKey.overlaysOff.has(k); li.classList.toggle('lg-off', overlayMode[k] === 'off'); }
+    // (Muni, OSM and bike lanes stay listed, unchecked, while a historic layer is on, even after a reload)
+    const keep = LgKey.overlaysOff.has(k) || (HIST_QUIET.includes(k) && (overlayMode.shoreline !== 'off' || overlayMode.water1850 !== 'off'));
+    const li = $('lg-lyr-' + k); if (li) { li.hidden = !showing && !keep; li.classList.toggle('lg-off', overlayMode[k] === 'off'); }
+    if (k === 'shoreline') syncShoreKey();
     if (k === 'muni') {
       // checked only while the numbers are on the map; zoomed out, unchecked and greyed until they can show
       const box = $('lg-muni-nums-check'), inZoom = z >= overlayLabelZoom('muni');
@@ -8395,6 +8427,9 @@ const LgKey = (() => {
       if (el.checked) { overlaysOff.delete(k); setOverlay(k, lastMode[k] || (OVERLAY_DEFAULT[k] && OVERLAY_DEFAULT[k] !== 'off' ? OVERLAY_DEFAULT[k] : ((OVERLAYS[k].modes || []).find(([m]) => m !== 'off') || ['close'])[0])); }
       else { lastMode[k] = overlayMode[k]; overlaysOff.add(k); setOverlay(k, 'off'); }
       if (typeof setupMapMenusRows === 'function') setupMapMenusRows();
+    } else if (el.dataset.lgShore) {
+      el.checked ? shoreOff.delete(el.dataset.lgShore) : shoreOff.add(el.dataset.lgShore);
+      syncShoreKey(); if (mapReady) applyOverlay('shoreline');
     } else if (el.dataset.lgAreabox) {
       const k = el.dataset.lgAreabox, key = areaKey(k);
       if (el.checked) { const [kk, v] = areasOff.get(k) || [key, 'borders']; areasOff.delete(k); if (key === 'special') setArea('special', k); setArea(kk, v); }
@@ -8472,7 +8507,9 @@ const LgKey = (() => {
     lg.addEventListener('mouseout', e => { const tr = e.target.closest('tr[data-hl]'); if (tr && !tr.contains(e.relatedTarget)) unhighlight(); });
     decorate();
   }
-  return { setup, decorate, overlaysOff, areasOff, dropsOff, reset: () => { overlaysOff.clear(); areasOff.clear(); dropsOff.clear(); touched.clear(); } };
+  // off the way the map key's box does it: the row stays listed, and its box turns it back on as it was
+  function turnOff(k) { if (overlayMode[k] === 'off') return; lastMode[k] = overlayMode[k]; overlaysOff.add(k); setOverlay(k, 'off', false); }
+  return { setup, decorate, turnOff, overlaysOff, areasOff, dropsOff, reset: () => { overlaysOff.clear(); areasOff.clear(); dropsOff.clear(); touched.clear(); } };
 })();
 
 /* ---------- downloads: the checked blocks, or what's along them, as CSV or GeoJSON ---------- */
@@ -10995,6 +11032,16 @@ function overlayInfo(e, s) {
   return out;
 }
 function setOverlay(k, v, write = true) {
+  if (k === 'slr') {   // the sea level rise pill: one at a time
+    for (const s of SEA_KEYS) if (OVERLAYS[s]) setOverlay(s, s === v ? 'close' : 'off', false);
+    syncSlrPill(); if (write) writeHash(); return;
+  }
+  if (k === 'shoreline' && (v === 'close' || v === 'on')) v = 'all';   // links from v111
+  const wasOff = overlayMode[k] === 'off' || !overlayMode[k];
+  if (write && wasOff && v !== 'off' && (k === 'shoreline' || k === 'water1850')) {
+    const quiet = HIST_QUIET.filter(m => OVERLAYS[m] && overlayMode[m] !== 'off');
+    if (quiet.length) { quiet.forEach(m => LgKey.turnOff(m)); toast(t('histQuiet')); }
+  }
   if (!(k in OVERLAY_DEFAULT)) return;
   const ok = k === 'contours' || k === 'hillshade' ? ['off', 'on'] : OVERLAYS[k] && OVERLAYS[k].modes ? OVERLAYS[k].modes.map(m => m[0]) : ['off', 'close', 'always'];
   if (k === 'landuse' && v === 'on') v = 'landuse';         // links from v32
@@ -11004,6 +11051,8 @@ function setOverlay(k, v, write = true) {
   // the map key's box follows
   const kb = document.querySelector(`[data-lg-lyr="${k}"]`); if (kb) kb.checked = v !== 'off';
   try { if (v !== 'off') LgKey.overlaysOff.delete(k); } catch (e) { }
+  if (k === 'shoreline') syncShoreKey();
+  if (SEA_KEYS.includes(k)) syncSlrPill();
   if (mapReady) {
     if (k === 'contours') { setContours(v === 'on'); updateContourLegend(); sync3dButton(); }
     else if (k === 'hillshade') { if (map.getLayer('bp-hillshade')) map.setLayoutProperty('bp-hillshade', 'visibility', v === 'on' ? 'visible' : 'none'); }
@@ -11029,6 +11078,7 @@ function setupMapMenus() {
     health: '<svg viewBox="0 0 26 16"><rect x="0.5" y="1.5" width="13" height="13" rx="3" fill="#0B7285"/><text x="7" y="11.5" font-size="9" font-weight="700" text-anchor="middle" fill="#fff">H</text><circle cx="20" cy="8" r="5.5" fill="#0B7285"/><path d="M20 5v6M17 8h6" stroke="#fff" stroke-width="1.8"/></svg>',
     shoreline: '<svg viewBox="0 0 26 16"><path d="M2 4 C8 6 12 2 24 5" fill="none" stroke="#1C7ED6" stroke-width="1.6"/><path d="M2 8 C8 10 12 6 24 9" fill="none" stroke="#E8590C" stroke-width="1.6"/><path d="M2 12 C8 14 12 10 24 13" fill="none" stroke="#2F9E44" stroke-width="1.6"/></svg>',
     water1850: '<svg viewBox="0 0 26 16"><rect width="26" height="16" rx="3" fill="#EEECE8"/><path d="M0 16 V7 C6 4 10 10 16 6 S24 8 26 5 V16Z" fill="#A6C8E0"/></svg>',
+    slr: '<svg viewBox="0 0 26 16"><rect x="1" y="2" width="24" height="12" rx="2" fill="#7048E8" fill-opacity=".18" stroke="#7048E8" stroke-width="1"/><path d="M1 10 C7 7 12 12 25 8" fill="none" stroke="#0B7285" stroke-width="1.6"/></svg>',
     slr24: '<svg viewBox="0 0 26 16"><rect x="2" y="2" width="22" height="12" rx="2" fill="#1971C2" fill-opacity=".25" stroke="#1971C2" stroke-width="1.2"/></svg>',
     slr66: '<svg viewBox="0 0 26 16"><rect x="2" y="2" width="22" height="12" rx="2" fill="#7048E8" fill-opacity=".25" stroke="#7048E8" stroke-width="1.2"/></svg>',
     slr108: '<svg viewBox="0 0 26 16"><path d="M2 11 C8 4 16 13 24 5" fill="none" stroke="#0B7285" stroke-width="2"/></svg>',
@@ -11062,13 +11112,14 @@ function setupMapMenus() {
     + `<div class="lyr-row" data-flat-row><span class="sw"></span><b>${esc(t('bm3d'))}<small>${esc(t('bm3dHint'))}</small></b>
     <div class="lseg" role="group" aria-label="${esc(t('bm3d'))}">${[['on', 'bm3dOn'], ['off', 'bm3dOff']].map(([v, l]) =>
       `<button type="button" data-flat="${v}" aria-pressed="${(v === 'off') === flatMap}">${esc(t(l))}</button>`).join('')}</div></div>`;
-  const rowFor = k => k === 'basemap' ? basemapRow() : k === 'contours' || k === 'hillshade' ? row(k, [['off', 'lyrOff'], ['on', 'lyrOn']]) : OVERLAYS[k].modes ? row(k, OVERLAYS[k].modes)
+  const slrRow = () => row('slr', [['off', 'lyrOff'], ...SEA_KEYS.filter(s => OVERLAYS[s]).map(s => [s, 'slrBtn' + s.slice(3)])]);
+  const rowFor = k => k === 'basemap' ? basemapRow() : k === 'slr' ? slrRow() : k === 'contours' || k === 'hillshade' ? row(k, [['off', 'lyrOff'], ['on', 'lyrOn']]) : OVERLAYS[k].modes ? row(k, OVERLAYS[k].modes)
     : row(k, three) + (k === 'lands' ? chipsFold(k, landChips) : k === 'trees' ? chipsFold(k, treeChips()) : k === 'businesses' ? chipsFold(k, bizChips()) : '');
   // in sections; a layer sf-blocks adds later that isn't in one goes at the end
-  const listed = new Set(LAYER_SECTIONS.flatMap(([, ks]) => ks));
-  const sections = [...LAYER_SECTIONS.map(([cap, ks]) => [cap, ks.filter(k => k === 'contours' || k === 'hillshade' || k === 'basemap' || OVERLAYS[k])]),
+  const listed = new Set([...LAYER_SECTIONS.flatMap(([, ks]) => ks), ...SEA_KEYS]);
+  const sections = [...LAYER_SECTIONS.map(([cap, ks]) => [cap, ks.filter(k => k === 'contours' || k === 'hillshade' || k === 'basemap' || OVERLAYS[k] || (k === 'slr' && SEA_KEYS.some(s => OVERLAYS[s])))]),
     ['grpMore', Object.keys(OVERLAYS).filter(k => !listed.has(k))]].filter(([, ks]) => ks.length);
-  setupMapMenusRows = () => { rowsEl.innerHTML = sections.map(([cap, ks]) => `<p class="areas-cap">${esc(t(cap))}</p>` + ks.map(rowFor).join('')).join(''); syncChipCounts(); };
+  setupMapMenusRows = () => { rowsEl.innerHTML = sections.map(([cap, ks]) => `<p class="areas-cap">${esc(t(cap))}</p>` + ks.map(rowFor).join('')).join(''); syncChipCounts(); syncSlrPill(); };
   setupMapMenusRows();
   rowsEl.addEventListener('change', e => {
     setTimeout(syncChipCounts);
