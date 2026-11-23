@@ -1,6 +1,6 @@
 # Pathfinder (civic-joy-fund)
 
-Files for Civic Joy Fund's copy of this page, which runs at https://civic-joy-fund.github.io/block-party/ as **Pathfinder**. The copy is this repo unchanged: `SITES.pathfinder` in `index.html` picks the name, logo, features and these files by the page's host. Open any copy with `?site=pathfinder` to see it as Pathfinder.
+Files for Civic Joy Fund's copy of this page, which runs at https://civic-joy-fund.github.io/pathfinder/ (repo civic-joy-fund/pathfinder) as **Pathfinder**. The copy is this repo unchanged: `SITES.pathfinder` in `index.html` picks the name, logo, features and these files by the page's host. Open any copy with `?site=pathfinder` to see it as Pathfinder.
 
 | File | What it is |
 | --- | --- |
